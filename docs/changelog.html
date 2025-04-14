@@ -1,37 +1,48 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <title>Changelog - Forge des Âges</title>
     <link rel="stylesheet" href="../css/changelog.css">
 </head>
+
 <body>
     <h1>Changelog - Forge des Âges</h1>
 
     <div class="version">
         <h2>Version 2.0 (Actuelle)</h2>
         <p><strong>Date</strong> : 13 avril 2025</p>
-        <p><strong>Description</strong> : Refonte visuelle majeure avec une interface utilisateur améliorée, optimisation de l’affichage des âges, et ajustements pour une meilleure expérience sur tous les écrans.</p>
-        
+        <p><strong>Description</strong> : Refonte visuelle majeure avec une interface utilisateur améliorée,
+            optimisation de l’affichage des âges, et ajustements pour une meilleure expérience sur tous les écrans.</p>
+
         <h3>Ajouts</h3>
         <ul>
             <li><strong>Amélioration visuelle</strong> :
                 <ul>
-                    <li>Nouvelle palette de couleurs avec un fond plus clair (<code>#4a3f2e</code>) et des sections plus contrastées (<code>#2f231a</code>).</li>
-                    <li>Ajout de bordures dorées (<code>#d4a017</code>) autour des sections <code>#resources</code> pour un meilleur contraste.</li>
-                    <li>Ombre portée sur les sections (<code>.section</code>) pour un effet de profondeur (<code>box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3)</code>).</li>
-                    <li>Augmentation de la taille de la barre de progression des saisons (10px au lieu de 8px) et texte plus grand (18px) dans <code>#seasonDisplay</code>.</li>
+                    <li>Nouvelle palette de couleurs avec un fond plus clair (<code>#4a3f2e</code>) et des sections plus
+                        contrastées (<code>#2f231a</code>).</li>
+                    <li>Ajout de bordures dorées (<code>#d4a017</code>) autour des sections <code>#resources</code> pour
+                        un meilleur contraste.</li>
+                    <li>Ombre portée sur les sections (<code>.section</code>) pour un effet de profondeur
+                        (<code>box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3)</code>).</li>
+                    <li>Augmentation de la taille de la barre de progression des saisons (10px au lieu de 8px) et texte
+                        plus grand (18px) dans <code>#seasonDisplay</code>.</li>
                 </ul>
             </li>
             <li><strong>Responsivité</strong> :
                 <ul>
-                    <li>Ajout d’une règle CSS <code>@media (max-width: 600px)</code> pour adapter les sections à 100% de la largeur sur petits écrans, avec un maximum de 300px.</li>
+                    <li>Ajout d’une règle CSS <code>@media (max-width: 600px)</code> pour adapter les sections à 100% de
+                        la largeur sur petits écrans, avec un maximum de 300px.</li>
                 </ul>
             </li>
             <li><strong>Affichage de l’âge</strong> :
                 <ul>
-                    <li>Le bandeau <code>#techBanner</code> est désormais toujours visible et affiche l’âge actuel via <code>#currentAgeDisplay</code>, même sans technologie débloquée.</li>
-                    <li>Bordure dynamique du bandeau selon l’âge : gris pierre (<code>#8c8c8c</code>) pour l’Âge de Pierre, bronze (<code>#cd7f32</code>) pour l’Âge des Métaux, vert fertile (<code>#4CAF50</code>) pour l’Âge de l’Agriculture.</li>
+                    <li>Le bandeau <code>#techBanner</code> est désormais toujours visible et affiche l’âge actuel via
+                        <code>#currentAgeDisplay</code>, même sans technologie débloquée.</li>
+                    <li>Bordure dynamique du bandeau selon l’âge : gris pierre (<code>#8c8c8c</code>) pour l’Âge de
+                        Pierre, bronze (<code>#cd7f32</code>) pour l’Âge des Métaux, vert fertile (<code>#4CAF50</code>)
+                        pour l’Âge de l’Agriculture.</li>
                 </ul>
             </li>
         </ul>
@@ -40,15 +51,20 @@
         <ul>
             <li><strong>Interface utilisateur</strong> :
                 <ul>
-                    <li>Suppression de la section <code>#agesList</code> au profit d’un affichage simplifié de l’âge actuel dans <code>#currentAgeDisplay</code>.</li>
-                    <li>Couleur du texte du footer et de <code>#narrative</code> ajustée à <code>#c9b68a</code> pour une meilleure lisibilité.</li>
-                    <li>Ajustement du padding et margins dans <code>#saveLoadSection</code> pour éviter tout chevauchement avec le footer.</li>
+                    <li>Suppression de la section <code>#agesList</code> au profit d’un affichage simplifié de l’âge
+                        actuel dans <code>#currentAgeDisplay</code>.</li>
+                    <li>Couleur du texte du footer et de <code>#narrative</code> ajustée à <code>#c9b68a</code> pour une
+                        meilleure lisibilité.</li>
+                    <li>Ajustement du padding et margins dans <code>#saveLoadSection</code> pour éviter tout
+                        chevauchement avec le footer.</li>
                 </ul>
             </li>
             <li><strong>Structure HTML</strong> :
                 <ul>
-                    <li>Suppression de la div <code>.columns</code> autour des sections pour une mise en page plus flexible avec Flexbox.</li>
-                    <li><code>#fabricationSection</code> et <code>#buildingsSection</code> déplacés hors de <code>.columns</code>, directement dans le <code>&lt;body&gt;</code>.</li>
+                    <li>Suppression de la div <code>.columns</code> autour des sections pour une mise en page plus
+                        flexible avec Flexbox.</li>
+                    <li><code>#fabricationSection</code> et <code>#buildingsSection</code> déplacés hors de
+                        <code>.columns</code>, directement dans le <code>&lt;body&gt;</code>.</li>
                 </ul>
             </li>
         </ul>
@@ -57,12 +73,14 @@
         <ul>
             <li><strong>Affichage cohérent</strong> :
                 <ul>
-                    <li>Correction de l’affichage initial du bandeau <code>#techBanner</code> pour qu’il soit visible dès le chargement, même à l’Âge de Pierre.</li>
+                    <li>Correction de l’affichage initial du bandeau <code>#techBanner</code> pour qu’il soit visible
+                        dès le chargement, même à l’Âge de Pierre.</li>
                 </ul>
             </li>
             <li><strong>Optimisation</strong> :
                 <ul>
-                    <li>Suppression des styles redondants dans <code>#saveLoadSection</code> (ex. <code>pointer-events: auto</code> déjà implicite).</li>
+                    <li>Suppression des styles redondants dans <code>#saveLoadSection</code> (ex.
+                        <code>pointer-events: auto</code> déjà implicite).</li>
                 </ul>
             </li>
         </ul>
@@ -71,29 +89,35 @@
     <div class="version">
         <h2>Version 1.9</h2>
         <p><strong>Date</strong> : 12 avril 2025</p>
-        <p><strong>Description</strong> : Introduction de la boulangerie pour automatiser la production de pain, amélioration de la gestion des âges, et ajustements ergonomiques.</p>
+        <p><strong>Description</strong> : Introduction de la boulangerie pour automatiser la production de pain,
+            amélioration de la gestion des âges, et ajustements ergonomiques.</p>
 
         <h3>Ajouts</h3>
         <ul>
             <li><strong>Nouveau bâtiment</strong> :
                 <ul>
-                    <li><strong>Boulangerie</strong> : Produit automatiquement du pain à partir de farine et d’eau (coût : 50 bois, 20 pierre, 5 farine, disponible à l’Âge de l’Agriculture).</li>
+                    <li><strong>Boulangerie</strong> : Produit automatiquement du pain à partir de farine et d’eau (coût
+                        : 50 bois, 20 pierre, 5 farine, disponible à l’Âge de l’Agriculture).</li>
                 </ul>
             </li>
             <li><strong>Nouvel indice</strong> :
                 <ul>
-                    <li>"Construis une boulangerie pour produire du pain automatiquement !" (condition : Âge de l’Agriculture et aucune boulangerie, coût : 5 farine).</li>
+                    <li>"Construis une boulangerie pour produire du pain automatiquement !" (condition : Âge de
+                        l’Agriculture et aucune boulangerie, coût : 5 farine).</li>
                 </ul>
             </li>
             <li><strong>Gestion des âges</strong> :
                 <ul>
-                    <li>Introduction de la variable <code>unlockedAges</code> pour suivre les âges débloqués, avec affichage dans <code>#agesList</code>.</li>
-                    <li>Fonction <code>getAgeTooltip</code> ajoutée pour fournir des descriptions contextuelles des âges dans <code>#agesList</code>.</li>
+                    <li>Introduction de la variable <code>unlockedAges</code> pour suivre les âges débloqués, avec
+                        affichage dans <code>#agesList</code>.</li>
+                    <li>Fonction <code>getAgeTooltip</code> ajoutée pour fournir des descriptions contextuelles des âges
+                        dans <code>#agesList</code>.</li>
                 </ul>
             </li>
             <li><strong>Cheatcode</strong> :
                 <ul>
-                    <li>Ajout d’un cheatcode (<code>fmenguy</code>) qui, une fois saisi, active un mode triche ajoutant 100 unités de chaque ressource (baies, viande, bois, pierre, eau) par clic.</li>
+                    <li>Ajout d’un cheatcode (<code>fmenguy</code>) qui, une fois saisi, active un mode triche ajoutant
+                        100 unités de chaque ressource (baies, viande, bois, pierre, eau) par clic.</li>
                 </ul>
             </li>
         </ul>
@@ -102,30 +126,38 @@
         <ul>
             <li><strong>Production de pain</strong> :
                 <ul>
-                    <li>Suppression de l’option manuelle de fabrication de pain (<code>craftBread</code>) dans <code>#fabricationSection</code>.</li>
-                    <li>La boulangerie prend en charge la production automatique dans <code>gameLoop</code> (2 farine + 1 eau par boulangerie par seconde).</li>
+                    <li>Suppression de l’option manuelle de fabrication de pain (<code>craftBread</code>) dans
+                        <code>#fabricationSection</code>.</li>
+                    <li>La boulangerie prend en charge la production automatique dans <code>gameLoop</code> (2 farine +
+                        1 eau par boulangerie par seconde).</li>
                 </ul>
             </li>
             <li><strong>Affichage des âges</strong> :
                 <ul>
-                    <li><code>#techSection</code> remplacé par <code>#techBanner</code> avec <code>#agesList</code>, affichant les âges débloqués avec une étoile pour l’âge en cours.</li>
-                    <li>Ajout de tooltips dynamiques pour chaque âge dans <code>#agesList</code> via <code>getAgeTooltip</code>.</li>
+                    <li><code>#techSection</code> remplacé par <code>#techBanner</code> avec <code>#agesList</code>,
+                        affichant les âges débloqués avec une étoile pour l’âge en cours.</li>
+                    <li>Ajout de tooltips dynamiques pour chaque âge dans <code>#agesList</code> via
+                        <code>getAgeTooltip</code>.</li>
                 </ul>
             </li>
             <li><strong>Stockage initial</strong> :
                 <ul>
-                    <li><code>maxWoodStorage</code> et <code>maxStoneStorage</code> initialisés à 1000 (au lieu de 0) pour une progression plus fluide.</li>
+                    <li><code>maxWoodStorage</code> et <code>maxStoneStorage</code> initialisés à 1000 (au lieu de 0)
+                        pour une progression plus fluide.</li>
                 </ul>
             </li>
             <li><strong>Ergonomie</strong> :
                 <ul>
                     <li>Footer simplifié avec le lien changelog déplacé sous le texte de version.</li>
-                    <li><code>#purchasedHintsList</code> affiché par défaut (<code>display: block</code>) pour plus de visibilité.</li>
+                    <li><code>#purchasedHintsList</code> affiché par défaut (<code>display: block</code>) pour plus de
+                        visibilité.</li>
                 </ul>
             </li>
             <li><strong>Messages d’aide</strong> :
                 <ul>
-                    <li>Ajout de messages dans <code>#narrative</code> pour guider vers l’Âge de l’Agriculture ("Construis des moulins et recrute des fermiers...") et la boulangerie ("Produis plus de farine...").</li>
+                    <li>Ajout de messages dans <code>#narrative</code> pour guider vers l’Âge de l’Agriculture
+                        ("Construis des moulins et recrute des fermiers...") et la boulangerie ("Produis plus de
+                        farine...").</li>
                 </ul>
             </li>
         </ul>
@@ -134,17 +166,21 @@
         <ul>
             <li><strong>Sauvegarde</strong> :
                 <ul>
-                    <li>Ajout de <code>bakeries</code> et <code>unlockedAges</code> dans les données de sauvegarde (<code>saveGame</code>, <code>loadGame</code>, <code>exportSave</code>, <code>importSave</code>).</li>
+                    <li>Ajout de <code>bakeries</code> et <code>unlockedAges</code> dans les données de sauvegarde
+                        (<code>saveGame</code>, <code>loadGame</code>, <code>exportSave</code>,
+                        <code>importSave</code>).</li>
                 </ul>
             </li>
             <li><strong>Boutons</strong> :
                 <ul>
-                    <li>Ajout de vérifications explicites pour désactiver les boutons <code>#craftSawmillBtn</code> et <code>#craftBreadBtn</code> (si présent) en fonction des ressources et de l’âge.</li>
+                    <li>Ajout de vérifications explicites pour désactiver les boutons <code>#craftSawmillBtn</code> et
+                        <code>#craftBreadBtn</code> (si présent) en fonction des ressources et de l’âge.</li>
                 </ul>
             </li>
             <li><strong>Exploration</strong> :
                 <ul>
-                    <li>Ajout de logs console pour déboguer les timers d’exploration (<code>explorationTimer</code>).</li>
+                    <li>Ajout de logs console pour déboguer les timers d’exploration (<code>explorationTimer</code>).
+                    </li>
                 </ul>
             </li>
         </ul>
@@ -153,19 +189,24 @@
     <div class="version">
         <h2>Version 1.8</h2>
         <p><strong>Date</strong> : 11 avril 2025</p>
-        <p><strong>Description</strong> : Optimisation de l’interface utilisateur avec des améliorations ergonomiques, introduction du pain dans les bâtiments, et corrections de bugs.</p>
+        <p><strong>Description</strong> : Optimisation de l’interface utilisateur avec des améliorations ergonomiques,
+            introduction du pain dans les bâtiments, et corrections de bugs.</p>
 
         <h3>Ajouts</h3>
         <ul>
             <li><strong>Fabrication de pain</strong> :
                 <ul>
-                    <li>Nouvelle option dans <code>#buildingsSection</code> pour fabriquer du pain (coût : 2 farine, 1 eau, disponible à l’Âge de l’Agriculture).</li>
+                    <li>Nouvelle option dans <code>#buildingsSection</code> pour fabriquer du pain (coût : 2 farine, 1
+                        eau, disponible à l’Âge de l’Agriculture).</li>
                 </ul>
             </li>
             <li><strong>Ergonomie</strong> :
                 <ul>
-                    <li>Ajout de styles pour <code>#saveLoadSection</code> (<code>margin-bottom: 40px</code>, <code>pointer-events: auto</code>, <code>z-index: 10</code>) pour éviter les chevauchements avec le footer.</li>
-                    <li>Boutons de sauvegarde renommés avec des IDs explicites (<code>#saveGameBtn</code>, <code>#loadGameBtn</code>, <code>#exportSaveBtn</code>, <code>#importSaveBtn</code>).</li>
+                    <li>Ajout de styles pour <code>#saveLoadSection</code> (<code>margin-bottom: 40px</code>,
+                        <code>pointer-events: auto</code>, <code>z-index: 10</code>) pour éviter les chevauchements avec
+                        le footer.</li>
+                    <li>Boutons de sauvegarde renommés avec des IDs explicites (<code>#saveGameBtn</code>,
+                        <code>#loadGameBtn</code>, <code>#exportSaveBtn</code>, <code>#importSaveBtn</code>).</li>
                 </ul>
             </li>
         </ul>
@@ -174,19 +215,24 @@
         <ul>
             <li><strong>Structure HTML</strong> :
                 <ul>
-                    <li><code>#fabricationSection</code> et <code>#buildingsSection</code> déplacés dans une div <code>.columns</code> pour une mise en page cohérente avec <code>#workerSection</code>, <code>#hintSection</code>, et <code>#relicSection</code>.</li>
+                    <li><code>#fabricationSection</code> et <code>#buildingsSection</code> déplacés dans une div
+                        <code>.columns</code> pour une mise en page cohérente avec <code>#workerSection</code>,
+                        <code>#hintSection</code>, et <code>#relicSection</code>.</li>
                     <li><code>#villageStats</code> supprimé, car non utilisé dans cette version.</li>
                 </ul>
             </li>
             <li><strong>Affichage</strong> :
                 <ul>
-                    <li><code>#purchasedHintsList</code> passe à <code>display: block</code> par défaut pour une meilleure accessibilité.</li>
-                    <li>Footer aligné à gauche (<code>justify-content: flex-start</code>) avec le lien changelog affiché en dessous de la version.</li>
+                    <li><code>#purchasedHintsList</code> passe à <code>display: block</code> par défaut pour une
+                        meilleure accessibilité.</li>
+                    <li>Footer aligné à gauche (<code>justify-content: flex-start</code>) avec le lien changelog affiché
+                        en dessous de la version.</li>
                 </ul>
             </li>
             <li><strong>Gestion des villages</strong> :
                 <ul>
-                    <li>Ajustement de <code>foundVillage</code> pour exiger <code>(villages + 1) * 50</code> villageois et <code>villages + 1</code> chefs, clarifiant les besoins pour chaque nouveau village.</li>
+                    <li>Ajustement de <code>foundVillage</code> pour exiger <code>(villages + 1) * 50</code> villageois
+                        et <code>villages + 1</code> chefs, clarifiant les besoins pour chaque nouveau village.</li>
                 </ul>
             </li>
         </ul>
@@ -195,12 +241,15 @@
         <ul>
             <li><strong>Sauvegarde</strong> :
                 <ul>
-                    <li>Mise à jour des fonctions <code>saveGame</code>, <code>loadGame</code>, <code>exportSave</code>, <code>importSave</code> pour inclure <code>villages</code> et gérer correctement <code>villageFounded</code>.</li>
+                    <li>Mise à jour des fonctions <code>saveGame</code>, <code>loadGame</code>, <code>exportSave</code>,
+                        <code>importSave</code> pour inclure <code>villages</code> et gérer correctement
+                        <code>villageFounded</code>.</li>
                 </ul>
             </li>
             <li><strong>Affichage dynamique</strong> :
                 <ul>
-                    <li>Correction de l’affichage conditionnel de <code>#breadSection</code> pour apparaître uniquement dans l’Âge de l’Agriculture.</li>
+                    <li>Correction de l’affichage conditionnel de <code>#breadSection</code> pour apparaître uniquement
+                        dans l’Âge de l’Agriculture.</li>
                 </ul>
             </li>
         </ul>
@@ -209,100 +258,127 @@
     <div class="version">
         <h2>Version 1.7</h2>
         <p><strong>Date</strong> : 10 avril 2025</p>
-        <p><strong>Description</strong> : Amélioration de l’interface utilisateur avec réorganisation des sections, nouveaux bâtiments pour la gestion des ressources, et ajustements pour une meilleure progression.</p>
-        
+        <p><strong>Description</strong> : Amélioration de l’interface utilisateur avec réorganisation des sections,
+            nouveaux bâtiments pour la gestion des ressources, et ajustements pour une meilleure progression.</p>
+
         <h3>Ajouts</h3>
         <ul>
             <li><strong>Nouveaux bâtiments</strong> :
                 <ul>
-                    <li><strong>Scierie</strong> : Produit automatiquement du bois (coût : 50 bois, 20 pierre, 5 métaux, disponible à l’Âge des Métaux).</li>
-                    <li><strong>Carrière de Pierre</strong> : Produit automatiquement de la pierre (coût : 50 bois, 20 pierre, 5 métaux, disponible à l’Âge des Métaux).</li>
-                    <li><strong>Entrepôt</strong> : Augmente la capacité de stockage de 50 000 unités pour bois, pierre, eau, métaux, herbes, blé et farine (coût : 100 bois, 50 pierre, 10 métaux, disponible à l’Âge des Métaux).</li>
+                    <li><strong>Scierie</strong> : Produit automatiquement du bois (coût : 50 bois, 20 pierre, 5 métaux,
+                        disponible à l’Âge des Métaux).</li>
+                    <li><strong>Carrière de Pierre</strong> : Produit automatiquement de la pierre (coût : 50 bois, 20
+                        pierre, 5 métaux, disponible à l’Âge des Métaux).</li>
+                    <li><strong>Entrepôt</strong> : Augmente la capacité de stockage de 50 000 unités pour bois, pierre,
+                        eau, métaux, herbes, blé et farine (coût : 100 bois, 50 pierre, 10 métaux, disponible à l’Âge
+                        des Métaux).</li>
                 </ul>
             </li>
             <li><strong>Nouveaux indices</strong> :
                 <ul>
                     <li>"Fabrique au moins 25 haches !" (condition : avant chef et &lt; 25 haches, coût : 50 bois).</li>
-                    <li>"Construis un atelier pour augmenter la limite des fibres !" (condition : fibres découvertes et ≥ 150 fibres sans atelier, coût : 100 fibres).</li>
+                    <li>"Construis un atelier pour augmenter la limite des fibres !" (condition : fibres découvertes et
+                        ≥ 150 fibres sans atelier, coût : 100 fibres).</li>
                     <li>"Affiche l’effet des dons débloqués" (condition : ≥ 5 éclats d’éternité, coût : 5 éclats).</li>
-                    <li>"Tu peux réorganiser les sections Fabrication et Bâtiments par glisser-déposer !" (condition : bricoleur ou ressource avancée découverte, gratuit).</li>
+                    <li>"Tu peux réorganiser les sections Fabrication et Bâtiments par glisser-déposer !" (condition :
+                        bricoleur ou ressource avancée découverte, gratuit).</li>
                 </ul>
             </li>
-            <li><strong>Réorganisation par glisser-déposer</strong> : Ajout de la fonctionnalité pour réorganiser les éléments dans les sections "Fabrication" et "Bâtiments" via drag-and-drop, sauvegardée dans les données de jeu.</li>
-            <li><strong>Gestion des villages multiples</strong> : Possibilité de fonder jusqu’à 10 villages (50 villageois et 1 chef par village supplémentaire).</li>
+            <li><strong>Réorganisation par glisser-déposer</strong> : Ajout de la fonctionnalité pour réorganiser les
+                éléments dans les sections "Fabrication" et "Bâtiments" via drag-and-drop, sauvegardée dans les données
+                de jeu.</li>
+            <li><strong>Gestion des villages multiples</strong> : Possibilité de fonder jusqu’à 10 villages (50
+                villageois et 1 chef par village supplémentaire).</li>
             <li><strong>Footer amélioré</strong> : Ajout d’un lien cliquable vers le changelog dans le footer.</li>
         </ul>
 
         <h3>Modifications</h3>
         <ul>
-            <li><strong>Cueilleurs</strong> : Tooltip mis à jour dynamiquement pour indiquer la récolte de fibres une fois découvertes ("Un cueilleur ramasse des baies et des fibres pour toi").</li>
-            <li><strong>Chef</strong> : Suppression de la limite à 1 chef, permettant plusieurs chefs pour gérer plusieurs villages.</li>
+            <li><strong>Cueilleurs</strong> : Tooltip mis à jour dynamiquement pour indiquer la récolte de fibres une
+                fois découvertes ("Un cueilleur ramasse des baies et des fibres pour toi").</li>
+            <li><strong>Chef</strong> : Suppression de la limite à 1 chef, permettant plusieurs chefs pour gérer
+                plusieurs villages.</li>
             <li><strong>Stockage des ressources</strong> :
                 <ul>
-                    <li>Bois, pierre, eau, métaux, herbes, blé et farine bénéficient désormais de limites de stockage augmentées par les entrepôts.</li>
+                    <li>Bois, pierre, eau, métaux, herbes, blé et farine bénéficient désormais de limites de stockage
+                        augmentées par les entrepôts.</li>
                     <li>Nourriture (baies, viande, pain) et fibres restent hors stockage d’entrepôt.</li>
                 </ul>
             </li>
             <li><strong>Fibres</strong> : Réinitialisation à 0 lors de leur découverte par les explorateurs.</li>
-            <li><strong>Sauvegarde</strong> : Ajout des ordres de "Fabrication" et "Bâtiments" dans les données sauvegardées.</li>
+            <li><strong>Sauvegarde</strong> : Ajout des ordres de "Fabrication" et "Bâtiments" dans les données
+                sauvegardées.</li>
         </ul>
 
         <h3>Corrections</h3>
         <ul>
-            <li><strong>Tooltip des indices</strong> : Affichage correct des coûts et conditions dans <code>#hintCost</code>.</li>
+            <li><strong>Tooltip des indices</strong> : Affichage correct des coûts et conditions dans
+                <code>#hintCost</code>.</li>
         </ul>
     </div>
 
     <div class="version">
         <h2>Version 1.6</h2>
         <p><strong>Date</strong> : [Non spécifiée dans le document]</p>
-        <p><strong>Description</strong> : Amélioration de la gestion des âges, ajustements de l’interface et corrections mineures.</p>
+        <p><strong>Description</strong> : Amélioration de la gestion des âges, ajustements de l’interface et corrections
+            mineures.</p>
 
         <h3>Ajouts</h3>
         <ul>
-            <li><strong>Section Pain dans Fabrication</strong> : Option pour fabriquer du pain ajoutée dans la section Fabrication (coût : 2 farine, 1 eau, disponible à l’Âge de l’Agriculture).</li>
-            <li><strong>Explorateurs</strong> : Réinitialisation des fibres à 0 lors de leur découverte (non explicite dans le changelog 1.5, mais observée dans le code).</li>
+            <li><strong>Section Pain dans Fabrication</strong> : Option pour fabriquer du pain ajoutée dans la section
+                Fabrication (coût : 2 farine, 1 eau, disponible à l’Âge de l’Agriculture).</li>
+            <li><strong>Explorateurs</strong> : Réinitialisation des fibres à 0 lors de leur découverte (non explicite
+                dans le changelog 1.5, mais observée dans le code).</li>
         </ul>
 
         <h3>Modifications</h3>
         <ul>
             <li><strong>Version dans le footer</strong> : Mise à jour du footer pour indiquer "Version 1.6".</li>
-            <li><strong>Affichage des ressources</strong> : Pain ajouté comme ressource affichée dans <code>#resources</code> avec tooltip "Le pain nourrit mieux que les baies".</li>
-            <li><strong>Âge de l’Agriculture</strong> : Pain disponible dans la section Ressources une fois cet âge atteint.</li>
+            <li><strong>Affichage des ressources</strong> : Pain ajouté comme ressource affichée dans
+                <code>#resources</code> avec tooltip "Le pain nourrit mieux que les baies".</li>
+            <li><strong>Âge de l’Agriculture</strong> : Pain disponible dans la section Ressources une fois cet âge
+                atteint.</li>
         </ul>
 
         <h3>Corrections</h3>
         <ul>
-            <li><strong>Chargement de sauvegarde</strong> : Correction de l’affichage des sections après chargement pour refléter correctement l’état du jeu (ex. <code>#chiefSection</code>, <code>#tinkerSection</code>).</li>
+            <li><strong>Chargement de sauvegarde</strong> : Correction de l’affichage des sections après chargement pour
+                refléter correctement l’état du jeu (ex. <code>#chiefSection</code>, <code>#tinkerSection</code>).</li>
         </ul>
     </div>
 
     <div class="version">
         <h2>Version 1.5</h2>
         <p><strong>Date</strong> : [Non spécifiée dans le document]</p>
-        <p><strong>Description</strong> : Consolidation des mécaniques de base avec une progression plus fluide et des indices retravaillés.</p>
+        <p><strong>Description</strong> : Consolidation des mécaniques de base avec une progression plus fluide et des
+            indices retravaillés.</p>
 
         <h3>Ajouts</h3>
         <ul>
             <li><strong>Nouveaux indices</strong> :
                 <ul>
                     <li>"Une saison dure 30 minutes" (coût : 30 baies).</li>
-                    <li>"La viande est plus nourrissante que les baies" (condition : 10 villageois, achat : 10 cueilleurs).</li>
-                    <li>"Tu es prêt pour un chef !" (condition : 20 haches et 20 villageois, coût : 100 bois, 1 hache).</li>
+                    <li>"La viande est plus nourrissante que les baies" (condition : 10 villageois, achat : 10
+                        cueilleurs).</li>
+                    <li>"Tu es prêt pour un chef !" (condition : 20 haches et 20 villageois, coût : 100 bois, 1 hache).
+                    </li>
                     <li>"Attire un bricoleur" (condition : 1 chef, achat : 40 villageois).</li>
                     <li>"Construis un puits" (condition : 100 eau, coût : 50 eau).</li>
                     <li>"Essaie d’avoir 10 bricoleurs" (condition : 1 bricoleur, 100 bois, 100 pierre).</li>
                     <li>"Ajoute plus de puits" (condition : 1 puits, 50 seaux, coût : 100 eau).</li>
                 </ul>
             </li>
-            <li><strong>Chercheur</strong> : Nouveau rôle débloqué avec 10 bricoleurs (coût : 10 bricoleurs), prépare de futures technologies.</li>
+            <li><strong>Chercheur</strong> : Nouveau rôle débloqué avec 10 bricoleurs (coût : 10 bricoleurs), prépare de
+                futures technologies.</li>
             <li><strong>Saisons de 30 minutes</strong> : <code>seasonDuration</code> passé de 120 à 1800 secondes.</li>
-            <li><strong>Aide active</strong> : Message dans <code>#narrative</code> quand l’eau atteint 0 avec des villageois ("Attention, un villageois consomme de l’eau ! Puise de l’eau.").</li>
+            <li><strong>Aide active</strong> : Message dans <code>#narrative</code> quand l’eau atteint 0 avec des
+                villageois ("Attention, un villageois consomme de l’eau ! Puise de l’eau.").</li>
         </ul>
 
         <h3>Modifications</h3>
         <ul>
-            <li><strong>Consommation de nourriture</strong> : Priorité inversée pour utiliser le stock le plus abondant (pain * 5, viande * 3, baies * 1) au lieu de baies en priorité.</li>
+            <li><strong>Consommation de nourriture</strong> : Priorité inversée pour utiliser le stock le plus abondant
+                (pain * 5, viande * 3, baies * 1) au lieu de baies en priorité.</li>
             <li><strong>Village</strong> : Fonder un village ne consomme plus les 50 villageois.</li>
             <li><strong>Puits et seaux</strong> :
                 <ul>
@@ -310,26 +386,32 @@
                     <li>Chaque puits ajoute 1000 à <code>maxWater</code> (cumulatif).</li>
                 </ul>
             </li>
-            <li><strong>Bricoleurs</strong> : Suppression de la limite à 1, désormais cumulables pour débloquer le chercheur.</li>
+            <li><strong>Bricoleurs</strong> : Suppression de la limite à 1, désormais cumulables pour débloquer le
+                chercheur.</li>
             <li><strong>Indices</strong> :
                 <ul>
                     <li>Suppression du préfixe "Nouvel indice disponible" dans <code>#narrative</code>.</li>
-                    <li>Affichage personnalisé dans <code>#hintCost</code> (ex. "Avoir au moins 10 cueilleurs", "Objectif : 10 bricoleurs").</li>
+                    <li>Affichage personnalisé dans <code>#hintCost</code> (ex. "Avoir au moins 10 cueilleurs",
+                        "Objectif : 10 bricoleurs").</li>
                 </ul>
             </li>
-            <li><strong>Récolte d’eau</strong> : Ajout d’un bonus par bricoleur (0.2 + 0.1 * <code>tinkers</code> par seau).</li>
+            <li><strong>Récolte d’eau</strong> : Ajout d’un bonus par bricoleur (0.2 + 0.1 * <code>tinkers</code> par
+                seau).</li>
             <li><strong>Traduction</strong> : "Water" traduit en "eau" dans les indices et messages d’erreur.</li>
         </ul>
 
         <h3>Corrections</h3>
         <ul>
-            <li><strong>Achat d’indices</strong> : Correction de <code>window[resource]</code> pour utiliser directement les variables globales (<code>berries</code>, <code>wood</code>, etc.).</li>
-            <li><strong>Bouton d’achat d’indices</strong> : Désactivation correcte après achat si aucune condition suivante n’est remplie.</li>
+            <li><strong>Achat d’indices</strong> : Correction de <code>window[resource]</code> pour utiliser directement
+                les variables globales (<code>berries</code>, <code>wood</code>, etc.).</li>
+            <li><strong>Bouton d’achat d’indices</strong> : Désactivation correcte après achat si aucune condition
+                suivante n’est remplie.</li>
         </ul>
     </div>
 
     <footer>
         <span>Forge des Âges - Retour au jeu : <a href="../index.html">Jouer</a></span>
-      </footer>
+    </footer>
 </body>
+
 </html>
