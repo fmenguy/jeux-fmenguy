@@ -54,7 +54,6 @@ export let buildingsOrder = [
 ];
 
 export function updateDisplay() {
-
   document.getElementById("berries").textContent = Math.floor(berries);
   document.getElementById("wood").textContent = Math.floor(wood);
   document.getElementById("stone").textContent = Math.floor(stone);
@@ -116,7 +115,6 @@ export function updateDisplay() {
 
   document.getElementById("recruitVillagerBtn").disabled = berries < 5;
   const maxChiefs = Math.floor(villagers / 25);
-
   document.getElementById("appointChiefBtn").disabled = !(axes >= 25 && villagers >= 25 && chief < maxChiefs);
   document.getElementById("recruitTinkerBtn").disabled = !(wood >= 100 && stone >= 100 && villageFounded);
   document.getElementById("recruitPickerBtn").disabled = !(berries >= 10 && wood >= 5);
@@ -129,34 +127,30 @@ export function updateDisplay() {
   document.getElementById("seekShardBtn").disabled = !(wood >= 200 && stone >= 100 && water >= 50);
   document.getElementById("gatherMetalsBtn").disabled = mines < 1;
 
-  // Affichage du bandeau Technologie
   const techBanner = document.getElementById("techBanner");
   const currentAgeDisplay = document.getElementById("currentAgeDisplay");
-  techBanner.style.display = "block"; // Toujours visible
+  techBanner.style.display = "block";
   currentAgeDisplay.textContent = techUnlocked ? currentAge : "Âge de Pierre";
 
-  // Bordure dynamique selon l'âge
   switch (techUnlocked ? currentAge : "Âge de Pierre") {
     case "Âge de Pierre":
-      techBanner.style.border = "1px solid #8c8c8c"; // Gris pierre
+      techBanner.style.border = "1px solid #8c8c8c";
       break;
     case "Âge des Métaux":
-      techBanner.style.border = "1px solid #cd7f32"; // Bronze
+      techBanner.style.border = "1px solid #cd7f32";
       break;
     case "Âge de l’Agriculture":
-      techBanner.style.border = "1px solid #4CAF50"; // Vert fertile
+      techBanner.style.border = "1px solid #4CAF50";
       break;
     default:
-      techBanner.style.border = "1px solid #d4a017"; // Par défaut
+      techBanner.style.border = "1px solid #d4a017";
   }
 
-  // Aide pour l'Âge de l'Agriculture
   if (currentAge !== "Âge de l’Agriculture" && wheatFields > 0) {
     document.getElementById("narrative").textContent =
       "Construis des moulins et recrute des fermiers pour atteindre l’Âge de l’Agriculture !";
   }
 
-  // Aide pour la farine
   if (currentAge === "Âge de l’Agriculture" && flour < 5 && mills > 0) {
     document.getElementById("narrative").textContent =
       "Produis plus de farine avec tes moulins pour construire une boulangerie !";
@@ -194,20 +188,21 @@ export function updateDisplay() {
   document.getElementById("loadGameBtn").disabled = false;
   document.getElementById("exportSaveBtn").disabled = false;
   document.getElementById("importSaveBtn").disabled = false;
-  document.getElementById("villagesDisplay").style.display = villageFounded ? "block" : "none";
-const villagesList = document.getElementById("villagesList");
-villagesList.innerHTML = "";
-if (villagesData && Array.isArray(villagesData)) {
-  villagesData.forEach((village, index) => {
-    const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
-    villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
-  });
-} else {
-  villagesList.innerHTML = "<li>Aucun village fondé.</li>";
-}
-document.getElementById("totalPopulation").textContent = getTotalPopulation();
-  updateHintButton();
 
+  document.getElementById("villagesDisplay").style.display = villageFounded ? "block" : "none";
+  const villagesList = document.getElementById("villagesList");
+  villagesList.innerHTML = "";
+  if (villagesData && Array.isArray(villagesData)) {
+    villagesData.forEach((village, index) => {
+      const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
+      villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
+    });
+  } else {
+    villagesList.innerHTML = "<li>Aucun village fondé.</li>";
+  }
+  document.getElementById("totalPopulation").textContent = getTotalPopulation();
+
+  updateHintButton();
 }
 
 export function updateSeasonDisplay() {
