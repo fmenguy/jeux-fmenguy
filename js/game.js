@@ -1,3 +1,5 @@
+import { updateDisplay, updateSeasonDisplay, showAlert, hideAlert, updateHintButton } from './ui.js';
+
 export let villageFounded = false;
 export let berries = 0,
   wood = 0,
@@ -45,7 +47,7 @@ export let villages = 0,
   techUnlocked = false,
   eternityShards = 0,
   deathTimer = 0;
-explorationTimer = 0,
+  export let explorationTimer = 0,
   explorationActive = false;
 export let discoveredFibers = false,
   discoveredMetals = false,
@@ -1492,18 +1494,6 @@ export function gameLoop() {
     deathTimer = 0;
   }
 
-  if (currentHint && !currentHint.condition()) {
-    currentHint = null;
-    console.log("Indice invalide, réinitialisé.");
-  }
-
-  let availableHint = dynamicHints.find(
-    (hint) => hint.condition() && !purchasedHints.includes(hint.id)
-  );
-  if (availableHint && !currentHint) {
-    currentHint = availableHint;
-  }
-
   if (villagers >= 1 && water === 0) {
     document.getElementById("narrative").textContent =
       "Attention, un villageois consomme de l’eau ! Puise de l’eau.";
@@ -2168,43 +2158,76 @@ updateDisplay = function () {
   applyCraftOrder();
   enableDragAndDrop();
 };
-// Variable pour stocker les touches tapées
-let cheatCodeBuffer = "";
-export const cheatCode = "fmenguy";
-let cheatModeActive = false;
-
-// Écouteur pour les touches
-document.addEventListener("keydown", (event) => {
-  // Ajoute la touche tapée au buffer (en minuscule)
-  cheatCodeBuffer += event.key.toLowerCase();
-
-  // Garde seulement les 7 derniers caractères (longueur de "fmenguy")
-  if (cheatCodeBuffer.length > cheatCode.length) {
-    cheatCodeBuffer = cheatCodeBuffer.slice(-cheatCode.length);
-  }
-
-  // Vérifie si le cheatcode est complet
-  if (cheatCodeBuffer === cheatCode) {
-    cheatModeActive = true;
-    cheatCodeBuffer = ""; // Réinitialise le buffer
-    document.getElementById("narrative").textContent = "Cheatcode activé : clique pour +100 ressources !";
-  }
-});
-
-// Écouteur pour les clics quand le cheat est actif
-document.addEventListener("click", () => {
-  if (cheatModeActive) {
-    berries += 100;
-    meat += 100;
-    wood += 100;
-    stone += 100;
-    water += 100;
-    updateDisplay();
-  }
-});
-
 
 export function initGame() {
   // Initialisation du jeu (peut être vide pour l’instant ou charger une sauvegarde si tu veux)
   console.log("Jeu initialisé");
 }
+
+export function setBerries(value) { berries = value; }
+export function setWood(value) { wood = value; }
+export function setStone(value) { stone = value; }
+export function setWater(value) { water = value; }
+export function setMeat(value) { meat = value; }
+export function setFibers(value) { fibers = value; }
+export function setMetals(value) { metals = value; }
+export function setHerbs(value) { herbs = value; }
+export function setWheat(value) { wheat = value; }
+export function setFlour(value) { flour = value; }
+export function setBread(value) { bread = value; }
+export function setMaxWater(value) { maxWater = value; }
+export function setMaxFibers(value) { maxFibers = value; }
+export function setMaxMetals(value) { maxMetals = value; }
+export function setMaxHerbs(value) { maxHerbs = value; }
+export function setMaxWheat(value) { maxWheat = value; }
+export function setMaxFlour(value) { maxFlour = value; }
+export function setMaxBread(value) { maxBread = value; }
+export function setAxes(value) { axes = value; }
+export function setBuckets(value) { buckets = value; }
+export function setWells(value) { wells = value; }
+export function setPickaxes(value) { pickaxes = value; }
+export function setBows(value) { bows = value; }
+export function setCoats(value) { coats = value; }
+export function setMetalAxes(value) { metalAxes = value; }
+export function setRemedies(value) { remedies = value; }
+export function setMines(value) { mines = value; }
+export function setWorkshops(value) { workshops = value; }
+export function setSawmills(value) { sawmills = value; }
+export function setStoneQuarries(value) { stoneQuarries = value; }
+export function setHerbalists(value) { herbalists = value; }
+export function setWheatFields(value) { wheatFields = value; }
+export function setMills(value) { mills = value; }
+export function setVillagers(value) { villagers = value; }
+export function setChief(value) { chief = value; }
+export function setTinkers(value) { tinkers = value; }
+export function setResearchers(value) { researchers = value; }
+export function setPickers(value) { pickers = value; }
+export function setHunters(value) { hunters = value; }
+export function setExplorers(value) { explorers = value; }
+export function setMiners(value) { miners = value; }
+export function setFarmers(value) { farmers = value; }
+export function setVillages(value) { villages = value; }
+export function setVillageFounded(value) { villageFounded = value; }
+export function setTechUnlocked(value) { techUnlocked = value; }
+export function setEternityShards(value) { eternityShards = value; }
+export function setCurrentSeason(value) { currentSeason = value; }
+export function setSeasonTimer(value) { seasonTimer = value; }
+export function setDeathTimer(value) { deathTimer = value; }
+export function setExplorationTimer(value) { explorationTimer = value; }
+export function setExplorationActive(value) { explorationActive = value; }
+export function setDiscoveredFibers(value) { discoveredFibers = value; }
+export function setDiscoveredMetals(value) { discoveredMetals = value; }
+export function setDiscoveredHerbs(value) { discoveredHerbs = value; }
+export function setCurrentAge(value) { currentAge = value; }
+export function setPurchasedHints(value) { purchasedHints = value; }
+export function setWarehouses(value) { warehouses = value; }
+export function setMaxWoodStorage(value) { maxWoodStorage = value; }
+export function setMaxStoneStorage(value) { maxStoneStorage = value; }
+export function setMaxWaterStorage(value) { maxWaterStorage = value; }
+export function setMaxMetalsStorage(value) { maxMetalsStorage = value; }
+export function setMaxHerbsStorage(value) { maxHerbsStorage = value; }
+export function setMaxWheatStorage(value) { maxWheatStorage = value; }
+export function setMaxFlourStorage(value) { maxFlourStorage = value; }
+export function setBakeries(value) { bakeries = value; }
+export function setUnlockedAges(value) { unlockedAges = value; }
+export function setCurrentHint(value) { currentHint = value; }
