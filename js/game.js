@@ -1001,7 +1001,7 @@ applyCraftOrder();
 enableDragAndDrop();
 
 // Surcharger updateDisplay pour réappliquer le drag-and-drop après chaque mise à jour
-const enhancedUpdateDisplay = function () {
+export const enhancedUpdateDisplay = function () {
   updateDisplay();
   applyCraftOrder();
   enableDragAndDrop();
