@@ -106,6 +106,9 @@ export function updateDisplay() {
   document.getElementById("sendExplorersBtn").disabled = !(berries >= 50 && wood >= 20 && villagers >= 10 && (!discoveredFibers || !discoveredMetals || !discoveredHerbs)) || explorationActive;
   document.getElementById("recruitMinerBtn").disabled = !(wood >= 10 && metals >= 5 && mines > 0);
   document.getElementById("recruitFarmerBtn").disabled = !(berries >= 10 && wood >= 5 && wheatFields > 0);
+
+  console.log("Valeurs pour foundVillageBtn:", { villagers, chief, villages });
+  
   document.getElementById("foundVillageBtn").disabled = !(villagers >= (villages + 1) * 50 && chief >= villages + 1 && villages < 10);
   document.getElementById("seekShardBtn").disabled = !(wood >= 200 && stone >= 100 && water >= 50);
   document.getElementById("gatherMetalsBtn").disabled = mines < 1;
