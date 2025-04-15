@@ -546,7 +546,7 @@ export function recruitVillager() {
 
 export function appointChief() {
   const maxChiefs = Math.floor(villagers / 25);
-  console.log("appointChief called", { villagers, chief, maxChiefs }); // Log pour déboguer
+
   if (axes >= 25 && villagers >= 25 && chief < maxChiefs) {
     setChief(chief + 1);
     document.getElementById("villageSection").style.display = "block";
@@ -626,7 +626,7 @@ export function sendExplorers() {
     setExplorers(explorers + 10);
     setExplorationActive(true);
     setExplorationTimer(30);
-    console.log("Exploration démarrée, timer =", explorationTimer);
+
     document.getElementById("narrative").textContent = "Les explorateurs partent à la découverte...";
     enhancedUpdateDisplay();
   } else {
@@ -667,7 +667,7 @@ export function recruitFarmer() {
 export function foundVillage() {
   const requiredVillagers = (villages + 1) * 50;
   const requiredChiefs = villages + 1;
-  console.log("foundVillage called", { villagers, chief, villages, requiredChiefs }); // Log avant
+
   if (villagers >= requiredVillagers && chief >= requiredChiefs && villages < 10) {
     setVillages(villages + 1);
     setVillageFounded(true);
@@ -677,7 +677,7 @@ export function foundVillage() {
     setCurrentSeason(1);
     enhancedUpdateDisplay();
     updateSeasonDisplay();
-    console.log("foundVillage after", { villagers, chief, villages }); // Log après
+
   } else if (villages >= 10) {
     showAlert("Tu as atteint la limite de 10 villages !");
   } else {
@@ -770,12 +770,12 @@ export function gameLoop() {
 
   if (explorationActive) {
     setExplorationTimer(explorationTimer - 1);
-    console.log("Exploration en cours, timer =", explorationTimer);
+
     if (explorationTimer <= 0) {
       setExplorers(explorers - 10);
       setVillagers(villagers + 10);
       setExplorationActive(false);
-      console.log("Exploration terminée, découverte en cours...");
+
       if (!discoveredFibers) {
         setDiscoveredFibers(true);
         setFibers(0);
@@ -914,7 +914,7 @@ export function gameLoop() {
 
   if (currentHint && !currentHint.condition()) {
     setCurrentHint(null);
-    console.log("Indice invalide, réinitialisé.");
+
   }
 
   const availableHint = dynamicHints.find(

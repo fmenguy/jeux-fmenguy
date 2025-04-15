@@ -177,7 +177,7 @@ export function loadGame(slot) {
     const maxChiefs = Math.floor(saveData.villagers / 25);
     if (saveData.chief > maxChiefs) {
       setChief(maxChiefs);
-      console.log("Chef limité après chargement", { oldChief: saveData.chief, newChief: maxChiefs });
+
     }
     enhancedUpdateDisplay();
     updateSeasonDisplay();
@@ -412,7 +412,7 @@ export function importSavePrompt() {
     const maxChiefs = Math.floor(saveData.villagers / 25);
     if (saveData.chief > maxChiefs) {
       setChief(maxChiefs);
-      console.log("Chef limité après chargement", { oldChief: saveData.chief, newChief: maxChiefs });
+
     }
     enhancedUpdateDisplay();
     updateSeasonDisplay();

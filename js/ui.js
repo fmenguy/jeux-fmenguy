@@ -40,7 +40,7 @@ export let buildingsOrder = [
 ];
 
 export function updateDisplay() {
-  console.log("updateDisplay before", { villagers, chief });
+
   document.getElementById("berries").textContent = Math.floor(berries);
   document.getElementById("wood").textContent = Math.floor(wood);
   document.getElementById("stone").textContent = Math.floor(stone);
@@ -101,7 +101,7 @@ export function updateDisplay() {
 
   document.getElementById("recruitVillagerBtn").disabled = berries < 5;
   const maxChiefs = Math.floor(villagers / 25);
-  console.log("updateDisplay: Chief limit check", { villagers, chief, maxChiefs });
+
   document.getElementById("appointChiefBtn").disabled = !(axes >= 25 && villagers >= 25 && chief < maxChiefs);
   document.getElementById("recruitTinkerBtn").disabled = !(wood >= 100 && stone >= 100 && villageFounded);
   document.getElementById("recruitPickerBtn").disabled = !(berries >= 10 && wood >= 5);
@@ -181,7 +181,7 @@ export function updateDisplay() {
   document.getElementById("importSaveBtn").disabled = false;
 
   updateHintButton();
-  console.log("updateDisplay after", { villagers, chief });
+
 }
 
 export function updateSeasonDisplay() {
