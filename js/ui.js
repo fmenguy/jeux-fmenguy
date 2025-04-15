@@ -81,9 +81,9 @@ export function updateDisplay() {
   document.getElementById("bakeries").textContent = bakeries;
 
   document.getElementById("mineSection").style.display = discoveredMetals ? "block" : "none";
-  document.getElementById("craftSawmillBtn").disabled = !(wood >= 50 && stone >= 20 && metals >= 5 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture"));
-  document.getElementById("craftStoneQuarryBtn").disabled = !(wood >= 50 && stone >= 20 && metals >= 5 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture"));
-  document.getElementById("craftWarehouseBtn").disabled = !(wood >= 100 && stone >= 50 && metals >= 10 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture"));
+  document.getElementById("craftSawmillBtn").disabled = !(wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture"));
+  document.getElementById("craftStoneQuarryBtn").disabled = !(wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture"));
+  document.getElementById("craftWarehouseBtn").disabled = !(wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === "Âge de l’Agriculture"));
   document.getElementById("craftAxeBtn").disabled = !(wood >= 5 && stone >= 2);
   document.getElementById("craftBucketBtn").disabled = !(wood >= 5 && stone >= 2);
   document.getElementById("craftWellBtn").disabled = !(wood >= 10 && stone >= 5);
@@ -169,9 +169,9 @@ export function updateDisplay() {
   document.getElementById("herbalistSection").style.display = discoveredHerbs ? "block" : "none";
   document.getElementById("wheatFieldSection").style.display = discoveredHerbs ? "block" : "none";
   document.getElementById("millSection").style.display = wheatFields > 0 ? "block" : "none";
-  document.getElementById("sawmillSection").style.display = currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture" ? "block" : "none";
-  document.getElementById("stoneQuarrySection").style.display = currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture" ? "block" : "none";
-  document.getElementById("warehouseSection").style.display = currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture" ? "block" : "none";
+  document.getElementById("sawmillSection").style.display = discoveredMetals || currentAge === "Âge de l’Agriculture" ? "block" : "none";
+  document.getElementById("stoneQuarrySection").style.display = discoveredMetals || currentAge === "Âge de l’Agriculture" ? "block" : "none";
+  document.getElementById("warehouseSection").style.display = discoveredMetals || currentAge === "Âge de l’Agriculture" ? "block" : "none";
   document.getElementById("saveGameBtn").disabled = false;
   document.getElementById("loadGameBtn").disabled = false;
   document.getElementById("exportSaveBtn").disabled = false;
