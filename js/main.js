@@ -48,10 +48,12 @@ window.buyHint = buyHint;
 window.toggleHints = toggleHints;
 
 initGame();
-enhancedUpdateDisplay();
-updateSeasonDisplay();
-enableDragAndDrop();
-applyCraftOrder();
+setTimeout(() => {
+  enhancedUpdateDisplay();
+  updateSeasonDisplay();
+  enableDragAndDrop();
+  applyCraftOrder();
+}, 0);
 
 // Initialisation de currentHint
 const availableHint = dynamicHints.find(
