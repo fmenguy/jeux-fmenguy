@@ -1,6 +1,6 @@
 import {
   villageFounded, berries, wood, stone, water, meat, fibers, metals, herbs, wheat, flour, bread,
-  maxWater, maxFibers, maxHerbs, maxMetals, // Ajoutez cette ligne
+  maxWater, maxFibers, maxHerbs, maxMetals, maxMetalsStorage, // Ajoutez maxMetalsStorage ici
   axes, buckets, wells, pickaxes, bows, coats, metalAxes, remedies,
   mines, workshops, sawmills, stoneQuarries, herbalists, wheatFields, mills, bakeries,
   villagers, chief, tinkers, researchers, pickers, hunters, explorers, miners, farmers, villages,
