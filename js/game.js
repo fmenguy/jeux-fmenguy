@@ -21,12 +21,8 @@ export function addVillage() {
 
 export function setVillagesData(value) { villagesData = value; }
 
-// Fonction pour calculer la population totale
 export function getTotalPopulation() {
-  return villagesData.reduce((total, village) => {
-    const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
-    return total + villagePop;
-  }, 0);
+  return villagers + chief + pickers + hunters + miners + farmers + tinkers + researchers + explorers;
 }
 
 // Ajout des imports/setters pour les nouvelles variables
