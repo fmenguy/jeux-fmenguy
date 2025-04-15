@@ -14,7 +14,6 @@
   border: 1px solid var(--primary-color);
 }
 
-
 html, body {
   height: 100%;
   margin: 0;
@@ -66,7 +65,7 @@ main {
   background-color: #2f231a;
   border-radius: 0.5rem;
   display: inline-block;
-  width: 90%; /* Remplacement de 300px */
+  width: 90%;
   max-width: 300px;
   vertical-align: top;
   box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3);
@@ -123,7 +122,7 @@ button:disabled {
 }
 
 .tooltip {
-  font-size: 0.8rem; /* Remplacement de 12px */
+  font-size: 0.8rem;
   color: #e0d5b8;
   display: block;
 }
@@ -168,7 +167,7 @@ footer {
     align-items: center;
   }
   button {
-    padding: 8px 16px; /* Boutons plus grands pour faciliter le toucher sur mobile */
+    padding: 8px 16px;
   }
   #narrative, #resources {
     margin: 10px;
@@ -266,52 +265,59 @@ footer {
   }
 }
 
+#narrative, #villagesList li, .tooltip {
+  overflow-wrap: break-word;
+}
+
 #villagesDisplay {
   margin: 20px auto;
-  padding: 15px;
-  background-color: #2f231a; /* Fond sombre cohérent avec le thème */
-  border-radius: 5px;
-  border: 1px solid #d4a017; /* Bordure dorée */
+  padding: 10px 15px;
+  background-color: rgba(47, 35, 26, 0.9); /* Légèrement plus clair que --background-dark */
+  border-top: 4px solid var(--primary-color); /* Bordure supérieure dorée */
+  border-bottom: 4px solid var(--primary-color); /* Bordure inférieure dorée */
+  border-left: none;
+  border-right: none;
+  border-radius: 0; /* Pas de bord arrondi pour un effet bandeau */
   width: 90%;
-  max-width: 400px;
-  text-align: left;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Ombre pour un effet de profondeur */
 }
 
 #villagesDisplay h2 {
-  color: #e0d5b8; /* Couleur claire pour le titre */
-  font-size: 18px;
-  margin-bottom: 10px;
-  text-align: center;
+  color: var(--secondary-color);
+  font-size: 20px;
+  margin-bottom: 15px;
+  text-transform: uppercase; /* Pour un look plus formel */
+  letter-spacing: 1px; /* Espacement pour plus d’élégance */
 }
 
 #villagesList {
-  list-style: none; /* Supprime les points de liste */
+  list-style: none;
   padding: 0;
-  margin: 0 0 10px 0;
+  margin: 0 0 15px 0;
 }
 
 #villagesList li {
-  padding: 8px 12px;
+  padding: 6px 10px;
   margin: 4px 0;
-  background-color: rgba(0, 0, 0, 0.3); /* Fond légèrement plus sombre */
+  background-color: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
-  color: #e0d5b8;
+  color: var(--secondary-color);
   font-size: 14px;
-  border-left: 3px solid #d4a017; /* Ligne dorée à gauche pour remplacer le point */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #villagesDisplay p {
-  color: #e0d5b8;
-  font-size: 14px;
-  text-align: center;
+  color: var(--secondary-color);
+  font-size: 16px;
+  margin: 0;
 }
 
 #totalPopulation {
-  color: #d4a017; /* Couleur dorée pour la population */
+  color: var(--primary-color);
   font-weight: bold;
-}
-
-
-#narrative, #villagesList li, .tooltip {
-  overflow-wrap: break-word; /* Anciennement word-wrap */
+  font-size: 18px;
 }
