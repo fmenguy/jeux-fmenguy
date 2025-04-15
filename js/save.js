@@ -71,7 +71,14 @@ export function saveGame(slot) {
     buildingsOrder,
     bakeries,
     unlockedAges,
+    villagesData,
+    maxPopulationPerVillage,
+    maxBuildingsPerVillage,
   };
+
+  setVillagesData(saveData.villagesData || []);
+  setMaxPopulationPerVillage(saveData.maxPopulationPerVillage || 250);
+  setMaxBuildingsPerVillage(saveData.maxBuildingsPerVillage || 2);
   localStorage.setItem(`forgeSave${slot}`, JSON.stringify(saveData));
   alert("Jeu sauvegardé !");
 }

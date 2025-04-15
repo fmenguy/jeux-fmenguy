@@ -1,6 +1,44 @@
 import { updateDisplay, updateSeasonDisplay, updateExplorationDisplay, showAlert, hideAlert, applyCraftOrder, enableDragAndDrop, enhancedUpdateDisplay } from './ui.js';
 
 
+// Structure pour représenter un village
+export let villagesData = []; // Tableau de villages, chaque village contient sa population et ses bâtiments
+
+// Fonctions pour gérer villagesData
+export function addVillage() {
+  villagesData.push({
+    population: {
+      villagers: 0,
+      chief: 0,
+      pickers: 0,
+      hunters: 0,
+      miners: 0,
+      farmers: 0,
+      tinkers: 0,
+      researchers: 0,
+      explorers: 0,
+    },
+    buildings: [], // Liste des bâtiments (par exemple, ["mine", "workshop"])
+  });
+}
+
+export function setVillagesData(value) { villagesData = value; }
+
+// Fonction pour calculer la population totale
+export function getTotalPopulation() {
+  return villagesData.reduce((total, village) => {
+    const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
+    return total + villagePop;
+  }, 0);
+}
+
+// Ajout des imports/setters pour les nouvelles variables
+export let maxPopulationPerVillage = 250;
+export let maxBuildingsPerVillage = 2;
+
+export function setMaxPopulationPerVillage(value) { maxPopulationPerVillage = value; }
+export function setMaxBuildingsPerVillage(value) { maxBuildingsPerVillage = value; }
+
 export let villageFounded = false;
 export let berries = 0,
   wood = 0,
@@ -223,6 +261,8 @@ export function getAgeTooltip(age) {
       return "Découverte des métaux, permettant des outils et bâtiments avancés.";
     case "Âge de l’Agriculture":
       return "Maîtrise de l’agriculture, avec production de blé, farine et pain.";
+    case "Âge des Cités": // Ajoutez ceci
+      return "Les villages se transforment en cités, marquant une ère de prospérité et d’organisation.";
     default:
       return "";
   }
@@ -379,16 +419,30 @@ export function craftRemedy() {
 }
 
 export function craftMine() {
-  if (wood >= 50 && stone >= 20 && tinkers >= 1 && discoveredMetals) {
+  const canAddBuilding = villagesData.some(village => village.buildings.length < maxBuildingsPerVillage);
+  if (wood >= 50 && stone >= 20 && tinkers >= 1 && miners >= 25 && discoveredMetals && canAddBuilding) {
     setWood(wood - 50);
     setStone(stone - 20);
     setMines(mines + 1);
-    setCurrentAge("Âge des Métaux");
     document.getElementById("minerSection").style.display = "block";
-    document.getElementById("narrative").textContent = "Une mine est construite ! L’Âge des Métaux commence.";
+    document.getElementById("narrative").textContent = "Une mine est construite ! Tu peux maintenant extraire des métaux.";
+
+    // Ajouter la mine au premier village disponible
+    const villageIndex = villagesData.findIndex(village => village.buildings.length < maxBuildingsPerVillage);
+    if (villageIndex !== -1) {
+      villagesData[villageIndex].buildings.push("mine");
+    }
+
     enhancedUpdateDisplay();
   } else {
-    showAlert("Il te faut 50 bois, 20 pierre, 1 bricoleur et les métaux découverts !");
+    let reasons = [];
+    if (wood < 50) reasons.push("pas assez de bois (" + wood + "/50)");
+    if (stone < 20) reasons.push("pas assez de pierre (" + stone + "/20)");
+    if (tinkers < 1) reasons.push("pas assez de bricoleurs (" + tinkers + "/1)");
+    if (miners < 25) reasons.push("pas assez de mineurs (" + miners + "/25)");
+    if (!discoveredMetals) reasons.push("métaux non découverts");
+    if (!canAddBuilding) reasons.push("limite de bâtiments atteinte dans tous les villages");
+    showAlert("Il te faut 50 bois, 20 pierre, 1 bricoleur, 25 mineurs et les métaux découverts ! " + reasons.join(", "));
   }
 }
 
@@ -667,21 +721,104 @@ export function recruitFarmer() {
 export function foundVillage() {
   const requiredVillagers = (villages + 1) * 50;
   const requiredChiefs = villages + 1;
-
   if (villagers >= requiredVillagers && chief >= requiredChiefs && villages < 10) {
+    // Ajouter un nouveau village
     setVillages(villages + 1);
+    addVillage(); // Ajoute un nouveau village à villagesData
+
+    // Répartir la population (par exemple, déplacer 50 villageois et 1 chef dans le nouveau village)
+    const newVillageIndex = villagesData.length - 1;
+    const villagersToMove = Math.min(50, villagers); // Déplace 50 villageois ou moins si insuffisant
+    const chiefToMove = Math.min(1, chief);         // Déplace 1 chef ou moins si insuffisant
+    assignBuildingsToVillages(); // Répartir les bâtiments
+    villagesData[newVillageIndex].population.villagers = villagersToMove;
+    villagesData[newVillageIndex].population.chief = chiefToMove;
+
+    // Mettre à jour la population globale
+    setVillagers(villagers - villagersToMove);
+    setChief(chief - chiefToMove);
+
+    // Répartir les travailleurs proportionnellement (par exemple, 1/2 des travailleurs existants)
+    const proportion = 0.5; // 50% des travailleurs vont dans le nouveau village
+    const pickersToMove = Math.floor(pickers * proportion);
+    const huntersToMove = Math.floor(hunters * proportion);
+    const minersToMove = Math.floor(miners * proportion);
+    const farmersToMove = Math.floor(farmers * proportion);
+    const tinkersToMove = Math.floor(tinkers * proportion);
+    const researchersToMove = Math.floor(researchers * proportion);
+    const explorersToMove = Math.floor(explorers * proportion);
+
+    villagesData[newVillageIndex].population.pickers = pickersToMove;
+    villagesData[newVillageIndex].population.hunters = huntersToMove;
+    villagesData[newVillageIndex].population.miners = minersToMove;
+    villagesData[newVillageIndex].population.farmers = farmersToMove;
+    villagesData[newVillageIndex].population.tinkers = tinkersToMove;
+    villagesData[newVillageIndex].population.researchers = researchersToMove;
+    villagesData[newVillageIndex].population.explorers = explorersToMove;
+
+    setPickers(pickers - pickersToMove);
+    setHunters(hunters - huntersToMove);
+    setMiners(miners - minersToMove);
+    setFarmers(farmers - farmersToMove);
+    setTinkers(tinkers - tinkersToMove);
+    setResearchers(researchers - researchersToMove);
+    setExplorers(explorers - explorersToMove);
+
+    // Débloquer les sections (premier village uniquement)
     setVillageFounded(true);
-    document.getElementById("narrative").textContent = `Village ${villages} fondé ! L’Été s’installe pour ce nouveau groupe.`;
     document.getElementById("tinkerSection").style.display = "block";
     document.getElementById("relicSection").style.display = "block";
     setCurrentSeason(1);
+
+    // Vérifier la population totale pour transformation en ville
+    const totalPopulation = getTotalPopulation();
+    if (totalPopulation >= 1000) {
+      transformToCity();
+    } else {
+      document.getElementById("narrative").textContent = `Village ${villages} fondé ! Population totale : ${totalPopulation}/1000.`;
+    }
+
     enhancedUpdateDisplay();
     updateSeasonDisplay();
-
   } else if (villages >= 10) {
     showAlert("Tu as atteint la limite de 10 villages !");
   } else {
     showAlert(`Il te faut ${requiredVillagers} villageois et ${requiredChiefs} chefs pour fonder le village ${villages + 1} !`);
+  }
+}
+
+export function assignBuildingsToVillages() {
+  // Liste des bâtiments existants et leur nombre
+  const buildingTypes = [
+    { type: "well", count: wells },
+    { type: "mine", count: mines },
+    { type: "workshop", count: workshops },
+    { type: "herbalist", count: herbalists },
+    { type: "wheatField", count: wheatFields },
+    { type: "mill", count: mills },
+    { type: "bakery", count: bakeries },
+    { type: "sawmill", count: sawmills },
+    { type: "stoneQuarry", count: stoneQuarries },
+    { type: "warehouse", count: warehouses },
+  ];
+
+  // Réinitialiser les bâtiments dans villagesData
+  villagesData.forEach(village => {
+    village.buildings = [];
+  });
+
+  // Répartir les bâtiments existants entre les villages
+  let currentVillageIndex = 0;
+  for (const building of buildingTypes) {
+    for (let i = 0; i < building.count; i++) {
+      if (currentVillageIndex >= villagesData.length) currentVillageIndex = 0; // Boucle sur les villages
+      if (villagesData[currentVillageIndex].buildings.length < maxBuildingsPerVillage) {
+        villagesData[currentVillageIndex].buildings.push(building.type);
+      } else {
+        currentVillageIndex++; // Passe au village suivant
+        i--; // Recommence pour ce bâtiment
+      }
+    }
   }
 }
 
@@ -929,6 +1066,31 @@ export function gameLoop() {
   updateExplorationDisplay();
 }
 
+export function transformToCity() {
+  // Réinitialiser villagesData pour représenter une ville
+  villagesData.length = 0; // Supprimer tous les villages
+  addVillage(); // Ajouter une "ville"
+  villagesData[0].population.villagers = villagers;
+  villagesData[0].population.chief = chief;
+  villagesData[0].population.pickers = pickers;
+  villagesData[0].population.hunters = hunters;
+  villagesData[0].population.miners = miners;
+  villagesData[0].population.farmers = farmers;
+  villagesData[0].population.tinkers = tinkers;
+  villagesData[0].population.researchers = researchers;
+  villagesData[0].population.explorers = explorers;
+
+  // Réassigner tous les bâtiments à la ville
+  assignBuildingsToVillages();
+
+  // Changer l'âge
+  updateAge("Âge des Cités");
+
+  // Message narratif
+  document.getElementById("narrative").textContent = "Votre population a atteint 1000 ! Vos villages se transforment en une ville. Bienvenue dans l’Âge des Cités !";
+
+  enhancedUpdateDisplay();
+}
 
 export function initGame() {}
 
