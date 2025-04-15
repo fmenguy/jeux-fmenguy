@@ -1,11 +1,5 @@
-import { updateDisplay, updateSeasonDisplay, showAlert, hideAlert, applyCraftOrder, enableDragAndDrop } from './ui.js';
+import { updateDisplay, updateSeasonDisplay, showAlert, hideAlert, applyCraftOrder, enableDragAndDrop, enhancedUpdateDisplay } from './ui.js';
 
-// Surcharger updateDisplay pour réappliquer le drag-and-drop après chaque mise à jour
-export const enhancedUpdateDisplay = function () {
-  updateDisplay();
-  applyCraftOrder();
-  enableDragAndDrop();
-};
 
 export let villageFounded = false;
 export let berries = 0,

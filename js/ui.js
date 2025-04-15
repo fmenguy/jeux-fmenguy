@@ -1,19 +1,17 @@
 import {
   villageFounded, berries, wood, stone, water, meat, fibers, metals, herbs, wheat, flour, bread,
-  maxWater, maxFibers, maxMetals, maxHerbs, maxWheat, maxFlour, maxBread,
-  axes, buckets, wells, pickaxes, bows, coats, metalAxes, remedies,
+  maxWater, maxFibers, maxHerbs, axes, buckets, wells, pickaxes, bows, coats, metalAxes, remedies,
   mines, workshops, sawmills, stoneQuarries, herbalists, wheatFields, mills, bakeries,
   villagers, chief, tinkers, researchers, pickers, hunters, explorers, miners, farmers, villages,
   techUnlocked, eternityShards, currentSeason, seasonTimer, seasonDuration, seasonNames, seasonIcons,
   discoveredFibers, discoveredMetals, discoveredHerbs, currentAge, purchasedHints, dynamicHints, currentHint,
-  warehouses, maxWoodStorage, maxStoneStorage, maxWaterStorage, maxMetalsStorage, maxHerbsStorage, maxWheatStorage, maxFlourStorage,
-  unlockedAges, shardEffects, updateAge,
+  warehouses,
   setBerries, setWood, setStone, setWater, setMeat, setFibers, setMetals, setHerbs, setWheat, setFlour, setBread,
   setAxes, setBuckets, setWells, setPickaxes, setBows, setCoats, setMetalAxes, setRemedies, setMines, setWorkshops,
   setSawmills, setStoneQuarries, setHerbalists, setWheatFields, setMills, setVillagers, setChief, setTinkers,
   setResearchers, setPickers, setHunters, setExplorers, setMiners, setFarmers, setVillages, setTechUnlocked,
   setEternityShards, setCurrentAge, setCurrentSeason, setSeasonTimer, setPurchasedHints, setCurrentHint,
-  enhancedUpdateDisplay,
+  shardEffects,
 } from './game.js';
 
 // Variables pour stocker l’ordre des sections
@@ -482,6 +480,13 @@ export function applyCraftOrder() {
     });
   }
 }
+
+
+export const enhancedUpdateDisplay = function () {
+  updateDisplay();
+  applyCraftOrder();
+  enableDragAndDrop();
+};
 
 
 

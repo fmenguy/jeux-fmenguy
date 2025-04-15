@@ -1,7 +1,6 @@
-import { initGame, gameLoop, gatherBerries, gatherWood, gatherStone, gatherWater, gatherMeat, gatherFibers, gatherMetals, craftAxe, craftBucket, craftPickaxe, craftBow, craftCoat, craftMetalAxe, craftRemedy, craftWell, craftMine, craftWorkshop, craftHerbalist, craftWheatField, craftMill, craftBakery, craftSawmill, craftStoneQuarry, craftWarehouse, recruitVillager, appointChief, recruitTinker, recruitPicker, recruitHunter, recruitResearcher, sendExplorers, recruitMiner, recruitFarmer, foundVillage, seekShard, dynamicHints, purchasedHints, setCurrentHint, enhancedUpdateDisplay } from './game.js';
+import { initGame, gameLoop, gatherBerries, gatherWood, gatherStone, gatherWater, gatherMeat, gatherFibers, gatherMetals, craftAxe, craftBucket, craftPickaxe, craftBow, craftCoat, craftMetalAxe, craftRemedy, craftWell, craftMine, craftWorkshop, craftHerbalist, craftWheatField, craftMill, craftBakery, craftSawmill, craftStoneQuarry, craftWarehouse, recruitVillager, appointChief, recruitTinker, recruitPicker, recruitHunter, recruitResearcher, sendExplorers, recruitMiner, recruitFarmer, foundVillage, seekShard, dynamicHints, purchasedHints, setCurrentHint } from './game.js';
 
-import { updateDisplay, updateSeasonDisplay, showAlert, hideAlert, enableDragAndDrop, applyCraftOrder, buyHint, toggleHints } from './ui.js';
-
+import { updateDisplay, updateSeasonDisplay, showAlert, hideAlert, enableDragAndDrop, applyCraftOrder, buyHint, toggleHints, enhancedUpdateDisplay } from './ui.js';
 
 import { saveGame, loadGame, exportSave, importSavePrompt } from './save.js';
 
