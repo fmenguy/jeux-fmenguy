@@ -127,11 +127,10 @@ export const shardEffects = [
 ];
 
 export const dynamicHints = [
-  // Nouvel indice pour inciter à fabriquer 25 haches dès le début
   {
-    condition: () => chief === 0 && axes < 25, // Avant d’avoir un chef et moins de 25 haches
+    condition: () => chief === 0 && axes < 25,
     message: "Fabrique au moins 25 haches !",
-    cost: { wood: 50 }, // Coût léger pour encourager l’achat tôt
+    cost: { wood: 50 },
     id: "prepareForChief",
   },
   {
@@ -149,8 +148,7 @@ export const dynamicHints = [
   },
   {
     condition: () => axes >= 20 && villagers >= 20,
-    message:
-      "Tu es prêt pour un chef ! Nomme-le avec 25 haches et 25 villageois.",
+    message: "Tu es prêt pour un chef ! Nomme-le avec 25 haches et 25 villageois.",
     cost: { wood: 100, axes: 1 },
     id: "chiefReady",
   },
@@ -180,32 +178,27 @@ export const dynamicHints = [
     id: "moreWells",
   },
   {
-    condition: () => discoveredFibers && fibers >= 150 && workshops === 0, // Quand les fibres approchent de la limite
+    condition: () => discoveredFibers && fibers >= 150 && workshops === 0,
     message: "Construis un atelier pour augmenter la limite des fibres !",
-    cost: { fibers: 100 }, // Coût de 100 fibres
+    cost: { fibers: 100 },
     id: "workshopFiberLimit",
   },
   {
-    condition: () => eternityShards >= 5, // Disponible si le joueur a 5 éclats ou plus
+    condition: () => eternityShards >= 5,
     message: "Affiche l'effet des dons débloqués.",
-    cost: { eternityShards: 5 }, // Coût de 5 éclats
+    cost: { eternityShards: 5 },
     id: "shardEffectsReveal",
   },
   {
     condition: () => currentAge === "Âge de l’Agriculture" && bakeries === 0,
     message: "Construis une boulangerie pour produire du pain automatiquement !",
     cost: { flour: 5 },
-    id: "bakeryHint"
+    id: "bakeryHint",
   },
   {
-    condition: () =>
-      tinkers >= 1 ||
-      discoveredMetals ||
-      discoveredFibers ||
-      discoveredHerbs, // Quand un bâtiment devient visible
-    message:
-      "Tu peux réorganiser les sections Fabrication et Bâtiments par glisser-déposer !",
-    cost: {}, // Gratuit
+    condition: () => tinkers >= 1 || discoveredMetals || discoveredFibers || discoveredHerbs,
+    message: "Tu peux réorganiser les sections Fabrication et Bâtiments par glisser-déposer !",
+    cost: {},
     id: "reorganizeHint",
   },
 ];
@@ -216,9 +209,8 @@ export function updateAge(newAge) {
   if (newAge !== currentAge && !unlockedAges.includes(newAge)) {
     currentAge = newAge;
     unlockedAges.push(newAge);
-    document.getElementById("narrative").textContent =
-      `Tu entres dans l’${newAge} !`;
-    updateDisplay();
+    document.getElementById("narrative").textContent = `Tu entres dans l’${newAge} !`;
+    enhancedUpdateDisplay();
   }
 }
 
@@ -236,81 +228,50 @@ export function getAgeTooltip(age) {
 }
 
 export function gatherBerries() {
-  let harvestBonus =
-    eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
+  let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
   berries += 1 * seasonModifiers[currentSeason].berries * harvestBonus;
   if (berries >= 5 && villagers === 0)
-    document.getElementById("narrative").textContent =
-      "Tu as assez de baies ! Attire un villageois maintenant.";
-  updateDisplay();
+    document.getElementById("narrative").textContent = "Tu as assez de baies ! Attire un villageois maintenant.";
+  enhancedUpdateDisplay();
 }
 
 export function gatherWood() {
-  let harvestBonus =
-    eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
-  wood +=
-    (metalAxes > 0 ? 3 : axes > 0 ? 2 : 1) *
-    seasonModifiers[currentSeason].wood *
-    harvestBonus;
-  updateDisplay();
+  let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
+  wood += (metalAxes > 0 ? 3 : axes > 0 ? 2 : 1) * seasonModifiers[currentSeason].wood * harvestBonus;
+  enhancedUpdateDisplay();
 }
 
 export function gatherStone() {
-  let harvestBonus =
-    eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
-  stone +=
-    (pickaxes > 0 ? 2 : 1) *
-    seasonModifiers[currentSeason].stone *
-    harvestBonus *
-    (currentAge === "Âge des Métaux" ? 1.1 : 1);
-  updateDisplay();
+  let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
+  stone += (pickaxes > 0 ? 2 : 1) * seasonModifiers[currentSeason].stone * harvestBonus * (currentAge === "Âge des Métaux" ? 1.1 : 1);
+  enhancedUpdateDisplay();
 }
 
 export function gatherWater() {
-  let harvestBonus =
-    eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
-  water = Math.min(
-    water +
-    (buckets > 0 ? 2 : 1) *
-    seasonModifiers[currentSeason].water *
-    harvestBonus,
-    maxWater
-  );
-  updateDisplay();
+  let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
+  water = Math.min(water + (buckets > 0 ? 2 : 1) * seasonModifiers[currentSeason].water * harvestBonus, maxWater);
+  enhancedUpdateDisplay();
 }
 
 export function gatherMeat() {
-  let harvestBonus =
-    eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
-  meat +=
-    (bows > 0 ? 2 : 1) *
-    seasonModifiers[currentSeason].meat *
-    harvestBonus;
-  updateDisplay();
+  let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
+  meat += (bows > 0 ? 2 : 1) * seasonModifiers[currentSeason].meat * harvestBonus;
+  enhancedUpdateDisplay();
 }
 
 export function gatherFibers() {
-  let harvestBonus =
-    eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
-  fibers = Math.min(
-    fibers + 1 * seasonModifiers[currentSeason].fibers * harvestBonus,
-    maxFibers
-  );
-  updateDisplay();
+  let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
+  fibers = Math.min(fibers + 1 * seasonModifiers[currentSeason].fibers * harvestBonus, maxFibers);
+  enhancedUpdateDisplay();
 }
 
 export function gatherMetals() {
-  let harvestBonus =
-    eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
+  let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
   metals = Math.min(
-    metals +
-    (pickaxes > 0 ? 3 : mines > 0 ? 2 : 1) *
-    seasonModifiers[currentSeason].metals *
-    harvestBonus *
-    (currentAge === "Âge des Métaux" ? 1.1 : 1),
+    metals + (pickaxes > 0 ? 3 : mines > 0 ? 2 : 1) * seasonModifiers[currentSeason].metals * harvestBonus * (currentAge === "Âge des Métaux" ? 1.1 : 1),
     maxMetals
   );
-  updateDisplay();
+  enhancedUpdateDisplay();
 }
 
 export function craftAxe() {
@@ -320,9 +281,8 @@ export function craftAxe() {
     axes += 1;
     if (axes >= 25 && villagers >= 25)
       document.getElementById("chiefSection").style.display = "block";
-    document.getElementById("narrative").textContent =
-      "Tu as une hache ! Elle coupe le bois plus vite.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Tu as une hache ! Elle coupe le bois plus vite.";
+    enhancedUpdateDisplay();
   } else
     showAlert("Il te faut 5 bois et 2 pierres pour faire une hache !");
 }
@@ -332,9 +292,8 @@ export function craftBucket() {
     wood -= 5;
     stone -= 2;
     buckets += 1;
-    document.getElementById("narrative").textContent =
-      "Tu as un seau ! Il récolte plus d’eau.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Tu as un seau ! Il récolte plus d’eau.";
+    enhancedUpdateDisplay();
   } else showAlert("Il te faut 5 bois et 2 pierres pour un seau !");
 }
 
@@ -344,9 +303,8 @@ export function craftWell() {
     stone -= 5;
     wells += 1;
     maxWater += 1000;
-    document.getElementById("narrative").textContent =
-      "Un puits est construit ! Il stocke plus d’eau.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un puits est construit ! Il stocke plus d’eau.";
+    enhancedUpdateDisplay();
   } else showAlert("Il te faut 10 bois et 5 pierres pour un puits !");
 }
 
@@ -355,9 +313,8 @@ export function craftPickaxe() {
     wood -= 10;
     stone -= 5;
     pickaxes += 1;
-    document.getElementById("narrative").textContent =
-      "Tu as une pioche ! Elle récolte plus de pierre.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Tu as une pioche ! Elle récolte plus de pierre.";
+    enhancedUpdateDisplay();
   } else
     showAlert("Il te faut 10 bois et 5 pierres pour faire une pioche !");
 }
@@ -367,31 +324,22 @@ export function craftBow() {
     wood -= 10;
     stone -= 5;
     bows += 1;
-    document.getElementById("narrative").textContent =
-      "Tu as un arc ! Il récolte plus de viande.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Tu as un arc ! Il récolte plus de viande.";
+    enhancedUpdateDisplay();
   } else showAlert("Il te faut 10 bois et 5 pierres pour faire un arc !");
 }
 
 export function craftCoat() {
   const fiberCost = workshops > 0 ? 8 : 10;
   const woodCost = workshops > 0 ? 4 : 5;
-  if (
-    fibers >= fiberCost &&
-    wood >= woodCost &&
-    coats < villagers &&
-    discoveredFibers
-  ) {
+  if (fibers >= fiberCost && wood >= woodCost && coats < villagers && discoveredFibers) {
     fibers -= fiberCost;
     wood -= woodCost;
     coats += 1;
-    document.getElementById("narrative").textContent =
-      "Un manteau est prêt pour l’Hiver !";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un manteau est prêt pour l’Hiver !";
+    enhancedUpdateDisplay();
   } else
-    showAlert(
-      `Il te faut ${fiberCost} fibres, ${woodCost} bois et moins de manteaux que de villageois !`
-    );
+    showAlert(`Il te faut ${fiberCost} fibres, ${woodCost} bois et moins de manteaux que de villageois !`);
 }
 
 export function craftMetalAxe() {
@@ -399,9 +347,8 @@ export function craftMetalAxe() {
     metals -= 5;
     wood -= 5;
     metalAxes += 1;
-    document.getElementById("narrative").textContent =
-      "Une hache en métal, plus tranchante !";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Une hache en métal, plus tranchante !";
+    enhancedUpdateDisplay();
   } else
     showAlert("Il te faut 5 métaux, 5 bois et les métaux découverts !");
 }
@@ -409,22 +356,14 @@ export function craftMetalAxe() {
 export function craftRemedy() {
   const herbCost = herbalists > 0 ? 4 : 5;
   const waterCost = herbalists > 0 ? 4 : 5;
-  if (
-    herbs >= herbCost &&
-    water >= waterCost &&
-    remedies < villagers &&
-    discoveredHerbs
-  ) {
+  if (herbs >= herbCost && water >= waterCost && remedies < villagers && discoveredHerbs) {
     herbs -= herbCost;
     water -= waterCost;
     remedies += 1;
-    document.getElementById("narrative").textContent =
-      "Un remède pour protéger ton peuple !";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un remède pour protéger ton peuple !";
+    enhancedUpdateDisplay();
   } else
-    showAlert(
-      `Il te faut ${herbCost} herbes, ${waterCost} eau et moins de remèdes que de villageois !`
-    );
+    showAlert(`Il te faut ${herbCost} herbes, ${waterCost} eau et moins de remèdes que de villageois !`);
 }
 
 export function craftMine() {
@@ -434,13 +373,10 @@ export function craftMine() {
     mines += 1;
     currentAge = "Âge des Métaux";
     document.getElementById("minerSection").style.display = "block";
-    document.getElementById("narrative").textContent =
-      "Une mine est construite ! L’Âge des Métaux commence.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Une mine est construite ! L’Âge des Métaux commence.";
+    enhancedUpdateDisplay();
   } else
-    showAlert(
-      "Il te faut 50 bois, 20 pierre, 1 bricoleur et les métaux découverts !"
-    );
+    showAlert("Il te faut 50 bois, 20 pierre, 1 bricoleur et les métaux découverts !");
 }
 
 export function craftWorkshop() {
@@ -449,16 +385,11 @@ export function craftWorkshop() {
     stone -= 10;
     fibers -= 5;
     workshops += 1;
-    maxFibers += 1000; // Ajoute 1000 par atelier
-    document.getElementById("narrative").textContent =
-      "Un atelier est construit ! La limite de fibres augmente à " +
-      maxFibers +
-      ".";
-    updateDisplay();
+    maxFibers += 1000;
+    document.getElementById("narrative").textContent = "Un atelier est construit ! La limite de fibres augmente à " + maxFibers + ".";
+    enhancedUpdateDisplay();
   } else
-    showAlert(
-      "Il te faut 20 bois, 10 pierre, 5 fibres et les fibres découvertes !"
-    );
+    showAlert("Il te faut 20 bois, 10 pierre, 5 fibres et les fibres découvertes !");
 }
 
 export function craftHerbalist() {
@@ -469,34 +400,23 @@ export function craftHerbalist() {
     herbalists += 1;
     maxHerbs = 200;
     document.getElementById("wheatFieldSection").style.display = "block";
-    document.getElementById("narrative").textContent =
-      "Une herboristerie est construite ! Les remèdes s’améliorent.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Une herboristerie est construite ! Les remèdes s’améliorent.";
+    enhancedUpdateDisplay();
   } else
-    showAlert(
-      "Il te faut 15 bois, 5 pierre, 5 herbes et les herbes découvertes !"
-    );
+    showAlert("Il te faut 15 bois, 5 pierre, 5 herbes et les herbes découvertes !");
 }
 
 export function craftWheatField() {
-  if (
-    wood >= 20 &&
-    stone >= 10 &&
-    herbs >= 5 &&
-    discoveredHerbs
-  ) {
+  if (wood >= 20 && stone >= 10 && herbs >= 5 && discoveredHerbs) {
     wood -= 20;
     stone -= 10;
     herbs -= 5;
     wheatFields += 1;
-    document.getElementById("narrative").textContent =
-      "Un champ de blé est construit ! Cultive du blé.";
+    document.getElementById("narrative").textContent = "Un champ de blé est construit ! Cultive du blé.";
     updateAge("Âge de l’Agriculture");
-    updateDisplay();
+    enhancedUpdateDisplay();
   } else {
-    showAlert(
-      "Il te faut 20 bois, 10 pierre, 5 herbes et avoir découvert les herbes !"
-    );
+    showAlert("Il te faut 20 bois, 10 pierre, 5 herbes et avoir découvert les herbes !");
   }
 }
 
@@ -507,96 +427,61 @@ export function craftMill() {
     metals -= 5;
     mills += 1;
     currentAge = "Âge de l’Agriculture";
-    document.getElementById("wheatSection").style.display =
-      "inline-block";
-    document.getElementById("flourSection").style.display =
-      "inline-block";
+    document.getElementById("wheatSection").style.display = "inline-block";
+    document.getElementById("flourSection").style.display = "inline-block";
     document.getElementById("breadSection").style.display = "block";
-    document.getElementById("narrative").textContent =
-      "Un moulin est construit ! L’Âge de l’Agriculture commence.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un moulin est construit ! L’Âge de l’Agriculture commence.";
+    enhancedUpdateDisplay();
   } else
-    showAlert(
-      "Il te faut 50 bois, 20 pierre, 5 métaux et des champs de blé !"
-    );
+    showAlert("Il te faut 50 bois, 20 pierre, 5 métaux et des champs de blé !");
 }
 
 export function craftBakery() {
-  if (
-    wood >= 50 &&
-    stone >= 20 &&
-    flour >= 5 &&
-    currentAge === "Âge de l’Agriculture"
-  ) {
+  if (wood >= 50 && stone >= 20 && flour >= 5 && currentAge === "Âge de l’Agriculture") {
     wood -= 50;
     stone -= 20;
     flour -= 5;
     bakeries += 1;
-    document.getElementById("narrative").textContent =
-      "Une boulangerie est construite ! Elle produit du pain automatiquement.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Une boulangerie est construite ! Elle produit du pain automatiquement.";
+    enhancedUpdateDisplay();
   } else {
     let reasons = [];
     if (wood < 50) reasons.push("pas assez de bois (" + wood + "/50)");
     if (stone < 20) reasons.push("pas assez de pierre (" + stone + "/20)");
     if (flour < 5) reasons.push("pas assez de farine (" + flour + "/5)");
     if (currentAge !== "Âge de l’Agriculture") reasons.push("mauvais âge (" + currentAge + ")");
-    showAlert(
-      "Il te faut 50 bois, 20 pierre, 5 farine et être dans l’Âge de l’Agriculture ! " +
-      reasons.join(", ")
-    );
+    showAlert("Il te faut 50 bois, 20 pierre, 5 farine et être dans l’Âge de l’Agriculture ! " + reasons.join(", "));
   }
 }
 
 export function craftSawmill() {
-  if (
-    wood >= 50 &&
-    stone >= 20 &&
-    metals >= 5 &&
-    (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")
-  ) {
+  if (wood >= 50 && stone >= 20 && metals >= 5 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")) {
     wood -= 50;
     stone -= 20;
     metals -= 5;
     sawmills += 1;
-    document.getElementById("narrative").textContent =
-      "Une scierie est construite ! Elle produit 0.5 bois par seconde.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Une scierie est construite ! Elle produit 0.5 bois par seconde.";
+    enhancedUpdateDisplay();
   } else {
-    showAlert(
-      "Il te faut 50 bois, 20 pierre, 5 métaux et être dans l’Âge des Métaux ou l’Âge de l’Agriculture !"
-    );
+    showAlert("Il te faut 50 bois, 20 pierre, 5 métaux et être dans l’Âge des Métaux ou l’Âge de l’Agriculture !");
   }
 }
 
 export function craftStoneQuarry() {
-  if (
-    wood >= 50 &&
-    stone >= 20 &&
-    metals >= 5 &&
-    (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")
-  ) {
+  if (wood >= 50 && stone >= 20 && metals >= 5 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")) {
     wood -= 50;
     stone -= 20;
     metals -= 5;
     stoneQuarries += 1;
-    document.getElementById("narrative").textContent =
-      "Une carrière de pierre est construite ! Elle produit 0.5 pierre par seconde.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Une carrière de pierre est construite ! Elle produit 0.5 pierre par seconde.";
+    enhancedUpdateDisplay();
   } else {
-    showAlert(
-      "Il te faut 50 bois, 20 pierre, 5 métaux et être dans l’Âge des Métaux ou l’Âge de l’Agriculture !"
-    );
+    showAlert("Il te faut 50 bois, 20 pierre, 5 métaux et être dans l’Âge des Métaux ou l’Âge de l’Agriculture !");
   }
 }
 
 export function craftWarehouse() {
-  if (
-    wood >= 50 &&
-    stone >= 20 &&
-    metals >= 5 &&
-    (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")
-  ) {
+  if (wood >= 50 && stone >= 20 && metals >= 5 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")) {
     wood -= 100;
     stone -= 50;
     metals -= 10;
@@ -618,13 +503,10 @@ export function craftWarehouse() {
       maxWheatStorage += 50000;
       maxFlourStorage += 50000;
     }
-    document.getElementById("narrative").textContent =
-      `Un entrepôt est construit ! Capacité de stockage ${warehouses === 1 ? "fixée à" : "augmentée de"} 50 000 pour bois, pierre, eau, métaux, herbes, blé et farine.`;
-    updateDisplay();
+    document.getElementById("narrative").textContent = `Un entrepôt est construit ! Capacité de stockage ${warehouses === 1 ? "fixée à" : "augmentée de"} 50 000 pour bois, pierre, eau, métaux, herbes, blé et farine.`;
+    enhancedUpdateDisplay();
   } else {
-    showAlert(
-      "Il te faut 100 bois, 50 pierre, 10 métaux et être dans l’Âge des Métaux ou l’Âge de l’Agriculture !"
-    );
+    showAlert("Il te faut 100 bois, 50 pierre, 10 métaux et être dans l’Âge des Métaux ou l’Âge de l’Agriculture !");
   }
 }
 
@@ -633,30 +515,25 @@ export function recruitVillager() {
     berries -= 5;
     villagers += 1;
     if (villagers === 1)
-      document.getElementById("narrative").textContent =
-        "Un villageois arrive ! Il va t’aider.";
+      document.getElementById("narrative").textContent = "Un villageois arrive ! Il va t’aider.";
     if (villagers >= 10)
       document.getElementById("pickerSection").style.display = "block";
     if (villagers >= 20)
       document.getElementById("hunterSection").style.display = "block";
     if (villagers >= 25 && axes >= 25)
       document.getElementById("chiefSection").style.display = "block";
-    updateDisplay();
+    enhancedUpdateDisplay();
   } else showAlert("Il te faut 5 baies pour attirer un villageois !");
 }
 
 export function appointChief() {
   if (axes >= 25 && villagers >= 25) {
-    // Retiré "chief < 1"
     chief += 1;
     document.getElementById("villageSection").style.display = "block";
-    document.getElementById("narrative").textContent =
-      "Tu as un nouveau chef ! Il guide une partie de ton peuple.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Tu as un nouveau chef ! Il guide une partie de ton peuple.";
+    enhancedUpdateDisplay();
   } else {
-    showAlert(
-      "Il te faut 25 haches et au moins 25 villageois pour nommer un chef !"
-    );
+    showAlert("Il te faut 25 haches et au moins 25 villageois pour nommer un chef !");
   }
 }
 
@@ -672,16 +549,13 @@ export function recruitTinker() {
     document.getElementById("metalAxeSection").style.display = "block";
     document.getElementById("remedySection").style.display = "block";
     techUnlocked = true;
-    document.getElementById("narrative").textContent =
-      "Un bricoleur arrive ! L’Automne s’installe.";
+    document.getElementById("narrative").textContent = "Un bricoleur arrive ! L’Automne s’installe.";
     currentSeason = 2;
     updateAge("Âge des Métaux");
-    updateDisplay();
+    enhancedUpdateDisplay();
     updateSeasonDisplay();
   } else {
-    showAlert(
-      "Il te faut 100 bois, 100 pierres et un village pour un bricoleur !"
-    );
+    showAlert("Il te faut 100 bois, 100 pierres et un village pour un bricoleur !");
   }
 }
 
@@ -690,9 +564,8 @@ export function recruitResearcher() {
     tinkers -= 10;
     researchers += 1;
     document.getElementById("researcherSection").style.display = "block";
-    document.getElementById("narrative").textContent =
-      "Un chercheur rejoint ton village ! De nouvelles technologies arrivent.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un chercheur rejoint ton village ! De nouvelles technologies arrivent.";
+    enhancedUpdateDisplay();
   } else
     showAlert("Il te faut 10 bricoleurs pour recruter un chercheur !");
 }
@@ -702,9 +575,8 @@ export function recruitPicker() {
     berries -= 10;
     wood -= 5;
     pickers += 1;
-    document.getElementById("narrative").textContent =
-      "Un cueilleur arrive ! Il ramasse des baies pour toi.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un cueilleur arrive ! Il ramasse des baies pour toi.";
+    enhancedUpdateDisplay();
   } else showAlert("Il te faut 10 baies et 5 bois pour un cueilleur !");
 }
 
@@ -713,20 +585,13 @@ export function recruitHunter() {
     wood -= 10;
     meat -= 5;
     hunters += 1;
-    document.getElementById("narrative").textContent =
-      "Un chasseur arrive ! Il trouve de la viande.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un chasseur arrive ! Il trouve de la viande.";
+    enhancedUpdateDisplay();
   } else showAlert("Il te faut 10 bois et 5 viande pour un chasseur !");
 }
 
 export function sendExplorers() {
-  if (
-    berries >= 50 &&
-    wood >= 20 &&
-    villagers >= 10 &&
-    !explorationActive &&
-    (!discoveredFibers || !discoveredMetals || !discoveredHerbs)
-  ) {
+  if (berries >= 50 && wood >= 20 && villagers >= 10 && !explorationActive && (!discoveredFibers || !discoveredMetals || !discoveredHerbs)) {
     berries -= 50;
     wood -= 20;
     villagers -= 10;
@@ -734,9 +599,8 @@ export function sendExplorers() {
     explorationActive = true;
     explorationTimer = 30;
     console.log("Exploration démarrée, timer =", explorationTimer);
-    document.getElementById("narrative").textContent =
-      "Les explorateurs partent à la découverte...";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Les explorateurs partent à la découverte...";
+    enhancedUpdateDisplay();
   } else {
     let reasons = [];
     if (berries < 50) reasons.push("pas assez de baies (" + berries + "/50)");
@@ -744,9 +608,7 @@ export function sendExplorers() {
     if (villagers < 10) reasons.push("pas assez de villageois (" + villagers + "/10)");
     if (explorationActive) reasons.push("exploration déjà en cours");
     if (discoveredFibers && discoveredMetals && discoveredHerbs) reasons.push("toutes les ressources découvertes");
-    showAlert(
-      "Impossible d'envoyer des explorateurs : " + reasons.join(", ") + " !"
-    );
+    showAlert("Impossible d'envoyer des explorateurs : " + reasons.join(", ") + " !");
   }
 }
 
@@ -755,9 +617,8 @@ export function recruitMiner() {
     wood -= 10;
     metals -= 5;
     miners += 1;
-    document.getElementById("narrative").textContent =
-      "Un mineur arrive ! Il extrait des métaux.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un mineur arrive ! Il extrait des métaux.";
+    enhancedUpdateDisplay();
   } else showAlert("Il te faut 10 bois, 5 métaux et une mine !");
 }
 
@@ -766,27 +627,22 @@ export function recruitFarmer() {
     berries -= 10;
     wood -= 5;
     farmers += 1;
-    document.getElementById("narrative").textContent =
-      "Un fermier arrive ! Il cultive le blé.";
-    updateDisplay();
+    document.getElementById("narrative").textContent = "Un fermier arrive ! Il cultive le blé.";
+    enhancedUpdateDisplay();
   } else showAlert("Il te faut 10 baies, 5 bois et des champs de blé !");
 }
 
 export function foundVillage() {
   const requiredVillagers = (villages + 1) * 50;
   const requiredChiefs = villages + 1;
-  if (
-    villagers >= requiredVillagers &&
-    chief >= requiredChiefs &&
-    villages < 10
-  ) {
+  if (villagers >= requiredVillagers && chief >= requiredChiefs && villages < 10) {
     villages += 1;
-    villageFounded = true; // Toujours nécessaire pour les bricoleurs
+    villageFounded = true;
     document.getElementById("narrative").textContent = `Village ${villages} fondé ! L’Été s’installe pour ce nouveau groupe.`;
     document.getElementById("tinkerSection").style.display = "block";
     document.getElementById("relicSection").style.display = "block";
     currentSeason = 1;
-    updateDisplay();
+    enhancedUpdateDisplay();
     updateSeasonDisplay();
   } else if (villages >= 10) {
     showAlert("Tu as atteint la limite de 10 villages !");
@@ -803,119 +659,57 @@ export function seekShard() {
     eternityShards += 1;
     let shardMessage = "Tu trouves un éclat spécial ! ";
     if (eternityShards <= shardEffects.length)
-      shardMessage += `Effet débloqué : ${shardEffects[eternityShards - 1].name
-        }.`;
+      shardMessage += `Effet débloqué : ${shardEffects[eternityShards - 1].name}.`;
     if (eternityShards === 1) {
       currentSeason = 3;
       shardMessage += " L’Hiver s’abat sur ton peuple.";
       updateSeasonDisplay();
     }
     document.getElementById("narrative").textContent = shardMessage;
-    document.getElementById("eternityShards").textContent =
-      eternityShards;
-    updateDisplay();
+    document.getElementById("eternityShards").textContent = eternityShards;
+    enhancedUpdateDisplay();
   } else
-    showAlert(
-      "Il te faut 200 bois, 100 pierres et 50 eau pour un éclat !"
-    );
+    showAlert("Il te faut 200 bois, 100 pierres et 50 eau pour un éclat !");
 }
 
 export function gameLoop() {
-  let harvestBonus =
-    eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
-  harvestBonus *=
-    currentAge === "Âge des Métaux" ||
-      currentAge === "Âge de l’Agriculture"
-      ? 1.1
-      : 1;
-  let waterConsumptionReduction =
-    eternityShards >= 2 ? shardEffects[1].waterConsumptionReduction : 1;
-  let foodConsumptionReduction =
-    eternityShards >= 3 ? shardEffects[2].foodConsumptionReduction : 1;
-  let seasonPenaltyReduction =
-    eternityShards >= 4 ? shardEffects[3].seasonPenaltyReduction : 0;
+  let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
+  harvestBonus *= currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture" ? 1.1 : 1;
+  let waterConsumptionReduction = eternityShards >= 2 ? shardEffects[1].waterConsumptionReduction : 1;
+  let foodConsumptionReduction = eternityShards >= 3 ? shardEffects[2].foodConsumptionReduction : 1;
+  let seasonPenaltyReduction = eternityShards >= 4 ? shardEffects[3].seasonPenaltyReduction : 0;
   let noDeath = eternityShards >= 5 && shardEffects[4].noDeath;
 
   let adjustedSeasonModifiers = [...seasonModifiers];
   if (seasonPenaltyReduction > 0) {
     adjustedSeasonModifiers[currentSeason] = {
-      berries:
-        1 -
-        (1 - seasonModifiers[currentSeason].berries) *
-        (1 - seasonPenaltyReduction),
-      wood:
-        1 -
-        (1 - seasonModifiers[currentSeason].wood) *
-        (1 - seasonPenaltyReduction),
-      stone:
-        1 -
-        (1 - seasonModifiers[currentSeason].stone) *
-        (1 - seasonPenaltyReduction),
-      water:
-        1 -
-        (1 - seasonModifiers[currentSeason].water) *
-        (1 - seasonPenaltyReduction),
-      meat:
-        1 -
-        (1 - seasonModifiers[currentSeason].meat) *
-        (1 - seasonPenaltyReduction),
-      fibers:
-        1 -
-        (1 - seasonModifiers[currentSeason].fibers) *
-        (1 - seasonPenaltyReduction),
-      metals:
-        1 -
-        (1 - seasonModifiers[currentSeason].metals) *
-        (1 - seasonPenaltyReduction),
-      herbs:
-        1 -
-        (1 - seasonModifiers[currentSeason].herbs) *
-        (1 - seasonPenaltyReduction),
-      wheat:
-        1 -
-        (1 - seasonModifiers[currentSeason].wheat) *
-        (1 - seasonPenaltyReduction),
+      berries: 1 - (1 - seasonModifiers[currentSeason].berries) * (1 - seasonPenaltyReduction),
+      wood: 1 - (1 - seasonModifiers[currentSeason].wood) * (1 - seasonPenaltyReduction),
+      stone: 1 - (1 - seasonModifiers[currentSeason].stone) * (1 - seasonPenaltyReduction),
+      water: 1 - (1 - seasonModifiers[currentSeason].water) * (1 - seasonPenaltyReduction),
+      meat: 1 - (1 - seasonModifiers[currentSeason].meat) * (1 - seasonPenaltyReduction),
+      fibers: 1 - (1 - seasonModifiers[currentSeason].fibers) * (1 - seasonPenaltyReduction),
+      metals: 1 - (1 - seasonModifiers[currentSeason].metals) * (1 - seasonPenaltyReduction),
+      herbs: 1 - (1 - seasonModifiers[currentSeason].herbs) * (1 - seasonPenaltyReduction),
+      wheat: 1 - (1 - seasonModifiers[currentSeason].wheat) * (1 - seasonPenaltyReduction),
     };
   }
 
   if (wells > 0) {
     let bucketEfficiency = 0.2 + tinkers * 0.1;
-    let waterGained =
-      buckets *
-      bucketEfficiency *
-      adjustedSeasonModifiers[currentSeason].water *
-      harvestBonus;
-    water = Math.min(water + waterGained, maxWater + maxWaterStorage); // Ajout de maxWaterStorage
+    let waterGained = buckets * bucketEfficiency * adjustedSeasonModifiers[currentSeason].water * harvestBonus;
+    water = Math.min(water + waterGained, maxWater + maxWaterStorage);
   }
-  berries +=
-    pickers *
-    0.5 *
-    adjustedSeasonModifiers[currentSeason].berries *
-    harvestBonus; // Pas de limite d’entrepôt pour la nourriture
-  meat +=
-    hunters *
-    0.2 *
-    adjustedSeasonModifiers[currentSeason].meat *
-    harvestBonus; // Pas de limite
+  berries += pickers * 0.5 * adjustedSeasonModifiers[currentSeason].berries * harvestBonus;
+  meat += hunters * 0.2 * adjustedSeasonModifiers[currentSeason].meat * harvestBonus;
   if (discoveredFibers) {
-    let fiberGain =
-      pickers *
-      0.2 *
-      adjustedSeasonModifiers[currentSeason].fibers *
-      harvestBonus;
-    fibers = Math.min(fibers + fiberGain, maxFibers); // Fibres exclues des entrepôts
+    let fiberGain = pickers * 0.2 * adjustedSeasonModifiers[currentSeason].fibers * harvestBonus;
+    fibers = Math.min(fibers + fiberGain, maxFibers);
   }
-  herbs +=
-    pickers *
-    0.1 *
-    adjustedSeasonModifiers[currentSeason].herbs *
-    harvestBonus;
-  herbs = Math.min(herbs, maxHerbs + maxHerbsStorage); // Limite avec entrepôt
-  metals +=
-    (mines * 0.1 + miners * 0.2) *
-    adjustedSeasonModifiers[currentSeason].metals *
-    harvestBonus;
-  metals = Math.min(metals, maxMetals + maxMetalsStorage); // Limite avec entrepôt
+  herbs += pickers * 0.1 * adjustedSeasonModifiers[currentSeason].herbs * harvestBonus;
+  herbs = Math.min(herbs, maxHerbs + maxHerbsStorage);
+  metals += (mines * 0.1 + miners * 0.2) * adjustedSeasonModifiers[currentSeason].metals * harvestBonus;
+  metals = Math.min(metals, maxMetals + maxMetalsStorage);
   if (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture") {
     wood += sawmills * 0.5 * adjustedSeasonModifiers[currentSeason].wood * harvestBonus;
     wood = Math.min(wood, maxWoodStorage);
@@ -951,25 +745,21 @@ export function gameLoop() {
         fibers = 0;
         document.getElementById("fibersSection").style.display = "inline-block";
         document.getElementById("workshopSection").style.display = "block";
-        document.getElementById("narrative").textContent =
-          "Les explorateurs ont découvert les fibres !";
-        document.querySelector("#pickerSection .tooltip").textContent =
-          "Un cueilleur ramasse des baies et des fibres pour toi.";
+        document.getElementById("narrative").textContent = "Les explorateurs ont découvert les fibres !";
+        document.querySelector("#pickerSection .tooltip").textContent = "Un cueilleur ramasse des baies et des fibres pour toi.";
       } else if (!discoveredMetals) {
         discoveredMetals = true;
         document.getElementById("metalsSection").style.display = "inline-block";
         document.getElementById("mineSection").style.display = "block";
-        document.getElementById("narrative").textContent =
-          "Les explorateurs ont découvert les métaux !";
+        document.getElementById("narrative").textContent = "Les explorateurs ont découvert les métaux !";
         updateAge("Âge des Métaux");
       } else if (!discoveredHerbs) {
         discoveredHerbs = true;
         document.getElementById("herbsSection").style.display = "inline-block";
         document.getElementById("herbalistSection").style.display = "block";
-        document.getElementById("narrative").textContent =
-          "Les explorateurs ont découvert les herbes !";
+        document.getElementById("narrative").textContent = "Les explorateurs ont découvert les herbes !";
       }
-      updateDisplay();
+      enhancedUpdateDisplay();
     }
   }
 
@@ -993,11 +783,7 @@ export function gameLoop() {
       currentAge === "Âge de l’Agriculture" ? bread * 5 : 0;
 
     // Trouver le stock le plus grand
-    if (
-      breadInBerryUnits >= berriesStock &&
-      breadInBerryUnits >= meatInBerryUnits
-    ) {
-      // Pain est le plus grand stock
+    if (breadInBerryUnits >= berriesStock && breadInBerryUnits >= meatInBerryUnits) {
       let breadNeeded = Math.ceil(foodConsumed / 5);
       if (bread >= breadNeeded) {
         bread -= breadNeeded;
@@ -1027,10 +813,7 @@ export function gameLoop() {
         } else {
           let stillNeeded = remainingFoodNeeded - berries;
           berries = 0;
-          if (
-            currentAge === "Âge de l’Agriculture" &&
-            bread >= Math.ceil(stillNeeded / 5)
-          ) {
+          if (currentAge === "Âge de l’Agriculture" && bread >= Math.ceil(stillNeeded / 5)) {
             bread -= Math.ceil(stillNeeded / 5);
           } else {
             bread = 0;
@@ -1050,10 +833,7 @@ export function gameLoop() {
         } else {
           let stillNeeded = remainingFoodNeeded - meat * 3;
           meat = 0;
-          if (
-            currentAge === "Âge de l’Agriculture" &&
-            bread >= Math.ceil(stillNeeded / 5)
-          ) {
+          if (currentAge === "Âge de l’Agriculture" && bread >= Math.ceil(stillNeeded / 5)) {
             bread -= Math.ceil(stillNeeded / 5);
           } else {
             bread = 0;
@@ -1066,34 +846,20 @@ export function gameLoop() {
     else water = 0;
 
     let alertMessage = "";
-    if (
-      berries <= 0 &&
-      meat <= 0 &&
-      (currentAge !== "Âge de l’Agriculture" || bread <= 0)
-    )
-      alertMessage =
-        "Plus de nourriture ! Récolte vite des baies ou de la viande !";
+    if (berries <= 0 && meat <= 0 && (currentAge !== "Âge de l’Agriculture" || bread <= 0))
+      alertMessage = "Plus de nourriture ! Récolte vite des baies ou de la viande !";
     if (water <= 0)
-      alertMessage += alertMessage
-        ? " Plus d’eau ! Récolte vite !"
-        : "Plus d’eau ! Récolte vite !";
+      alertMessage += alertMessage ? " Plus d’eau ! Récolte vite !" : "Plus d’eau ! Récolte vite !";
     if (alertMessage) showAlert(alertMessage);
     else hideAlert();
 
-    if (
-      berries <= 0 &&
-      meat <= 0 &&
-      water <= 0 &&
-      (currentAge !== "Âge de l’Agriculture" || bread <= 0) &&
-      !noDeath
-    ) {
+    if (berries <= 0 && meat <= 0 && water <= 0 && (currentAge !== "Âge de l’Agriculture" || bread <= 0) && !noDeath) {
       deathTimer += 1;
       let deathThreshold = remedies >= villagers ? 120 : 60;
       if (deathTimer >= deathThreshold) {
         villagers -= 1;
         deathTimer = 0;
-        document.getElementById("narrative").textContent =
-          "Un villageois est mort de faim et de soif !";
+        document.getElementById("narrative").textContent = "Un villageois est mort de faim et de soif !";
       }
     } else deathTimer = 0;
   } else {
@@ -1102,20 +868,17 @@ export function gameLoop() {
   }
 
   if (villagers >= 1 && water === 0) {
-    document.getElementById("narrative").textContent =
-      "Attention, un villageois consomme de l’eau ! Puise de l’eau.";
+    document.getElementById("narrative").textContent = "Attention, un villageois consomme de l’eau ! Puise de l’eau.";
   }
 
   seasonTimer += 1;
   if (seasonTimer >= seasonDuration) {
     seasonTimer = 0;
     currentSeason = (currentSeason + 1) % 4;
-    document.getElementById(
-      "narrative"
-    ).textContent = `La saison change : ${seasonNames[currentSeason]}.`;
+    document.getElementById("narrative").textContent = `La saison change : ${seasonNames[currentSeason]}.`;
   }
 
-  updateDisplay();
+  enhancedUpdateDisplay();
   updateSeasonDisplay();
 }
 
@@ -1297,34 +1060,25 @@ export function loadGame(slot) {
     applyCraftOrder();
 
     // Réinitialiser currentHint si tous les indices sont achetés
-    const allHintsPurchased = dynamicHints.every((hint) =>
-      purchasedHints.includes(hint.id)
-    );
+    const allHintsPurchased = dynamicHints.every((hint) => purchasedHints.includes(hint.id));
     if (allHintsPurchased) {
       currentHint = null;
     } else {
-      currentHint =
-        dynamicHints.find(
-          (hint) => hint.condition() && !purchasedHints.includes(hint.id)
-        ) || null;
+      currentHint = dynamicHints.find((hint) => hint.condition() && !purchasedHints.includes(hint.id)) || null;
     }
 
     // Ajoute cette condition pour mettre à jour le tooltip des cueilleurs
     if (discoveredFibers) {
-      document.querySelector("#pickerSection .tooltip").textContent =
-        "Un cueilleur ramasse des baies et des fibres pour toi.";
+      document.querySelector("#pickerSection .tooltip").textContent = "Un cueilleur ramasse des baies et des fibres pour toi.";
     } else {
-      document.querySelector("#pickerSection .tooltip").textContent =
-        "Un cueilleur ramasse des baies pour toi.";
+      document.querySelector("#pickerSection .tooltip").textContent = "Un cueilleur ramasse des baies pour toi.";
     }
 
-    const purchasedHintsList =
-      document.getElementById("purchasedHintsList");
+    const purchasedHintsList = document.getElementById("purchasedHintsList");
     purchasedHintsList.innerHTML = "";
     purchasedHints.forEach((hintId) => {
       const hint = dynamicHints.find((h) => h.id === hintId);
-      if (hint)
-        purchasedHintsList.innerHTML += `<li>${hint.message}</li>`;
+      if (hint) purchasedHintsList.innerHTML += `<li>${hint.message}</li>`;
     });
 
     document.getElementById("chiefSection").style.display =
@@ -1376,29 +1130,34 @@ export function loadGame(slot) {
     console.log("Mise à jour affichage boulangeries =", bakeries);
     document.getElementById("sawmills").textContent = sawmills;
     document.getElementById("stoneQuarries").textContent = stoneQuarries;
+
+    // Gestion de la liste des âges (problème ici avec agesList)
     const agesList = document.getElementById("agesList");
-    agesList.innerHTML = "";
-    unlockedAges.forEach(age => {
-      const isCurrent = age === currentAge;
-      const ageItem = document.createElement("div");
-      ageItem.className = "tech";
-      ageItem.innerHTML = `
-        <p>
-            <span class="icon">${isCurrent ? "⭐" : "✅"}</span>
-            ${age}${isCurrent ? " (en cours)" : ""}
-        </p>
-        <span class="tooltip">${getAgeTooltip(age)}</span>
-    `;
-      agesList.appendChild(ageItem);
-    });
-    document.getElementById("relicSection").style.display = villageFounded
-      ? "block"
-      : "none";
+    if (agesList) {
+      agesList.innerHTML = "";
+      unlockedAges.forEach((age) => {
+        const isCurrent = age === currentAge;
+        const ageItem = document.createElement("div");
+        ageItem.className = "tech";
+        ageItem.innerHTML = `
+          <p>
+              <span class="icon">${isCurrent ? "⭐" : "✅"}</span>
+              ${age}${isCurrent ? " (en cours)" : ""}
+          </p>
+          <span class="tooltip">${getAgeTooltip(age)}</span>
+      `;
+        agesList.appendChild(ageItem);
+      });
+    } else {
+      console.warn("Élément agesList non trouvé dans le DOM.");
+    }
+
+    document.getElementById("relicSection").style.display = villageFounded ? "block" : "none";
     if (saveData.warehouses > 0) {
       maxWoodStorage = saveData.warehouses * 50000;
       maxStoneStorage = saveData.warehouses * 50000;
     }
-    updateDisplay();
+    enhancedUpdateDisplay();
     updateSeasonDisplay();
     alert("Jeu chargé !");
   }
@@ -1580,22 +1339,17 @@ export function importSavePrompt() {
     ];
     applyCraftOrder();
 
-    const purchasedHintsList =
-      document.getElementById("purchasedHintsList");
+    const purchasedHintsList = document.getElementById("purchasedHintsList");
     purchasedHintsList.innerHTML = "";
     purchasedHints.forEach((hintId) => {
       const hint = dynamicHints.find((h) => h.id === hintId);
-      if (hint)
-        purchasedHintsList.innerHTML += `<li>${hint.message}</li>`;
+      if (hint) purchasedHintsList.innerHTML += `<li>${hint.message}</li>`;
     });
 
-    // Ajoute cette condition pour mettre à jour le tooltip des cueilleurs
     if (discoveredFibers) {
-      document.querySelector("#pickerSection .tooltip").textContent =
-        "Un cueilleur ramasse des baies et des fibres pour toi.";
+      document.querySelector("#pickerSection .tooltip").textContent = "Un cueilleur ramasse des baies et des fibres pour toi.";
     } else {
-      document.querySelector("#pickerSection .tooltip").textContent =
-        "Un cueilleur ramasse des baies pour toi.";
+      document.querySelector("#pickerSection .tooltip").textContent = "Un cueilleur ramasse des baies pour toi.";
     }
 
     document.getElementById("chiefSection").style.display =
@@ -1735,9 +1489,9 @@ export function enableDragAndDrop() {
     });
   });
 }
+
 export function applyCraftOrder() {
-  const fabricationSection =
-    document.getElementById("fabricationSection");
+  const fabricationSection = document.getElementById("fabricationSection");
   const batimentsSection = document.getElementById("buildingsSection");
 
   if (fabricationSection) {
@@ -1759,15 +1513,13 @@ applyCraftOrder();
 enableDragAndDrop();
 
 // Surcharger updateDisplay pour réappliquer le drag-and-drop après chaque mise à jour
-const originalUpdateDisplay = updateDisplay;
-updateDisplay = function () {
-  originalUpdateDisplay();
+const enhancedUpdateDisplay = function () {
+  updateDisplay();
   applyCraftOrder();
   enableDragAndDrop();
 };
 
 export function initGame() {
-  // Initialisation du jeu (peut être vide pour l’instant ou charger une sauvegarde si tu veux)
   console.log("Jeu initialisé");
 }
 
