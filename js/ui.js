@@ -286,10 +286,8 @@ export function toggleHints() {
 
 export function buyHint() {
   if (!currentHint) {
-    console.log("buyHint: Aucun indice courant.");
     return;
   }
-  console.log("buyHint: Tentative d'achat de l'indice", { id: currentHint.id, cost: currentHint.cost });
 
   const cost = currentHint.cost || {};
   const canAfford = Object.keys(cost).every((resource) => {
@@ -309,16 +307,13 @@ export function buyHint() {
       case "eternityShards":
         return eternityShards >= cost[resource];
       case "flour":
-        console.log("buyHint: Vérification de la farine", { flour, required: cost[resource] });
         return flour >= cost[resource];
       default:
-        console.log("buyHint: Ressource inconnue", resource);
         return false;
     }
   });
 
   if (canAfford && (!currentHint.canBuy || currentHint.canBuy())) {
-    console.log("buyHint: Achat autorisé, déduction des coûts...");
     Object.keys(cost).forEach((resource) => {
       switch (resource) {
         case "berries":
@@ -352,15 +347,12 @@ export function buyHint() {
         purchasedHintsList.innerHTML += `<li>${currentHint.message}</li>`;
         purchasedHints.push(currentHint.id);
         setCurrentHint(null);
-        console.log("buyHint: Indice acheté avec succès", currentHint.id);
       } else {
         console.error("buyHint: L'élément purchasedHintsList n'existe pas.");
       }
     } catch (error) {
       console.error("buyHint: Erreur lors de l'affichage de l'indice", error);
     }
-  } else {
-    console.log("buyHint: Achat impossible", { canAfford, canBuy: currentHint.canBuy ? currentHint.canBuy() : true });
   }
 }
 
