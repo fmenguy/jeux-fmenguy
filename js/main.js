@@ -294,7 +294,6 @@ if (availableHint) {
   setCurrentHint(availableHint);
 }
 
-// Lancer la boucle de jeu
 setInterval(() => {
   const result = gameLoop();
   if (result && result.alert) {
@@ -302,7 +301,9 @@ setInterval(() => {
   } else if (result && result.hideAlert) {
     hideAlert();
   }
-  enhancedUpdateDisplay();
-  updateSeasonDisplay();
-  updateExplorationDisplay();
+  if (result && (result.ageChanged || result.seasonChanged)) {
+    enhancedUpdateDisplay();
+    updateSeasonDisplay();
+    updateExplorationDisplay();
+  }
 }, 1000);
