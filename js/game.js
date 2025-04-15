@@ -1,4 +1,4 @@
-import { updateDisplay, updateSeasonDisplay, showAlert, hideAlert, applyCraftOrder, enableDragAndDrop, enhancedUpdateDisplay } from './ui.js';
+import { updateDisplay, updateSeasonDisplay, updateExplorationDisplay, showAlert, hideAlert, applyCraftOrder, enableDragAndDrop, enhancedUpdateDisplay } from './ui.js';
 
 
 export let villageFounded = false;
@@ -918,6 +918,7 @@ export function gameLoop() {
 
   enhancedUpdateDisplay();
   updateSeasonDisplay();
+  updateExplorationDisplay();
 }
 
 
