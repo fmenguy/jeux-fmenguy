@@ -1,5 +1,9 @@
-import { initGame, gameLoop, gatherBerries, gatherWood, gatherStone, gatherWater, gatherMeat, gatherFibers, gatherMetals, craftAxe, craftBucket, craftPickaxe, craftBow, craftCoat, craftMetalAxe, craftRemedy, craftWell, craftMine, craftWorkshop, craftHerbalist, craftWheatField, craftMill, craftBakery, craftSawmill, craftStoneQuarry, craftWarehouse, recruitVillager, appointChief, recruitTinker, recruitPicker, recruitHunter, recruitResearcher, sendExplorers, recruitMiner, recruitFarmer, foundVillage, seekShard } from './game.js';
+import { initGame, gameLoop, gatherBerries, gatherWood, gatherStone, gatherWater, gatherMeat, gatherFibers, gatherMetals, craftAxe, craftBucket, craftPickaxe, craftBow, craftCoat, craftMetalAxe, craftRemedy, craftWell, craftMine, craftWorkshop, craftHerbalist, craftWheatField, craftMill, craftBakery, craftSawmill, craftStoneQuarry, craftWarehouse, recruitVillager, appointChief, recruitTinker, recruitPicker, recruitHunter, recruitResearcher, sendExplorers, recruitMiner, recruitFarmer, foundVillage, seekShard, dynamicHints, purchasedHints, setCurrentHint } from './game.js';
+
+
 import { updateDisplay, updateSeasonDisplay, showAlert, hideAlert, enableDragAndDrop, applyCraftOrder, buyHint, toggleHints } from './ui.js';
+
+
 import { saveGame, loadGame, exportSave, importSavePrompt } from './save.js';
 
 // Exporter les fonctions globales pour les événements onclick
@@ -45,12 +49,19 @@ window.importSavePrompt = importSavePrompt;
 window.buyHint = buyHint;
 window.toggleHints = toggleHints;
 
-// Initialisation du jeu
 initGame();
 updateDisplay();
 updateSeasonDisplay();
 enableDragAndDrop();
 applyCraftOrder();
+
+// Initialisation de currentHint
+const availableHint = dynamicHints.find(
+  (hint) => hint.condition() && !purchasedHints.includes(hint.id)
+);
+if (availableHint) {
+  setCurrentHint(availableHint);
+}
 
 // Lancer la boucle de jeu
 setInterval(gameLoop, 1000);

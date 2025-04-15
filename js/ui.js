@@ -7,7 +7,13 @@ import {
   techUnlocked, eternityShards, currentSeason, seasonTimer, seasonDuration, seasonNames, seasonIcons,
   discoveredFibers, discoveredMetals, discoveredHerbs, currentAge, purchasedHints, dynamicHints, currentHint,
   warehouses, maxWoodStorage, maxStoneStorage, maxWaterStorage, maxMetalsStorage, maxHerbsStorage, maxWheatStorage, maxFlourStorage,
-  unlockedAges, shardEffects, updateAge
+  unlockedAges, shardEffects, updateAge,
+  setBerries, setWood, setStone, setWater, setMeat, setFibers, setMetals, setHerbs, setWheat, setFlour, setBread,
+  setAxes, setBuckets, setWells, setPickaxes, setBows, setCoats, setMetalAxes, setRemedies, setMines, setWorkshops,
+  setSawmills, setStoneQuarries, setHerbalists, setWheatFields, setMills, setVillagers, setChief, setTinkers,
+  setResearchers, setPickers, setHunters, setExplorers, setMiners, setFarmers, setVillages, setTechUnlocked,
+  setEternityShards, setCurrentAge, setCurrentSeason, setSeasonTimer, setPurchasedHints, setCurrentHint,
+  enhancedUpdateDisplay,
 } from './game.js';
 
 // Variables pour stocker l’ordre des sections
@@ -250,15 +256,13 @@ export function buyHint() {
   }
   if (!currentHint.condition()) {
     showAlert("La condition de cet indice n’est plus remplie !");
-    currentHint = null;
+    setCurrentHint(null);
     updateHintButton();
-    updateDisplay();
+    enhancedUpdateDisplay();
     return;
   }
   if (currentHint.canBuy && !currentHint.canBuy()) {
-    showAlert(
-      "Tu ne remplis pas les conditions pour acheter cet indice !"
-    );
+    showAlert("Tu ne remplis pas les conditions pour acheter cet indice !");
     return;
   }
   const canAfford =
@@ -284,7 +288,7 @@ export function buyHint() {
         case "water":
           resourceValue = water;
           break;
-        case "eternityShards": // Ajout pour gérer les éclats
+        case "eternityShards":
           resourceValue = eternityShards;
           break;
         default:
@@ -298,79 +302,59 @@ export function buyHint() {
       Object.entries(currentHint.cost).forEach(([resource, amount]) => {
         switch (resource) {
           case "berries":
-            berries -= amount;
+            setBerries(berries - amount);
             break;
           case "wood":
-            wood -= amount;
+            setWood(wood - amount);
             break;
           case "stone":
-            stone -= amount;
+            setStone(stone - amount);
             break;
           case "axes":
-            axes -= amount;
+            setAxes(axes - amount);
             break;
           case "fibers":
-            fibers -= amount;
+            setFibers(fibers - amount);
             break;
           case "water":
-            water -= amount;
+            setWater(water - amount);
             break;
-          case "eternityShards": // Retrait des éclats
-            eternityShards -= amount;
+          case "eternityShards":
+            setEternityShards(eternityShards - amount);
             break;
         }
       });
     }
-    purchasedHints.push(currentHint.id);
-    const purchasedHintsList =
-      document.getElementById("purchasedHintsList");
+    const updatedPurchasedHints = [...purchasedHints, currentHint.id];
+    setPurchasedHints(updatedPurchasedHints);
+    const purchasedHintsList = document.getElementById("purchasedHintsList");
 
-    // Gestion spéciale pour l’indice des effets des éclats
     if (currentHint.id === "shardEffectsReveal") {
       let effectsText = "Effets des Éclats d’Éternité débloqués :<br>";
-      for (
-        let i = 0;
-        i < eternityShards && i < shardEffects.length;
-        i++
-      ) {
+      for (let i = 0; i < eternityShards && i < shardEffects.length; i++) {
         const effect = shardEffects[i];
         if (effect.harvestBonus) {
-          effectsText += `- ${effect.name} : Bonus de récolte de ${(
-            (effect.harvestBonus - 1) *
-            100
-          ).toFixed(0)}%.<br>`;
+          effectsText += `- ${effect.name} : Bonus de récolte de ${((effect.harvestBonus - 1) * 100).toFixed(0)}%.<br>`;
         } else if (effect.waterConsumptionReduction) {
-          effectsText += `- ${effect.name
-            } : Réduction de la consommation d’eau à ${Math.round(
-              effect.waterConsumptionReduction * 100
-            )}%.<br>`;
+          effectsText += `- ${effect.name} : Réduction de la consommation d’eau à ${Math.round(effect.waterConsumptionReduction * 100)}%.<br>`;
         } else if (effect.foodConsumptionReduction) {
-          effectsText += `- ${effect.name
-            } : Réduction de la consommation de nourriture à ${Math.round(
-              effect.foodConsumptionReduction * 100
-            )}%.<br>`;
+          effectsText += `- ${effect.name} : Réduction de la consommation de nourriture à ${Math.round(effect.foodConsumptionReduction * 100)}%.<br>`;
         } else if (effect.seasonPenaltyReduction) {
-          effectsText += `- ${effect.name
-            } : Réduction des pénalités saisonnières de ${Math.round(
-              effect.seasonPenaltyReduction * 100
-            )}%.<br>`;
+          effectsText += `- ${effect.name} : Réduction des pénalités saisonnières de ${Math.round(effect.seasonPenaltyReduction * 100)}%.<br>`;
         } else if (effect.noDeath) {
           effectsText += `- ${effect.name} : Plus de morts par manque de ressources.<br>`;
         }
       }
       purchasedHintsList.innerHTML += `<li>${effectsText}</li>`;
-      document.getElementById("narrative").textContent =
-        "Les effets des Éclats d’Éternité sont révélés dans les indices !";
+      document.getElementById("narrative").textContent = "Les effets des Éclats d’Éternité sont révélés dans les indices !";
     } else {
       purchasedHintsList.innerHTML += `<li>${currentHint.message}</li>`;
-      document.getElementById(
-        "narrative"
-      ).textContent = `Indice acheté : ${currentHint.message}`;
+      document.getElementById("narrative").textContent = `Indice acheté : ${currentHint.message}`;
     }
 
-    currentHint = null;
+    setCurrentHint(null);
     updateHintButton();
-    updateDisplay();
+    enhancedUpdateDisplay();
   } else {
     let missing = "Il te faut ";
     let parts = [];
@@ -419,10 +403,7 @@ export function buyHint() {
                       : resource;
       if (resourceValue < amount) parts.push(`${amount} ${resourceName}`);
     });
-    missing +=
-      parts.length > 0
-        ? parts.join(", ").replace(/, ([^,]*)$/, " et $1")
-        : "plus de ressources";
+    missing += parts.length > 0 ? parts.join(", ").replace(/, ([^,]*)$/, " et $1") : "plus de ressources";
     showAlert(`${missing} pour cet indice !`);
   }
 }
@@ -533,18 +514,11 @@ document.addEventListener("keydown", (event) => {
 // Écouteur pour les clics quand le cheat est actif
 document.addEventListener("click", () => {
   if (cheatModeActive) {
-    berries += 100;
-    meat += 100;
-    wood += 100;
-    stone += 100;
-    water += 100;
-    updateDisplay();
+    setBerries(berries + 100);
+    setMeat(meat + 100);
+    setWood(wood + 100);
+    setStone(stone + 100);
+    setWater(water + 100);
+    enhancedUpdateDisplay();
   }
 });
-
-const originalUpdateDisplay = updateDisplay;
-updateDisplay = function () {
-  originalUpdateDisplay();
-  applyCraftOrder();
-  enableDragAndDrop();
-};

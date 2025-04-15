@@ -878,8 +878,21 @@ export function gameLoop() {
     document.getElementById("narrative").textContent = `La saison change : ${seasonNames[currentSeason]}.`;
   }
 
-  enhancedUpdateDisplay();
-  updateSeasonDisplay();
+// Ajout de la logique pour gérer currentHint
+if (currentHint && !currentHint.condition()) {
+  setCurrentHint(null);
+  console.log("Indice invalide, réinitialisé.");
+}
+
+const availableHint = dynamicHints.find(
+  (hint) => hint.condition() && !purchasedHints.includes(hint.id)
+);
+if (availableHint && !currentHint) {
+  setCurrentHint(availableHint);
+}
+
+enhancedUpdateDisplay();
+updateSeasonDisplay();
 }
 
 export function saveGame(slot) {
