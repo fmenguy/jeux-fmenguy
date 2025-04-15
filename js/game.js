@@ -1092,7 +1092,9 @@ export function transformToCity() {
   enhancedUpdateDisplay();
 }
 
-export function initGame() {}
+export function initGame() {
+  villagesData = []; // Initialisation explicite
+}
 
 export function setBerries(value) { berries = value; }
 export function setWood(value) { wood = value; }

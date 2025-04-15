@@ -19,12 +19,15 @@ import {
 
 const villagesList = document.getElementById("villagesList");
 villagesList.innerHTML = "";
-villagesData.forEach((village, index) => {
-  const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
-  villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
-});
+if (villagesData && Array.isArray(villagesData)) { // Vérification
+  villagesData.forEach((village, index) => {
+    const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
+    villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
+  });
+} else {
+  villagesList.innerHTML = "<li>Aucun village fondé.</li>";
+}
 document.getElementById("totalPopulation").textContent = getTotalPopulation();
-
 
 // Variables pour stocker l’ordre des sections
 export let fabricationOrder = [
