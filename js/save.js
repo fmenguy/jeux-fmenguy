@@ -143,6 +143,7 @@ export function loadGame(slot) {
     setMaxFlourStorage(saveData.maxFlourStorage || 0);
     setBakeries(saveData.bakeries || 0);
     setUnlockedAges(saveData.unlockedAges || ["Âge de Pierre"]);
+
     const newFabricationOrder = saveData.fabricationOrder || [
       "metalAxeSection",
       "axeSection",
@@ -164,9 +165,11 @@ export function loadGame(slot) {
       "stoneQuarrySection",
       "warehouseSection",
     ];
-    fabricationOrder.length = 0;
-    buildingsOrder.length = 0;
-
+    
+    // Mettre à jour les tableaux sans réassignation
+    while (fabricationOrder.length > 0) fabricationOrder.pop();
+    while (buildingsOrder.length > 0) buildingsOrder.pop();
+    
     fabricationOrder.push(...newFabricationOrder);
     buildingsOrder.push(...newBuildingsOrder);
 
@@ -379,12 +382,11 @@ export function importSavePrompt() {
       "stoneQuarrySection",
       "warehouseSection",
     ];
-
-    // Vider les tableaux existants
-    fabricationOrder.length = 0;
-    buildingsOrder.length = 0;
-
-    // Remplir avec les nouvelles valeurs
+    
+    // Mettre à jour les tableaux sans réassignation
+    while (fabricationOrder.length > 0) fabricationOrder.pop();
+    while (buildingsOrder.length > 0) buildingsOrder.pop();
+    
     fabricationOrder.push(...newFabricationOrder);
     buildingsOrder.push(...newBuildingsOrder);
     
