@@ -244,7 +244,7 @@ export function gatherWood() {
 
 export function gatherStone() {
   let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
-  setStone(stone + (pickaxes > 0 ? 2 : 1) * seasonModifiers[currentSeason].stone * harvestBonus * (currentAge === "Âge des Métaux" ? 1.1 : 1));
+  setStone(stone + (pickaxes > 0 ? 2 : 1) * seasonModifiers[currentSeason].stone * harvestBonus * (discoveredMetals ? 1.1 : 1));
   enhancedUpdateDisplay();
 }
 
@@ -269,7 +269,7 @@ export function gatherFibers() {
 export function gatherMetals() {
   let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
   setMetals(Math.min(
-    metals + (pickaxes > 0 ? 3 : mines > 0 ? 2 : 1) * seasonModifiers[currentSeason].metals * harvestBonus * (currentAge === "Âge des Métaux" ? 1.1 : 1),
+    metals + (pickaxes > 0 ? 3 : mines > 0 ? 2 : 1) * seasonModifiers[currentSeason].metals * harvestBonus * (discoveredMetals ? 1.1 : 1),
     maxMetals
   ));
   enhancedUpdateDisplay();
@@ -471,7 +471,7 @@ export function craftBakery() {
 }
 
 export function craftSawmill() {
-  if (wood >= 50 && stone >= 20 && metals >= 5 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")) {
+  if (wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture")) {
     setWood(wood - 50);
     setStone(stone - 20);
     setMetals(metals - 5);
@@ -479,12 +479,12 @@ export function craftSawmill() {
     document.getElementById("narrative").textContent = "Une scierie est construite ! Elle produit 0.5 bois par seconde.";
     enhancedUpdateDisplay();
   } else {
-    showAlert("Il te faut 50 bois, 20 pierre, 5 métaux et être dans l’Âge des Métaux ou l’Âge de l’Agriculture !");
+    showAlert("Il te faut 50 bois, 20 pierre, 5 métaux et avoir découvert les métaux ou être dans l’Âge de l’Agriculture !");
   }
 }
 
 export function craftStoneQuarry() {
-  if (wood >= 50 && stone >= 20 && metals >= 5 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")) {
+  if (wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture")) {
     setWood(wood - 50);
     setStone(stone - 20);
     setMetals(metals - 5);
@@ -497,7 +497,7 @@ export function craftStoneQuarry() {
 }
 
 export function craftWarehouse() {
-  if (wood >= 50 && stone >= 20 && metals >= 5 && (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture")) {
+  if (wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture")) {
     setWood(wood - 100);
     setStone(stone - 50);
     setMetals(metals - 10);
@@ -569,7 +569,6 @@ export function recruitTinker() {
     setTechUnlocked(true);
     document.getElementById("narrative").textContent = "Un bricoleur arrive ! L’Automne s’installe.";
     setCurrentSeason(2);
-    updateAge("Âge des Métaux");
     enhancedUpdateDisplay();
     updateSeasonDisplay();
   } else {
@@ -739,7 +738,7 @@ export function gameLoop() {
   setHerbs(Math.min(herbs, maxHerbs + maxHerbsStorage));
   setMetals(metals + (mines * 0.1 + miners * 0.2) * adjustedSeasonModifiers[currentSeason].metals * harvestBonus);
   setMetals(Math.min(metals, maxMetals + maxMetalsStorage));
-  if (currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture") {
+  if (discoveredMetals || currentAge === "Âge de l’Agriculture") {
     setWood(wood + sawmills * 0.5 * adjustedSeasonModifiers[currentSeason].wood * harvestBonus);
     setWood(Math.min(wood, maxWoodStorage));
     setStone(stone + stoneQuarries * 0.5 * adjustedSeasonModifiers[currentSeason].stone * harvestBonus);
