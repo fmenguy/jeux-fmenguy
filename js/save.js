@@ -135,6 +135,7 @@ export function loadGame(slot) {
     setCurrentAge(saveData.currentAge || "Âge de Pierre");
     setPurchasedHints(saveData.purchasedHints || []);
     setWarehouses(saveData.warehouses || 0);
+    setMaxMetalsStorage(saveData.maxMetalsStorage || 0);
     setMaxWoodStorage(saveData.maxWoodStorage || 1000);
     setMaxStoneStorage(saveData.maxStoneStorage || 1000);
     setMaxWaterStorage(saveData.maxWaterStorage || 0);
@@ -179,6 +180,12 @@ export function loadGame(slot) {
       setChief(maxChiefs);
 
     }
+
+    // Recalculer maxMetalsStorage si warehouses est chargé mais maxMetalsStorage est incorrect
+    if (saveData.warehouses && saveData.warehouses > 0) {
+      setMaxMetalsStorage(saveData.warehouses * 50000);
+    }
+
     enhancedUpdateDisplay();
     updateSeasonDisplay();
     updateExplorationDisplay();
@@ -359,6 +366,7 @@ export function importSavePrompt() {
     setCurrentAge(saveData.currentAge || "Âge de Pierre");
     setPurchasedHints(saveData.purchasedHints || []);
     setWarehouses(saveData.warehouses || 0);
+    setMaxMetalsStorage(saveData.maxMetalsStorage || 0);
     setMaxWoodStorage(saveData.maxWoodStorage || 1000);
     setMaxStoneStorage(saveData.maxStoneStorage || 1000);
     setMaxWaterStorage(saveData.maxWaterStorage || 0);
@@ -414,6 +422,13 @@ export function importSavePrompt() {
       setChief(maxChiefs);
 
     }
+
+    // Recalculer maxMetalsStorage si warehouses est chargé mais maxMetalsStorage est incorrect
+    if (saveData.warehouses && saveData.warehouses > 0) {
+      setMaxMetalsStorage(saveData.warehouses * 50000);
+    }
+
+
     enhancedUpdateDisplay();
     updateSeasonDisplay();
     updateExplorationDisplay();
