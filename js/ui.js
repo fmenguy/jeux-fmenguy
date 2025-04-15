@@ -1,3 +1,15 @@
+import {
+  villageFounded, berries, wood, stone, water, meat, fibers, metals, herbs, wheat, flour, bread,
+  maxWater, maxFibers, maxMetals, maxHerbs, maxWheat, maxFlour, maxBread,
+  axes, buckets, wells, pickaxes, bows, coats, metalAxes, remedies,
+  mines, workshops, sawmills, stoneQuarries, herbalists, wheatFields, mills, bakeries,
+  villagers, chief, tinkers, researchers, pickers, hunters, explorers, miners, farmers, villages,
+  techUnlocked, eternityShards, currentSeason, seasonTimer, seasonDuration, seasonNames, seasonIcons,
+  discoveredFibers, discoveredMetals, discoveredHerbs, currentAge, purchasedHints, dynamicHints, currentHint,
+  warehouses, maxWoodStorage, maxStoneStorage, maxWaterStorage, maxMetalsStorage, maxHerbsStorage, maxWheatStorage, maxFlourStorage,
+  unlockedAges, shardEffects, updateAge
+} from './game.js';
+
 // Variables pour stocker l’ordre des sections
 export let fabricationOrder = [
   "axeSection",
@@ -492,3 +504,47 @@ export function applyCraftOrder() {
     });
   }
 }
+
+
+
+// Variable pour stocker les touches tapées
+let cheatCodeBuffer = "";
+export const cheatCode = "fmenguy";
+let cheatModeActive = false;
+
+// Écouteur pour les touches
+document.addEventListener("keydown", (event) => {
+  // Ajoute la touche tapée au buffer (en minuscule)
+  cheatCodeBuffer += event.key.toLowerCase();
+
+  // Garde seulement les 7 derniers caractères (longueur de "fmenguy")
+  if (cheatCodeBuffer.length > cheatCode.length) {
+    cheatCodeBuffer = cheatCodeBuffer.slice(-cheatCode.length);
+  }
+
+  // Vérifie si le cheatcode est complet
+  if (cheatCodeBuffer === cheatCode) {
+    cheatModeActive = true;
+    cheatCodeBuffer = ""; // Réinitialise le buffer
+    document.getElementById("narrative").textContent = "Cheatcode activé : clique pour +100 ressources !";
+  }
+});
+
+// Écouteur pour les clics quand le cheat est actif
+document.addEventListener("click", () => {
+  if (cheatModeActive) {
+    berries += 100;
+    meat += 100;
+    wood += 100;
+    stone += 100;
+    water += 100;
+    updateDisplay();
+  }
+});
+
+const originalUpdateDisplay = updateDisplay;
+updateDisplay = function () {
+  originalUpdateDisplay();
+  applyCraftOrder();
+  enableDragAndDrop();
+};
