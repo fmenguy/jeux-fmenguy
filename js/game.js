@@ -246,7 +246,6 @@ export function updateAge(newAge) {
     currentAge = newAge;
     unlockedAges.push(newAge);
     document.getElementById("narrative").textContent = `Tu entres dans l’${newAge} !`;
-    enhancedUpdateDisplay();
   }
 }
 
@@ -424,28 +423,26 @@ export function craftRemedy() {
 
 export function craftMine() {
   const canAddBuilding = villagesData.some(village => village.buildings.length < maxBuildingsPerVillage);
-  if (wood >= 50 && stone >= 20 && tinkers >= 1 && miners >= 25 && discoveredMetals && canAddBuilding) {
+  const minersRequired = mines > 0 ? 25 : 0; // 25 mineurs requis uniquement pour les mines supplémentaires
+  if (wood >= 50 && stone >= 20 && tinkers >= 1 && miners >= minersRequired && discoveredMetals && canAddBuilding) {
     setWood(wood - 50);
     setStone(stone - 20);
     setMines(mines + 1);
-    document.getElementById("minerSection").style.display = "block";
     document.getElementById("narrative").textContent = "Une mine est construite ! Tu peux maintenant extraire des métaux.";
 
     const villageIndex = villagesData.findIndex(village => village.buildings.length < maxBuildingsPerVillage);
     if (villageIndex !== -1) {
       villagesData[villageIndex].buildings.push("mine");
     }
-    // Supprimez : enhancedUpdateDisplay();
   } else {
     let reasons = [];
     if (wood < 50) reasons.push("pas assez de bois (" + wood + "/50)");
     if (stone < 20) reasons.push("pas assez de pierre (" + stone + "/20)");
     if (tinkers < 1) reasons.push("pas assez de bricoleurs (" + tinkers + "/1)");
-    if (miners < 25) reasons.push("pas assez de mineurs (" + miners + "/25)");
+    if (miners < minersRequired) reasons.push("pas assez de mineurs (" + miners + "/" + minersRequired + ")");
     if (!discoveredMetals) reasons.push("métaux non découverts");
     if (!canAddBuilding) reasons.push("limite de bâtiments atteinte dans tous les villages");
-    // Supprimez : showAlert("Il te faut 50 bois, 20 pierre, 1 bricoleur, 25 mineurs et les métaux découverts ! " + reasons.join(", "));
-    return { error: "Il te faut 50 bois, 20 pierre, 1 bricoleur, 25 mineurs et les métaux découverts ! " + reasons.join(", ") };
+    return { error: "Il te faut 50 bois, 20 pierre, 1 bricoleur" + (minersRequired > 0 ? ", 25 mineurs" : "") + " et les métaux découverts ! " + reasons.join(", ") };
   }
 }
 
@@ -761,8 +758,9 @@ export function foundVillage() {
   villagesData[newVillageIndex].population.villagers = villagersToMove;
   villagesData[newVillageIndex].population.chief = chiefToMove;
 
-  setVillagers(villagers - villagersToMove);
-  setChief(chief - chiefToMove);
+  // Supprimez ces lignes pour ne pas consommer les villageois et chefs
+  // setVillagers(villagers - villagersToMove);
+  // setChief(chief - chiefToMove);
 
   const proportion = 0.5;
   const pickersToMove = Math.floor(pickers * proportion);
@@ -781,13 +779,14 @@ export function foundVillage() {
   villagesData[newVillageIndex].population.researchers = researchersToMove;
   villagesData[newVillageIndex].population.explorers = explorersToMove;
 
-  setPickers(pickers - pickersToMove);
-  setHunters(hunters - huntersToMove);
-  setMiners(miners - minersToMove);
-  setFarmers(farmers - farmersToMove);
-  setTinkers(tinkers - tinkersToMove);
-  setResearchers(researchers - researchersToMove);
-  setExplorers(explorers - explorersToMove);
+  // Supprimez ces lignes pour ne pas consommer les travailleurs
+  // setPickers(pickers - pickersToMove);
+  // setHunters(hunters - huntersToMove);
+  // setMiners(miners - minersToMove);
+  // setFarmers(farmers - farmersToMove);
+  // setTinkers(tinkers - tinkersToMove);
+  // setResearchers(researchers - researchersToMove);
+  // setExplorers(explorers - explorersToMove);
 
   setVillageFounded(true);
   document.getElementById("tinkerSection").style.display = "block";
@@ -800,9 +799,6 @@ export function foundVillage() {
   } else {
     document.getElementById("narrative").textContent = `Village ${villages} fondé ! Population totale : ${totalPopulation}/1000.`;
   }
-
-  // Supprimez : enhancedUpdateDisplay();
-  // Supprimez : updateSeasonDisplay();
 }
 
 
@@ -866,6 +862,8 @@ export function seekShard() {
 
 
 export function gameLoop() {
+  let result = {};
+
   let harvestBonus = eternityShards >= 1 ? shardEffects[0].harvestBonus : 1;
   harvestBonus *= currentAge === "Âge des Métaux" || currentAge === "Âge de l’Agriculture" ? 1.1 : 1;
   let waterConsumptionReduction = eternityShards >= 2 ? shardEffects[1].waterConsumptionReduction : 1;
@@ -933,6 +931,7 @@ export function gameLoop() {
       setVillagers(villagers + 10);
       setExplorationActive(false);
 
+      let previousAge = currentAge; // Sauvegarde de l’âge avant changement
       if (!discoveredFibers) {
         setDiscoveredFibers(true);
         setFibers(0);
@@ -952,7 +951,9 @@ export function gameLoop() {
         document.getElementById("herbalistSection").style.display = "block";
         document.getElementById("narrative").textContent = "Les explorateurs ont découvert les herbes !";
       }
-      // Supprimez : enhancedUpdateDisplay();
+      if (previousAge !== currentAge) {
+        result.ageChanged = true; // Indique un changement d’âge
+      }
     }
   }
 
@@ -1042,7 +1043,7 @@ export function gameLoop() {
       alertMessage += alertMessage ? " Plus d’eau ! Récolte vite !" : "Plus d’eau ! Récolte vite !";
     }
     if (alertMessage) {
-      return { alert: alertMessage };
+      result.alert = alertMessage;
     }
 
     if (berries <= 0 && meat <= 0 && water <= 0 && (currentAge !== "Âge de l’Agriculture" || bread <= 0) && !noDeath) {
@@ -1058,7 +1059,7 @@ export function gameLoop() {
     }
   } else {
     setDeathTimer(0);
-    return { hideAlert: true };
+    result.hideAlert = true;
   }
 
   if (villagers >= 1 && water === 0) {
@@ -1070,6 +1071,7 @@ export function gameLoop() {
     setSeasonTimer(0);
     setCurrentSeason((currentSeason + 1) % 4);
     document.getElementById("narrative").textContent = `La saison change : ${seasonNames[currentSeason]}.`;
+    result.seasonChanged = true; // Indique un changement de saison
   }
 
   if (currentHint && !currentHint.condition()) {
@@ -1083,9 +1085,7 @@ export function gameLoop() {
     setCurrentHint(availableHint);
   }
 
-  // Supprimez : enhancedUpdateDisplay();
-  // Supprimez : updateSeasonDisplay();
-  // Supprimez : updateExplorationDisplay();
+  return result;
 }
 
 export function transformToCity() {
