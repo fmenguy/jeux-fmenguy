@@ -143,6 +143,14 @@ button:disabled {
   text-align: left;
 }
 
+#noHintMessage {
+  color: #e0d5b8;
+  font-style: italic;
+  font-size: 14px;
+  margin: 10px 0;
+  text-align: center;
+}
+
 footer {
   flex-shrink: 0;
   width: 100%;

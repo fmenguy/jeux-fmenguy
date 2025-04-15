@@ -209,8 +209,9 @@
 
     <div class="section" id="hintSection">
       <h2>Indices</h2>
-      <button id="hintBtn" onclick="buyHint()">Acheter un indice</button>
-      <span id="hintCost" class="tooltip">Aucun indice disponible</span>
+      <p id="noHintMessage">Aucun indice disponible</p>
+      <button id="buyHintBtn" onclick="buyHint()">Acheter un indice</button>
+      <p id="hintCost" class="tooltip"></p>
       <button id="toggleHintsBtn" onclick="toggleHints()">Afficher/Masquer</button>
       <ul id="purchasedHintsList" style="display: block"></ul>
     </div>
