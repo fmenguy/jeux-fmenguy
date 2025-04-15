@@ -14,6 +14,7 @@ import {
   setEternityShards, setCurrentAge, setCurrentSeason, setSeasonTimer, setPurchasedHints, setCurrentHint,
   shardEffects,
   explorationActive, explorationTimer,
+  villageFounded,
   villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, getTotalPopulation,
 } from './game.js';
 
@@ -193,7 +194,18 @@ export function updateDisplay() {
   document.getElementById("loadGameBtn").disabled = false;
   document.getElementById("exportSaveBtn").disabled = false;
   document.getElementById("importSaveBtn").disabled = false;
-
+  document.getElementById("villagesDisplay").style.display = villageFounded ? "block" : "none";
+const villagesList = document.getElementById("villagesList");
+villagesList.innerHTML = "";
+if (villagesData && Array.isArray(villagesData)) {
+  villagesData.forEach((village, index) => {
+    const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
+    villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
+  });
+} else {
+  villagesList.innerHTML = "<li>Aucun village fondé.</li>";
+}
+document.getElementById("totalPopulation").textContent = getTotalPopulation();
   updateHintButton();
 
 }
@@ -279,160 +291,81 @@ export function toggleHints() {
 
 export function buyHint() {
   if (!currentHint) {
-    showAlert("Aucun indice disponible !");
+    console.log("buyHint: Aucun indice courant.");
     return;
   }
-  if (!currentHint.condition()) {
-    showAlert("La condition de cet indice n’est plus remplie !");
-    setCurrentHint(null);
-    updateHintButton();
-    enhancedUpdateDisplay();
-    return;
-  }
-  if (currentHint.canBuy && !currentHint.canBuy()) {
-    showAlert("Tu ne remplis pas les conditions pour acheter cet indice !");
-    return;
-  }
-  const canAfford =
-    Object.keys(currentHint.cost).length === 0 ||
-    Object.entries(currentHint.cost).every(([resource, amount]) => {
-      let resourceValue;
+  console.log("buyHint: Tentative d'achat de l'indice", { id: currentHint.id, cost: currentHint.cost });
+
+  const cost = currentHint.cost || {};
+  const canAfford = Object.keys(cost).every((resource) => {
+    switch (resource) {
+      case "berries":
+        return berries >= cost[resource];
+      case "wood":
+        return wood >= cost[resource];
+      case "stone":
+        return stone >= cost[resource];
+      case "water":
+        return water >= cost[resource];
+      case "fibers":
+        return fibers >= cost[resource];
+      case "axes":
+        return axes >= cost[resource];
+      case "eternityShards":
+        return eternityShards >= cost[resource];
+      case "flour":
+        console.log("buyHint: Vérification de la farine", { flour, required: cost[resource] });
+        return flour >= cost[resource];
+      default:
+        console.log("buyHint: Ressource inconnue", resource);
+        return false;
+    }
+  });
+
+  if (canAfford && (!currentHint.canBuy || currentHint.canBuy())) {
+    console.log("buyHint: Achat autorisé, déduction des coûts...");
+    Object.keys(cost).forEach((resource) => {
       switch (resource) {
         case "berries":
-          resourceValue = berries;
+          setBerries(berries - cost[resource]);
           break;
         case "wood":
-          resourceValue = wood;
+          setWood(wood - cost[resource]);
           break;
         case "stone":
-          resourceValue = stone;
-          break;
-        case "axes":
-          resourceValue = axes;
-          break;
-        case "fibers":
-          resourceValue = fibers;
+          setStone(stone - cost[resource]);
           break;
         case "water":
-          resourceValue = water;
+          setWater(water - cost[resource]);
+          break;
+        case "fibers":
+          setFibers(fibers - cost[resource]);
+          break;
+        case "axes":
+          setAxes(axes - cost[resource]);
           break;
         case "eternityShards":
-          resourceValue = eternityShards;
+          setEternityShards(eternityShards - cost[resource]);
           break;
-        default:
-          resourceValue = 0;
+        case "flour":
+          setFlour(flour - cost[resource]);
+          break;
       }
-      return resourceValue >= amount;
     });
-
-  if (canAfford) {
-    if (Object.keys(currentHint.cost).length > 0) {
-      Object.entries(currentHint.cost).forEach(([resource, amount]) => {
-        switch (resource) {
-          case "berries":
-            setBerries(berries - amount);
-            break;
-          case "wood":
-            setWood(wood - amount);
-            break;
-          case "stone":
-            setStone(stone - amount);
-            break;
-          case "axes":
-            setAxes(axes - amount);
-            break;
-          case "fibers":
-            setFibers(fibers - amount);
-            break;
-          case "water":
-            setWater(water - amount);
-            break;
-          case "eternityShards":
-            setEternityShards(eternityShards - amount);
-            break;
-        }
-      });
-    }
-    const updatedPurchasedHints = [...purchasedHints, currentHint.id];
-    setPurchasedHints(updatedPurchasedHints);
-    const purchasedHintsList = document.getElementById("purchasedHintsList");
-
-    if (currentHint.id === "shardEffectsReveal") {
-      let effectsText = "Effets des Éclats d’Éternité débloqués :<br>";
-      for (let i = 0; i < eternityShards && i < shardEffects.length; i++) {
-        const effect = shardEffects[i];
-        if (effect.harvestBonus) {
-          effectsText += `- ${effect.name} : Bonus de récolte de ${((effect.harvestBonus - 1) * 100).toFixed(0)}%.<br>`;
-        } else if (effect.waterConsumptionReduction) {
-          effectsText += `- ${effect.name} : Réduction de la consommation d’eau à ${Math.round(effect.waterConsumptionReduction * 100)}%.<br>`;
-        } else if (effect.foodConsumptionReduction) {
-          effectsText += `- ${effect.name} : Réduction de la consommation de nourriture à ${Math.round(effect.foodConsumptionReduction * 100)}%.<br>`;
-        } else if (effect.seasonPenaltyReduction) {
-          effectsText += `- ${effect.name} : Réduction des pénalités saisonnières de ${Math.round(effect.seasonPenaltyReduction * 100)}%.<br>`;
-        } else if (effect.noDeath) {
-          effectsText += `- ${effect.name} : Plus de morts par manque de ressources.<br>`;
-        }
+    try {
+      if (purchasedHintsList) {
+        purchasedHintsList.innerHTML += `<li>${currentHint.message}</li>`;
+        purchasedHints.push(currentHint.id);
+        setCurrentHint(null);
+        console.log("buyHint: Indice acheté avec succès", currentHint.id);
+      } else {
+        console.error("buyHint: L'élément purchasedHintsList n'existe pas.");
       }
-      purchasedHintsList.innerHTML += `<li>${effectsText}</li>`;
-      document.getElementById("narrative").textContent = "Les effets des Éclats d’Éternité sont révélés dans les indices !";
-    } else {
-      purchasedHintsList.innerHTML += `<li>${currentHint.message}</li>`;
-      document.getElementById("narrative").textContent = `Indice acheté : ${currentHint.message}`;
+    } catch (error) {
+      console.error("buyHint: Erreur lors de l'affichage de l'indice", error);
     }
-
-    setCurrentHint(null);
-    updateHintButton();
-    enhancedUpdateDisplay();
   } else {
-    let missing = "Il te faut ";
-    let parts = [];
-    Object.entries(currentHint.cost).forEach(([resource, amount]) => {
-      let resourceValue;
-      switch (resource) {
-        case "berries":
-          resourceValue = berries;
-          break;
-        case "wood":
-          resourceValue = wood;
-          break;
-        case "stone":
-          resourceValue = stone;
-          break;
-        case "axes":
-          resourceValue = axes;
-          break;
-        case "fibers":
-          resourceValue = fibers;
-          break;
-        case "water":
-          resourceValue = water;
-          break;
-        case "eternityShards":
-          resourceValue = eternityShards;
-          break;
-        default:
-          resourceValue = 0;
-      }
-      let resourceName =
-        resource === "stone"
-          ? "pierres"
-          : resource === "berries"
-            ? "baies"
-            : resource === "wood"
-              ? "bois"
-              : resource === "axes"
-                ? "haches"
-                : resource === "fibers"
-                  ? "fibres"
-                  : resource === "water"
-                    ? "eau"
-                    : resource === "eternityShards"
-                      ? "éclats d’éternité"
-                      : resource;
-      if (resourceValue < amount) parts.push(`${amount} ${resourceName}`);
-    });
-    missing += parts.length > 0 ? parts.join(", ").replace(/, ([^,]*)$/, " et $1") : "plus de ressources";
-    showAlert(`${missing} pour cet indice !`);
+    console.log("buyHint: Achat impossible", { canAfford, canBuy: currentHint.canBuy ? currentHint.canBuy() : true });
   }
 }
 
