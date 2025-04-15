@@ -25,7 +25,6 @@ export let fabricationOrder = [
   "coatSection",
   "metalAxeSection",
   "remedySection",
-  "breadSection",
 ];
 export let buildingsOrder = [
   "wellSection",
