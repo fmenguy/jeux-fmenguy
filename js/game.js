@@ -216,7 +216,7 @@ export const dynamicHints = [
     id: "workshopFiberLimit",
   },
   {
-    condition: () => eternityShards >= 5,
+    condition: () => eternityShards >= 5 && villageFounded, // Ajout de villageFounded comme condition
     message: "Affiche l'effet des dons débloqués.",
     cost: { eternityShards: 5 },
     id: "shardEffectsReveal",
@@ -790,7 +790,7 @@ export function foundVillage() {
   setCurrentSeason(1);
 
   const totalPopulation = getTotalPopulation();
-  if (totalPopulation >= 1000) {
+  if (totalPopulation >= 500) {
     transformToCity();
   } else {
     document.getElementById("narrative").textContent = `Village ${villages} fondé ! Population totale : ${totalPopulation}/1000.`;

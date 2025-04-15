@@ -414,6 +414,7 @@ export function toggleHints() {
 
 export function buyHint() {
   if (!currentHint) {
+    console.log("buyHint: Aucun indice courant.");
     return;
   }
 
@@ -470,9 +471,39 @@ export function buyHint() {
           break;
       }
     });
+
     try {
       if (purchasedHintsList) {
-        purchasedHintsList.innerHTML += `<li>${currentHint.message}</li>`;
+        // Si l’indice est shardEffectsReveal, afficher les effets des dons
+        if (currentHint.id === "shardEffectsReveal") {
+          let effectsText = "Effets des dons débloqués :<br>";
+          const shardEffects = [
+            { name: "Don de la Terre", harvestBonus: 1.2 },
+            { name: "Souffle de Vie", waterConsumptionReduction: 0.75 },
+            { name: "Force des Anciens", foodConsumptionReduction: 0.8 },
+            { name: "Équilibre Saisonnal", seasonPenaltyReduction: 0.5 },
+            { name: "Harmonie Éternelle", noDeath: true },
+          ];
+
+          shardEffects.forEach((effect, index) => {
+            if (eternityShards >= index + 1) { // Vérifier si l’effet est débloqué
+              if (effect.harvestBonus) {
+                effectsText += `- ${effect.name} : Bonus de récolte de ${effect.harvestBonus}x<br>`;
+              } else if (effect.waterConsumptionReduction) {
+                effectsText += `- ${effect.name} : Réduction de la consommation d'eau à ${effect.waterConsumptionReduction}x<br>`;
+              } else if (effect.foodConsumptionReduction) {
+                effectsText += `- ${effect.name} : Réduction de la consommation de nourriture à ${effect.foodConsumptionReduction}x<br>`;
+              } else if (effect.seasonPenaltyReduction) {
+                effectsText += `- ${effect.name} : Réduction des pénalités saisonnières de ${effect.seasonPenaltyReduction}x<br>`;
+              } else if (effect.noDeath) {
+                effectsText += `- ${effect.name} : Plus de morts par manque de ressources<br>`;
+              }
+            }
+          });
+          purchasedHintsList.innerHTML += `<li>${effectsText}</li>`;
+        } else {
+          purchasedHintsList.innerHTML += `<li>${currentHint.message}</li>`;
+        }
         purchasedHints.push(currentHint.id);
         setCurrentHint(null);
       } else {
