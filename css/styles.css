@@ -38,9 +38,18 @@ main {
 
 #narrative {
   font-style: italic;
-  margin: 20px;
+  margin: 20px auto;
   color: #c9b68a;
-  padding: 10px;
+  border: 2px solid var(--primary-color);
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 600px;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 #resources {
@@ -265,59 +274,51 @@ footer {
   }
 }
 
-#narrative, #villagesList li, .tooltip {
-  overflow-wrap: break-word;
-}
-
 #villagesDisplay {
   margin: 20px auto;
-  padding: 10px 15px;
-  background-color: rgba(47, 35, 26, 0.9); /* Légèrement plus clair que --background-dark */
-  border-top: 4px solid var(--primary-color); /* Bordure supérieure dorée */
-  border-bottom: 4px solid var(--primary-color); /* Bordure inférieure dorée */
-  border-left: none;
-  border-right: none;
-  border-radius: 0; /* Pas de bord arrondi pour un effet bandeau */
+  padding: 15px;
+  background-color: #2f231a;
+  border-radius: 5px;
+  border: 1px solid #d4a017;
   width: 90%;
-  max-width: 600px;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Ombre pour un effet de profondeur */
+  max-width: 400px;
+  text-align: left;
 }
 
 #villagesDisplay h2 {
-  color: var(--secondary-color);
-  font-size: 20px;
-  margin-bottom: 15px;
-  text-transform: uppercase; /* Pour un look plus formel */
-  letter-spacing: 1px; /* Espacement pour plus d’élégance */
+  color: #e0d5b8;
+  font-size: 18px;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 #villagesList {
   list-style: none;
   padding: 0;
-  margin: 0 0 15px 0;
+  margin: 0 0 10px 0;
 }
 
 #villagesList li {
-  padding: 6px 10px;
+  padding: 8px 12px;
   margin: 4px 0;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.3);
   border-radius: 3px;
-  color: var(--secondary-color);
+  color: #e0d5b8;
   font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-left: 3px solid #d4a017;
 }
 
 #villagesDisplay p {
-  color: var(--secondary-color);
-  font-size: 16px;
-  margin: 0;
+  color: #e0d5b8;
+  font-size: 14px;
+  text-align: center;
 }
 
 #totalPopulation {
-  color: var(--primary-color);
+  color: #d4a017;
   font-weight: bold;
-  font-size: 18px;
+}
+
+#narrative, #villagesList li, .tooltip {
+  overflow-wrap: break-word;
 }
