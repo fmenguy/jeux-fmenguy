@@ -384,7 +384,6 @@ export function importSavePrompt() {
       "coatSection",
       "metalAxeSection",
       "remedySection",
-      "breadSection",
     ];
     const newBuildingsOrder = saveData.buildingsOrder || [
       "wellSection",
