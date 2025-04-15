@@ -930,9 +930,7 @@ export function gameLoop() {
 }
 
 
-export function initGame() {
-  console.log("Jeu initialisé");
-}
+export function initGame() {}
 
 export function setBerries(value) { berries = value; }
 export function setWood(value) { wood = value; }
