@@ -14,7 +14,17 @@ import {
   setEternityShards, setCurrentAge, setCurrentSeason, setSeasonTimer, setPurchasedHints, setCurrentHint,
   shardEffects,
   explorationActive, explorationTimer,
+  villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, getTotalPopulation,
 } from './game.js';
+
+const villagesList = document.getElementById("villagesList");
+villagesList.innerHTML = "";
+villagesData.forEach((village, index) => {
+  const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
+  villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
+});
+document.getElementById("totalPopulation").textContent = getTotalPopulation();
+
 
 // Variables pour stocker l’ordre des sections
 export let fabricationOrder = [
