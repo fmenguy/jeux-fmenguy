@@ -12,7 +12,7 @@ import {
   setResearchers, setPickers, setHunters, setExplorers, setMiners, setFarmers, setVillages, setTechUnlocked,
   setEternityShards, setCurrentAge, setCurrentSeason, setSeasonTimer, setPurchasedHints, setCurrentHint,
   shardEffects,
-  explorationActive, explorationTimer, // Assurez-vous que ces deux variables sont bien importées
+  explorationActive, explorationTimer,
 } from './game.js';
 
 // Variables pour stocker l’ordre des sections
