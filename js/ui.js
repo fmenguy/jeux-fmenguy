@@ -251,7 +251,6 @@ export function updateDisplay() {
   const villagesList = document.getElementById("villagesList");
   villagesList.innerHTML = "";
   if (villagesData && Array.isArray(villagesData)) {
-    // Synchronisation de villagesData pour l’affichage par village
     if (villagesData.length > 0) {
       const totalVillagers = villagers;
       const totalChiefs = chief;
@@ -262,7 +261,7 @@ export function updateDisplay() {
       const totalTinkers = tinkers;
       const totalResearchers = researchers;
       const totalExplorers = explorers;
-  
+
       const numVillages = villagesData.length;
       const baseVillagersPerVillage = Math.floor(totalVillagers / numVillages);
       const baseChiefsPerVillage = Math.floor(totalChiefs / numVillages);
@@ -273,7 +272,7 @@ export function updateDisplay() {
       const baseTinkersPerVillage = Math.floor(totalTinkers / numVillages);
       const baseResearchersPerVillage = Math.floor(totalResearchers / numVillages);
       const baseExplorersPerVillage = Math.floor(totalExplorers / numVillages);
-  
+
       let remainingVillagers = totalVillagers % numVillages;
       let remainingChiefs = totalChiefs % numVillages;
       let remainingPickers = totalPickers % numVillages;
@@ -283,7 +282,7 @@ export function updateDisplay() {
       let remainingTinkers = totalTinkers % numVillages;
       let remainingResearchers = totalResearchers % numVillages;
       let remainingExplorers = totalExplorers % numVillages;
-  
+
       villagesData.forEach((village, index) => {
         village.population.villagers = baseVillagersPerVillage + (remainingVillagers > 0 ? 1 : 0);
         village.population.chief = baseChiefsPerVillage + (remainingChiefs > 0 ? 1 : 0);
@@ -294,7 +293,7 @@ export function updateDisplay() {
         village.population.tinkers = baseTinkersPerVillage + (remainingTinkers > 0 ? 1 : 0);
         village.population.researchers = baseResearchersPerVillage + (remainingResearchers > 0 ? 1 : 0);
         village.population.explorers = baseExplorersPerVillage + (remainingExplorers > 0 ? 1 : 0);
-  
+
         if (remainingVillagers > 0) remainingVillagers--;
         if (remainingChiefs > 0) remainingChiefs--;
         if (remainingPickers > 0) remainingPickers--;
@@ -304,7 +303,7 @@ export function updateDisplay() {
         if (remainingTinkers > 0) remainingTinkers--;
         if (remainingResearchers > 0) remainingResearchers--;
         if (remainingExplorers > 0) remainingExplorers--;
-  
+
         const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
         villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
       });
@@ -314,7 +313,13 @@ export function updateDisplay() {
     document.getElementById("totalPopulation").textContent = getTotalPopulation();
   }
 
-  updateHintButton();
+  // Vérification avant d’appeler updateHintButton
+  const hintSection = document.getElementById("hintSection");
+  if (hintSection) {
+    updateHintButton();
+  } else {
+    console.warn("updateDisplay: La section #hintSection n'existe pas dans le DOM, updateHintButton n'est pas appelé.");
+  }
 }
 
 export function updateSeasonDisplay() {
@@ -349,14 +354,16 @@ export function hideAlert() {
 export function updateHintButton() {
   const buyHintBtn = document.getElementById("buyHintBtn");
   const hintCost = document.getElementById("hintCost");
+  const noHintMessage = document.getElementById("noHintMessage");
 
   // Vérification que les éléments existent
-  if (!buyHintBtn || !hintCost) {
-    console.error("updateHintButton: Les éléments buyHintBtn ou hintCost n'existent pas dans le DOM.");
+  if (!buyHintBtn || !hintCost || !noHintMessage) {
+    console.error("updateHintButton: Les éléments buyHintBtn, hintCost ou noHintMessage n'existent pas dans le DOM.");
     return;
   }
 
   if (currentHint) {
+    noHintMessage.style.display = "none"; // Masquer "Aucun indice disponible"
     buyHintBtn.style.display = "block";
     hintCost.style.display = "block";
     let costText = "Coût : ";
@@ -392,10 +399,12 @@ export function updateHintButton() {
     }
     hintCost.textContent = costText;
   } else {
+    noHintMessage.style.display = "block"; // Afficher "Aucun indice disponible"
     buyHintBtn.style.display = "none";
     hintCost.style.display = "none";
   }
 }
+
 
 export function toggleHints() {
   const hintList = document.getElementById("purchasedHintsList");
