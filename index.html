@@ -58,8 +58,9 @@
       <button onclick="gatherFibers()">Récolter</button><span class="tooltip">Les fibres servent à faire des vêtements ou cordes.</span>
     </div>
     <div class="resource" id="metalsSection" style="display: none">
-      <p><span class="icon">⚒️</span> Métaux: <span id="metals">0</span></p>
-      <button id="gatherMetalsBtn" onclick="gatherMetals()" disabled>Récolter</button><span class="tooltip">Les métaux améliorent les outils (mine requise).</span>
+      <p><span class="icon">⚒️</span> Métaux: <span id="metals">0</span> / <span id="maxMetalsLimit">100</span></p>
+      <button id="gatherMetalsBtn" onclick="gatherMetals()" disabled>Récolter</button>
+      <span class="tooltip">Les métaux améliorent les outils (mine requise).</span>
     </div>
     <div class="resource" id="herbsSection" style="display: none">
       <p><span class="icon">🌿</span> Herbes: <span id="herbs">0</span></p>

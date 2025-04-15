@@ -48,6 +48,7 @@ export function updateDisplay() {
   document.getElementById("meat").textContent = Math.floor(meat);
   document.getElementById("fibers").textContent = Math.floor(fibers);
   document.getElementById("metals").textContent = Math.floor(metals);
+  document.getElementById("maxMetalsLimit").textContent = maxMetals + maxMetalsStorage;
   document.getElementById("herbs").textContent = Math.floor(herbs);
   document.getElementById("wheat").textContent = Math.floor(wheat);
   document.getElementById("flour").textContent = Math.floor(flour);
