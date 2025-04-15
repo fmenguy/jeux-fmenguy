@@ -174,6 +174,11 @@ export function loadGame(slot) {
     fabricationOrder.push(...newFabricationOrder);
     buildingsOrder.push(...newBuildingsOrder);
 
+    const maxChiefs = Math.floor(saveData.villagers / 25);
+    if (saveData.chief > maxChiefs) {
+      setChief(maxChiefs);
+      console.log("Chef limité après chargement", { oldChief: saveData.chief, newChief: maxChiefs });
+    }
     enhancedUpdateDisplay();
     updateSeasonDisplay();
     updateExplorationDisplay();
@@ -403,6 +408,11 @@ export function importSavePrompt() {
           (hint) => hint.condition() && !purchasedHints.includes(hint.id)
         ) || null
       );
+    }
+    const maxChiefs = Math.floor(saveData.villagers / 25);
+    if (saveData.chief > maxChiefs) {
+      setChief(maxChiefs);
+      console.log("Chef limité après chargement", { oldChief: saveData.chief, newChief: maxChiefs });
     }
     enhancedUpdateDisplay();
     updateSeasonDisplay();
