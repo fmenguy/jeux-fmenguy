@@ -136,6 +136,22 @@ button:disabled {
   display: block;
 }
 
+
+#hintSection {
+  text-align: center; /* Centre tous les éléments enfants */
+}
+
+#buyHintBtn, #toggleHintsBtn {
+  display: block; /* Permet de centrer avec margin */
+  margin: 5px auto; /* Centre horizontalement */
+}
+
+#hintCost, #noHintMessage {
+  display: block; /* Permet de centrer avec margin */
+  margin: 5px auto; /* Centre horizontalement */
+}
+
+
 #purchasedHintsList {
   font-size: 14px;
   color: #d4a017;
