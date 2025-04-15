@@ -349,6 +349,13 @@ export function hideAlert() {
 export function updateHintButton() {
   const buyHintBtn = document.getElementById("buyHintBtn");
   const hintCost = document.getElementById("hintCost");
+
+  // Vérification que les éléments existent
+  if (!buyHintBtn || !hintCost) {
+    console.error("updateHintButton: Les éléments buyHintBtn ou hintCost n'existent pas dans le DOM.");
+    return;
+  }
+
   if (currentHint) {
     buyHintBtn.style.display = "block";
     hintCost.style.display = "block";
@@ -360,7 +367,6 @@ export function updateHintButton() {
     } else {
       costText += costEntries
         .map(([resource, amount]) => {
-          // Traduction des ressources en français
           switch (resource) {
             case "berries":
               return `${amount} baies`;
