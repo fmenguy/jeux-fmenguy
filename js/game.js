@@ -545,13 +545,18 @@ export function recruitVillager() {
 }
 
 export function appointChief() {
-  if (axes >= 25 && villagers >= 25) {
+  const maxChiefs = Math.floor(villagers / 25); // 1 chef pour 25 villageois
+  if (axes >= 25 && villagers >= 25 && chief < maxChiefs) {
     setChief(chief + 1);
     document.getElementById("villageSection").style.display = "block";
     document.getElementById("narrative").textContent = "Tu as un nouveau chef ! Il guide une partie de ton peuple.";
     enhancedUpdateDisplay();
   } else {
-    showAlert("Il te faut 25 haches et au moins 25 villageois pour nommer un chef !");
+    let reasons = [];
+    if (axes < 25) reasons.push("pas assez de haches (" + axes + "/25)");
+    if (villagers < 25) reasons.push("pas assez de villageois (" + villagers + "/25)");
+    if (chief >= maxChiefs) reasons.push("trop de chefs pour le nombre de villageois (" + chief + "/" + maxChiefs + ")");
+    showAlert("Impossible de nommer un chef : " + reasons.join(", ") + " !");
   }
 }
 

@@ -99,7 +99,8 @@ export function updateDisplay() {
   document.getElementById("craftMillBtn").disabled = !(wood >= 50 && stone >= 20 && metals >= 5 && wheatFields > 0);
 
   document.getElementById("recruitVillagerBtn").disabled = berries < 5;
-  document.getElementById("appointChiefBtn").disabled = !(axes >= 25 && villagers >= 25);
+  const maxChiefs = Math.floor(villagers / 25);
+  document.getElementById("appointChiefBtn").disabled = !(axes >= 25 && villagers >= 25 && chief < maxChiefs);
   document.getElementById("recruitTinkerBtn").disabled = !(wood >= 100 && stone >= 100 && villageFounded);
   document.getElementById("recruitPickerBtn").disabled = !(berries >= 10 && wood >= 5);
   document.getElementById("recruitHunterBtn").disabled = !(wood >= 10 && meat >= 5);
