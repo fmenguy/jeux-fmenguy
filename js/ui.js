@@ -12,7 +12,7 @@ import {
   setResearchers, setPickers, setHunters, setExplorers, setMiners, setFarmers, setVillages, setTechUnlocked,
   setEternityShards, setCurrentAge, setCurrentSeason, setSeasonTimer, setPurchasedHints, setCurrentHint,
   shardEffects,
-  explorationActive, // Ajoutez cette ligne
+  explorationActive, explorationTimer, // Assurez-vous que ces deux variables sont bien importées
 } from './game.js';
 
 // Variables pour stocker l’ordre des sections
@@ -186,6 +186,17 @@ export function updateSeasonDisplay() {
     }</span> ${seasonNames[currentSeason]
     } <div class="progress-bar"><div class="progress" style="width: ${(seasonTimer / seasonDuration) * 100
     }%"></div></div>`;
+}
+
+export function updateExplorationDisplay() {
+  const explorationElement = document.getElementById("explorationDisplay");
+  if (explorationActive) {
+    const explorationDuration = 30; // Durée fixe de l'exploration (doit correspondre à la valeur dans sendExplorers)
+    explorationElement.style.display = "block";
+    explorationElement.innerHTML = `<span class="icon">🗺️</span> Exploration <div class="progress-bar"><div class="progress" style="width: ${((explorationDuration - explorationTimer) / explorationDuration) * 100}%"></div></div>`;
+  } else {
+    explorationElement.style.display = "none";
+  }
 }
 
 export function showAlert(message) {
