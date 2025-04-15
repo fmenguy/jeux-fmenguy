@@ -143,7 +143,7 @@ export function loadGame(slot) {
     setMaxFlourStorage(saveData.maxFlourStorage || 0);
     setBakeries(saveData.bakeries || 0);
     setUnlockedAges(saveData.unlockedAges || ["Âge de Pierre"]);
-    fabricationOrder = saveData.fabricationOrder || [
+    const newFabricationOrder = saveData.fabricationOrder || [
       "metalAxeSection",
       "axeSection",
       "bucketSection",
@@ -153,7 +153,7 @@ export function loadGame(slot) {
       "remedySection",
       "breadSection",
     ];
-    buildingsOrder = saveData.buildingsOrder || [
+    const newBuildingsOrder = saveData.buildingsOrder || [
       "wellSection",
       "mineSection",
       "workshopSection",
@@ -164,6 +164,11 @@ export function loadGame(slot) {
       "stoneQuarrySection",
       "warehouseSection",
     ];
+    fabricationOrder.length = 0;
+    buildingsOrder.length = 0;
+
+    fabricationOrder.push(...newFabricationOrder);
+    buildingsOrder.push(...newBuildingsOrder);
 
     updateDisplay();
     updateSeasonDisplay();
@@ -353,17 +358,17 @@ export function importSavePrompt() {
     setMaxFlourStorage(saveData.maxFlourStorage || 0);
     setBakeries(saveData.bakeries || 0);
     setUnlockedAges(saveData.unlockedAges || ["Âge de Pierre"]);
-    fabricationOrder = saveData.fabricationOrder || [
-      "metalAxeSection",
+    const newFabricationOrder = saveData.fabricationOrder || [
       "axeSection",
       "bucketSection",
       "pickaxeSection",
       "bowSection",
       "coatSection",
+      "metalAxeSection",
       "remedySection",
       "breadSection",
     ];
-    buildingsOrder = saveData.buildingsOrder || [
+    const newBuildingsOrder = saveData.buildingsOrder || [
       "wellSection",
       "mineSection",
       "workshopSection",
@@ -374,6 +379,15 @@ export function importSavePrompt() {
       "stoneQuarrySection",
       "warehouseSection",
     ];
+
+    // Vider les tableaux existants
+    fabricationOrder.length = 0;
+    buildingsOrder.length = 0;
+
+    // Remplir avec les nouvelles valeurs
+    fabricationOrder.push(...newFabricationOrder);
+    buildingsOrder.push(...newBuildingsOrder);
+    
     const allHintsPurchased = dynamicHints.every((hint) =>
       purchasedHints.includes(hint.id)
     );
