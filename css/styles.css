@@ -1,3 +1,20 @@
+:root {
+  --primary-color: #d4a017;
+  --secondary-color: #e0d5b8;
+  --background-dark: #2f231a;
+  --text-dark: #2b1d0e;
+  --background-body: #4a3f2e;
+}
+
+.bg-dark-transparent {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.border-gold {
+  border: 1px solid var(--primary-color);
+}
+
+
 html, body {
   height: 100%;
   margin: 0;
@@ -6,8 +23,8 @@ html, body {
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #4a3f2e;
-  color: #e0d5b8;
+  background-color: var(--background-body);
+  color: var(--secondary-color);
   text-align: center;
   padding: 20px;
   margin: 0;
@@ -24,17 +41,13 @@ main {
   font-style: italic;
   margin: 20px;
   color: #c9b68a;
-  border: 1px solid #d4a017;
   padding: 10px;
-  background-color: rgba(0, 0, 0, 0.3);
 }
 
 #resources {
   margin: 10px;
   padding: 10px;
-  background-color: #2f231a;
   border-radius: 5px;
-  border: 1px solid #d4a017;
 }
 
 .resource {
@@ -48,14 +61,15 @@ main {
 }
 
 .section {
-  margin: 20px;
-  padding: 15px;
+  margin: 2rem;
+  padding: 1.5rem;
   background-color: #2f231a;
-  border-radius: 5px;
+  border-radius: 0.5rem;
   display: inline-block;
-  width: 300px;
+  width: 90%; /* Remplacement de 300px */
+  max-width: 300px;
   vertical-align: top;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3);
 }
 
 .craft,
@@ -77,8 +91,8 @@ button {
   padding: 5px 10px;
   margin: 2px;
   cursor: pointer;
-  background-color: #d4a017;
-  color: #2b1d0e;
+  background-color: var(--primary-color);
+  color: var(--text-dark);
   border: none;
   border-radius: 3px;
   transition: background-color 0.3s;
@@ -109,7 +123,7 @@ button:disabled {
 }
 
 .tooltip {
-  font-size: 12px;
+  font-size: 0.8rem; /* Remplacement de 12px */
   color: #e0d5b8;
   display: block;
 }
@@ -142,17 +156,52 @@ footer {
   text-decoration: none;
 }
 
+/* Petits écrans (mobile) */
+@media (max-width: 600px) {
+  .section {
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+  }
+  .columns {
+    flex-direction: column;
+    align-items: center;
+  }
+  button {
+    padding: 8px 16px; /* Boutons plus grands pour faciliter le toucher sur mobile */
+  }
+  #narrative, #resources {
+    margin: 10px;
+    padding: 8px;
+  }
+}
+
+/* Tablettes */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .section {
+    width: 45%;
+    max-width: 400px;
+  }
+  .columns {
+    justify-content: space-around;
+  }
+}
+
+/* Grands écrans */
+@media (min-width: 1025px) {
+  .section {
+    width: 30%;
+    max-width: 350px;
+  }
+  .columns {
+    justify-content: center;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .changelog-link:hover {
     color: #e0c040;
     text-decoration: underline;
-  }
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .changelog-link:hover {
-    color: #d4a017;
-    text-decoration: none;
   }
 }
 
@@ -215,4 +264,54 @@ footer {
     max-width: 300px;
     margin: 10px auto;
   }
+}
+
+#villagesDisplay {
+  margin: 20px auto;
+  padding: 15px;
+  background-color: #2f231a; /* Fond sombre cohérent avec le thème */
+  border-radius: 5px;
+  border: 1px solid #d4a017; /* Bordure dorée */
+  width: 90%;
+  max-width: 400px;
+  text-align: left;
+}
+
+#villagesDisplay h2 {
+  color: #e0d5b8; /* Couleur claire pour le titre */
+  font-size: 18px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#villagesList {
+  list-style: none; /* Supprime les points de liste */
+  padding: 0;
+  margin: 0 0 10px 0;
+}
+
+#villagesList li {
+  padding: 8px 12px;
+  margin: 4px 0;
+  background-color: rgba(0, 0, 0, 0.3); /* Fond légèrement plus sombre */
+  border-radius: 3px;
+  color: #e0d5b8;
+  font-size: 14px;
+  border-left: 3px solid #d4a017; /* Ligne dorée à gauche pour remplacer le point */
+}
+
+#villagesDisplay p {
+  color: #e0d5b8;
+  font-size: 14px;
+  text-align: center;
+}
+
+#totalPopulation {
+  color: #d4a017; /* Couleur dorée pour la population */
+  font-weight: bold;
+}
+
+
+#narrative, #villagesList li, .tooltip {
+  overflow-wrap: break-word; /* Anciennement word-wrap */
 }
