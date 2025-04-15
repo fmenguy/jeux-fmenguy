@@ -410,8 +410,7 @@ export function buyHint() {
 
 
 export function enableDragAndDrop() {
-  const fabricationSection =
-    document.getElementById("fabricationSection");
+  const fabricationSection = document.getElementById("fabricationSection");
   const batimentsSection = document.getElementById("buildingsSection");
   const sections = [fabricationSection, batimentsSection];
 
@@ -437,11 +436,8 @@ export function enableDragAndDrop() {
         const draggedId = e.dataTransfer.getData("text/plain");
         const draggedElement = document.getElementById(draggedId);
 
-        // Vérifie que l’élément appartient à la même section
         if (draggedElement.parentElement === section) {
-          const craftsArray = Array.from(
-            section.querySelectorAll(".craft")
-          );
+          const craftsArray = Array.from(section.querySelectorAll(".craft"));
           const draggedIndex = craftsArray.indexOf(draggedElement);
           const dropTarget = e.target.closest(".craft");
 
@@ -452,14 +448,13 @@ export function enableDragAndDrop() {
             } else {
               dropTarget.before(draggedElement);
             }
-            // Mettre à jour l’ordre
-            const newOrder = Array.from(
-              section.querySelectorAll(".craft")
-            ).map((craft) => craft.id);
+            const newOrder = Array.from(section.querySelectorAll(".craft")).map((craft) => craft.id);
             if (section.id === "fabricationSection") {
-              fabricationOrder = newOrder;
+              while (fabricationOrder.length > 0) fabricationOrder.pop();
+              fabricationOrder.push(...newOrder);
             } else if (section.id === "buildingsSection") {
-              buildingsOrder = newOrder;
+              while (buildingsOrder.length > 0) buildingsOrder.pop();
+              buildingsOrder.push(...newOrder);
             }
           }
         }
@@ -467,6 +462,8 @@ export function enableDragAndDrop() {
     });
   });
 }
+
+
 export function applyCraftOrder() {
   const fabricationSection =
     document.getElementById("fabricationSection");
