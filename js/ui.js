@@ -235,46 +235,47 @@ export function hideAlert() {
 }
 
 export function updateHintButton() {
-  const hintBtn = document.getElementById("hintBtn");
+  const buyHintBtn = document.getElementById("buyHintBtn");
   const hintCost = document.getElementById("hintCost");
-  if (!currentHint || purchasedHints.includes(currentHint.id)) {
-    hintBtn.disabled = true;
-    hintCost.textContent = "Aucun indice disponible pour le moment.";
-    return;
-  }
-  hintBtn.disabled = false;
-  if (Object.keys(currentHint.cost).length > 0) {
+  if (currentHint) {
+    buyHintBtn.style.display = "block";
+    hintCost.style.display = "block";
     let costText = "Coût : ";
-    Object.entries(currentHint.cost).forEach(([resource, amount]) => {
-      let resourceName =
-        resource === "stone"
-          ? "pierres"
-          : resource === "berries"
-            ? "baies"
-            : resource === "wood"
-              ? "bois"
-              : resource === "axes"
-                ? "haches"
-                : resource === "fibers"
-                  ? "fibres"
-                  : resource === "water"
-                    ? "eau"
-                    : resource;
-      costText += `${amount} ${resourceName}, `;
-    });
-    hintCost.textContent = costText.slice(0, -2);
-  } else if (currentHint.canBuy) {
-    if (currentHint.id === "meatValue") {
-      hintCost.textContent = "Avoir au moins 10 cueilleurs";
-    } else if (currentHint.id === "tinkerHint") {
-      hintCost.textContent = "Avoir au moins 40 villageois";
+    const cost = currentHint.cost || {};
+    const costEntries = Object.entries(cost);
+    if (costEntries.length === 0) {
+      costText += "Gratuit";
     } else {
-      hintCost.textContent = "Condition spéciale requise";
+      costText += costEntries
+        .map(([resource, amount]) => {
+          // Traduction des ressources en français
+          switch (resource) {
+            case "berries":
+              return `${amount} baies`;
+            case "wood":
+              return `${amount} bois`;
+            case "stone":
+              return `${amount} pierre`;
+            case "water":
+              return `${amount} eau`;
+            case "fibers":
+              return `${amount} fibres`;
+            case "axes":
+              return `${amount} haches`;
+            case "eternityShards":
+              return `${amount} éclats d’éternité`;
+            case "flour":
+              return `${amount} farine`;
+            default:
+              return `${amount} ${resource}`;
+          }
+        })
+        .join(", ");
     }
-  } else if (currentHint.id === "tenTinkers") {
-    hintCost.textContent = "Objectif : 10 bricoleurs";
+    hintCost.textContent = costText;
   } else {
-    hintCost.textContent = "Aucune ressource requise";
+    buyHintBtn.style.display = "none";
+    hintCost.style.display = "none";
   }
 }
 
