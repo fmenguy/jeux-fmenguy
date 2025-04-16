@@ -162,75 +162,75 @@ export const dynamicHints = [
   {
     condition: () => chief === 0 && axes < 25,
     message: "Fabrique au moins 25 haches !",
-    cost: { wood: 50 },
+    cost: { axes: 20, passive: true }, // Vérification passive
     id: "prepareForChief",
   },
   {
     condition: () => true,
     message: "Une saison dure 30 minutes.",
-    cost: { berries: 30 },
+    cost: { berries: 10 }, // Coût réduit, consommation réelle
     id: "seasonDuration",
   },
   {
     condition: () => villagers >= 10,
     canBuy: () => pickers >= 10,
     message: "La viande est plus nourrissante que les baies.",
-    cost: { berries: 20 }, // Ajout d’un coût
+    cost: { pickers: 10, passive: true }, // Vérification passive
     id: "meatValue",
   },
   {
     condition: () => axes >= 20 && villagers >= 20,
     message: "Tu es prêt pour un chef ! Nomme-le avec 25 haches et 25 villageois.",
-    cost: { wood: 100, axes: 1 },
+    cost: { axes: 20, villagers: 20, passive: true }, // Vérification passive
     id: "chiefReady",
   },
   {
     condition: () => chief >= 1,
     canBuy: () => villagers >= 40,
     message: "Attire un bricoleur pour améliorer tes outils.",
-    cost: { wood: 50, stone: 50 }, // Ajout d’un coût
+    cost: { villagers: 40, passive: true }, // Vérification passive
     id: "tinkerHint",
   },
   {
     condition: () => water >= 100,
     message: "Construis un puits pour augmenter ton stock d’eau.",
-    cost: { water: 50 },
+    cost: { water: 100, passive: true }, // Vérification passive
     id: "wellHint",
   },
   {
     condition: () => tinkers >= 1 && wood >= 100 && stone >= 100,
     message: "Essaie d’avoir 10 bricoleurs.",
-    cost: { berries: 50 }, // Ajout d’un coût
+    cost: { tinkers: 1, wood: 100, stone: 100, passive: true }, // Vérification passive
     id: "tenTinkers",
   },
   {
     condition: () => wells >= 1 && buckets >= 50,
     message: "Ajoute plus de puits pour récolter davantage d’eau.",
-    cost: { water: 100 },
+    cost: { wells: 1, buckets: 50, passive: true }, // Vérification passive
     id: "moreWells",
   },
   {
     condition: () => discoveredFibers && fibers >= 150 && workshops === 0,
     message: "Construis un atelier pour augmenter la limite des fibres !",
-    cost: { fibers: 100 },
+    cost: { fibers: 150, passive: true }, // Vérification passive
     id: "workshopFiberLimit",
   },
   {
     condition: () => eternityShards >= 5 && villageFounded,
     message: "Affiche l'effet des dons débloqués.",
-    cost: { eternityShards: 5 },
+    cost: { eternityShards: 5, passive: true }, // Vérification passive
     id: "shardEffectsReveal",
   },
   {
     condition: () => currentAge === "Âge de l’Agriculture" && bakeries === 0,
     message: "Construis une boulangerie pour produire du pain automatiquement !",
-    cost: { flour: 5 },
+    cost: { flour: 5, passive: true }, // Vérification passive
     id: "bakeryHint",
   },
   {
     condition: () => tinkers >= 1 || discoveredMetals || discoveredFibers || discoveredHerbs,
     message: "Tu peux réorganiser les sections Fabrication et Bâtiments par glisser-déposer !",
-    cost: { wood: 20 }, // Ajout d’un coût
+    cost: { tinkers: 1, passive: true }, // Vérification passive
     id: "reorganizeHint",
   },
 ];

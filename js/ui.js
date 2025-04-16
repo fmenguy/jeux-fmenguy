@@ -363,43 +363,99 @@ export function updateHintButton() {
   }
 
   if (currentHint) {
-    noHintMessage.style.display = "none"; // Masquer "Aucun indice disponible"
+    noHintMessage.style.display = "none";
     buyHintBtn.style.display = "block";
     hintCost.style.display = "block";
-    let costText = "Coût : ";
+    let costText = "";
     const cost = currentHint.cost || {};
     const costEntries = Object.entries(cost);
-    if (costEntries.length === 0) {
-      costText += "Gratuit";
+
+    // Vérification de la condition canBuy
+    const canBuy = !currentHint.canBuy || currentHint.canBuy();
+    if (!canBuy) {
+      if (currentHint.id === "meatValue") {
+        costText = `Condition : 10 cueilleurs requis (${pickers}/10)`;
+      } else if (currentHint.id === "tinkerHint") {
+        costText = `Condition : 40 villageois requis (${villagers}/40)`;
+      } else {
+        costText = "Condition non remplie";
+      }
+      buyHintBtn.disabled = true;
     } else {
-      costText += costEntries
-        .map(([resource, amount]) => {
-          switch (resource) {
-            case "berries":
-              return `${amount} baies`;
-            case "wood":
-              return `${amount} bois`;
-            case "stone":
-              return `${amount} pierre`;
-            case "water":
-              return `${amount} eau`;
-            case "fibers":
-              return `${amount} fibres`;
-            case "axes":
-              return `${amount} haches`;
-            case "eternityShards":
-              return `${amount} éclats d’éternité`;
-            case "flour":
-              return `${amount} farine`;
-            default:
-              return `${amount} ${resource}`;
-          }
-        })
-        .join(", ");
+      // Vérifier si le coût est passif
+      if (cost.passive) {
+        costText = "Posséder : ";
+        costText += costEntries
+          .filter(([resource]) => resource !== "passive")
+          .map(([resource, amount]) => {
+            switch (resource) {
+              case "berries":
+                return `${amount} baies`;
+              case "wood":
+                return `${amount} bois`;
+              case "stone":
+                return `${amount} pierre`;
+              case "water":
+                return `${amount} eau`;
+              case "fibers":
+                return `${amount} fibres`;
+              case "axes":
+                return `${amount} haches`;
+              case "eternityShards":
+                return `${amount} éclats d’éternité`;
+              case "flour":
+                return `${amount} farine`;
+              case "pickers":
+                return `${amount} cueilleurs`;
+              case "villagers":
+                return `${amount} villageois`;
+              case "tinkers":
+                return `${amount} bricoleurs`;
+              case "wells":
+                return `${amount} puits`;
+              case "buckets":
+                return `${amount} seaux`;
+              default:
+                return `${amount} ${resource}`;
+            }
+          })
+          .join(", ");
+      } else {
+        costText = "Coût : ";
+        if (costEntries.length === 0) {
+          costText += "Gratuit";
+        } else {
+          costText += costEntries
+            .map(([resource, amount]) => {
+              switch (resource) {
+                case "berries":
+                  return `${amount} baies`;
+                case "wood":
+                  return `${amount} bois`;
+                case "stone":
+                  return `${amount} pierre`;
+                case "water":
+                  return `${amount} eau`;
+                case "fibers":
+                  return `${amount} fibres`;
+                case "axes":
+                  return `${amount} haches`;
+                case "eternityShards":
+                  return `${amount} éclats d’éternité`;
+                case "flour":
+                  return `${amount} farine`;
+                default:
+                  return `${amount} ${resource}`;
+              }
+            })
+            .join(", ");
+        }
+      }
+      buyHintBtn.disabled = false;
     }
     hintCost.textContent = costText;
   } else {
-    noHintMessage.style.display = "block"; // Afficher "Aucun indice disponible"
+    noHintMessage.style.display = "block";
     buyHintBtn.style.display = "none";
     hintCost.style.display = "none";
   }
@@ -419,7 +475,11 @@ export function buyHint() {
   }
 
   const cost = currentHint.cost || {};
+  const isPassive = cost.passive === true;
+
+  // Vérification des coûts (même pour les coûts passifs)
   const canAfford = Object.keys(cost).every((resource) => {
+    if (resource === "passive") return true; // Ignorer la clé passive
     switch (resource) {
       case "berries":
         return berries >= cost[resource];
@@ -437,44 +497,56 @@ export function buyHint() {
         return eternityShards >= cost[resource];
       case "flour":
         return flour >= cost[resource];
+      case "pickers":
+        return pickers >= cost[resource];
+      case "villagers":
+        return villagers >= cost[resource];
+      case "tinkers":
+        return tinkers >= cost[resource];
+      case "wells":
+        return wells >= cost[resource];
+      case "buckets":
+        return buckets >= cost[resource];
       default:
         return false;
     }
   });
 
   if (canAfford && (!currentHint.canBuy || currentHint.canBuy())) {
-    Object.keys(cost).forEach((resource) => {
-      switch (resource) {
-        case "berries":
-          setBerries(berries - cost[resource]);
-          break;
-        case "wood":
-          setWood(wood - cost[resource]);
-          break;
-        case "stone":
-          setStone(stone - cost[resource]);
-          break;
-        case "water":
-          setWater(water - cost[resource]);
-          break;
-        case "fibers":
-          setFibers(fibers - cost[resource]);
-          break;
-        case "axes":
-          setAxes(axes - cost[resource]);
-          break;
-        case "eternityShards":
-          setEternityShards(eternityShards - cost[resource]);
-          break;
-        case "flour":
-          setFlour(flour - cost[resource]);
-          break;
-      }
-    });
+    // Consommation des ressources uniquement si ce n’est pas un coût passif
+    if (!isPassive) {
+      Object.keys(cost).forEach((resource) => {
+        switch (resource) {
+          case "berries":
+            setBerries(berries - cost[resource]);
+            break;
+          case "wood":
+            setWood(wood - cost[resource]);
+            break;
+          case "stone":
+            setStone(stone - cost[resource]);
+            break;
+          case "water":
+            setWater(water - cost[resource]);
+            break;
+          case "fibers":
+            setFibers(fibers - cost[resource]);
+            break;
+          case "axes":
+            setAxes(axes - cost[resource]);
+            break;
+          case "eternityShards":
+            setEternityShards(eternityShards - cost[resource]);
+            break;
+          case "flour":
+            setFlour(flour - cost[resource]);
+            break;
+        }
+      });
+    }
 
     try {
       if (purchasedHintsList) {
-        // Si l’indice est shardEffectsReveal, afficher les effets des dons
         if (currentHint.id === "shardEffectsReveal") {
           let effectsText = "Effets des dons débloqués :<br>";
           const shardEffects = [
@@ -486,7 +558,7 @@ export function buyHint() {
           ];
 
           shardEffects.forEach((effect, index) => {
-            if (eternityShards >= index + 1) { // Vérifier si l’effet est débloqué
+            if (eternityShards >= index + 1) {
               if (effect.harvestBonus) {
                 effectsText += `- ${effect.name} : Bonus de récolte de ${effect.harvestBonus}x<br>`;
               } else if (effect.waterConsumptionReduction) {
