@@ -175,7 +175,7 @@ export const dynamicHints = [
     condition: () => villagers >= 10,
     canBuy: () => pickers >= 10,
     message: "La viande est plus nourrissante que les baies.",
-    cost: {},
+    cost: { berries: 20 }, // Ajout d’un coût
     id: "meatValue",
   },
   {
@@ -188,7 +188,7 @@ export const dynamicHints = [
     condition: () => chief >= 1,
     canBuy: () => villagers >= 40,
     message: "Attire un bricoleur pour améliorer tes outils.",
-    cost: {},
+    cost: { wood: 50, stone: 50 }, // Ajout d’un coût
     id: "tinkerHint",
   },
   {
@@ -200,7 +200,7 @@ export const dynamicHints = [
   {
     condition: () => tinkers >= 1 && wood >= 100 && stone >= 100,
     message: "Essaie d’avoir 10 bricoleurs.",
-    cost: {},
+    cost: { berries: 50 }, // Ajout d’un coût
     id: "tenTinkers",
   },
   {
@@ -216,7 +216,7 @@ export const dynamicHints = [
     id: "workshopFiberLimit",
   },
   {
-    condition: () => eternityShards >= 5 && villageFounded, // Ajout de villageFounded comme condition
+    condition: () => eternityShards >= 5 && villageFounded,
     message: "Affiche l'effet des dons débloqués.",
     cost: { eternityShards: 5 },
     id: "shardEffectsReveal",
@@ -230,10 +230,11 @@ export const dynamicHints = [
   {
     condition: () => tinkers >= 1 || discoveredMetals || discoveredFibers || discoveredHerbs,
     message: "Tu peux réorganiser les sections Fabrication et Bâtiments par glisser-déposer !",
-    cost: {},
+    cost: { wood: 20 }, // Ajout d’un coût
     id: "reorganizeHint",
   },
 ];
+
 export let purchasedHints = [];
 export let currentHint = null;
 
