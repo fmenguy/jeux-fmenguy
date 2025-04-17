@@ -697,6 +697,16 @@ export function recruitHunter() {
 }
 
 export function sendExplorers() {
+  console.log("sendExplorers appelé, conditions:", {
+    berries: berries,
+    wood: wood,
+    villagers: villagers,
+    explorationActive: explorationActive,
+    resourcesNotDiscovered: !discoveredFibers || !discoveredMetals || !discoveredHerbs,
+    discoveredFibers: discoveredFibers,
+    discoveredMetals: discoveredMetals,
+    discoveredHerbs: discoveredHerbs
+  });
   if (berries >= 50 && wood >= 20 && villagers >= 10 && !explorationActive && (!discoveredFibers || !discoveredMetals || !discoveredHerbs)) {
     setBerries(berries - 50);
     setWood(wood - 20);
@@ -704,9 +714,9 @@ export function sendExplorers() {
     setExplorers(explorers + 10);
     setExplorationActive(true);
     setExplorationTimer(30);
-    console.log("Exploration activée, explorationActive:", explorationActive, "explorationTimer:", explorationTimer); // Log pour débogage
+    console.log("Exploration activée, explorationActive:", explorationActive, "explorationTimer:", explorationTimer);
     document.getElementById("narrative").textContent = "Les explorateurs partent à la découverte...";
-    updateExplorationDisplay(); // Ajout pour forcer la mise à jour
+    updateExplorationDisplay();
   } else {
     let reasons = [];
     if (berries < 50) reasons.push("pas assez de baies (" + berries + "/50)");
@@ -714,6 +724,7 @@ export function sendExplorers() {
     if (villagers < 10) reasons.push("pas assez de villageois (" + villagers + "/10)");
     if (explorationActive) reasons.push("exploration déjà en cours");
     if (discoveredFibers && discoveredMetals && discoveredHerbs) reasons.push("toutes les ressources découvertes");
+    console.log("Exploration non activée, raisons:", reasons);
     return { error: "Impossible d'envoyer des explorateurs : " + reasons.join(", ") + " !" };
   }
 }
