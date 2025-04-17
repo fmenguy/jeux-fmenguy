@@ -241,8 +241,12 @@ export function updateDisplay() {
   document.getElementById("importSaveBtn").disabled = false;
 
   document.getElementById("villagesDisplay").style.display = villageFounded ? "block" : "none";
-  const villagesList = document.getElementById("villagesList");
-  villagesList.innerHTML = "";
+  const villagesListElement = document.getElementById("villagesList");
+  if (!villagesListElement) {
+    console.error("L'élément villagesList n'existe pas dans le DOM");
+    return;
+  }
+  villagesListElement.innerHTML = "";
   if (villagesData && Array.isArray(villagesData)) {
     if (villagesData.length > 0) {
       const totalVillagers = villagers;
@@ -309,7 +313,7 @@ export function updateDisplay() {
         villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
       });
     } else {
-      villagesList.innerHTML = "<li>Aucun village fondé.</li>";
+      villagesListElement.innerHTML = "<li>Aucun village fondé.</li>";
     }
     document.getElementById("totalPopulation").textContent = getTotalPopulation();
   }
