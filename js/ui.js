@@ -18,19 +18,6 @@ import {
   villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, getTotalPopulation,
 } from './game.js';
 
-const villagesList = document.getElementById("villagesList");
-villagesList.innerHTML = "";
-if (villagesData && Array.isArray(villagesData)) { // Vérification
-  villagesData.forEach((village, index) => {
-    console.log(`Village ${index + 1} bâtiments :`, village.buildings);
-    const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
-    villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
-  });
-} else {
-  villagesList.innerHTML = "<li>Aucun village fondé.</li>";
-}
-document.getElementById("totalPopulation").textContent = getTotalPopulation();
-
 // Variables pour stocker l’ordre des sections
 export let fabricationOrder = [
   "axeSection",
@@ -306,15 +293,15 @@ export function updateDisplay() {
         if (remainingExplorers > 0) remainingExplorers--;
 
         const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
-      // Exclure les puits du décompte des bâtiments
-      const buildingCount = village.buildings.filter(building => building !== "well").length;
-      villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
-    });
-  } else {
-    villagesList.innerHTML = "<li>Aucun village fondé.</li>";
+        // Exclure les puits du décompte des bâtiments
+        const buildingCount = village.buildings.filter(building => building !== "well").length;
+        villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
+      });
+    } else {
+      villagesList.innerHTML = "<li>Aucun village fondé.</li>";
+    }
+    document.getElementById("totalPopulation").textContent = getTotalPopulation();
   }
-  document.getElementById("totalPopulation").textContent = getTotalPopulation();
-}
 
   // Vérification avant d’appeler updateHintButton
   const hintSection = document.getElementById("hintSection");
@@ -336,9 +323,9 @@ export function updateSeasonDisplay() {
 export function updateExplorationDisplay() {
   const explorationElement = document.getElementById("explorationDisplay");
   if (explorationActive) {
-    const explorationDuration = 30; // Durée fixe de l'exploration (doit correspondre à la valeur dans sendExplorers)
+    const explorationDuration = 30; // Durée fixe de l'exploration
     explorationElement.style.display = "block";
-    explorationElement.innerHTML = `<span class="icon">🗺️</span> Exploration <div class="progress-bar"><div class="progress" style="width: ${((explorationDuration - explorationTimer) / explorationDuration) * 100}%"></div></div>`;
+    explorationElement.innerHTML = `<span class="icon">🗺️</span> Exploration <div class="exploration-progress-bar"><div class="exploration-progress" style="width: ${((explorationDuration - explorationTimer) / explorationDuration) * 100}%"></div></div>`;
   } else {
     explorationElement.style.display = "none";
   }

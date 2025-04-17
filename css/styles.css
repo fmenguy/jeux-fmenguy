@@ -4,6 +4,7 @@
   --background-dark: #2f231a;
   --text-dark: #2b1d0e;
   --background-body: #4a3f2e;
+  --exploration-progress-color: #4CAF50; /* Green for exploration progress */
 }
 
 .bg-dark-transparent {
@@ -136,21 +137,19 @@ button:disabled {
   display: block;
 }
 
-
 #hintSection {
-  text-align: center; /* Centre tous les éléments enfants */
+  text-align: center;
 }
 
 #buyHintBtn, #toggleHintsBtn {
-  display: block; /* Permet de centrer avec margin */
-  margin: 5px auto; /* Centre horizontalement */
+  display: block;
+  margin: 5px auto;
 }
 
 #hintCost, #noHintMessage {
-  display: block; /* Permet de centrer avec margin */
-  margin: 5px auto; /* Centre horizontalement */
+  display: block;
+  margin: 5px auto;
 }
-
 
 #purchasedHintsList {
   font-size: 14px;
@@ -188,7 +187,6 @@ footer {
   text-decoration: none;
 }
 
-/* Petits écrans (mobile) */
 @media (max-width: 600px) {
   .section {
     width: 100%;
@@ -208,7 +206,6 @@ footer {
   }
 }
 
-/* Tablettes */
 @media (min-width: 601px) and (max-width: 1024px) {
   .section {
     width: 45%;
@@ -219,7 +216,6 @@ footer {
   }
 }
 
-/* Grands écrans */
 @media (min-width: 1025px) {
   .section {
     width: 30%;
@@ -272,6 +268,24 @@ footer {
   height: 100%;
   background-color: #d4a017;
   border-radius: 4px;
+}
+
+.exploration-progress-bar {
+  width: 80px; /* Smaller width */
+  height: 6px; /* Thinner bar */
+  background-color: #2b1d0e;
+  border-radius: 8px; /* More rounded */
+  margin-top: 5px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.exploration-progress {
+  height: 100%;
+  background-color: var(--exploration-progress-color);
+  border-radius: 8px;
+  transition: width 0.5s ease; /* Animation fluide pour la progression */
 }
 
 #techBanner {
