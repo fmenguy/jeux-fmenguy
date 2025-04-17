@@ -271,14 +271,15 @@ footer {
 }
 
 #explorationDisplay {
-  margin: 10px 0;
+  margin: 10px auto;
   padding: 8px;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 5px;
-  display: inline-block;
   font-size: 18px;
   text-align: center;
-  max-width: 200px; /* Ajuster pour correspondre à seasonDisplay */
+  max-width: 600px;
+  width: 90%;
+  display: block;
 }
 
 .exploration-text {
@@ -287,7 +288,7 @@ footer {
 }
 
 .exploration-progress-bar {
-  width: 100%; /* Prend la largeur du conteneur parent (#explorationDisplay) */
+  width: 100%;
   height: 6px;
   background-color: #2b1d0e;
   border-radius: 8px;

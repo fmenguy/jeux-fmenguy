@@ -343,8 +343,9 @@ export function craftWell() {
     setStone(stone - 5);
     setWells(wells + 1);
     setMaxWater(maxWater + 1000);
+    console.log("craftWell: wells =", wells);
     document.getElementById("narrative").textContent = "Un puits est construit ! Il stocke plus d’eau.";
-    assignBuildingsToVillages(); // Ajout pour mettre à jour les bâtiments
+    assignBuildingsToVillages();
   } else {
     return { error: "Il te faut 10 bois et 5 pierres pour un puits !" };
   }
