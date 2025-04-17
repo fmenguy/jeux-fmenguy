@@ -1,3 +1,5 @@
+import { updateExplorationDisplay } from './ui.js';
+
 // Structure pour représenter un village
 export let villagesData = []; // Tableau de villages, chaque village contient sa population et ses bâtiments
 
@@ -694,9 +696,9 @@ export function sendExplorers() {
     setExplorers(explorers + 10);
     setExplorationActive(true);
     setExplorationTimer(30);
-
+    console.log("Exploration activée, explorationActive:", explorationActive, "explorationTimer:", explorationTimer); // Log pour débogage
     document.getElementById("narrative").textContent = "Les explorateurs partent à la découverte...";
-    // Supprimez : enhancedUpdateDisplay();
+    updateExplorationDisplay(); // Ajout pour forcer la mise à jour
   } else {
     let reasons = [];
     if (berries < 50) reasons.push("pas assez de baies (" + berries + "/50)");
@@ -704,7 +706,6 @@ export function sendExplorers() {
     if (villagers < 10) reasons.push("pas assez de villageois (" + villagers + "/10)");
     if (explorationActive) reasons.push("exploration déjà en cours");
     if (discoveredFibers && discoveredMetals && discoveredHerbs) reasons.push("toutes les ressources découvertes");
-    // Supprimez : showAlert("Impossible d'envoyer des explorateurs : " + reasons.join(", ") + " !");
     return { error: "Impossible d'envoyer des explorateurs : " + reasons.join(", ") + " !" };
   }
 }
@@ -1107,7 +1108,8 @@ export function transformToCity() {
 }
 
 export function initGame() {
-  villagesData = []; // Initialisation explicite
+  villagesData = [];
+  console.log("initGame: villagesData initialisé", villagesData);
 }
 
 export function setBerries(value) { berries = value; }
