@@ -343,7 +343,6 @@ export function craftWell() {
     setStone(stone - 5);
     setWells(wells + 1);
     setMaxWater(maxWater + 1000);
-    console.log("craftWell: wells =", wells);
     document.getElementById("narrative").textContent = "Un puits est construit ! Il stocke plus d’eau.";
     assignBuildingsToVillages();
   } else {
@@ -783,15 +782,6 @@ export function foundVillage() {
   villagesData[newVillageIndex].population.tinkers = tinkersToMove;
   villagesData[newVillageIndex].population.researchers = researchersToMove;
   villagesData[newVillageIndex].population.explorers = explorersToMove;
-
-  // Supprimez ces lignes pour ne pas consommer les travailleurs
-  // setPickers(pickers - pickersToMove);
-  // setHunters(hunters - huntersToMove);
-  // setMiners(miners - minersToMove);
-  // setFarmers(farmers - farmersToMove);
-  // setTinkers(tinkers - tinkersToMove);
-  // setResearchers(researchers - researchersToMove);
-  // setExplorers(explorers - explorersToMove);
 
   setVillageFounded(true);
   document.getElementById("tinkerSection").style.display = "block";

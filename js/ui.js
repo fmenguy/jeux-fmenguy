@@ -151,7 +151,6 @@ export function updateDisplay() {
       villagesData.forEach((village, index) => {
         const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
         const buildingCount = village.buildings.filter(building => building.toLowerCase().trim() !== "well").length;
-        console.log(`Village ${index + 1} : buildings =`, village.buildings, `filtered buildings (excluant puits) =`, village.buildings.filter(building => building.toLowerCase().trim() !== "well"), `buildingCount = ${buildingCount}`);
         villageListNode.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
       });
     } else {
@@ -186,17 +185,6 @@ export function updateDisplay() {
   document.getElementById("recruitHunterBtn").disabled = !(wood >= 10 && meat >= 5);
   document.getElementById("recruitResearcherBtn").disabled = !(tinkers >= 10);
   document.getElementById("sendExplorersBtn").disabled = !(berries >= 50 && wood >= 20 && villagers >= 10 && (!discoveredFibers || !discoveredMetals || !discoveredHerbs)) || explorationActive;
-  console.log("sendExplorersBtn état:", {
-    disabled: document.getElementById("sendExplorersBtn").disabled,
-    berries: berries,
-    wood: wood,
-    villagers: villagers,
-    resourcesNotDiscovered: !discoveredFibers || !discoveredMetals || !discoveredHerbs,
-    discoveredFibers: discoveredFibers,
-    discoveredMetals: discoveredMetals,
-    discoveredHerbs: discoveredHerbs,
-    explorationActive: explorationActive
-  });
   document.getElementById("recruitMinerBtn").disabled = !(wood >= 10 && metals >= 5 && mines > 0);
   document.getElementById("recruitFarmerBtn").disabled = !(berries >= 10 && wood >= 5 && wheatFields > 0);
   document.getElementById("foundVillageBtn").disabled = !(villagers >= (villages + 1) * 50 && chief >= villages + 1 && villages < 10);
@@ -292,7 +280,6 @@ export function updateExplorationDisplay() {
       <div class="exploration-text"><span class="icon">🗺️</span> Exploration</div>
       <div class="exploration-progress-bar"><div class="exploration-progress" style="width: ${progressPercentage}%"></div></div>
     `;
-    console.log("Barre d'exploration affichée, style.display:", explorationElement.style.display, "progressPercentage:", progressPercentage);
   } else {
     explorationElement.style.display = "none";
   }
