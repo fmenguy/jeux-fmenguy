@@ -165,8 +165,8 @@ export function updateDisplay() {
 
         const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
         const buildingCount = village.buildings.filter(building => building !== "well").length;
-        console.log(`Village ${index + 1} : buildings =`, village.buildings, `buildingCount (excluant puits) = ${buildingCount}`);
-        villageListNode.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
+console.log(`Village ${index + 1} : buildings =`, village.buildings, `filtered buildings (excluant puits) =`, village.buildings.filter(building => building !== "well"), `buildingCount = ${buildingCount}`);
+villageListNode.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
       });
     } else {
       villageListNode.innerHTML = "<li>Aucun village fondé.</li>";
