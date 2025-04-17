@@ -22,6 +22,7 @@ const villagesList = document.getElementById("villagesList");
 villagesList.innerHTML = "";
 if (villagesData && Array.isArray(villagesData)) { // Vérification
   villagesData.forEach((village, index) => {
+    console.log(`Village ${index + 1} bâtiments :`, village.buildings);
     const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
     villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
   });
@@ -305,13 +306,15 @@ export function updateDisplay() {
         if (remainingExplorers > 0) remainingExplorers--;
 
         const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
-        villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${village.buildings.length}/${maxBuildingsPerVillage}</li>`;
-      });
-    } else {
-      villagesList.innerHTML = "<li>Aucun village fondé.</li>";
-    }
-    document.getElementById("totalPopulation").textContent = getTotalPopulation();
+      // Exclure les puits du décompte des bâtiments
+      const buildingCount = village.buildings.filter(building => building !== "well").length;
+      villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
+    });
+  } else {
+    villagesList.innerHTML = "<li>Aucun village fondé.</li>";
   }
+  document.getElementById("totalPopulation").textContent = getTotalPopulation();
+}
 
   // Vérification avant d’appeler updateHintButton
   const hintSection = document.getElementById("hintSection");
