@@ -54,7 +54,6 @@ export function updateDisplay() {
     const totalResearchers = researchers;
     const totalExplorers = explorers;
 
-    // Répartition proportionnelle entre les villages
     const numVillages = villagesData.length;
     const baseVillagersPerVillage = Math.floor(totalVillagers / numVillages);
     const baseChiefsPerVillage = Math.floor(totalChiefs / numVillages);
@@ -66,7 +65,6 @@ export function updateDisplay() {
     const baseResearchersPerVillage = Math.floor(totalResearchers / numVillages);
     const baseExplorersPerVillage = Math.floor(totalExplorers / numVillages);
 
-    // Répartir les restes
     let remainingVillagers = totalVillagers % numVillages;
     let remainingChiefs = totalChiefs % numVillages;
     let remainingPickers = totalPickers % numVillages;
@@ -97,13 +95,83 @@ export function updateDisplay() {
       if (remainingTinkers > 0) remainingTinkers--;
       if (remainingResearchers > 0) remainingResearchers--;
       if (remainingExplorers > 0) remainingExplorers--;
-
-      const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
-      // Exclure les puits du décompte des bâtiments
-      const buildingCount = village.buildings.filter(building => building !== "well").length;
-      console.log(`Village ${index + 1} : buildings =`, village.buildings, `buildingCount (excluant puits) = ${buildingCount}`);
-      villagesListElement.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
     });
+  }
+
+  document.getElementById("berries").textContent = Math.floor(berries);
+  // ... (autres mises à jour d'affichage)
+
+  document.getElementById("villagesDisplay").style.display = villageFounded ? "block" : "none";
+  const villageListNode = document.getElementById("villagesList"); // Renommé pour éviter tout conflit
+  console.log("villageListNode initialisé:", villageListNode);
+  if (!villageListNode) {
+    console.error("L'élément villagesList n'existe pas dans le DOM");
+    return;
+  }
+  villageListNode.innerHTML = "";
+  if (villagesData && Array.isArray(villagesData)) {
+    if (villagesData.length > 0) {
+      const totalVillagers = villagers;
+      const totalChiefs = chief;
+      const totalPickers = pickers;
+      const totalHunters = hunters;
+      const totalMiners = miners;
+      const totalFarmers = farmers;
+      const totalTinkers = tinkers;
+      const totalResearchers = researchers;
+      const totalExplorers = explorers;
+
+      const numVillages = villagesData.length;
+      const baseVillagersPerVillage = Math.floor(totalVillagers / numVillages);
+      const baseChiefsPerVillage = Math.floor(totalChiefs / numVillages);
+      const basePickersPerVillage = Math.floor(totalPickers / numVillages);
+      const baseHuntersPerVillage = Math.floor(totalHunters / numVillages);
+      const baseMinersPerVillage = Math.floor(totalMiners / numVillages);
+      const baseFarmersPerVillage = Math.floor(totalFarmers / numVillages);
+      const baseTinkersPerVillage = Math.floor(totalTinkers / numVillages);
+      const baseResearchersPerVillage = Math.floor(totalResearchers / numVillages);
+      const baseExplorersPerVillage = Math.floor(totalExplorers / numVillages);
+
+      let remainingVillagers = totalVillagers % numVillages;
+      let remainingChiefs = totalChiefs % numVillages;
+      let remainingPickers = totalPickers % numVillages;
+      let remainingHunters = totalHunters % numVillages;
+      let remainingMiners = totalMiners % numVillages;
+      let remainingFarmers = totalFarmers % numVillages;
+      let remainingTinkers = totalTinkers % numVillages;
+      let remainingResearchers = totalResearchers % numVillages;
+      let remainingExplorers = totalExplorers % numVillages;
+
+      villagesData.forEach((village, index) => {
+        village.population.villagers = baseVillagersPerVillage + (remainingVillagers > 0 ? 1 : 0);
+        village.population.chief = baseChiefsPerVillage + (remainingChiefs > 0 ? 1 : 0);
+        village.population.pickers = basePickersPerVillage + (remainingPickers > 0 ? 1 : 0);
+        village.population.hunters = baseHuntersPerVillage + (remainingHunters > 0 ? 1 : 0);
+        village.population.miners = baseMinersPerVillage + (remainingMiners > 0 ? 1 : 0);
+        village.population.farmers = baseFarmersPerVillage + (remainingFarmers > 0 ? 1 : 0);
+        village.population.tinkers = baseTinkersPerVillage + (remainingTinkers > 0 ? 1 : 0);
+        village.population.researchers = baseResearchersPerVillage + (remainingResearchers > 0 ? 1 : 0);
+        village.population.explorers = baseExplorersPerVillage + (remainingExplorers > 0 ? 1 : 0);
+
+        if (remainingVillagers > 0) remainingVillagers--;
+        if (remainingChiefs > 0) remainingChiefs--;
+        if (remainingPickers > 0) remainingPickers--;
+        if (remainingHunters > 0) remainingHunters--;
+        if (remainingMiners > 0) remainingMiners--;
+        if (remainingFarmers > 0) remainingFarmers--;
+        if (remainingTinkers > 0) remainingTinkers--;
+        if (remainingResearchers > 0) remainingResearchers--;
+        if (remainingExplorers > 0) remainingExplorers--;
+
+        const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
+        const buildingCount = village.buildings.filter(building => building !== "well").length;
+        console.log(`Village ${index + 1} : buildings =`, village.buildings, `buildingCount (excluant puits) = ${buildingCount}`);
+        villageListNode.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
+      });
+    } else {
+      villageListNode.innerHTML = "<li>Aucun village fondé.</li>";
+    }
+    document.getElementById("totalPopulation").textContent = getTotalPopulation();
   }
 
   document.getElementById("berries").textContent = Math.floor(berries);
