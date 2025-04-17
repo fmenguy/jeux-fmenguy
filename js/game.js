@@ -696,16 +696,6 @@ export function recruitHunter() {
 }
 
 export function sendExplorers() {
-  console.log("sendExplorers appelé, conditions:", {
-    berries: berries,
-    wood: wood,
-    villagers: villagers,
-    explorationActive: explorationActive,
-    resourcesNotDiscovered: !discoveredFibers || !discoveredMetals || !discoveredHerbs,
-    discoveredFibers: discoveredFibers,
-    discoveredMetals: discoveredMetals,
-    discoveredHerbs: discoveredHerbs
-  });
   if (berries >= 50 && wood >= 20 && villagers >= 10 && !explorationActive && (!discoveredFibers || !discoveredMetals || !discoveredHerbs)) {
     setBerries(berries - 50);
     setWood(wood - 20);
@@ -713,7 +703,6 @@ export function sendExplorers() {
     setExplorers(explorers + 10);
     setExplorationActive(true);
     setExplorationTimer(30);
-    console.log("Exploration activée, explorationActive:", explorationActive, "explorationTimer:", explorationTimer);
     document.getElementById("narrative").textContent = "Les explorateurs partent à la découverte...";
     updateExplorationDisplay();
   } else {
@@ -723,7 +712,6 @@ export function sendExplorers() {
     if (villagers < 10) reasons.push("pas assez de villageois (" + villagers + "/10)");
     if (explorationActive) reasons.push("exploration déjà en cours");
     if (discoveredFibers && discoveredMetals && discoveredHerbs) reasons.push("toutes les ressources découvertes");
-    console.log("Exploration non activée, raisons:", reasons);
     return { error: "Impossible d'envoyer des explorateurs : " + reasons.join(", ") + " !" };
   }
 }
@@ -865,11 +853,6 @@ export function assignBuildingsToVillages() {
       currentVillageIndex++;
     }
   }
-
-  // Log pour débogage
-  villagesData.forEach((village, index) => {
-    console.log(`Village ${index + 1} après assignBuildingsToVillages : buildings =`, village.buildings);
-  });
 }
 
 export function syncVillageBuildings() {
@@ -1175,7 +1158,6 @@ export function transformToCity() {
 
 export function initGame() {
   villagesData = [];
-  console.log("initGame: villagesData initialisé", villagesData);
 }
 
 export function setBerries(value) { berries = value; }

@@ -103,7 +103,6 @@ export function updateDisplay() {
 
   document.getElementById("villagesDisplay").style.display = villageFounded ? "block" : "none";
   const villageListNode = document.getElementById("villagesList"); // Renommé pour éviter tout conflit
-  console.log("villageListNode initialisé:", villageListNode);
   if (!villageListNode) {
     console.error("L'élément villagesList n'existe pas dans le DOM");
     return;
@@ -165,7 +164,6 @@ export function updateDisplay() {
 
         const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
         const buildingCount = village.buildings.filter(building => building !== "well").length;
-console.log(`Village ${index + 1} : buildings =`, village.buildings, `filtered buildings (excluant puits) =`, village.buildings.filter(building => building !== "well"), `buildingCount = ${buildingCount}`);
 villageListNode.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
       });
     } else {
@@ -436,12 +434,6 @@ export function updateHintButton() {
   const buyHintBtn = document.getElementById("buyHintBtn");
   const hintCost = document.getElementById("hintCost");
   const noHintMessage = document.getElementById("noHintMessage");
-
-  // Vérification que les éléments existent
-  if (!buyHintBtn || !hintCost || !noHintMessage) {
-    console.error("updateHintButton: Les éléments buyHintBtn, hintCost ou noHintMessage n'existent pas dans le DOM.");
-    return;
-  }
 
   if (currentHint) {
     noHintMessage.style.display = "none";
