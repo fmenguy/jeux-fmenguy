@@ -87,7 +87,7 @@ export function updateDisplay() {
       village.population.tinkers = baseTinkersPerVillage + (remainingTinkers > 0 ? 1 : 0);
       village.population.researchers = baseResearchersPerVillage + (remainingResearchers > 0 ? 1 : 0);
       village.population.explorers = baseExplorersPerVillage + (remainingExplorers > 0 ? 1 : 0);
-
+    
       if (remainingVillagers > 0) remainingVillagers--;
       if (remainingChiefs > 0) remainingChiefs--;
       if (remainingPickers > 0) remainingPickers--;
@@ -97,6 +97,11 @@ export function updateDisplay() {
       if (remainingTinkers > 0) remainingTinkers--;
       if (remainingResearchers > 0) remainingResearchers--;
       if (remainingExplorers > 0) remainingExplorers--;
+    
+      const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
+      // Exclure les puits du décompte des bâtiments
+      const buildingCount = village.buildings.filter(building => building !== "well").length;
+      villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
     });
   }
 
@@ -330,7 +335,7 @@ export function updateExplorationDisplay() {
   const explorationElement = document.getElementById("explorationDisplay");
   console.log("Exploration Active:", explorationActive, "Timer:", explorationTimer); // Ajoute ce log
   if (explorationActive) {
-    const explorationDuration = 30; // Durée fixe de l'exploration
+    const explorationDuration = 30;
     explorationElement.style.display = "block";
     explorationElement.innerHTML = `<span class="icon">🗺️</span> Exploration <div class="exploration-progress-bar"><div class="exploration-progress" style="width: ${((explorationDuration - explorationTimer) / explorationDuration) * 100}%"></div></div>`;
   } else {
