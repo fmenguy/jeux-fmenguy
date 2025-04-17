@@ -322,6 +322,7 @@ export function updateSeasonDisplay() {
 
 export function updateExplorationDisplay() {
   const explorationElement = document.getElementById("explorationDisplay");
+  console.log("Exploration Active:", explorationActive, "Timer:", explorationTimer); // Ajoute ce log
   if (explorationActive) {
     const explorationDuration = 30; // Durée fixe de l'exploration
     explorationElement.style.display = "block";
