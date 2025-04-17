@@ -3,7 +3,6 @@ import { updateExplorationDisplay } from './ui.js';
 // Structure pour représenter un village
 export let villagesData = []; // Tableau de villages, chaque village contient sa population et ses bâtiments
 
-// Fonctions pour gérer villagesData
 export function addVillage() {
   villagesData.push({
     population: {
@@ -17,8 +16,9 @@ export function addVillage() {
       researchers: 0,
       explorers: 0,
     },
-    buildings: [], // Liste des bâtiments (par exemple, ["mine", "workshop"])
+    buildings: [],
   });
+  syncVillageBuildings(); // Synchronise les bâtiments après la création du village
 }
 
 export function setVillagesData(value) { villagesData = value; }
@@ -451,6 +451,7 @@ export function craftWorkshop() {
     setStone(stone - 10);
     setFibers(fibers - 5);
     setWorkshops(workshops + 1);
+    syncVillageBuildings();
     setMaxFibers(maxFibers + 1000);
     document.getElementById("narrative").textContent = "Un atelier est construit ! La limite de fibres augmente à " + maxFibers + ".";
     // Supprimez : enhancedUpdateDisplay();
@@ -466,6 +467,7 @@ export function craftHerbalist() {
     setStone(stone - 5);
     setHerbs(herbs - 5);
     setHerbalists(herbalists + 1);
+    syncVillageBuildings();
     setMaxHerbs(200);
     document.getElementById("wheatFieldSection").style.display = "block";
     document.getElementById("narrative").textContent = "Une herboristerie est construite ! Les remèdes s’améliorent.";
@@ -482,6 +484,7 @@ export function craftWheatField() {
     setStone(stone - 10);
     setHerbs(herbs - 5);
     setWheatFields(wheatFields + 1);
+    syncVillageBuildings();
     document.getElementById("narrative").textContent = "Un champ de blé est construit ! Cultive du blé.";
     updateAge("Âge de l’Agriculture");
     // Supprimez : enhancedUpdateDisplay();
@@ -497,6 +500,7 @@ export function craftMill() {
     setStone(stone - 20);
     setMetals(metals - 5);
     setMills(mills + 1);
+    syncVillageBuildings();
     setCurrentAge("Âge de l’Agriculture");
     document.getElementById("wheatSection").style.display = "inline-block";
     document.getElementById("flourSection").style.display = "inline-block";
@@ -515,6 +519,7 @@ export function craftBakery() {
     setStone(stone - 20);
     setFlour(flour - 5);
     setBakeries(bakeries + 1);
+    syncVillageBuildings();
     document.getElementById("narrative").textContent = "Une boulangerie est construite ! Elle produit du pain automatiquement.";
     // Supprimez : enhancedUpdateDisplay();
   } else {
@@ -534,6 +539,7 @@ export function craftSawmill() {
     setStone(stone - 20);
     setMetals(metals - 5);
     setSawmills(sawmills + 1);
+    syncVillageBuildings();
     document.getElementById("narrative").textContent = "Une scierie est construite ! Elle produit 0.5 bois par seconde.";
     // Supprimez : enhancedUpdateDisplay();
   } else {
@@ -548,6 +554,7 @@ export function craftStoneQuarry() {
     setStone(stone - 20);
     setMetals(metals - 5);
     setStoneQuarries(stoneQuarries + 1);
+    syncVillageBuildings();
     document.getElementById("narrative").textContent = "Une carrière de pierre est construite ! Elle produit 0.5 pierre par seconde.";
     // Supprimez : enhancedUpdateDisplay();
   } else {
@@ -562,6 +569,7 @@ export function craftWarehouse() {
     setStone(stone - 50);
     setMetals(metals - 10);
     setWarehouses(warehouses + 1);
+    syncVillageBuildings();
     if (warehouses === 1) {
       setMaxWoodStorage(50000);
       setMaxStoneStorage(50000);
@@ -833,6 +841,35 @@ export function assignBuildingsToVillages() {
       }
     }
   }
+}
+
+export function syncVillageBuildings() {
+  villagesData.forEach(village => {
+    village.buildings = [];
+  });
+
+  const buildingTypes = [
+    { type: "mine", count: mines },
+    { type: "workshop", count: workshops },
+    { type: "herbalist", count: herbalists },
+    { type: "wheatField", count: wheatFields },
+    { type: "mill", count: mills },
+    { type: "bakery", count: bakeries },
+    { type: "sawmill", count: sawmills },
+    { type: "stoneQuarry", count: stoneQuarries },
+    { type: "warehouse", count: warehouses },
+  ];
+
+  buildingTypes.forEach(({ type, count }) => {
+    let remaining = count;
+    let villageIndex = 0;
+
+    while (remaining > 0 && villageIndex < villagesData.length) {
+      villagesData[villageIndex].buildings.push(type);
+      remaining--;
+      villageIndex = (villageIndex + 1) % villagesData.length;
+    }
+  });
 }
 
 export function seekShard() {
