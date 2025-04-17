@@ -87,7 +87,7 @@ export function updateDisplay() {
       village.population.tinkers = baseTinkersPerVillage + (remainingTinkers > 0 ? 1 : 0);
       village.population.researchers = baseResearchersPerVillage + (remainingResearchers > 0 ? 1 : 0);
       village.population.explorers = baseExplorersPerVillage + (remainingExplorers > 0 ? 1 : 0);
-    
+
       if (remainingVillagers > 0) remainingVillagers--;
       if (remainingChiefs > 0) remainingChiefs--;
       if (remainingPickers > 0) remainingPickers--;
@@ -97,11 +97,12 @@ export function updateDisplay() {
       if (remainingTinkers > 0) remainingTinkers--;
       if (remainingResearchers > 0) remainingResearchers--;
       if (remainingExplorers > 0) remainingExplorers--;
-    
+
       const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
       // Exclure les puits du décompte des bâtiments
       const buildingCount = village.buildings.filter(building => building !== "well").length;
-      villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
+      console.log(`Village ${index + 1} : buildings =`, village.buildings, `buildingCount (excluant puits) = ${buildingCount}`);
+      villagesListElement.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
     });
   }
 
@@ -337,13 +338,19 @@ export function updateSeasonDisplay() {
 
 export function updateExplorationDisplay() {
   const explorationElement = document.getElementById("explorationDisplay");
-  console.log("Exploration Active:", explorationActive, "Timer:", explorationTimer); // Ajoute ce log
+  console.log("updateExplorationDisplay appelé, explorationActive:", explorationActive, "explorationTimer:", explorationTimer);
   if (explorationActive) {
     const explorationDuration = 30;
+    const progressPercentage = ((explorationDuration - explorationTimer) / explorationDuration) * 100;
     explorationElement.style.display = "block";
-    explorationElement.innerHTML = `<span class="icon">🗺️</span> Exploration <div class="exploration-progress-bar"><div class="exploration-progress" style="width: ${((explorationDuration - explorationTimer) / explorationDuration) * 100}%"></div></div>`;
+    explorationElement.innerHTML = `
+      <div class="exploration-text"><span class="icon">🗺️</span> Exploration</div>
+      <div class="exploration-progress-bar"><div class="exploration-progress" style="width: ${progressPercentage}%"></div></div>
+    `;
+    console.log("Barre d'exploration affichée, style.display:", explorationElement.style.display, "progressPercentage:", progressPercentage);
   } else {
     explorationElement.style.display = "none";
+    console.log("Barre d'exploration cachée");
   }
 }
 

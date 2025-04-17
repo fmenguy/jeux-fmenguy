@@ -270,22 +270,35 @@ footer {
   border-radius: 4px;
 }
 
-.exploration-progress-bar {
-  width: 80px; /* Smaller width */
-  height: 6px; /* Thinner bar */
-  background-color: #2b1d0e;
-  border-radius: 8px; /* More rounded */
-  margin-top: 5px;
-  overflow: hidden;
+#explorationDisplay {
+  margin: 10px 0;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
   display: inline-block;
-  vertical-align: middle;
+  font-size: 18px;
+  text-align: center; /* Centrer le contenu */
+}
+
+.exploration-text {
+  display: block; /* Le texte prend toute la ligne */
+  margin-bottom: 5px; /* Espacement entre le texte et la barre */
+}
+
+.exploration-progress-bar {
+  width: 100%; /* Même longueur que le texte ou le conteneur parent */
+  height: 6px;
+  background-color: #2b1d0e;
+  border-radius: 8px;
+  overflow: hidden;
+  display: block; /* Prend toute la largeur disponible */
 }
 
 .exploration-progress {
   height: 100%;
   background-color: var(--exploration-progress-color);
   border-radius: 8px;
-  transition: width 0.5s ease; /* Animation fluide pour la progression */
+  transition: width 0.5s ease;
 }
 
 #techBanner {

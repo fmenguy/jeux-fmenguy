@@ -809,9 +809,8 @@ export function foundVillage() {
 
 
 export function assignBuildingsToVillages() {
-  // Liste des bâtiments existants et leur nombre
-  const buildingTypes = [
-    { type: "well", count: wells },
+  // Liste des bâtiments soumis à la limite
+  const limitedBuildingTypes = [
     { type: "mine", count: mines },
     { type: "workshop", count: workshops },
     { type: "herbalist", count: herbalists },
@@ -823,22 +822,37 @@ export function assignBuildingsToVillages() {
     { type: "warehouse", count: warehouses },
   ];
 
+  // Liste des bâtiments non soumis à la limite (comme les puits)
+  const unlimitedBuildingTypes = [
+    { type: "well", count: wells },
+  ];
+
   // Réinitialiser les bâtiments dans villagesData
   villagesData.forEach(village => {
     village.buildings = [];
   });
 
-  // Répartir les bâtiments existants entre les villages
+  // Ajouter les bâtiments limités
   let currentVillageIndex = 0;
-  for (const building of buildingTypes) {
+  for (const building of limitedBuildingTypes) {
     for (let i = 0; i < building.count; i++) {
-      if (currentVillageIndex >= villagesData.length) currentVillageIndex = 0; // Boucle sur les villages
-      if (villagesData[currentVillageIndex].buildings.length < maxBuildingsPerVillage) {
+      if (currentVillageIndex >= villagesData.length) currentVillageIndex = 0;
+      if (villagesData[currentVillageIndex].buildings.filter(b => b !== "well").length < maxBuildingsPerVillage) { // Exclure les puits de la limite
         villagesData[currentVillageIndex].buildings.push(building.type);
       } else {
-        currentVillageIndex++; // Passe au village suivant
-        i--; // Recommence pour ce bâtiment
+        currentVillageIndex++;
+        i--;
       }
+    }
+  }
+
+  // Ajouter les bâtiments non limités (puits)
+  currentVillageIndex = 0;
+  for (const building of unlimitedBuildingTypes) {
+    for (let i = 0; i < building.count; i++) {
+      if (currentVillageIndex >= villagesData.length) currentVillageIndex = 0;
+      villagesData[currentVillageIndex].buildings.push(building.type); // Pas de limite pour les puits
+      currentVillageIndex++;
     }
   }
 }
