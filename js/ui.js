@@ -609,28 +609,24 @@ export const enhancedUpdateDisplay = function () {
 
 
 
-// Variable pour stocker les touches tapées
-let cheatCodeBuffer = "";
-export const cheatCode = "fmenguy";
+// Variable pour gérer le mode triche
 let cheatModeActive = false;
+let logoClickCount = 0;
 
-// Écouteur pour les touches
-document.addEventListener("keydown", (event) => {
-  // Ajoute la touche tapée au buffer (en minuscule)
-  cheatCodeBuffer += event.key.toLowerCase();
-
-  // Garde seulement les 7 derniers caractères (longueur de "fmenguy")
-  if (cheatCodeBuffer.length > cheatCode.length) {
-    cheatCodeBuffer = cheatCodeBuffer.slice(-cheatCode.length);
-  }
-
-  // Vérifie si le cheatcode est complet
-  if (cheatCodeBuffer === cheatCode) {
-    cheatModeActive = true;
-    cheatCodeBuffer = ""; // Réinitialise le buffer
-    document.getElementById("narrative").textContent = "Cheatcode activé : clique pour +100 ressources !";
-  }
-});
+// Écouteur pour les clics sur le logo
+const logo = document.querySelector('img[src="assets/logo_fda.webp"]');
+if (logo) {
+  logo.addEventListener("click", () => {
+    logoClickCount++;
+    if (logoClickCount >= 5) {
+      cheatModeActive = true;
+      logoClickCount = 0; // Réinitialise le compteur
+      document.getElementById("narrative").textContent = "Cheatcode activé : clique pour +100 ressources !";
+    }
+  });
+} else {
+  console.warn("L'élément logo n'a pas été trouvé dans le DOM.");
+}
 
 // Écouteur pour les clics quand le cheat est actif
 document.addEventListener("click", () => {
