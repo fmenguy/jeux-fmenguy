@@ -25,7 +25,12 @@
     Ici, tout est sauvage. Récolte des baies pour survivre et attirer des amis.
   </div>
   <div id="alert" style="display: none"></div>
-
+  <div id="explorationDisplay" style="display: none;">
+    <span class="icon">🗺️</span> Exploration
+    <div class="progress-bar">
+      <div class="progress" style="width: 0%"></div>
+    </div>
+  </div>
   <div id="resources">
     <div class="resource">
       <p><span class="icon">🍇</span> Baies: <span id="berries">0</span></p>
@@ -186,12 +191,6 @@
       <div class="worker" id="explorerSection" style="display: none">
         <p><span class="icon">🗺️</span> Explorateurs: <span id="explorers">0</span></p>
         <button id="sendExplorersBtn" onclick="sendExplorers()">Envoyer (50 Baies, 20 Bois, 10 Villageois)</button><span class="tooltip">Les explorateurs découvrent de nouvelles ressources.</span>
-      </div>
-      <div id="explorationDisplay" style="display: none;">
-        <span class="icon">🗺️</span> Exploration
-        <div class="progress-bar">
-          <div class="progress" style="width: 0%"></div>
-        </div>
       </div>
       <div class="worker" id="minerSection" style="display: none">
         <p><span class="icon">⛏️</span> Mineur: <span id="miners">0</span></p>
