@@ -293,8 +293,14 @@ export function updateDisplay() {
         if (remainingExplorers > 0) remainingExplorers--;
 
         const villagePop = Object.values(village.population).reduce((sum, count) => sum + count, 0);
-        // Exclure les puits du décompte des bâtiments
-        const buildingCount = village.buildings.filter(building => building !== "well").length;
+        // Calcule le nombre total de bâtiments pour ce village en utilisant les totaux globaux
+        const totalBuildings = wells + mines + workshops + herbalists + wheatFields + mills + bakeries + sawmills + stoneQuarries + warehouses;
+        // Répartis proportionnellement les bâtiments entre les villages (similaire à la population)
+        const baseBuildingsPerVillage = Math.floor(totalBuildings / villagesData.length);
+        let remainingBuildings = totalBuildings % villagesData.length;
+        const buildingCount = baseBuildingsPerVillage + (remainingBuildings > 0 ? 1 : 0);
+        if (remainingBuildings > 0) remainingBuildings--;
+
         villagesList.innerHTML += `<li>Village ${index + 1} : Population ${villagePop}/${maxPopulationPerVillage}, Bâtiments ${buildingCount}/${maxBuildingsPerVillage}</li>`;
       });
     } else {
