@@ -304,6 +304,6 @@ setInterval(() => {
   if (result && (result.ageChanged || result.seasonChanged)) {
     enhancedUpdateDisplay();
     updateSeasonDisplay();
-    updateExplorationDisplay();
   }
+  updateExplorationDisplay(); // Appel à chaque tick pour mettre à jour la barre
 }, 1000);
