@@ -344,9 +344,8 @@ export function craftWell() {
     setWells(wells + 1);
     setMaxWater(maxWater + 1000);
     document.getElementById("narrative").textContent = "Un puits est construit ! Il stocke plus d’eau.";
-    // Supprimez : enhancedUpdateDisplay();
+    assignBuildingsToVillages(); // Ajout pour mettre à jour les bâtiments
   } else {
-    // Supprimez : showAlert("Il te faut 10 bois et 5 pierres pour un puits !");
     return { error: "Il te faut 10 bois et 5 pierres pour un puits !" };
   }
 }
@@ -820,7 +819,6 @@ export function foundVillage() {
 
 
 export function assignBuildingsToVillages() {
-  // Liste des bâtiments soumis à la limite
   const limitedBuildingTypes = [
     { type: "mine", count: mines },
     { type: "workshop", count: workshops },
@@ -833,7 +831,6 @@ export function assignBuildingsToVillages() {
     { type: "warehouse", count: warehouses },
   ];
 
-  // Liste des bâtiments non soumis à la limite (comme les puits)
   const unlimitedBuildingTypes = [
     { type: "well", count: wells },
   ];
@@ -843,13 +840,15 @@ export function assignBuildingsToVillages() {
     village.buildings = [];
   });
 
-  // Ajouter les bâtiments limités
+  // Ajouter les bâtiments limités (sans compter les puits dans la limite)
   let currentVillageIndex = 0;
   for (const building of limitedBuildingTypes) {
     for (let i = 0; i < building.count; i++) {
       if (currentVillageIndex >= villagesData.length) currentVillageIndex = 0;
-      if (villagesData[currentVillageIndex].buildings.filter(b => b !== "well").length < maxBuildingsPerVillage) { // Exclure les puits de la limite
-        villagesData[currentVillageIndex].buildings.push(building.type);
+      const currentVillage = villagesData[currentVillageIndex];
+      const limitedBuildingsCount = currentVillage.buildings.filter(b => b !== "well").length;
+      if (limitedBuildingsCount < maxBuildingsPerVillage) {
+        currentVillage.buildings.push(building.type);
       } else {
         currentVillageIndex++;
         i--;
@@ -862,10 +861,15 @@ export function assignBuildingsToVillages() {
   for (const building of unlimitedBuildingTypes) {
     for (let i = 0; i < building.count; i++) {
       if (currentVillageIndex >= villagesData.length) currentVillageIndex = 0;
-      villagesData[currentVillageIndex].buildings.push(building.type); // Pas de limite pour les puits
+      villagesData[currentVillageIndex].buildings.push(building.type);
       currentVillageIndex++;
     }
   }
+
+  // Log pour débogage
+  villagesData.forEach((village, index) => {
+    console.log(`Village ${index + 1} après assignBuildingsToVillages : buildings =`, village.buildings);
+  });
 }
 
 export function syncVillageBuildings() {

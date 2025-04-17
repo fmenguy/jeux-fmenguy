@@ -277,21 +277,22 @@ footer {
   border-radius: 5px;
   display: inline-block;
   font-size: 18px;
-  text-align: center; /* Centrer le contenu */
+  text-align: center;
+  max-width: 200px; /* Ajuster pour correspondre à seasonDisplay */
 }
 
 .exploration-text {
-  display: block; /* Le texte prend toute la ligne */
-  margin-bottom: 5px; /* Espacement entre le texte et la barre */
+  display: block !important;
+  margin-bottom: 5px;
 }
 
 .exploration-progress-bar {
-  width: 100%; /* Même longueur que le texte ou le conteneur parent */
+  width: 100%; /* Prend la largeur du conteneur parent (#explorationDisplay) */
   height: 6px;
   background-color: #2b1d0e;
   border-radius: 8px;
   overflow: hidden;
-  display: block; /* Prend toute la largeur disponible */
+  display: block !important;
 }
 
 .exploration-progress {
