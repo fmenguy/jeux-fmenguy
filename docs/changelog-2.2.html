@@ -1,0 +1,155 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Changelog - Forge des Âges</title>
+    <link rel="stylesheet" href="../css/changelog.css">
+</head>
+<body>
+    <h1>Changelog - Forge des Âges</h1>
+
+    <div class="version">
+        <h2>Version 2.2 (Actuelle)</h2>
+        <p><strong>Date</strong> : 22 avril 2025</p>
+        <p><strong>Description</strong> : Introduction d’un système de gestion de villages multiples, nouvel Âge des Cités, et refonte modulaire du code pour une meilleure maintenance et évolutivité.</p>
+
+        <h3>Ajouts</h3>
+        <ul>
+            <li><strong>Gestion des villages</strong> :
+                <ul>
+                    <li>Nouvelle structure <code>villagesData</code> pour gérer chaque village avec sa population (villageois, chefs, cueilleurs, etc.) et ses bâtiments.</li>
+                    <li>Section <code>#villagesDisplay</code> affichant les villages fondés, leur population (<code>maxPopulationPerVillage: 250</code>), et leurs bâtiments (<code>maxBuildingsPerVillage: 2</code>).</li>
+                    <li>Fonction <code>foundVillage</code> mise à jour pour répartir proportionnellement les travailleurs (50% des cueilleurs, chasseurs, etc.) sans consommer les villageois/chefs.</li>
+                </ul>
+            </li>
+            <li><strong>Âge des Cités</strong> :
+                <ul>
+                    <li>Nouvel âge débloqué lorsque la population totale atteint 1000, transformant les villages en une ville unique via <code>transformToCity</code>.</li>
+                    <li>Tooltip ajouté pour l’Âge des Cités dans <code>getAgeTooltip</code>.</li>
+                </ul>
+            </li>
+            <li><strong>Exploration</strong> :
+                <ul>
+                    <li>Section <code>#explorationDisplay</code> avec une barre de progression verte (<code>--exploration-progress-color: #4CAF50</code>) pour visualiser le temps d’exploration.</li>
+                    <li>Fonction <code>updateExplorationDisplay</code> pour gérer l’affichage dynamique.</li>
+                </ul>
+            </li>
+            <li><strong>Interface utilisateur</strong> :
+                <ul>
+                    <li>Ajout d’un logo (<code>assets/logo_fda.webp</code>) et d’un favicon (<code>assets/favicon.ico</code>).</li>
+                    <li>CSS externalisé dans <code>styles.css</code> avec variables CSS (<code>--primary-color</code>, <code>--background-body</code>, etc.).</li>
+                    <li>Règle de responsivité pour tablettes (<code>@media (min-width: 601px) and (max-width: 1024px)</code>).</li>
+                    <li>Message <code>#noHintMessage</code> affiché lorsque aucun indice n’est disponible.</li>
+                </ul>
+            </li>
+            <li><strong>Cheatcode</strong> :
+                <ul>
+                    <li>Activation du mode triche par 5 clics sur le logo, ajoutant 100 unités de chaque ressource (baies, viande, bois, pierre, eau) par clic.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>Modifications</h3>
+        <ul>
+            <li><strong>Structure du code</strong> :
+                <ul>
+                    <li>Code JavaScript divisé en modules ES (<code>main.js</code>, <code>game.js</code>, <code>ui.js</code>, <code>save.js</code>) pour une meilleure organisation.</li>
+                    <li>Fonctions de fabrication/recrutement renvoient des objets <code>{ error: message }</code> pour gérer les erreurs.</li>
+                </ul>
+            </li>
+            <li><strong>Gestion des indices</strong> :
+                <ul>
+                    <li>Coûts “passifs” pour les indices, vérifiant la possession sans consommer les ressources.</li>
+                    <li>Bouton <code>#buyHintBtn</code> masqué et remplacé par <code>#noHintMessage</code> si aucun indice n’est disponible.</li>
+                </ul>
+            </li>
+            <li><strong>Performance</strong> :
+                <ul>
+                    <li>Fonction <code>updateResourcesDisplay</code> pour des mises à jour légères des ressources, réduisant les appels à <code>enhancedUpdateDisplay</code>.</li>
+                </ul>
+            </li>
+            <li><strong>Chefs</strong> :
+                <ul>
+                    <li>Limite dynamique à 1 chef par 25 villageois, vérifiée dans <code>appointChief</code> et lors du chargement de sauvegarde.</li>
+                </ul>
+            </li>
+            <li><strong>Stockage</strong> :
+                <ul>
+                    <li>Affichage de la limite des métaux (<code>maxMetals + maxMetalsStorage</code>) dans <code>#metalsSection</code>.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>Corrections</h3>
+        <ul>
+            <li><strong>Sauvegarde</strong> :
+                <ul>
+                    <li>Ajout de <code>villagesData</code>, <code>maxPopulationPerVillage</code>, et <code>maxBuildingsPerVillage</code> dans les données de sauvegarde.</li>
+                    <li>Correction de <code>maxMetalsStorage</code> recalculé lors du chargement si des entrepôts existent.</li>
+                </ul>
+            </li>
+            <li><strong>Interface</strong> :
+                <ul>
+                    <li>Correction de l’affichage conditionnel de <code>#hintSection</code> pour éviter les erreurs si la section est absente.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="version">
+        <h2>Historique</h2>
+        <ul>
+            <li><a href="changelog-2.1.html">Version 2.1</a> - 15 avril 2025</li>
+            <li><a href="changelog-2.0.html">Version 2.0</a> - 13 avril 2025</li>
+            <li><a href="changelog-1.9.html">Version 1.9</a> - 12 avril 2025</li>
+            <li><a href="changelog-1.8.html">Version 1.8</a> - 11 avril 2025</li>
+            <li><a href="changelog-1.7.html">Version 1.7</a> - 10 avril 2025</li>
+            <li><a href="changelog-1.6.html">Version 1.6</a> - Non spécifiée</li>
+            <li><a href="changelog-1.5.html">Version 1.5</a> - Non spécifiée</li>
+        </ul>
+    </div>
+
+    <footer>
+        <span>Forge des Âges - Retour au jeu : <a href="../index.html">Jouer</a></span>
+    </footer>
+</body>
+</html>
