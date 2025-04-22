@@ -628,6 +628,21 @@ if (logo) {
   console.warn("L'élément logo n'a pas été trouvé dans le DOM.");
 }
 
+export function updateResourcesDisplay() {
+  document.getElementById("berries").textContent = Math.floor(berries);
+  document.getElementById("wood").textContent = Math.floor(wood);
+  document.getElementById("stone").textContent = Math.floor(stone);
+  document.getElementById("water").textContent = Math.floor(water);
+  document.getElementById("meat").textContent = Math.floor(meat);
+  document.getElementById("fibers").textContent = Math.floor(fibers);
+  document.getElementById("metals").textContent = Math.floor(metals);
+  document.getElementById("maxMetalsLimit").textContent = maxMetals + maxMetalsStorage;
+  document.getElementById("herbs").textContent = Math.floor(herbs);
+  document.getElementById("wheat").textContent = Math.floor(wheat);
+  document.getElementById("flour").textContent = Math.floor(flour);
+  document.getElementById("bread").textContent = Math.floor(bread);
+}
+
 // Écouteur pour les clics quand le cheat est actif
 document.addEventListener("click", () => {
   if (cheatModeActive) {
