@@ -1,43 +1,43 @@
 import { initGame, gameLoop, gatherBerries, gatherWood, gatherStone, gatherWater, gatherMeat, gatherFibers, gatherMetals, craftAxe, craftBucket, craftPickaxe, craftBow, craftCoat, craftMetalAxe, craftRemedy, craftWell, craftMine, craftWorkshop, craftHerbalist, craftWheatField, craftMill, craftBakery, craftSawmill, craftStoneQuarry, craftWarehouse, recruitVillager, appointChief, recruitTinker, recruitPicker, recruitHunter, recruitResearcher, sendExplorers, recruitMiner, recruitFarmer, foundVillage, seekShard, dynamicHints, purchasedHints, setCurrentHint } from './game.js';
 
-import { updateDisplay, updateSeasonDisplay, updateExplorationDisplay, showAlert, hideAlert, enableDragAndDrop, applyCraftOrder, buyHint, toggleHints, enhancedUpdateDisplay } from './ui.js';
+import { updateDisplay, updateResourcesDisplay, updateSeasonDisplay, updateExplorationDisplay, showAlert, hideAlert, enableDragAndDrop, applyCraftOrder, buyHint, toggleHints, enhancedUpdateDisplay } from './ui.js';
 
 import { saveGame, loadGame, exportSave, importSavePrompt } from './save.js';
 
 // Exporter les fonctions globales pour les événements onclick
 window.gatherBerries = () => {
   gatherBerries();
-  enhancedUpdateDisplay();
+  updateResourcesDisplay();
 };
 
 window.gatherWood = () => {
   gatherWood();
-  enhancedUpdateDisplay();
+  updateResourcesDisplay();
 };
 
 window.gatherStone = () => {
   gatherStone();
-  enhancedUpdateDisplay();
+  updateResourcesDisplay();
 };
 
 window.gatherWater = () => {
   gatherWater();
-  enhancedUpdateDisplay();
+  updateResourcesDisplay();
 };
 
 window.gatherMeat = () => {
   gatherMeat();
-  enhancedUpdateDisplay();
+  updateResourcesDisplay();
 };
 
 window.gatherFibers = () => {
   gatherFibers();
-  enhancedUpdateDisplay();
+  updateResourcesDisplay();
 };
 
 window.gatherMetals = () => {
   gatherMetals();
-  enhancedUpdateDisplay();
+  updateResourcesDisplay();
 };
 
 window.craftAxe = () => {
@@ -301,9 +301,10 @@ setInterval(() => {
   } else if (result && result.hideAlert) {
     hideAlert();
   }
+  updateResourcesDisplay(); // Mise à jour légère des ressources à chaque tick
   if (result && (result.ageChanged || result.seasonChanged)) {
-    enhancedUpdateDisplay();
+    enhancedUpdateDisplay(); // Mise à jour complète lors d'événements majeurs
     updateSeasonDisplay();
   }
-  updateExplorationDisplay(); // Appel à chaque tick pour mettre à jour la barre
+  updateExplorationDisplay();
 }, 1000);
