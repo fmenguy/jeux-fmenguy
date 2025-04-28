@@ -1082,6 +1082,8 @@ export function gameLoop() {
     }
     if (alertMessage) {
       result.alert = alertMessage;
+    } else {
+      result.hideAlert = true; // Masquer l'alerte si aucune condition d'alerte n'est remplie
     }
 
     if (berries <= 0 && meat <= 0 && water <= 0 && (currentAge !== "Âge de l’Agriculture" || bread <= 0) && !noDeath) {
