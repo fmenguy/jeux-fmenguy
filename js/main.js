@@ -7,37 +7,37 @@ import { saveGame, loadGame, exportSave, importSavePrompt } from './save.js';
 // Exporter les fonctions globales pour les événements onclick
 window.gatherBerries = () => {
   gatherBerries();
-  enhancedUpdateDisplay();
+  enhancedUpdateDisplay(); // Mise à jour complète
 };
 
 window.gatherWood = () => {
   gatherWood();
-  updateResourcesDisplay();
+  enhancedUpdateDisplay(); // Mise à jour complète
 };
 
 window.gatherStone = () => {
   gatherStone();
-  updateResourcesDisplay();
+  enhancedUpdateDisplay(); // Mise à jour complète
 };
 
 window.gatherWater = () => {
   gatherWater();
-  updateResourcesDisplay();
+  enhancedUpdateDisplay(); // Mise à jour complète
 };
 
 window.gatherMeat = () => {
   gatherMeat();
-  updateResourcesDisplay();
+  enhancedUpdateDisplay(); // Mise à jour complète
 };
 
 window.gatherFibers = () => {
   gatherFibers();
-  updateResourcesDisplay();
+  enhancedUpdateDisplay(); // Mise à jour complète
 };
 
 window.gatherMetals = () => {
   gatherMetals();
-  updateResourcesDisplay();
+  enhancedUpdateDisplay(); // Mise à jour complète
 };
 
 window.craftAxe = () => {
