@@ -7,7 +7,7 @@ import { saveGame, loadGame, exportSave, importSavePrompt } from './save.js';
 // Exporter les fonctions globales pour les événements onclick
 window.gatherBerries = () => {
   gatherBerries();
-  updateResourcesDisplay();
+  enhancedUpdateDisplay();
 };
 
 window.gatherWood = () => {
