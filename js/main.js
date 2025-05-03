@@ -309,23 +309,12 @@ window.toggleSidebar = () => {
   }
 };
 
-// Initialisation
 initGame();
 setTimeout(() => {
   enhancedUpdateDisplay();
   updateSeasonDisplay();
   enableDragAndDrop();
   applyCraftOrder();
-
-  // Initialiser la session pour l'accès aux fichiers
-  fetch('init_session.php')
-    .then(response => response.json())
-    .then(data => {
-      console.log("Session initialisée :", data.status);
-    })
-    .catch(error => {
-      console.error("Erreur lors de l'initialisation de la session :", error);
-    });
 
   const music = document.getElementById("backgroundMusic");
   if (music) {
@@ -340,6 +329,7 @@ setTimeout(() => {
   const playBtn = document.getElementById("playMusicBtn");
   const pauseBtn = document.getElementById("pauseMusicBtn");
   const volumeSlider = document.getElementById("volumeSlider");
+  const volumePercentage = document.getElementById("volumePercentage");
 
   if (toggleSidebarBtn) {
     toggleSidebarBtn.addEventListener("click", () => {
@@ -368,17 +358,22 @@ setTimeout(() => {
     console.error("Élément pauseMusicBtn non trouvé");
   }
 
-  if (volumeSlider) {
+  if (volumeSlider && volumePercentage) {
+    // Mettre à jour l'affichage initial du pourcentage
+    volumePercentage.textContent = `${Math.round(volumeSlider.value)}%`;
+
     volumeSlider.addEventListener("input", (e) => {
       if (music) {
-        music.volume = e.target.value;
-        console.log("Volume ajusté à :", e.target.value);
+        const volumeValue = e.target.value / 100; // Convertir de 0-100 à 0-1
+        music.volume = volumeValue;
+        volumePercentage.textContent = `${e.target.value}%`; // Mettre à jour le pourcentage
+        console.log("Volume ajusté à :", volumeValue);
       } else {
         console.error("Élément backgroundMusic non trouvé pour ajuster le volume");
       }
     });
   } else {
-    console.error("Élément volumeSlider non trouvé");
+    console.error("Élément volumeSlider ou volumePercentage non trouvé");
   }
 }, 0);
 
