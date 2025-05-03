@@ -385,7 +385,7 @@ footer {
   color: var(--text-dark);
   border: none;
   border-radius: 5px;
-  padding: 5px; /* Taille discrète comme demandé précédemment */
+  padding: 5px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
@@ -399,7 +399,7 @@ footer {
 /* Bandeau latéral pour le contrôle audio */
 #audioSidebar {
   position: fixed;
-  top: 50px; /* Positionné juste en dessous du bouton toggle */
+  top: 50px;
   right: 0;
   z-index: 1000;
 }
@@ -407,39 +407,26 @@ footer {
 /* Contenu du bandeau latéral */
 .sidebar-content {
   width: 0;
-  height: 100px; /* Hauteur compacte */
+  height: 60px; /* Réduit après suppression du h2 */
   background-color: var(--background-dark);
-  border: 1px solid var(--primary-color);
-  border-right: none;
-  border-radius: 5px 0 0 5px;
+  border: 0; /* Supprimer la bordure pour qu'elle ne soit pas visible quand repliée */
   overflow: hidden;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, border 0.3s ease; /* Ajout de la transition pour la bordure */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px; /* Ajouté pour éviter le débordement */
+  padding: 0; /* Supprimer le padding quand replié */
+  visibility: hidden; /* Rendre invisible quand replié */
 }
 
 .sidebar-content.open {
-  width: 260px; /* Légèrement plus large pour accueillir tous les éléments */
-}
-
-.sidebar-content h2 {
-  color: var(--secondary-color);
-  font-size: 16px;
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between; /* Alignement pour "Contrôle Audio" et "Musique" */
-  width: 100%;
-  padding: 0 10px; /* Ajouté pour éviter le débordement */
-}
-
-/* Texte "Musique" */
-.music-label {
-  color: var(--secondary-color);
-  font-size: 14px;
-  font-weight: normal;
+  width: 260px;
+  border: 1px solid var(--primary-color); /* Réactiver la bordure quand ouvert */
+  border-right: none;
+  border-radius: 5px 0 0 5px;
+  padding: 10px; /* Réactiver le padding quand ouvert */
+  visibility: visible; /* Rendre visible quand ouvert */
 }
 
 /* Conteneur pour les contrôles audio */
@@ -487,7 +474,7 @@ footer {
   background: #d3d3d3;
   outline: none;
   opacity: 0.7;
-  transition: opacity 0.2s;
+  transition: opacity 0.3s;
   border-radius: 5px;
 }
 
