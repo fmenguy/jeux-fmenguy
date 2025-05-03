@@ -380,6 +380,17 @@ setInterval(() => {
   updateExplorationDisplay();
 }, 1000);
 
+const volumeSlider = document.getElementById("volumeSlider");
+if (volumeSlider) {
+  volumeSlider.addEventListener("input", (e) => {
+    const music = document.getElementById("backgroundMusic");
+    if (music) {
+      music.volume = e.target.value;
+      console.log("Volume ajusté à :", e.target.value);
+    }
+  });
+}
+
 window.toggleMusic = () => {
   console.log("toggleMusic appelé");
   const music = document.getElementById("backgroundMusic");

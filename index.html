@@ -6,15 +6,17 @@
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
   <title>Forge des Âges</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <!-- Bandeau latéral pour le contrôle audio -->
   <div id="audioSidebar">
-    <button id="toggleSidebarBtn" class="sidebar-toggle">🎵</button>
+    <button id="toggleSidebarBtn" class="sidebar-toggle"><i class="fas fa-music"></i></button>
     <div id="audioSidebarContent" class="sidebar-content">
       <h2>Contrôle Audio</h2>
-      <button id="playMusicBtn" class="audio-control-btn">▶</button>
-      <button id="pauseMusicBtn" class="audio-control-btn">⏸</button>
+      <button id="playMusicBtn" class="audio-control-btn"><i class="fas fa-play"></i></button>
+      <button id="pauseMusicBtn" class="audio-control-btn"><i class="fas fa-pause"></i></button>
+      <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
     </div>
   </div>
 
