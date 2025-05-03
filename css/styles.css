@@ -376,37 +376,38 @@ footer {
   overflow-wrap: break-word;
 }
 
-#audioControlSection {
-  margin: 20px auto;
-  padding: 15px;
-  background-color: var(--background-dark);
+/* Bouton pour ouvrir le bandeau latéral */
+.sidebar-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: var(--primary-color);
+  color: var(--text-dark);
+  border: none;
   border-radius: 5px;
-  border: 1px solid var(--primary-color);
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
+  padding: 5px; /* Réduit pour une icône plus petite */
+  font-size: 16px; /* Réduit pour une icône plus petite */
+  cursor: pointer;
+  transition: background-color 0.3s;
+  z-index: 1001; /* S'assurer qu'il est au-dessus du bandeau */
 }
 
-#audioControlSection h2 {
-  color: var(--secondary-color);
-  font-size: 18px;
-  margin-bottom: 10px;
+.sidebar-toggle:hover {
+  background-color: #e0c040;
 }
 
-#toggleMusicBtn {
-  padding: 8px 16px;
-  font-size: 14px;
+/* Bandeau latéral pour le contrôle audio */
+#audioSidebar {
+  position: fixed;
+  top: 50px; /* Positionné juste en dessous du bouton toggle */
+  right: 0;
+  z-index: 1000;
 }
-
-#backgroundMusic {
-  display: none; /* Cacher l'élément audio natif */
-}
-
 
 /* Contenu du bandeau latéral */
 .sidebar-content {
   width: 0;
-  height: 180px; /* Augmenté pour accueillir le curseur vertical */
+  height: 100px; /* Réduit pour un design compact */
   background-color: var(--background-dark);
   border: 1px solid var(--primary-color);
   border-right: none;
@@ -420,7 +421,7 @@ footer {
 }
 
 .sidebar-content.open {
-  width: 220px; /* Légèrement plus large pour l'affichage en pourcentage */
+  width: 250px; /* Ajusté pour le design compact */
 }
 
 .sidebar-content h2 {
@@ -434,14 +435,14 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px; /* Espacement augmenté pour une meilleure disposition */
+  gap: 15px; /* Espacement entre les boutons et le curseur */
 }
 
 /* Boutons Play/Pause */
 .play-pause-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 8px; /* Espacement légèrement augmenté */
+  flex-direction: row; /* Alignement horizontal */
+  gap: 10px; /* Espacement entre les boutons */
 }
 
 .audio-control-btn {
@@ -462,27 +463,20 @@ footer {
 /* Conteneur pour le curseur de volume et le pourcentage */
 .volume-control {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 5px; /* Ajout d’un léger padding pour l’esthétique */
+  gap: 10px; /* Espacement entre le curseur et le pourcentage */
 }
 
-/* Conteneur pour le curseur vertical */
-.volume-slider-container {
-  height: 100px; /* Hauteur du curseur */
-  margin: 5px 0;
-}
-
-/* Style du curseur vertical */
+/* Style du curseur horizontal */
 #volumeSlider {
-  -webkit-appearance: slider-vertical; /* Curseur vertical pour WebKit */
-  width: 10px; /* Largeur du curseur */
-  height: 100px; /* Hauteur du curseur */
+  -webkit-appearance: none;
+  width: 100px; /* Largeur du curseur */
+  height: 8px; /* Hauteur de la barre */
   background: #d3d3d3;
   outline: none;
   opacity: 0.7;
   transition: opacity 0.2s;
+  border-radius: 5px;
 }
 
 #volumeSlider:hover {
@@ -492,16 +486,16 @@ footer {
 #volumeSlider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   background: #4CAF50;
   cursor: pointer;
   border-radius: 50%;
 }
 
 #volumeSlider::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   background: #4CAF50;
   cursor: pointer;
   border-radius: 50%;
@@ -511,5 +505,11 @@ footer {
 .volume-percentage {
   color: var(--secondary-color);
   font-size: 14px;
-  margin-top: 5px;
+  width: 40px; /* Largeur fixe pour alignement */
+  text-align: left;
+}
+
+/* Cacher l'élément audio natif */
+#backgroundMusic {
+  display: none;
 }
