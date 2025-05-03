@@ -468,3 +468,8 @@ footer {
 .audio-control-btn:hover {
   background-color: #e0c040;
 }
+
+#volumeSlider {
+  margin-top: 10px;
+  width: 80%;
+}
