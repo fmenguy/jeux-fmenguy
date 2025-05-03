@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Changelog - Forge des Âges</title>
+    <link rel="stylesheet" href="../css/changelog.css">
+</head>
+<body>
+    <h1>Changelog - Forge des Âges</h1>
+
+    <div class="version">
+        <h2>Version 2.3 (Actuelle)</h2>
+        <p><strong>Date</strong> : 03 mai 2025</p>
+        <p><strong>Description</strong> : Ajout d’un système de contrôle audio interactif avec un bandeau latéral, améliorations de l’interface utilisateur, et protection des fichiers audio.</p>
+
+        <h3>Ajouts</h3>
+        <ul>
+            <li><strong>Contrôle audio interactif</strong> :
+                <ul>
+                    <li>Nouveau bouton <code>#toggleSidebarBtn</code> avec une icône de note de musique (<code><i class="fas fa-music"></code>), positionné en haut à droite, conçu pour être discret et compact (<code>padding: 5px</code>, <code>font-size: 16px</code>).</li>
+                    <li>Bandeau latéral <code>#audioSidebarContent</code> pour gérer la musique :
+                        <ul>
+                            <li>Boutons "Play" (<code>#playMusicBtn</code>) et "Pause" (<code>#pauseMusicBtn</code>) alignés horizontalement.</li>
+                            <li>Curseur de volume horizontal (<code>#volumeSlider</code>) avec affichage du pourcentage (<code>#volumePercentage</code>).</li>
+                            <li>Le bandeau est totalement invisible lorsqu’il est replié (<code>width: 0</code>, <code>visibility: hidden</code>, <code>border: 0</code>, <code>padding: 0</code>).</li>
+                        </ul>
+                    </li>
+                    <li>Gestion de l’état de lecture (<code>isMusicPlaying</code>) sauvegardé et chargé via <code>saveGame</code>, <code>loadGame</code>, <code>exportSave</code>, et <code>importSavePrompt</code>.</li>
+                    <li>Musique relancée après une interaction utilisateur pour respecter les restrictions des navigateurs modernes.</li>
+                </ul>
+            </li>
+            <li><strong>Protection des fichiers audio</strong> :
+                <ul>
+                    <li>Ajout d’une règle <code>.htaccess</code> pour bloquer l’accès direct aux fichiers dans <code>assets/audio/</code> tout en permettant leur chargement par le site via l’élément <code><audio></code>.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>Modifications</h3>
+        <ul>
+            <li><strong>Interface utilisateur</strong> :
+                <ul>
+                    <li>Suppression du <code><h2>Contrôle Audio</h2></code> dans le bandeau audio pour un design plus compact.</li>
+                    <li>Réduction de la hauteur du bandeau à <code>60px</code> après suppression du titre.</li>
+                    <li>Ajustement des marges et du padding pour éviter le débordement des boutons "Play" et "Pause" (<code>padding: 10px</code> ajouté à <code>.sidebar-content</code>, largeur augmentée à <code>260px</code>).</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>Corrections</h3>
+        <ul>
+            <li><strong>Bandeau audio</strong> :
+                <ul>
+                    <li>Correction d’un problème de visibilité du bandeau lorsqu’il est replié, en supprimant la bordure et le padding pour qu’il soit totalement invisible.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="version">
+        <h2>Historique</h2>
+        <ul>
+            <li><a href="changelog-2.2.html">Version 2.2</a> - 22 avril 2025</li>
+            <li><a href="changelog-2.1.html">Version 2.1</a> - 22 avril 2025</li>
+            <li><a href="changelog-2.0.html">Version 2.0</a> - 02 avril 2025</li>
+        </ul>
+    </div>
+
+    <footer>
+        <span>Forge des Âges - Retour au jeu : <a href="../index.html">Jouer</a></span>
+    </footer>
+</body>
+</html>
