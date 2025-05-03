@@ -280,6 +280,36 @@ window.buyHint = () => {
 
 window.toggleHints = toggleHints;
 
+// Définir les fonctions pour le contrôle audio
+window.playMusic = () => {
+  const music = document.getElementById("backgroundMusic");
+  if (music) {
+    music.play().then(() => {
+      console.log("Musique démarrée");
+      setIsMusicPlaying(true);
+    }).catch((error) => {
+      console.error("Erreur lors de la lecture de la musique :", error);
+    });
+  }
+};
+
+window.pauseMusic = () => {
+  const music = document.getElementById("backgroundMusic");
+  if (music) {
+    music.pause();
+    console.log("Musique en pause");
+    setIsMusicPlaying(false);
+  }
+};
+
+window.toggleSidebar = () => {
+  const sidebarContent = document.getElementById("audioSidebarContent");
+  if (sidebarContent) {
+    sidebarContent.classList.toggle("open");
+  }
+};
+
+// Initialisation
 initGame();
 setTimeout(() => {
   enhancedUpdateDisplay();
@@ -292,6 +322,38 @@ setTimeout(() => {
     console.log("Audio initialisé, volume défini à 0.5");
   } else {
     console.error("Élément backgroundMusic non trouvé lors de l'initialisation");
+  }
+
+  // Ajouter les écouteurs d'événements pour le bandeau et les boutons
+  const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
+  const playBtn = document.getElementById("playMusicBtn");
+  const pauseBtn = document.getElementById("pauseMusicBtn");
+
+  if (toggleSidebarBtn) {
+    toggleSidebarBtn.addEventListener("click", () => {
+      console.log("Bouton toggleSidebar cliqué");
+      window.toggleSidebar();
+    });
+  } else {
+    console.error("Élément toggleSidebarBtn non trouvé");
+  }
+
+  if (playBtn) {
+    playBtn.addEventListener("click", () => {
+      console.log("Bouton Play cliqué");
+      window.playMusic();
+    });
+  } else {
+    console.error("Élément playMusicBtn non trouvé");
+  }
+
+  if (pauseBtn) {
+    pauseBtn.addEventListener("click", () => {
+      console.log("Bouton Pause cliqué");
+      window.pauseMusic();
+    });
+  } else {
+    console.error("Élément pauseMusicBtn non trouvé");
   }
 }, 0);
 

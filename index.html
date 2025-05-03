@@ -8,6 +8,16 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <!-- Bandeau latéral pour le contrôle audio -->
+  <div id="audioSidebar">
+    <button id="toggleSidebarBtn" class="sidebar-toggle">🎵</button>
+    <div id="audioSidebarContent" class="sidebar-content">
+      <h2>Contrôle Audio</h2>
+      <button id="playMusicBtn" class="audio-control-btn">▶</button>
+      <button id="pauseMusicBtn" class="audio-control-btn">⏸</button>
+    </div>
+  </div>
+
   <div style="text-align: center; margin-bottom: 20px;">
     <img src="assets/logo_fda.webp" alt="Forge des Âges Logo" style="width: 200px; height: auto;">
   </div>
@@ -243,14 +253,10 @@
 
   <script src="js/main.js" type="module"></script>
 
-  <div id="audioControlSection">
-    <h2>Contrôle Audio</h2>
-    <button id="toggleMusicBtn" onclick="toggleMusic()">Play/Pause Musique</button>
-    <audio id="backgroundMusic" loop>
-      <source src="assets/audio/ambiance_fda.mp3" type="audio/mpeg">
-      Votre navigateur ne supporte pas l'élément audio.
-    </audio>
-  </div>
+  <audio id="backgroundMusic" loop>
+    <source src="assets/audio/ambiance_fda.mp3" type="audio/mpeg">
+    Votre navigateur ne supporte pas l'élément audio.
+  </audio>
 
 </body>
 </html>
