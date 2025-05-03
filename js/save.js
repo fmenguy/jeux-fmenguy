@@ -159,17 +159,22 @@ export function loadGame(slot) {
     setUnlockedAges(saveData.unlockedAges || ["Âge de Pierre"]);
     setIsMusicPlaying(saveData.isMusicPlaying || false);
 
-    // Restaurer l'état de la musique
     const music = document.getElementById("backgroundMusic");
-    const toggleBtn = document.getElementById("toggleMusicBtn");
-    if (isMusicPlaying) {
-      music.play().catch((error) => {
-        console.error("Erreur lors de la lecture de la musique après chargement :", error);
-      });
-      toggleBtn.textContent = "Pause Musique";
-    } else {
-      music.pause();
-      toggleBtn.textContent = "Play Musique";
+    if (music) {
+      if (saveData.isMusicPlaying) {
+        // Attendre une interaction utilisateur pour relancer la musique
+        const startMusicAfterInteraction = () => {
+          music.play().then(() => {
+            console.log("Musique relancée après chargement et interaction");
+          }).catch((error) => {
+            console.error("Erreur lors de la relance de la musique après chargement :", error);
+          });
+          document.removeEventListener("click", startMusicAfterInteraction);
+        };
+        document.addEventListener("click", startMusicAfterInteraction);
+      } else {
+        music.pause();
+      }
     }
 
     const newFabricationOrder = saveData.fabricationOrder || [
@@ -260,6 +265,7 @@ export function loadGame(slot) {
 
 export function exportSave(slot) {
   const saveData = {
+    isMusicPlaying,
     berries,
     wood,
     stone,
@@ -402,6 +408,26 @@ export function importSavePrompt() {
     setMaxFlourStorage(saveData.maxFlourStorage || 0);
     setBakeries(saveData.bakeries || 0);
     setUnlockedAges(saveData.unlockedAges || ["Âge de Pierre"]);
+    setIsMusicPlaying(saveData.isMusicPlaying || false);
+
+    const music = document.getElementById("backgroundMusic");
+    if (music) {
+      if (saveData.isMusicPlaying) {
+        const startMusicAfterInteraction = () => {
+          music.play().then(() => {
+            console.log("Musique relancée après import et interaction");
+          }).catch((error) => {
+            console.error("Erreur lors de la relance de la musique après import :", error);
+          });
+          document.removeEventListener("click", startMusicAfterInteraction);
+        };
+        document.addEventListener("click", startMusicAfterInteraction);
+      } else {
+        music.pause();
+      }
+    }
+
+
     const newFabricationOrder = saveData.fabricationOrder || [
       "axeSection",
       "bucketSection",
