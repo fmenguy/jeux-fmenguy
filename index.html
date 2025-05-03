@@ -22,7 +22,9 @@
         <button id="pauseMusicBtn" class="audio-control-btn"><i class="fas fa-pause"></i></button>
       </div>
       <div class="volume-control">
-        <input type="range" id="volumeSlider" min="0" max="100" step="1" value="50">
+        <div class="volume-slider-container">
+          <input type="range" id="volumeSlider" min="0" max="100" step="1" value="50" orient="vertical">
+        </div>
         <span id="volumePercentage" class="volume-percentage">50%</span>
       </div>
     </div>
@@ -30,8 +32,8 @@
 </div>
 
 <div style="text-align: center; margin-bottom: 20px;">
-  <img src="assets/logo_fda.webp" alt="Forge des Âges Logo" style="width: 200px; height: auto;">
-</div>
+    <img src="assets/logo_fda.webp" alt="Forge des Âges Logo" style="width: 200px; height: auto;">
+  </div>
 
   <div id="seasonDisplay">
     <span class="icon">🌱</span> Printemps
