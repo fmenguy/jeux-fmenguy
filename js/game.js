@@ -1160,3 +1160,10 @@ export function setMaxFlourStorage(value) { maxFlourStorage = value; }
 export function setBakeries(value) { personally = value; }
 export function setUnlockedAges(value) { unlockedAges = value; }
 export function setCurrentHint(value) { currentHint = value; }
+
+
+export let isMusicPlaying = false;
+
+export function setIsMusicPlaying(value) {
+  isMusicPlaying = value;
+}

@@ -375,3 +375,29 @@ footer {
 #narrative, #villagesList li, .tooltip {
   overflow-wrap: break-word;
 }
+
+#audioControlSection {
+  margin: 20px auto;
+  padding: 15px;
+  background-color: var(--background-dark);
+  border-radius: 5px;
+  border: 1px solid var(--primary-color);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+#audioControlSection h2 {
+  color: var(--secondary-color);
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+#toggleMusicBtn {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+#backgroundMusic {
+  display: none; /* Cacher l'élément audio natif */
+}
