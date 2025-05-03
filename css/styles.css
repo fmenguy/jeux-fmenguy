@@ -434,14 +434,14 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px; /* Espacement entre les boutons et le curseur */
+  gap: 20px; /* Espacement augmenté pour une meilleure disposition */
 }
 
 /* Boutons Play/Pause */
 .play-pause-buttons {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px; /* Espacement légèrement augmenté */
 }
 
 .audio-control-btn {
@@ -465,6 +465,7 @@ footer {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 5px; /* Ajout d’un léger padding pour l’esthétique */
 }
 
 /* Conteneur pour le curseur vertical */
