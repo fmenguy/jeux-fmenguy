@@ -402,30 +402,32 @@ footer {
   display: none; /* Cacher l'élément audio natif */
 }
 
-/* Bandeau latéral pour le contrôle audio */
-#audioSidebar {
-  position: fixed;
-  top: 20px;
-  right: 0;
-  z-index: 1000; /* S'assurer qu'il est au-dessus des autres éléments */
-}
-
+/* Bouton pour ouvrir le bandeau latéral */
 .sidebar-toggle {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: fixed;
+  top: 10px;
+  right: 10px;
   background-color: var(--primary-color);
   color: var(--text-dark);
   border: none;
-  border-radius: 5px 0 0 5px;
+  border-radius: 5px;
   padding: 10px;
   font-size: 20px;
   cursor: pointer;
   transition: background-color 0.3s;
+  z-index: 1001; /* S'assurer qu'il est au-dessus du bandeau */
 }
 
 .sidebar-toggle:hover {
   background-color: #e0c040;
+}
+
+/* Bandeau latéral pour le contrôle audio */
+#audioSidebar {
+  position: fixed;
+  top: 50px; /* Positionné juste en dessous du bouton toggle */
+  right: 0;
+  z-index: 1000;
 }
 
 .sidebar-content {
@@ -472,4 +474,32 @@ footer {
 #volumeSlider {
   margin-top: 10px;
   width: 80%;
+  -webkit-appearance: none;
+  height: 5px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+#volumeSlider:hover {
+  opacity: 1;
+}
+
+#volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #4CAF50;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+#volumeSlider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  background: #4CAF50;
+  cursor: pointer;
+  border-radius: 50%;
 }

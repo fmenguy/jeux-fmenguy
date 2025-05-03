@@ -316,6 +316,17 @@ setTimeout(() => {
   updateSeasonDisplay();
   enableDragAndDrop();
   applyCraftOrder();
+
+  // Initialiser la session pour l'accès aux fichiers
+  fetch('init_session.php')
+    .then(response => response.json())
+    .then(data => {
+      console.log("Session initialisée :", data.status);
+    })
+    .catch(error => {
+      console.error("Erreur lors de l'initialisation de la session :", error);
+    });
+
   const music = document.getElementById("backgroundMusic");
   if (music) {
     music.volume = 0.5;
@@ -328,6 +339,7 @@ setTimeout(() => {
   const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
   const playBtn = document.getElementById("playMusicBtn");
   const pauseBtn = document.getElementById("pauseMusicBtn");
+  const volumeSlider = document.getElementById("volumeSlider");
 
   if (toggleSidebarBtn) {
     toggleSidebarBtn.addEventListener("click", () => {
@@ -354,6 +366,19 @@ setTimeout(() => {
     });
   } else {
     console.error("Élément pauseMusicBtn non trouvé");
+  }
+
+  if (volumeSlider) {
+    volumeSlider.addEventListener("input", (e) => {
+      if (music) {
+        music.volume = e.target.value;
+        console.log("Volume ajusté à :", e.target.value);
+      } else {
+        console.error("Élément backgroundMusic non trouvé pour ajuster le volume");
+      }
+    });
+  } else {
+    console.error("Élément volumeSlider non trouvé");
   }
 }, 0);
 
