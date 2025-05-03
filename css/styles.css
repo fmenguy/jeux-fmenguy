@@ -385,8 +385,8 @@ footer {
   color: var(--text-dark);
   border: none;
   border-radius: 5px;
-  padding: 5px; /* Réduit pour une icône plus petite */
-  font-size: 16px; /* Réduit pour une icône plus petite */
+  padding: 5px; /* Taille discrète comme demandé précédemment */
+  font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
   z-index: 1001; /* S'assurer qu'il est au-dessus du bandeau */
@@ -407,7 +407,7 @@ footer {
 /* Contenu du bandeau latéral */
 .sidebar-content {
   width: 0;
-  height: 100px; /* Réduit pour un design compact */
+  height: 100px; /* Hauteur compacte */
   background-color: var(--background-dark);
   border: 1px solid var(--primary-color);
   border-right: none;
@@ -418,16 +418,28 @@ footer {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 10px; /* Ajouté pour éviter le débordement */
 }
 
 .sidebar-content.open {
-  width: 250px; /* Ajusté pour le design compact */
+  width: 260px; /* Légèrement plus large pour accueillir tous les éléments */
 }
 
 .sidebar-content h2 {
   color: var(--secondary-color);
   font-size: 16px;
   margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between; /* Alignement pour "Contrôle Audio" et "Musique" */
+  width: 100%;
+  padding: 0 10px; /* Ajouté pour éviter le débordement */
+}
+
+/* Texte "Musique" */
+.music-label {
+  color: var(--secondary-color);
+  font-size: 14px;
+  font-weight: normal;
 }
 
 /* Conteneur pour les contrôles audio */
