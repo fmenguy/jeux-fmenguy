@@ -4,6 +4,8 @@ import { updateDisplay, updateResourcesDisplay, updateSeasonDisplay, updateExplo
 
 import { saveGame, loadGame, exportSave, importSavePrompt } from './save.js';
 
+import { setIsMusicPlaying } from './game.js';
+
 // Exporter les fonctions globales pour les événements onclick
 window.gatherBerries = () => {
   gatherBerries();
@@ -284,6 +286,9 @@ setTimeout(() => {
   updateSeasonDisplay();
   enableDragAndDrop();
   applyCraftOrder();
+  // Préparer l'audio
+  const music = document.getElementById("backgroundMusic");
+  music.volume = 0.5; // Volume à 50% pour ne pas dominer
 }, 0);
 
 // Initialisation de currentHint
@@ -308,3 +313,18 @@ setInterval(() => {
   }
   updateExplorationDisplay();
 }, 1000);
+
+window.toggleMusic = () => {
+  const music = document.getElementById("backgroundMusic");
+  if (music.paused) {
+    music.play().catch((error) => {
+      console.error("Erreur lors de la lecture de la musique :", error);
+    });
+    document.getElementById("toggleMusicBtn").textContent = "Pause Musique";
+    setIsMusicPlaying(true);
+  } else {
+    music.pause();
+    document.getElementById("toggleMusicBtn").textContent = "Play Musique";
+    setIsMusicPlaying(false);
+  }
+};

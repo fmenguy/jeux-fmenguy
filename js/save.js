@@ -8,6 +8,7 @@ import {
 export function saveGame(slot) {
   console.log("saveGame: villagesData avant sauvegarde", villagesData); // Log pour débogage
   const saveData = {
+    isMusicPlaying,
     berries,
     wood,
     stone,
@@ -156,6 +157,20 @@ export function loadGame(slot) {
     setMaxFlourStorage(saveData.maxFlourStorage || 0);
     setBakeries(saveData.bakeries || 0);
     setUnlockedAges(saveData.unlockedAges || ["Âge de Pierre"]);
+    setIsMusicPlaying(saveData.isMusicPlaying || false);
+
+    // Restaurer l'état de la musique
+    const music = document.getElementById("backgroundMusic");
+    const toggleBtn = document.getElementById("toggleMusicBtn");
+    if (isMusicPlaying) {
+      music.play().catch((error) => {
+        console.error("Erreur lors de la lecture de la musique après chargement :", error);
+      });
+      toggleBtn.textContent = "Pause Musique";
+    } else {
+      music.pause();
+      toggleBtn.textContent = "Play Musique";
+    }
 
     const newFabricationOrder = saveData.fabricationOrder || [
       "metalAxeSection",
