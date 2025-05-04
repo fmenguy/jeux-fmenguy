@@ -539,8 +539,13 @@ footer {
   color: var(--text-dark);
 }
 
+#tabContent {
+  background: transparent; /* Assure que le conteneur des onglets n'a pas de fond */
+}
+
 .tab-pane {
   display: none;
+  background: transparent; /* Assure que chaque onglet n'a pas de fond */
 }
 
 .tab-pane.active {
@@ -551,16 +556,19 @@ footer {
 #mapSection {
   margin: 20px auto;
   padding: 10px;
-  background-color: var(--background-dark);
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   max-width: 600px;
   text-align: center;
+  background: transparent; /* Supprime tout fond */
+}
+
+#mapSection h2 {
+  color: var(--secondary-color);
+  margin-bottom: 10px;
 }
 
 #gameMap {
   border: 1px solid var(--primary-color);
-  background-color: var(--background-body);
+  background: transparent; /* Assure que le canvas n'a pas de fond brun */
   max-width: 100%;
   height: auto;
 }
