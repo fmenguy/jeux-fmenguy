@@ -1158,7 +1158,7 @@ export function setMaxMetalsStorage(value) { maxMetalsStorage = value; }
 export function setMaxHerbsStorage(value) { maxHerbsStorage = value; }
 export function setMaxWheatStorage(value) { maxWheatStorage = value; }
 export function setMaxFlourStorage(value) { maxFlourStorage = value; }
-export function setBakeries(value) { personally = value; }
+export function setBakeries(value) { bakeries = value; }
 export function setUnlockedAges(value) { unlockedAges = value; }
 export function setCurrentHint(value) { currentHint = value; }
 
