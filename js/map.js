@@ -149,8 +149,115 @@ export function drawMap() {
       if (buildingInfo) {
         const bx = villageX + (bIndex % villageSize);
         const by = villageY + Math.floor(bIndex / villageSize);
+        const x = bx * tileSize;
+        const y = by * tileSize;
+
+        // Dessiner des bâtiments avec des formes plus détaillées
         ctx.fillStyle = buildingInfo.color;
-        ctx.fillRect(bx * tileSize, by * tileSize, tileSize, tileSize);
+        switch (buildingInfo.type) {
+          case 'well':
+            // Puits : cercle bleu avec une ligne pour un seau
+            ctx.beginPath();
+            ctx.arc(x + tileSize / 2, y + tileSize / 2, tileSize / 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + tileSize / 2, y + tileSize / 2);
+            ctx.lineTo(x + tileSize / 2, y + tileSize / 4);
+            ctx.stroke();
+            break;
+          case 'mine':
+            // Mine : triangle gris pour une entrée
+            ctx.beginPath();
+            ctx.moveTo(x + tileSize / 2, y + tileSize / 4);
+            ctx.lineTo(x + tileSize / 4, y + 3 * tileSize / 4);
+            ctx.lineTo(x + 3 * tileSize / 4, y + 3 * tileSize / 4);
+            ctx.closePath();
+            ctx.fill();
+            break;
+          case 'workshop':
+            // Atelier : rectangle marron avec une cheminée
+            ctx.fillRect(x + tileSize / 4, y + tileSize / 4, tileSize / 2, tileSize / 2);
+            ctx.fillStyle = '#555';
+            ctx.fillRect(x + 3 * tileSize / 4, y + tileSize / 4, tileSize / 8, tileSize / 4);
+            break;
+          case 'herbalist':
+            // Herboristerie : cercle vert avec des "feuilles"
+            ctx.beginPath();
+            ctx.arc(x + tileSize / 2, y + tileSize / 2, tileSize / 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#0a3d0a';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + tileSize / 2, y + tileSize / 2);
+            ctx.lineTo(x + tileSize / 3, y + tileSize / 4);
+            ctx.moveTo(x + tileSize / 2, y + tileSize / 2);
+            ctx.lineTo(x + 2 * tileSize / 3, y + tileSize / 4);
+            ctx.stroke();
+            break;
+          case 'wheatField':
+            // Champ de blé : rectangle jaune avec des lignes pour des épis
+            ctx.fillRect(x + tileSize / 4, y + tileSize / 4, tileSize / 2, tileSize / 2);
+            ctx.strokeStyle = '#b8860b';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + tileSize / 4, y + tileSize / 4);
+            ctx.lineTo(x + 3 * tileSize / 4, y + 3 * tileSize / 4);
+            ctx.moveTo(x + 3 * tileSize / 4, y + tileSize / 4);
+            ctx.lineTo(x + tileSize / 4, y + 3 * tileSize / 4);
+            ctx.stroke();
+            break;
+          case 'mill':
+            // Moulin : rectangle brun avec un triangle pour les ailes
+            ctx.fillRect(x + tileSize / 4, y + tileSize / 3, tileSize / 2, tileSize / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + tileSize / 2, y + tileSize / 3);
+            ctx.lineTo(x + tileSize / 4, y + tileSize / 6);
+            ctx.lineTo(x + 3 * tileSize / 4, y + tileSize / 6);
+            ctx.closePath();
+            ctx.fill();
+            break;
+          case 'bakery':
+            // Boulangerie : rectangle beige avec une cheminée et de la fumée
+            ctx.fillRect(x + tileSize / 4, y + tileSize / 4, tileSize / 2, tileSize / 2);
+            ctx.fillStyle = '#555';
+            ctx.fillRect(x + 3 * tileSize / 4, y + tileSize / 4, tileSize / 8, tileSize / 4);
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + 7 * tileSize / 8, y + tileSize / 4);
+            ctx.quadraticCurveTo(x + tileSize, y + tileSize / 8, x + 7 * tileSize / 8, y);
+            ctx.stroke();
+            break;
+          case 'sawmill':
+            // Scierie : rectangle marron avec une scie en zigzag
+            ctx.fillRect(x + tileSize / 4, y + tileSize / 4, tileSize / 2, tileSize / 2);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + tileSize / 4, y + tileSize / 2);
+            ctx.lineTo(x + tileSize / 3, y + tileSize / 3);
+            ctx.lineTo(x + tileSize / 2, y + tileSize / 2);
+            ctx.lineTo(x + 2 * tileSize / 3, y + tileSize / 3);
+            ctx.lineTo(x + 3 * tileSize / 4, y + tileSize / 2);
+            ctx.stroke();
+            break;
+          case 'stoneQuarry':
+            // Carrière : rectangle gris avec des blocs de pierre
+            ctx.fillRect(x + tileSize / 4, y + tileSize / 4, tileSize / 2, tileSize / 2);
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x + tileSize / 4, y + tileSize / 4, tileSize / 4, tileSize / 4);
+            ctx.strokeRect(x + tileSize / 2, y + tileSize / 2, tileSize / 4, tileSize / 4);
+            break;
+          case 'warehouse':
+            // Entrepôt : grand rectangle bleu avec une porte
+            ctx.fillRect(x + tileSize / 5, y + tileSize / 5, 3 * tileSize / 5, 3 * tileSize / 5);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x + 2 * tileSize / 5, y + 3 * tileSize / 5, tileSize / 5, tileSize / 5);
+            break;
+        }
       }
     });
 
