@@ -266,7 +266,7 @@ window.seekShard = () => {
 };
 
 window.saveGame = saveGame;
-window.loadram = loadGame;
+window.loadGame = loadGame;
 window.exportSave = exportSave;
 window.importSavePrompt = importSavePrompt;
 
@@ -306,29 +306,21 @@ window.toggleSidebar = () => {
   }
 };
 
-// Initialisation du jeu
-initGame();
-setTimeout(() => {
-  enhancedUpdateDisplay();
-  updateSeasonDisplay();
-  enableDragAndDrop();
-  applyCraftOrder();
-  initMap(); // Initialiser la carte
-
+// Fonction pour initialiser les écouteurs d'événements
+function initializeEventListeners() {
+  const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
+  const playBtn = document.getElementById("playMusicBtn");
+  const pauseBtn = document.getElementById("pauseMusicBtn");
+  const volumeSlider = document.getElementById("volumeSlider");
+  const volumePercentage = document.getElementById("volumePercentage");
   const music = document.getElementById("backgroundMusic");
+
   if (music) {
     music.volume = 0.5;
     console.log("Audio initialisé, volume défini à 0.5");
   } else {
     console.error("Élément backgroundMusic non trouvé lors de l'initialisation");
   }
-
-  // Ajouter les écouteurs d'événements pour le bandeau et les boutons
-  const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
-  const playBtn = document.getElementById("playMusicBtn");
-  const pauseBtn = document.getElementById("pauseMusicBtn");
-  const volumeSlider = document.getElementById("volumeSlider");
-  const volumePercentage = document.getElementById("volumePercentage");
 
   if (toggleSidebarBtn) {
     toggleSidebarBtn.addEventListener("click", () => {
@@ -358,14 +350,12 @@ setTimeout(() => {
   }
 
   if (volumeSlider && volumePercentage) {
-    // Mettre à jour l'affichage initial du pourcentage
     volumePercentage.textContent = `${Math.round(volumeSlider.value)}%`;
-
     volumeSlider.addEventListener("input", (e) => {
       if (music) {
-        const volumeValue = e.target.value / 100; // Convertir de 0-100 à 0-1
+        const volumeValue = e.target.value / 100;
         music.volume = volumeValue;
-        volumePercentage.textContent = `${e.target.value}%`; // Mettre à jour le pourcentage
+        volumePercentage.textContent = `${e.target.value}%`;
         console.log("Volume ajusté à :", volumeValue);
       } else {
         console.error("Élément backgroundMusic non trouvé pour ajuster le volume");
@@ -374,16 +364,42 @@ setTimeout(() => {
   } else {
     console.error("Élément volumeSlider ou volumePercentage non trouvé");
   }
-}, 0);
-
-// Initialisation de currentHint
-const availableHint = dynamicHints.find(
-  (hint) => hint.condition() && !purchasedHints.includes(hint.id)
-);
-if (availableHint) {
-  setCurrentHint(availableHint);
 }
 
+// Initialisation du jeu après le chargement du DOM
+document.addEventListener('DOMContentLoaded', () => {
+  initGame();
+  initMap();
+  enhancedUpdateDisplay();
+  updateSeasonDisplay();
+  enableDragAndDrop();
+  applyCraftOrder();
+  initializeEventListeners();
+
+  // Initialisation de currentHint
+  const availableHint = dynamicHints.find(
+    (hint) => hint.condition() && !purchasedHints.includes(hint.id)
+  );
+  if (availableHint) {
+    setCurrentHint(availableHint);
+  }
+
+  // Réappliquer les écouteurs lorsque l'onglet Jeu est activé
+  document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', () => {
+      if (button.dataset.tab === 'gameTab') {
+        setTimeout(() => {
+          enhancedUpdateDisplay();
+          enableDragAndDrop();
+          applyCraftOrder();
+          initializeEventListeners();
+        }, 0);
+      }
+    });
+  });
+});
+
+// Boucle de jeu
 setInterval(() => {
   const result = gameLoop();
   if (result && result.alert) {
@@ -391,9 +407,9 @@ setInterval(() => {
   } else if (result && result.hideAlert) {
     hideAlert();
   }
-  updateResourcesDisplay(); // Mise à jour légère des ressources à chaque tick
+  updateResourcesDisplay();
   if (result && (result.ageChanged || result.seasonChanged)) {
-    enhancedUpdateDisplay(); // Mise à jour complète lors d'événements majeurs
+    enhancedUpdateDisplay();
     updateSeasonDisplay();
   }
   updateExplorationDisplay();
