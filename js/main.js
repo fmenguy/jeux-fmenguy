@@ -6,6 +6,8 @@ import { saveGame, loadGame, exportSave, importSavePrompt } from './save.js';
 
 import { setIsMusicPlaying } from './game.js';
 
+import { initMap } from './map.js';
+
 // Exporter les fonctions globales pour les événements onclick
 window.gatherBerries = () => {
   gatherBerries();
@@ -310,6 +312,7 @@ window.toggleSidebar = () => {
 };
 
 initGame();
+initMap();
 setTimeout(() => {
   enhancedUpdateDisplay();
   updateSeasonDisplay();
