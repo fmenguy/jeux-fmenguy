@@ -5,6 +5,7 @@
   --text-dark: #2b1d0e;
   --background-body: #4a3f2e;
   --exploration-progress-color: #4CAF50; /* Green for exploration progress */
+  --frame-color: #b8860b; /* Couleur du cadre style jeu */
 }
 
 .bg-dark-transparent {
@@ -19,6 +20,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
 body {
@@ -37,6 +39,18 @@ main {
   flex: 1 0 auto;
 }
 
+/* Cadre style jeu autour des sections principales */
+.game-frame {
+  border: 5px solid var(--frame-color);
+  border-image: linear-gradient(to right, var(--frame-color), #d4a017, var(--frame-color)) 1;
+  padding: 15px;
+  margin: 10px auto;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  max-width: 90%;
+}
+
 #narrative {
   font-style: italic;
   margin: 20px auto;
@@ -53,39 +67,49 @@ main {
   line-height: 1.4;
 }
 
+/* Harmonisation des blocs */
 #resources {
   margin: 10px;
-  padding: 10px;
-  border-radius: 5px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: var(--background-dark);
+  border: 2px solid var(--frame-color);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
 }
 
 .resource {
-  display: inline-block;
-  margin: 0 15px;
-}
-
-.craft.dragging {
-  opacity: 0.5;
-  border: 2px dashed #d4a017;
+  flex: 1 1 150px;
+  margin: 5px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  border: 1px solid var(--primary-color);
+  text-align: center;
 }
 
 .section {
-  margin: 2rem;
-  padding: 1.5rem;
-  background-color: #2f231a;
-  border-radius: 0.5rem;
-  display: inline-block;
+  margin: 1rem auto;
+  padding: 1rem;
+  background-color: var(--background-dark);
+  border-radius: 8px;
+  border: 2px solid var(--frame-color);
   width: 90%;
   max-width: 300px;
-  vertical-align: top;
-  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  text-align: center;
 }
 
 .craft,
 .worker,
 .tech {
-  margin: 10px 0;
-  padding: 5px;
+  margin: 8px 0;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  border: 1px solid var(--primary-color);
 }
 
 .columns {
@@ -93,7 +117,7 @@ main {
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 20px;
+  gap: 15px;
 }
 
 button {
@@ -117,13 +141,19 @@ button:disabled {
   background-color: #7a6e4e;
 }
 
+#saveLoadSection {
+  margin-bottom: 40px;
+  padding: 10px;
+  background-color: var(--background-dark);
+  border: 2px solid var(--frame-color);
+  border-radius: 8px;
+  max-width: 90%;
+  margin: 20px auto;
+}
+
 #saveLoadSection button {
   pointer-events: auto;
   z-index: 10;
-}
-
-#saveLoadSection {
-  margin-bottom: 40px;
 }
 
 .icon {
@@ -197,6 +227,10 @@ footer {
     flex-direction: column;
     align-items: center;
   }
+  .resource {
+    flex: 1 1 100%;
+    max-width: 200px;
+  }
   button {
     padding: 8px 16px;
   }
@@ -214,6 +248,9 @@ footer {
   .columns {
     justify-content: space-around;
   }
+  .resource {
+    flex: 1 1 150px;
+  }
 }
 
 @media (min-width: 1025px) {
@@ -223,6 +260,9 @@ footer {
   }
   .columns {
     justify-content: center;
+  }
+  .resource {
+    flex: 1 1 150px;
   }
 }
 
@@ -319,20 +359,12 @@ footer {
   font-weight: bold;
 }
 
-@media (max-width: 600px) {
-  .section {
-    width: 100%;
-    max-width: 300px;
-    margin: 10px auto;
-  }
-}
-
 #villagesDisplay {
   margin: 20px auto;
   padding: 15px;
-  background-color: #2f231a;
+  background-color: var(--background-dark);
   border-radius: 5px;
-  border: 1px solid #d4a017;
+  border: 2px solid var(--frame-color);
   width: 90%;
   max-width: 400px;
   text-align: left;
@@ -517,6 +549,11 @@ footer {
 #tabs {
   margin: 20px auto;
   text-align: center;
+  background-color: var(--background-dark);
+  padding: 10px;
+  border: 2px solid var(--frame-color);
+  border-radius: 8px;
+  max-width: 90%;
 }
 
 .tab-button {
@@ -642,6 +679,10 @@ footer {
   .tab-button {
     padding: 8px 16px;
     font-size: 14px;
+  }
+
+  #tabs {
+    padding: 5px;
   }
 }
 
