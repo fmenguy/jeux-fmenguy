@@ -513,16 +513,77 @@ footer {
   display: none;
 }
 
+/* Styles pour les onglets */
+#tabs {
+  margin: 20px auto;
+  text-align: center;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  margin: 0 5px;
+  background-color: var(--background-dark);
+  color: var(--secondary-color);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.tab-button:hover {
+  background-color: #3a2d21;
+}
+
+.tab-button.active {
+  background-color: var(--primary-color);
+  color: var(--text-dark);
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* Styles pour la section de la carte */
 #mapSection {
   margin: 20px auto;
   padding: 10px;
   background-color: var(--background-dark);
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  max-width: 800px;
+  max-width: 600px;
+  text-align: center;
 }
 
 #gameMap {
   border: 1px solid var(--primary-color);
   background-color: var(--background-body);
+  max-width: 100%;
+  height: auto;
+}
+
+/* Compatibilité mobile */
+@media (max-width: 600px) {
+  #mapSection {
+    max-width: 90%;
+  }
+
+  #gameMap {
+    width: 100%;
+    height: auto;
+  }
+
+  .tab-button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  #mapSection {
+    max-width: 80%;
+  }
 }
