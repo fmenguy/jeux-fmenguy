@@ -1,47 +1,42 @@
-import { initGame, gameLoop, gatherBerries, gatherWood, gatherStone, gatherWater, gatherMeat, gatherFibers, gatherMetals, craftAxe, craftBucket, craftPickaxe, craftBow, craftCoat, craftMetalAxe, craftRemedy, craftWell, craftMine, craftWorkshop, craftHerbalist, craftWheatField, craftMill, craftBakery, craftSawmill, craftStoneQuarry, craftWarehouse, recruitVillager, appointChief, recruitTinker, recruitPicker, recruitHunter, recruitResearcher, sendExplorers, recruitMiner, recruitFarmer, foundVillage, seekShard, dynamicHints, purchasedHints, setCurrentHint } from './game.js';
-
+import { initGame, gameLoop, gatherBerries, gatherWood, gatherStone, gatherWater, gatherMeat, gatherFibers, gatherMetals, craftAxe, craftBucket, craftPickaxe, craftBow, craftCoat, craftMetalAxe, craftRemedy, craftWell, craftMine, craftWorkshop, craftHerbalist, craftWheatField, craftMill, craftBakery, craftSawmill, craftStoneQuarry, craftWarehouse, recruitVillager, appointChief, recruitTinker, recruitPicker, recruitHunter, recruitResearcher, sendExplorers, recruitMiner, recruitFarmer, foundVillage, seekShard, dynamicHints, purchasedHints, setCurrentHint, setIsMusicPlaying } from './game.js';
 import { updateDisplay, updateResourcesDisplay, updateSeasonDisplay, updateExplorationDisplay, showAlert, hideAlert, enableDragAndDrop, applyCraftOrder, buyHint, toggleHints, enhancedUpdateDisplay } from './ui.js';
-
 import { saveGame, loadGame, exportSave, importSavePrompt } from './save.js';
-
-import { setIsMusicPlaying } from './game.js';
-
 import { initMap } from './map.js';
 
 // Exporter les fonctions globales pour les événements onclick
 window.gatherBerries = () => {
   gatherBerries();
-  enhancedUpdateDisplay(); // Mise à jour complète
+  enhancedUpdateDisplay();
 };
 
 window.gatherWood = () => {
   gatherWood();
-  enhancedUpdateDisplay(); // Mise à jour complète
+  enhancedUpdateDisplay();
 };
 
 window.gatherStone = () => {
   gatherStone();
-  enhancedUpdateDisplay(); // Mise à jour complète
+  enhancedUpdateDisplay();
 };
 
 window.gatherWater = () => {
   gatherWater();
-  enhancedUpdateDisplay(); // Mise à jour complète
+  enhancedUpdateDisplay();
 };
 
 window.gatherMeat = () => {
   gatherMeat();
-  enhancedUpdateDisplay(); // Mise à jour complète
+  enhancedUpdateDisplay();
 };
 
 window.gatherFibers = () => {
   gatherFibers();
-  enhancedUpdateDisplay(); // Mise à jour complète
+  enhancedUpdateDisplay();
 };
 
 window.gatherMetals = () => {
   gatherMetals();
-  enhancedUpdateDisplay(); // Mise à jour complète
+  enhancedUpdateDisplay();
 };
 
 window.craftAxe = () => {
@@ -271,7 +266,7 @@ window.seekShard = () => {
 };
 
 window.saveGame = saveGame;
-window.loadGame = loadGame;
+window.loadram = loadGame;
 window.exportSave = exportSave;
 window.importSavePrompt = importSavePrompt;
 
@@ -311,13 +306,14 @@ window.toggleSidebar = () => {
   }
 };
 
+// Initialisation du jeu
 initGame();
-initMap();
 setTimeout(() => {
   enhancedUpdateDisplay();
   updateSeasonDisplay();
   enableDragAndDrop();
   applyCraftOrder();
+  initMap(); // Initialiser la carte
 
   const music = document.getElementById("backgroundMusic");
   if (music) {

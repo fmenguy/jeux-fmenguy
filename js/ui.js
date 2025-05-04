@@ -1,6 +1,6 @@
 import {
   berries, wood, stone, water, meat, fibers, metals, herbs, wheat, flour, bread,
-  maxWater, maxFibers, maxHerbs, maxMetals, maxMetalsStorage, // Ajoutez maxMetalsStorage ici
+  maxWater, maxFibers, maxHerbs, maxMetals, maxMetalsStorage,
   axes, buckets, wells, pickaxes, bows, coats, metalAxes, remedies,
   mines, workshops, sawmills, stoneQuarries, herbalists, wheatFields, mills, bakeries,
   villagers, chief, tinkers, researchers, pickers, hunters, explorers, miners, farmers, villages,
@@ -17,7 +17,6 @@ import {
   villageFounded,
   villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, getTotalPopulation,
 } from './game.js';
-
 import { drawMap } from './map.js';
 
 // Variables pour stocker l’ordre des sections
@@ -401,7 +400,6 @@ export function updateHintButton() {
   }
 }
 
-
 export function toggleHints() {
   const hintList = document.getElementById("purchasedHintsList");
   hintList.style.display =
@@ -527,7 +525,6 @@ export function buyHint() {
   }
 }
 
-
 export function enableDragAndDrop() {
   const fabricationSection = document.getElementById("fabricationSection");
   const batimentsSection = document.getElementById("buildingsSection");
@@ -582,7 +579,6 @@ export function enableDragAndDrop() {
   });
 }
 
-
 export function applyCraftOrder() {
   const fabricationSection =
     document.getElementById("fabricationSection");
@@ -602,15 +598,27 @@ export function applyCraftOrder() {
   }
 }
 
-
 export const enhancedUpdateDisplay = function () {
   updateDisplay();
   applyCraftOrder();
   enableDragAndDrop();
-  drawMap();
+  drawMap(); // Mettre à jour la carte
 };
 
-
+export function updateResourcesDisplay() {
+  document.getElementById("berries").textContent = Math.floor(berries);
+  document.getElementById("wood").textContent = Math.floor(wood);
+  document.getElementById("stone").textContent = Math.floor(stone);
+  document.getElementById("water").textContent = Math.floor(water);
+  document.getElementById("meat").textContent = Math.floor(meat);
+  document.getElementById("fibers").textContent = Math.floor(fibers);
+  document.getElementById("metals").textContent = Math.floor(metals);
+  document.getElementById("maxMetalsLimit").textContent = maxMetals + maxMetalsStorage;
+  document.getElementById("herbs").textContent = Math.floor(herbs);
+  document.getElementById("wheat").textContent = Math.floor(wheat);
+  document.getElementById("flour").textContent = Math.floor(flour);
+  document.getElementById("bread").textContent = Math.floor(bread);
+}
 
 // Variable pour gérer le mode triche
 let cheatModeActive = false;
@@ -629,21 +637,6 @@ if (logo) {
   });
 } else {
   console.warn("L'élément logo n'a pas été trouvé dans le DOM.");
-}
-
-export function updateResourcesDisplay() {
-  document.getElementById("berries").textContent = Math.floor(berries);
-  document.getElementById("wood").textContent = Math.floor(wood);
-  document.getElementById("stone").textContent = Math.floor(stone);
-  document.getElementById("water").textContent = Math.floor(water);
-  document.getElementById("meat").textContent = Math.floor(meat);
-  document.getElementById("fibers").textContent = Math.floor(fibers);
-  document.getElementById("metals").textContent = Math.floor(metals);
-  document.getElementById("maxMetalsLimit").textContent = maxMetals + maxMetalsStorage;
-  document.getElementById("herbs").textContent = Math.floor(herbs);
-  document.getElementById("wheat").textContent = Math.floor(wheat);
-  document.getElementById("flour").textContent = Math.floor(flour);
-  document.getElementById("bread").textContent = Math.floor(bread);
 }
 
 // Écouteur pour les clics quand le cheat est actif
