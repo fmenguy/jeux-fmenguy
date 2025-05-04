@@ -1168,5 +1168,3 @@ export let isMusicPlaying = false;
 export function setIsMusicPlaying(value) {
   isMusicPlaying = value;
 }
-
-export { isMusicPlaying };
