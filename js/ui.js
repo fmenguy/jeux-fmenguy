@@ -18,6 +18,8 @@ import {
   villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, getTotalPopulation,
 } from './game.js';
 
+import { drawMap } from './map.js';
+
 // Variables pour stocker l’ordre des sections
 export let fabricationOrder = [
   "axeSection",
@@ -605,6 +607,7 @@ export const enhancedUpdateDisplay = function () {
   updateDisplay();
   applyCraftOrder();
   enableDragAndDrop();
+  drawMap();
 };
 
 

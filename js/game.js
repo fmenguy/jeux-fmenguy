@@ -1,5 +1,6 @@
 import { updateExplorationDisplay } from './ui.js';
 
+
 // Structure pour représenter un village
 export let villagesData = []; // Tableau de villages, chaque village contient sa population et ses bâtiments
 
