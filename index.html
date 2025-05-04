@@ -157,10 +157,10 @@
           </div>
           <div class="craft" id="mineSection" style="display: none" draggable="true">
             <p><span class="icon">⛏️</span> Mine: <span id="mines">0</span></p>
-            <button id="craftMineBtn" onclick="craftMine()">Construire (50 Bois, 20 Pierre, 1 Bricoleur)</button><span class="tooltip">Une mine produit des métaux automatiquement.</span>
+            <button id="craftMineBtn" onclick="craftMine()">Construire (50 Bois, 20 Pierre, 1 Bricoleur)</WAY>Une mine produit des métaux automatiquement.</span>
           </div>
           <div class="craft" id="workshopSection" style="display: none" draggable="true">
-            <p><span class="icon">🛠️</span> Atelier: <span id="workshops">0</span></p>
+            <p><span class="icon">🛠️</span> Atelier: < typeface="icon">🛠️</span> Atelier: <span id="workshops">0</span></p>
             <button id="craftWorkshopBtn" onclick="craftWorkshop()">Construire (20 Bois, 10 Pierre, 5 Fibres)</button><span class="tooltip">Un atelier améliore les fibres.</span>
           </div>
           <div class="craft" id="herbalistSection" style="display: none" draggable="true">
@@ -268,7 +268,28 @@
     <div id="mapTab" class="tab-pane">
       <div id="mapSection">
         <h2>Carte du Monde</h2>
-        <canvas id="gameMap"></canvas>
+        <div class="map-container">
+          <canvas id="gameMap"></canvas>
+          <div id="mapLegend">
+            <h3>Légende</h3>
+            <ul>
+              <li><span class="legend-color" style="background-color: #4a3f2e;"></span> Sol</li>
+              <li><span class="legend-color" style="background-color: #2f231a;"></span> Village</li>
+              <li><span class="legend-color" style="background-color: #1e90ff;"></span> Puits</li>
+              <li><span class="legend-color" style="background-color: #696969;"></span> Mine</li>
+              <li><span class="legend-color" style="background-color: #8b4513;"></span> Atelier</li>
+              <li><span class="legend-color" style="background-color: #228b22;"></span> Herboristerie</li>
+              <li><span class="legend-color" style="background-color: #f4a460;"></span> Champ de Blé</li>
+              <li><span class="legend-color" style="background-color: #cd853f;"></span> Moulin</li>
+              <li><span class="legend-color" style="background-color: #deb887;"></span> Boulangerie</li>
+              <li><span class="legend-color" style="background-color: #a0522d;"></span> Scierie</li>
+              <li><span class="legend-color" style="background-color: #808080;"></span> Carrière de Pierre</li>
+              <li><span class="legend-color" style="background-color: #4682b4;"></span> Entrepôt</li>
+              <li><span class="legend-color" style="background-color: #d4a017;"></span> Villageois</li>
+              <li><span class="legend-color" style="background-color: rgba(0, 0, 0, 0.8);"></span> Brouillard de Guerre</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>

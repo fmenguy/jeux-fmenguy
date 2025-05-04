@@ -565,6 +565,52 @@ footer {
   height: auto;
 }
 
+/* Styles pour le conteneur de la carte et la légende */
+.map-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+#mapLegend {
+  background-color: var(--background-dark);
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--primary-color);
+  text-align: left;
+  max-width: 200px;
+}
+
+#mapLegend h3 {
+  color: var(--secondary-color);
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+#mapLegend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#mapLegend li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--secondary-color);
+  font-size: 14px;
+}
+
+.legend-color {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  border: 1px solid #fff;
+}
+
 /* Compatibilité mobile */
 @media (max-width: 600px) {
   #mapSection {
@@ -574,6 +620,15 @@ footer {
   #gameMap {
     width: 100%;
     height: auto;
+  }
+
+  .map-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #mapLegend {
+    max-width: 100%;
   }
 
   .tab-button {

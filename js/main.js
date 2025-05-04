@@ -314,6 +314,10 @@ function initializeEventListeners() {
   const volumeSlider = document.getElementById("volumeSlider");
   const volumePercentage = document.getElementById("volumePercentage");
   const music = document.getElementById("backgroundMusic");
+  const saveGameBtn = document.getElementById("saveGameBtn");
+  const loadGameBtn = document.getElementById("loadGameBtn");
+  const exportSaveBtn = document.getElementById("exportSaveBtn");
+  const importSaveBtn = document.getElementById("importSaveBtn");
 
   if (music) {
     music.volume = 0.5;
@@ -363,6 +367,43 @@ function initializeEventListeners() {
     });
   } else {
     console.error("Élément volumeSlider ou volumePercentage non trouvé");
+  }
+
+  // Initialisation des boutons de sauvegarde
+  if (saveGameBtn) {
+    saveGameBtn.addEventListener("click", () => {
+      console.log("Bouton Sauvegarder cliqué");
+      window.saveGame(0);
+    });
+  } else {
+    console.error("Élément saveGameBtn non trouvé");
+  }
+
+  if (loadGameBtn) {
+    loadGameBtn.addEventListener("click", () => {
+      console.log("Bouton Charger cliqué");
+      window.loadGame(0);
+    });
+  } else {
+    console.error("Élément loadGameBtn non trouvé");
+  }
+
+  if (exportSaveBtn) {
+    exportSaveBtn.addEventListener("click", () => {
+      console.log("Bouton Exporter cliqué");
+      window.exportSave(0);
+    });
+  } else {
+    console.error("Élément exportSaveBtn non trouvé");
+  }
+
+  if (importSaveBtn) {
+    importSaveBtn.addEventListener("click", () => {
+      console.log("Bouton Importer cliqué");
+      window.importSavePrompt();
+    });
+  } else {
+    console.error("Élément importSaveBtn non trouvé");
   }
 }
 
