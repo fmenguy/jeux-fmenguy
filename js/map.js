@@ -69,6 +69,17 @@ function updateFogOfWar() {
     }
   }
 
+  // Révéler une zone de départ au centre de la carte (3x3 cases)
+  const startX = Math.floor(mapWidth / 2) - 1;
+  const startY = Math.floor(mapHeight / 2) - 1;
+  for (let y = startY; y < startY + 3; y++) {
+    for (let x = startX; x < startX + 3; x++) {
+      if (y >= 0 && y < mapHeight && x >= 0 && x < mapWidth) {
+        fogOfWar[y][x] = false;
+      }
+    }
+  }
+
   // Révéler les zones des villages
   villagesData.forEach((village, index) => {
     if (villageFounded) {

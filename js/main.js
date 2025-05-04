@@ -306,18 +306,14 @@ window.toggleSidebar = () => {
   }
 };
 
-// Fonction pour initialiser les écouteurs d'événements
-function initializeEventListeners() {
+// Fonction pour initialiser les écouteurs d'événements pour les contrôles audio uniquement
+function initializeAudioEventListeners() {
   const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
   const playBtn = document.getElementById("playMusicBtn");
   const pauseBtn = document.getElementById("pauseMusicBtn");
   const volumeSlider = document.getElementById("volumeSlider");
   const volumePercentage = document.getElementById("volumePercentage");
   const music = document.getElementById("backgroundMusic");
-  const saveGameBtn = document.getElementById("saveGameBtn");
-  const loadGameBtn = document.getElementById("loadGameBtn");
-  const exportSaveBtn = document.getElementById("exportSaveBtn");
-  const importSaveBtn = document.getElementById("importSaveBtn");
 
   if (music) {
     music.volume = 0.5;
@@ -368,8 +364,15 @@ function initializeEventListeners() {
   } else {
     console.error("Élément volumeSlider ou volumePercentage non trouvé");
   }
+}
 
-  // Initialisation des boutons de sauvegarde
+// Initialisation des écouteurs pour les boutons de sauvegarde (une seule fois)
+function initializeSaveEventListeners() {
+  const saveGameBtn = document.getElementById("saveGameBtn");
+  const loadGameBtn = document.getElementById("loadGameBtn");
+  const exportSaveBtn = document.getElementById("exportSaveBtn");
+  const importSaveBtn = document.getElementById("importSaveBtn");
+
   if (saveGameBtn) {
     saveGameBtn.addEventListener("click", () => {
       console.log("Bouton Sauvegarder cliqué");
@@ -415,7 +418,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateSeasonDisplay();
   enableDragAndDrop();
   applyCraftOrder();
-  initializeEventListeners();
+  initializeAudioEventListeners();
+  initializeSaveEventListeners(); // Ajoute les écouteurs pour les boutons de sauvegarde une seule fois
 
   // Initialisation de currentHint
   const availableHint = dynamicHints.find(
@@ -425,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setCurrentHint(availableHint);
   }
 
-  // Réappliquer les écouteurs lorsque l'onglet Jeu est activé
+  // Réappliquer les éléments dynamiques lorsque l'onglet Jeu est activé
   document.querySelectorAll('.tab-button').forEach(button => {
     button.addEventListener('click', () => {
       if (button.dataset.tab === 'gameTab') {
@@ -433,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
           enhancedUpdateDisplay();
           enableDragAndDrop();
           applyCraftOrder();
-          initializeEventListeners();
+          initializeAudioEventListeners(); // Réapplique uniquement les écouteurs audio
         }, 0);
       }
     });
