@@ -25,7 +25,7 @@ resizeCanvas();
 
 // Couleurs pour les éléments
 const colors = {
-  ground: '#4a3f2e', // Couleur du sol
+  ground: '#d2b48c', // Couleur du sol (beige clair pour mieux contraster)
   village: '#2f231a', // Couleur du village
   well: '#1e90ff', // Bleu pour les puits
   mine: '#696969', // Gris pour les mines
@@ -38,7 +38,7 @@ const colors = {
   stoneQuarry: '#808080', // Gris clair pour les carrières
   warehouse: '#4682b4', // Bleu acier pour les entrepôts
   villager: '#d4a017', // Or pour les villageois
-  fog: 'rgba(0, 0, 0, 0.8)', // Brouillard de guerre (noir semi-transparent)
+  fog: '#000000', // Brouillard de guerre (noir complet pour un contraste plus fort)
 };
 
 // Fonction pour obtenir les types de bâtiments avec leurs comptes actuels
