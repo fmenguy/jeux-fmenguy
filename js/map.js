@@ -41,19 +41,21 @@ const colors = {
   fog: 'rgba(0, 0, 0, 0.8)', // Brouillard de guerre (noir semi-transparent)
 };
 
-// Représentation des bâtiments
-const buildingTypes = [
-  { type: 'well', count: wells, color: colors.well },
-  { type: 'mine', count: mines, color: colors.mine },
-  { type: 'workshop', count: workshops, color: colors.workshop },
-  { type: 'herbalist', count: herbalists, color: colors.herbalist },
-  { type: 'wheatField', count: wheatFields, color: colors.wheatField },
-  { type: 'mill', count: mills, color: colors.mill },
-  { type: 'bakery', count: bakeries, color: colors.bakery },
-  { type: 'sawmill', count: sawmills, color: colors.sawmill },
-  { type: 'stoneQuarry', count: stoneQuarries, color: colors.stoneQuarry },
-  { type: 'warehouse', count: warehouses, color: colors.warehouse },
-];
+// Fonction pour obtenir les types de bâtiments avec leurs comptes actuels
+function getBuildingTypes() {
+  return [
+    { type: 'well', count: wells, color: colors.well },
+    { type: 'mine', count: mines, color: colors.mine },
+    { type: 'workshop', count: workshops, color: colors.workshop },
+    { type: 'herbalist', count: herbalists, color: colors.herbalist },
+    { type: 'wheatField', count: wheatFields, color: colors.wheatField },
+    { type: 'mill', count: mills, color: colors.mill },
+    { type: 'bakery', count: bakeries, color: colors.bakery },
+    { type: 'sawmill', count: sawmills, color: colors.sawmill },
+    { type: 'stoneQuarry', count: stoneQuarries, color: colors.stoneQuarry },
+    { type: 'warehouse', count: warehouses, color: colors.warehouse },
+  ];
+}
 
 // Gestion du brouillard de guerre
 const fogOfWar = Array(mapHeight).fill().map(() => Array(mapWidth).fill(true)); // Tout est caché par défaut
@@ -117,6 +119,9 @@ export function drawMap() {
   // Effacer le canvas
   ctx.fillStyle = colors.ground;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Obtenir les types de bâtiments au moment du rendu
+  const buildingTypes = getBuildingTypes();
 
   // Dessiner les villages
   villagesData.forEach((village, index) => {
