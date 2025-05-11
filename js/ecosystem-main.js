@@ -11,11 +11,12 @@ canvas.height = gridSize * tileSize;
 // État du jeu
 let creatures = [];
 let foodItems = [];
+let frameCount = 0; // Pour l'animation des jambes
 
 // Type de créature (seulement herbivore)
 const creatureType = {
   color: '#4CAF50', // Vert pour les herbivores
-  size: 10,
+  size: 15, // Augmenté de 10 à 15 pour plus de visibilité
   energy: 100,
   maxEnergy: 100,
   speed: 1,
@@ -23,11 +24,13 @@ const creatureType = {
 };
 
 // Initialisation avec une seule créature
-creatures.push({
+const initialCreature = {
   x: Math.floor(gridSize / 2),
   y: Math.floor(gridSize / 2),
   ...creatureType
-});
+};
+creatures.push(initialCreature);
+console.log('Créature initiale ajoutée :', initialCreature); // Debug
 
 // Ajouter de la nourriture
 window.addFood = () => {
@@ -78,17 +81,42 @@ function draw() {
     ctx.fill();
   });
 
-  // Dessiner les créatures
+  // Dessiner les créatures avec des jambes
   creatures.forEach(creature => {
+    const x = creature.x * tileSize + tileSize / 2;
+    const y = creature.y * tileSize + tileSize / 2;
+
+    // Corps (cercle)
     ctx.fillStyle = creature.color;
     ctx.beginPath();
-    ctx.arc(creature.x * tileSize + tileSize / 2, creature.y * tileSize + tileSize / 2, creature.size, 0, Math.PI * 2);
+    ctx.arc(x, y, creature.size, 0, Math.PI * 2);
     ctx.fill();
+
+    // Jambes (deux lignes animées)
+    const legLength = creature.size * 0.8;
+    const legOffset = creature.size * 0.5;
+    const animationPhase = Math.sin(frameCount * 0.2); // Animation basée sur frameCount
+
+    // Jambe gauche
+    ctx.strokeStyle = '#2E7D32'; // Vert plus foncé pour les jambes
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x - legOffset, y + creature.size);
+    ctx.lineTo(x - legOffset + animationPhase * 5, y + creature.size + legLength);
+    ctx.stroke();
+
+    // Jambe droite
+    ctx.beginPath();
+    ctx.moveTo(x + legOffset, y + creature.size);
+    ctx.lineTo(x + legOffset - animationPhase * 5, y + creature.size + legLength);
+    ctx.stroke();
   });
 }
 
 // Boucle de jeu
 function gameLoop() {
+  frameCount++; // Incrémenter pour l'animation des jambes
+
   creatures.forEach((creature, index) => {
     // Perdre de l'énergie
     creature.energy -= 1.5;
