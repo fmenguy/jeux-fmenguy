@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes jeux</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Contenu de ton jeu actuel -->
+  <div id="currentGame">
+    <h1>Bienvenue sur mon jeu !</h1>
+    <!-- Le contenu de ton jeu actuel ici -->
+  </div>
+
+  <!-- Conteneur pour les onglets discrets -->
+  <div id="tabs" style="position: fixed; bottom: 10px; left: 10px; opacity: 0.3; transition: opacity 0.3s;">
+    <!-- Onglet pour Forge des Âges -->
+    <a href="forge.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #d4a017; text-decoration: none;">🔥 Un secret...</a>
+    <!-- Onglet pour le nouveau jeu -->
+    <a href="ecosystem.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #4CAF50; text-decoration: none;">🌱 Un mystère...</a>
+  </div>
+
+  <!-- Scripts de ton jeu actuel -->
+  <script src="js/main.js" type="module"></script>
+
+  <script>
+    // Effet de survol pour rendre les onglets plus visibles
+    const tabs = document.getElementById('tabs');
+    tabs.addEventListener('mouseover', () => { tabs.style.opacity = '1'; });
+    tabs.addEventListener('mouseout', () => { tabs.style.opacity = '0.3'; });
+  </script>
+</body>
+</html>
