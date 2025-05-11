@@ -17,12 +17,13 @@ let frameCount = 0; // Pour l'animation des tentacules et le flottement
 const creatureType = {
   color: '#AB47BC', // Violet pour la créature initiale
   size: 15, // Taille adulte
-  speed: 0.1, // Réduit pour un déplacement plus lent (0.1 case par tick)
+  speed: 1, // Saut d'une case par tick (ralenti par un cooldown)
   foodEaten: 0, // Compteur de nourriture consommée
-  lifespan: 900, // 30 secondes à 30 FPS (30 * 30 = 900 ticks)
+  lifespan: 1800, // 60 secondes à 30 FPS (60 * 30 = 1800 ticks) pour tester
   isOriginal: true, // Indique si c'est la créature initiale
   isAdult: true, // Indique si la créature est adulte
-  floatOffset: 0 // Pour le flottement
+  floatOffset: 0, // Pour le flottement
+  moveCooldown: 0 // Cooldown pour ralentir le déplacement
 };
 
 // Initialisation avec une seule créature
@@ -45,10 +46,26 @@ window.addFood = () => {
   updateCounts();
 };
 
-// Mettre à jour les compteurs
+// Faire réapparaître une créature initiale
+window.respawnCreature = () => {
+  if (creatures.length === 0) {
+    const newCreature = {
+      x: Math.floor(gridSize / 2),
+      y: Math.floor(gridSize / 2),
+      ...creatureType
+    };
+    creatures.push(newCreature);
+    console.log('Créature réapparue :', newCreature); // Debug
+    updateCounts();
+  }
+};
+
+// Mettre à jour les compteurs et l'état du bouton
 function updateCounts() {
   document.getElementById('creatureCount').textContent = creatures.length;
   document.getElementById('foodCount').textContent = foodItems.length;
+  const respawnButton = document.getElementById('respawnButton');
+  respawnButton.disabled = creatures.length > 0; // Désactiver si des créatures sont présentes
 }
 
 // Trouver une position libre autour d'une position donnée
@@ -70,7 +87,7 @@ function findFreePosition(x, y) {
     if (
       newX >= 0 && newX < gridSize &&
       newY >= 0 && newY < gridSize &&
-      !creatures.some(c => c.x === newX && c.y === newY)
+      !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY)
     ) {
       return { x: newX, y: newY };
     }
@@ -167,6 +184,11 @@ function gameLoop() {
 
     // Réduire la durée de vie
     creature.lifespan -= 1;
+
+    // Réduire le cooldown de déplacement
+    if (creature.moveCooldown > 0) {
+      creature.moveCooldown -= 1;
+    }
   });
 
   // Supprimer les créatures mortes
@@ -177,22 +199,14 @@ function gameLoop() {
     const action = decideAction(creature, foodItems, gridSize);
 
     // Exécuter l'action
-    if (action === 'move') {
+    if (action === 'move' && creature.moveCooldown <= 0) {
       const path = findPath(creature, foodItems, gridSize);
       if (path.length > 1) {
-        // Se déplacer progressivement vers la prochaine case du chemin
+        // Sauter directement à la prochaine case du chemin
         const nextStep = path[1];
-        const dx = nextStep.x - creature.x;
-        const dy = nextStep.y - creature.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance > 0) {
-          creature.x += (dx / distance) * creature.speed;
-          creature.y += (dy / distance) * creature.speed;
-
-          // Arrondir à la grille si proche
-          if (Math.abs(creature.x - nextStep.x) < 0.1) creature.x = nextStep.x;
-          if (Math.abs(creature.y - nextStep.y) < 0.1) creature.y = nextStep.y;
-        }
+        creature.x = nextStep.x;
+        creature.y = nextStep.y;
+        creature.moveCooldown = 15; // Cooldown de 15 ticks (0.5 seconde à 30 FPS)
       }
     } else if (action === 'eat') {
       const foodIndex = foodItems.findIndex(food => Math.round(creature.x) === food.x && Math.round(creature.y) === food.y);
@@ -207,7 +221,7 @@ function gameLoop() {
 
         // Duplication après 5 unités de nourriture
         if (creature.foodEaten >= 5) {
-          const newPosition = findFreePosition(creature.x, creature.y);
+          const newPosition = findFreePosition(Math.round(creature.x), Math.round(creature.y));
           const newCreature = {
             x: newPosition.x,
             y: newPosition.y,
