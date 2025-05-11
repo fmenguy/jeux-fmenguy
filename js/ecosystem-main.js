@@ -14,12 +14,17 @@ let foodItems = [];
 let frameCount = 0; // Pour l'animation des tentacules et le flottement
 let bubbles = []; // Pour les bulles
 let algae = []; // Liste des abris (algues)
+let walls = []; // Liste des murs
+let particles = []; // Liste des particules
 
 // Données pour la courbe (stocke tout depuis le début)
 const statsHistory = { creatures: [], food: [] };
 
 // Cooldown de base pour le déplacement, modifiable par les boutons radio
 let baseCooldown = 60; // 2 secondes à 30 FPS (par défaut : lent)
+
+// État du mode "ajout de mur"
+let addWallMode = false;
 
 // Mettre à jour baseCooldown avec les boutons radio
 window.updateSpeed = (value) => {
@@ -48,9 +53,17 @@ const generationColors = [
   '#F3E5F5'  // Génération 5+ : Presque blanc
 ];
 
+// Différentes espèces de méduses
+const speciesTypes = [
+  { name: 'Classic', color: generationColors, tentacleCount: 3 }, // Espèce par défaut
+  { name: 'Glow', color: ['#00CED1', '#20B2AA', '#48D1CC', '#40E0D0', '#7FFFD4', '#B0E0E6'], tentacleCount: 4 }, // Espèce lumineuse
+  { name: 'Spiky', color: ['#FF6347', '#FF4500', '#FF7F50', '#FF8C00', '#FFA07A', '#FFD700'], tentacleCount: 5 } // Espèce piquante
+];
+
 // Type de créature (méduse-like)
 const creatureType = {
-  color: generationColors[0], // Couleur initiale (génération 0)
+  species: speciesTypes[0], // Espèce par défaut
+  color: speciesTypes[0].color[0], // Couleur initiale
   size: 15, // Taille adulte initiale
   speed: 1, // Saut d'une case par tick (ralenti par un cooldown)
   foodEaten: 0, // Compteur de nourriture consommée
@@ -62,7 +75,8 @@ const creatureType = {
   generation: 0, // Génération initiale
   isPredator: false, // Indique si la créature est devenue un prédateur
   lastFoodRequest: 0, // Compteur pour la demande de nourriture
-  isRequestingFood: false // Indicateur pour l'affichage visuel
+  isRequestingFood: false, // Indicateur pour l'affichage visuel
+  wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 } // Direction aléatoire pour le mouvement
 };
 
 // Taille maximale d'une créature
@@ -79,12 +93,15 @@ console.log('Créature initiale ajoutée :', initialCreature); // Debug
 
 // Ajouter de la nourriture
 window.addFood = () => {
-  const food = {
-    x: Math.floor(Math.random() * gridSize),
-    y: Math.floor(Math.random() * gridSize),
-    energy: 50
-  };
-  foodItems.push(food);
+  const baseFoodCount = creatures.length >= 100 ? Math.floor(creatures.length / 20) : 1; // Proportionnel au nombre de créatures
+  for (let i = 0; i < baseFoodCount; i++) {
+    const food = {
+      x: Math.floor(Math.random() * gridSize),
+      y: Math.floor(Math.random() * gridSize),
+      energy: 50
+    };
+    foodItems.push(food);
+  }
   updateCounts();
 };
 
@@ -101,6 +118,29 @@ window.respawnCreature = () => {
     updateCounts();
   }
 };
+
+// Activer/désactiver le mode d'ajout de mur
+window.toggleAddWallMode = () => {
+  addWallMode = !addWallMode;
+  const button = document.getElementById('addWallButton');
+  button.style.backgroundColor = addWallMode ? '#FF4500' : '#1E3A8A'; // Rouge si actif, bleu sinon
+};
+
+// Ajouter un mur avec la souris
+canvas.addEventListener('click', (event) => {
+  if (!addWallMode) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  const gridX = Math.floor(x / tileSize);
+  const gridY = Math.floor(y / tileSize);
+
+  // Vérifier si la position est déjà occupée par un mur
+  if (!walls.some(wall => wall.x === gridX && wall.y === gridY)) {
+    walls.push({ x: gridX, y: gridY });
+  }
+});
 
 // Gérer les bulles de demande de nourriture
 let requestSide = 'left'; // Alterner les côtés des bulles
@@ -175,7 +215,8 @@ function findFreePosition(x, y) {
     if (
       newX >= 0 && newX < gridSize &&
       newY >= 0 && newY < gridSize &&
-      !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY)
+      !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
+      !walls.some(wall => wall.x === newX && wall.y === newY)
     ) {
       return { x: newX, y: newY };
     }
@@ -191,6 +232,18 @@ function generateBubble() {
     y: canvas.height,
     size: Math.random() * 5 + 2, // Taille entre 2 et 7 pixels
     speed: Math.random() * 2 + 1 // Vitesse de montée entre 1 et 3 pixels par tick
+  };
+}
+
+// Générer des particules
+function generateParticle(x, y) {
+  return {
+    x: x,
+    y: y,
+    size: Math.random() * 3 + 1,
+    speedX: (Math.random() - 0.5) * 2,
+    speedY: (Math.random() - 0.5) * 2,
+    life: 60 // Durée de vie en ticks
   };
 }
 
@@ -258,9 +311,15 @@ function draw() {
     ctx.globalAlpha = 1; // Réinitialiser l'opacité
   });
 
+  // Dessiner les murs
+  walls.forEach(wall => {
+    ctx.fillStyle = '#696969'; // Gris pour les murs
+    ctx.fillRect(wall.x * tileSize, wall.y * tileSize, tileSize, tileSize);
+  });
+
   // Dessiner les chemins des créatures
   creatures.forEach(creature => {
-    let path = findPath(creature, foodItems, gridSize);
+    let path = findPath(creature, foodItems, gridSize, walls);
     let isAttacking = false;
 
     // Vérifier si la créature est un prédateur et se dirige vers une autre créature
@@ -269,7 +328,7 @@ function draw() {
       const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult && c.size < creature.size) : null;
       const targetCreature = nearestSmall || nearestAdult;
       if (targetCreature) {
-        path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize);
+        path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize, walls);
         isAttacking = true;
       }
     }
@@ -297,6 +356,23 @@ function draw() {
     ctx.fill();
   });
 
+  // Dessiner les particules
+  particles.forEach((particle, index) => {
+    particle.x += particle.speedX;
+    particle.y += particle.speedY;
+    particle.life--;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.beginPath();
+    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Supprimer les particules mortes
+    if (particle.life <= 0) {
+      particles.splice(index, 1);
+    }
+  });
+
   // Dessiner les créatures avec des tentacules
   creatures.forEach(creature => {
     const x = creature.x * tileSize + tileSize / 2;
@@ -305,8 +381,13 @@ function draw() {
     const waveEffect = Math.sin(frameCount * 0.1 + creature.x + creature.y) * 2; // Effet de vague
     const isMaxSize = creature.size >= maxSize;
 
+    // Générer des particules autour de la créature
+    if (Math.random() < 0.1) {
+      particles.push(generateParticle(x + waveEffect, y));
+    }
+
     // Corps (cercle ou étoile selon le statut de prédateur et la taille maximale)
-    ctx.fillStyle = isMaxSize ? '#000000' : generationColors[Math.min(creature.generation, generationColors.length - 1)];
+    ctx.fillStyle = isMaxSize ? '#000000' : creature.species.color[Math.min(creature.generation, creature.species.color.length - 1)];
     if (creature.isPredator && !isMaxSize) {
       drawStar(x + waveEffect, y, 5, size, size / 2); // Étoile à 5 branches
     } else {
@@ -331,36 +412,25 @@ function draw() {
       ctx.stroke();
     }
 
-    // Tentacules (trois ou quatre lignes animées selon le statut de prédateur)
+    // Tentacules (selon l'espèce)
     const tentacleLength = size * 0.8;
     const tentacleOffset = size * 0.5;
     const animationPhase = Math.sin(frameCount * 0.2); // Animation basée sur frameCount
+    const tentacleCount = creature.species.tentacleCount;
 
-    // Tentacule gauche
-    ctx.strokeStyle = '#4A148C'; // Violet foncé pour les tentacules
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x + waveEffect - tentacleOffset, y + size);
-    ctx.lineTo(x + waveEffect - tentacleOffset + animationPhase * 5, y + size + tentacleLength);
-    ctx.stroke();
+    // Dessiner les tentacules selon le nombre défini par l'espèce
+    for (let i = 0; i < tentacleCount; i++) {
+      const angle = (i / tentacleCount) * Math.PI * 2;
+      const tentacleX = x + waveEffect + Math.cos(angle) * tentacleOffset;
+      const tentacleY = y + Math.sin(angle) * tentacleOffset;
+      const tentacleEndX = tentacleX + Math.cos(angle + animationPhase * 0.5) * tentacleLength;
+      const tentacleEndY = tentacleY + Math.sin(angle + animationPhase * 0.5) * tentacleLength;
 
-    // Tentacule droite
-    ctx.beginPath();
-    ctx.moveTo(x + waveEffect + tentacleOffset, y + size);
-    ctx.lineTo(x + waveEffect + tentacleOffset - animationPhase * 5, y + size + tentacleLength);
-    ctx.stroke();
-
-    // Tentacule central
-    ctx.beginPath();
-    ctx.moveTo(x + waveEffect, y + size);
-    ctx.lineTo(x + waveEffect + animationPhase * 3, y + size + tentacleLength);
-    ctx.stroke();
-
-    // Tentacule supplémentaire si prédateur (sauf si taille maximale)
-    if (creature.isPredator && !isMaxSize) {
+      ctx.strokeStyle = '#4A148C'; // Violet foncé pour les tentacules
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(x + waveEffect, y + size);
-      ctx.lineTo(x + waveEffect - animationPhase * 3, y + size + tentacleLength * 1.2); // Légèrement plus long
+      ctx.moveTo(tentacleX, tentacleY);
+      ctx.lineTo(tentacleEndX, tentacleEndY);
       ctx.stroke();
     }
 
@@ -383,6 +453,18 @@ function draw() {
 function gameLoop() {
   frameCount++; // Incrémenter pour l'animation des tentacules et le flottement
 
+  // Introduire de nouvelles espèces après un certain temps
+  if (frameCount % 9000 === 0) { // Toutes les 5 minutes (9000 ticks à 30 FPS)
+    const newSpeciesIndex = Math.floor(frameCount / 9000) % speciesTypes.length;
+    const newSpecies = speciesTypes[newSpeciesIndex];
+    creatures.forEach(creature => {
+      if (Math.random() < 0.2) { // 20% de chances pour chaque créature de changer d'espèce
+        creature.species = newSpecies;
+        creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
+      }
+    });
+  }
+
   creatures.forEach(creature => {
     // Ajouter un effet de flottement
     creature.floatOffset = Math.sin(frameCount * 0.05 + creature.x + creature.y) * 5; // Léger mouvement vertical
@@ -404,6 +486,35 @@ function gameLoop() {
       setTimeout(() => {
         creature.isRequestingFood = false;
       }, 5000); // Correspond à la durée de la bulle
+    }
+
+    // Mouvement aléatoire si pas d'action (errance)
+    if (creature.moveCooldown <= 0) {
+      const hasFoodTarget = foodItems.length > 0;
+      const hasPredatorNearby = creatures.some(c => c.isPredator && c.size > creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < 5);
+      const hasPreyTarget = foodItems.length === 0 && creature.isAdult && (creatures.some(c => !c.isAdult && c.size < creature.size) || (creature.isPredator && creatures.some(c => c !== creature && c.isAdult && c.size < creature.size)));
+
+      if (!hasFoodTarget && !hasPredatorNearby && !hasPreyTarget) {
+        // Changer de direction aléatoirement toutes les 5 secondes
+        if (frameCount % 150 === 0) {
+          creature.wanderDirection = { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 };
+        }
+
+        const newX = Math.round(creature.x + creature.wanderDirection.dx);
+        const newY = Math.round(creature.y + creature.wanderDirection.dy);
+
+        // Vérifier si la nouvelle position est valide
+        if (
+          newX >= 0 && newX < gridSize &&
+          newY >= 0 && newY < gridSize &&
+          !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
+          !walls.some(wall => wall.x === newX && wall.y === newY)
+        ) {
+          creature.x = newX;
+          creature.y = newY;
+          creature.moveCooldown = baseCooldown * sizeFactor;
+        }
+      }
     }
   });
 
@@ -460,7 +571,7 @@ function gameLoop() {
             const distance = Math.sqrt((creature.x - alga.x) ** 2 + (creature.y - alga.y) ** 2);
             return distance < Math.sqrt((creature.x - closest.x) ** 2 + (creature.y - closest.y) ** 2) ? alga : closest;
           }, algae[0]);
-          const path = findPath(creature, [{ x: nearestAlga.x, y: nearestAlga.y }], gridSize);
+          const path = findPath(creature, [{ x: nearestAlga.x, y: nearestAlga.y }], gridSize, walls);
           if (path.length > 1) {
             const nextStep = path[1];
             creature.x = nextStep.x;
@@ -474,7 +585,7 @@ function gameLoop() {
     }
 
     // Décider de l'action via l'IA
-    let action = decideAction(creature, foodItems, gridSize);
+    let action = decideAction(creature, foodItems, gridSize, walls);
 
     // Si pas de nourriture et adulte, chercher à manger un petit ou un autre adulte
     if (foodItems.length === 0 && creature.isAdult && creature.moveCooldown <= 0) {
@@ -513,7 +624,7 @@ function gameLoop() {
           const isTargetUnderAlgae = algae.some(alga => Math.round(targetCreature.x) === alga.x && Math.round(targetCreature.y) === alga.y);
           if (isTargetUnderAlgae) return; // Ne pas attaquer si la cible est protégée
 
-          const path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize);
+          const path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize, walls);
           if (path.length > 1) {
             const nextStep = path[1];
             creature.x = nextStep.x;
@@ -528,7 +639,7 @@ function gameLoop() {
 
     // Exécuter l'action normale (aller vers la nourriture)
     if (action === 'move' && creature.moveCooldown <= 0) {
-      const path = findPath(creature, foodItems, gridSize);
+      const path = findPath(creature, foodItems, gridSize, walls);
       if (path.length > 1) {
         // Sauter directement à la prochaine case du chemin
         const nextStep = path[1];
@@ -565,11 +676,14 @@ function gameLoop() {
             x: newPosition.x,
             y: newPosition.y,
             ...creatureType,
+            species: creature.species, // Hérite de l'espèce du parent
+            color: creature.species.color[Math.min(creature.generation + 1, creature.species.color.length - 1)],
             foodEaten: 0, // Nouvelle créature commence avec 0 nourriture consommée
             isOriginal: false, // Marquer comme duplicata
             isAdult: false, // Commence comme bébé
             floatOffset: Math.random() * 10, // Offset de flottement aléatoire
-            generation: creature.generation + 1 // Incrémenter la génération
+            generation: creature.generation + 1, // Incrémenter la génération
+            wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 }
           };
           creatures.push(newCreature);
           creature.foodEaten = 0; // Réinitialiser le compteur pour la créature originale
