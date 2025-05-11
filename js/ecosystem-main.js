@@ -26,6 +26,9 @@ let baseCooldown = 60; // 2 secondes à 30 FPS (par défaut : lent)
 // État du mode "ajout de mur"
 let addWallMode = false;
 
+// Liste des espèces présentes pour la légende
+let activeSpecies = new Set();
+
 // Mettre à jour baseCooldown avec les boutons radio
 window.updateSpeed = (value) => {
   baseCooldown = parseInt(value);
@@ -43,21 +46,11 @@ function generateAlgae() {
 }
 generateAlgae(); // Appeler pour générer les algues au démarrage
 
-// Palette de couleurs pour les générations
-const generationColors = [
-  '#4B0082', // Génération 0 : Indigo foncé
-  '#6A0DAD', // Génération 1 : Violet foncé
-  '#AB47BC', // Génération 2 : Violet moyen
-  '#CE93D8', // Génération 3 : Violet clair
-  '#E1BEE7', // Génération 4 : Violet très clair
-  '#F3E5F5'  // Génération 5+ : Presque blanc
-];
-
 // Différentes espèces de méduses
 const speciesTypes = [
-  { name: 'Classic', color: generationColors, tentacleCount: 3 }, // Espèce par défaut
-  { name: 'Glow', color: ['#00CED1', '#20B2AA', '#48D1CC', '#40E0D0', '#7FFFD4', '#B0E0E6'], tentacleCount: 4 }, // Espèce lumineuse
-  { name: 'Spiky', color: ['#FF6347', '#FF4500', '#FF7F50', '#FF8C00', '#FFA07A', '#FFD700'], tentacleCount: 5 } // Espèce piquante
+  { name: 'Lunaria', shape: 'circle', color: ['#1E90FF', '#00B7EB', '#00CED1', '#48D1CC', '#87CEEB', '#B0E0E6'], tentacleCount: 3 }, // Bleus luminescents
+  { name: 'Coralix', shape: 'hexagon', color: ['#FF4040', '#FF6347', '#FF7F50', '#FF8C00', '#FFA07A', '#FFDAB9'], tentacleCount: 4 }, // Corail vibrant
+  { name: 'Abyssal', shape: 'triangle', color: ['#2F0047', '#4B0082', '#483D8B', '#6A5ACD', '#7B68EE', '#9370DB'], tentacleCount: 5 } // Tons abyssaux
 ];
 
 // Type de créature (méduse-like)
@@ -89,6 +82,8 @@ const initialCreature = {
   ...creatureType
 };
 creatures.push(initialCreature);
+activeSpecies.add(speciesTypes[0].name); // Ajouter l'espèce initiale à la légende
+updateSpeciesLegend();
 console.log('Créature initiale ajoutée :', initialCreature); // Debug
 
 // Ajouter de la nourriture
@@ -114,6 +109,8 @@ window.respawnCreature = () => {
       ...creatureType
     };
     creatures.push(newCreature);
+    activeSpecies.add(newCreature.species.name); // Mettre à jour la légende
+    updateSpeciesLegend();
     console.log('Créature réapparue :', newCreature); // Debug
     updateCounts();
   }
@@ -162,6 +159,31 @@ function showFoodRequest(generation) {
   setTimeout(() => {
     bubble.remove();
   }, 5000);
+}
+
+// Mettre à jour la légende des espèces
+function updateSpeciesLegend() {
+  const speciesListDiv = document.getElementById('speciesList');
+  speciesListDiv.innerHTML = ''; // Vider la légende actuelle
+
+  activeSpecies.forEach(speciesName => {
+    const species = speciesTypes.find(s => s.name === speciesName);
+    if (species) {
+      const speciesItem = document.createElement('div');
+      speciesItem.className = 'species-item';
+
+      const colorDiv = document.createElement('div');
+      colorDiv.className = 'species-color';
+      colorDiv.style.backgroundColor = species.color[0];
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = species.name;
+
+      speciesItem.appendChild(colorDiv);
+      speciesItem.appendChild(nameSpan);
+      speciesListDiv.appendChild(speciesItem);
+    }
+  });
 }
 
 // Mettre à jour les compteurs et l'état du bouton
@@ -268,6 +290,40 @@ function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
     rot += step;
   }
   ctx.lineTo(cx, cy - outerRadius);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Dessiner un hexagone
+function drawHexagon(cx, cy, size) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i + Math.PI / 6;
+    const x = cx + size * Math.cos(angle);
+    const y = cy + size * Math.sin(angle);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Dessiner un triangle
+function drawTriangle(cx, cy, size) {
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const angle = (Math.PI * 2 / 3) * i + Math.PI / 2;
+    const x = cx + size * Math.cos(angle);
+    const y = cy + size * Math.sin(angle);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
   ctx.closePath();
   ctx.fill();
 }
@@ -386,30 +442,48 @@ function draw() {
       particles.push(generateParticle(x + waveEffect, y));
     }
 
-    // Corps (cercle ou étoile selon le statut de prédateur et la taille maximale)
+    // Corps (selon l'espèce et le statut de prédateur)
     ctx.fillStyle = isMaxSize ? '#000000' : creature.species.color[Math.min(creature.generation, creature.species.color.length - 1)];
-    if (creature.isPredator && !isMaxSize) {
-      drawStar(x + waveEffect, y, 5, size, size / 2); // Étoile à 5 branches
-    } else {
+    if (creature.species.shape === 'circle') {
       ctx.beginPath();
       ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
       ctx.fill();
+    } else if (creature.species.shape === 'hexagon') {
+      drawHexagon(x + waveEffect, y, size);
+    } else if (creature.species.shape === 'triangle') {
+      drawTriangle(x + waveEffect, y, size);
     }
 
     // Ajouter un contour lumineux
     ctx.strokeStyle = '#BBDEFB';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
-    ctx.stroke();
+    if (creature.species.shape === 'circle') {
+      ctx.beginPath();
+      ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (creature.species.shape === 'hexagon') {
+      drawHexagon(x + waveEffect, y, size);
+      ctx.stroke();
+    } else if (creature.species.shape === 'triangle') {
+      drawTriangle(x + waveEffect, y, size);
+      ctx.stroke();
+    }
 
     // Ajouter un indicateur visuel si la créature demande de la nourriture
     if (creature.isRequestingFood) {
       ctx.strokeStyle = '#FF0000';
       ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x + waveEffect, y, size + 5, 0, Math.PI * 2);
-      ctx.stroke();
+      if (creature.species.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(x + waveEffect, y, size + 5, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (creature.species.shape === 'hexagon') {
+        drawHexagon(x + waveEffect, y, size + 5);
+        ctx.stroke();
+      } else if (creature.species.shape === 'triangle') {
+        drawTriangle(x + waveEffect, y, size + 5);
+        ctx.stroke();
+      }
     }
 
     // Tentacules (selon l'espèce)
@@ -461,6 +535,8 @@ function gameLoop() {
       if (Math.random() < 0.2) { // 20% de chances pour chaque créature de changer d'espèce
         creature.species = newSpecies;
         creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
+        activeSpecies.add(newSpecies.name); // Mettre à jour la légende
+        updateSpeciesLegend();
       }
     });
   }
@@ -489,38 +565,37 @@ function gameLoop() {
     }
 
     // Mouvement aléatoire si pas d'action (errance)
-// Mouvement aléatoire si pas d'action (errance)
-if (creature.moveCooldown <= 0) {
-  const hasFoodTarget = foodItems.length > 0;
-  const hasPredatorNearby = creatures.some(c => c.isPredator && c.size > creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < 5);
-  const hasPreyTarget = foodItems.length === 0 && creature.isAdult && (creatures.some(c => !c.isAdult && c.size < creature.size) || (creature.isPredator && creatures.some(c => c !== creature && c.isAdult && c.size < creature.size)));
+    if (creature.moveCooldown <= 0) {
+      const hasFoodTarget = foodItems.length > 0;
+      const hasPredatorNearby = creatures.some(c => c.isPredator && c.size > creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < 5);
+      const hasPreyTarget = foodItems.length === 0 && creature.isAdult && (creatures.some(c => !c.isAdult && c.size < creature.size) || (creature.isPredator && creatures.some(c => c !== creature && c.isAdult && c.size < creature.size)));
 
-  if (!hasFoodTarget && !hasPredatorNearby && !hasPreyTarget) {
-    // Changer de direction aléatoirement toutes les 5 secondes
-    if (frameCount % 150 === 0) {
-      creature.wanderDirection = { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 };
-    }
+      if (!hasFoodTarget && !hasPredatorNearby && !hasPreyTarget) {
+        // Changer de direction aléatoirement toutes les 5 secondes
+        if (frameCount % 150 === 0) {
+          creature.wanderDirection = { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 };
+        }
 
-    const newX = Math.round(creature.x + creature.wanderDirection.dx);
-    const newY = Math.round(creature.y + creature.wanderDirection.dy);
+        const newX = Math.round(creature.x + creature.wanderDirection.dx);
+        const newY = Math.round(creature.y + creature.wanderDirection.dy);
 
-    // Vérifier si la nouvelle position est valide
-    if (
-      newX >= 0 && newX < gridSize &&
-      newY >= 0 && newY < gridSize &&
-      !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
-      !walls.some(wall => wall.x === newX && wall.y === newY)
-    ) {
-      // Vérifier que le chemin est libre (pas de mur sur le trajet)
-      const path = findPath(creature, [{ x: newX, y: newY }], gridSize, walls);
-      if (path.length > 1) {
-        creature.x = newX;
-        creature.y = newY;
-        creature.moveCooldown = baseCooldown * sizeFactor;
+        // Vérifier si la nouvelle position est valide
+        if (
+          newX >= 0 && newX < gridSize &&
+          newY >= 0 && newY < gridSize &&
+          !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
+          !walls.some(wall => wall.x === newX && wall.y === newY)
+        ) {
+          // Vérifier que le chemin est libre (pas de mur sur le trajet)
+          const path = findPath(creature, [{ x: newX, y: newY }], gridSize, walls);
+          if (path.length > 1) {
+            creature.x = newX;
+            creature.y = newY;
+            creature.moveCooldown = baseCooldown * sizeFactor;
+          }
+        }
       }
     }
-  }
-}
   });
 
   // Supprimer les créatures mortes
@@ -691,6 +766,8 @@ if (creature.moveCooldown <= 0) {
             wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 }
           };
           creatures.push(newCreature);
+          activeSpecies.add(newCreature.species.name); // Mettre à jour la légende
+          updateSpeciesLegend();
           creature.foodEaten = 0; // Réinitialiser le compteur pour la créature originale
         }
       }

@@ -116,3 +116,34 @@ button:hover:not(:disabled) {
   80% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* Style pour la légende des espèces */
+#speciesLegend {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(30, 58, 138, 0.7);
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(187, 222, 251, 0.5);
+  color: #E0E0E0;
+}
+
+#speciesLegend h2 {
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  color: #BBDEFB;
+}
+
+.species-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.species-color {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  border-radius: 3px;
+}
