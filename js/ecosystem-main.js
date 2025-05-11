@@ -540,13 +540,11 @@ function gameLoop() {
   updateCounts();
 }
 // Dessiner la courbe des statistiques
-// Dessiner la courbe des statistiques
-// Dessiner la courbe des statistiques
 function drawStatsCurve() {
   const statsCanvas = document.getElementById('statsCanvas');
   const statsCtx = statsCanvas.getContext('2d');
-  statsCanvas.width = gridSize * tileSize + 60; // Ajout de place pour les annotations
-  statsCanvas.height = 120; // Ajout de place pour les annotations
+  statsCanvas.width = 200; // Taille carrée fixe
+  statsCanvas.height = 200; // Taille carrée fixe
 
   // Effacer le canvas
   statsCtx.fillStyle = 'rgba(30, 58, 138, 0.7)';
@@ -569,12 +567,6 @@ function drawStatsCurve() {
     const value = (i / numTicksY) * maxValue;
     const y = (statsCanvas.height - axisYOffset) - (i / numTicksY) * (statsCanvas.height - axisYOffset - 10);
     statsCtx.fillText(Math.round(value), axisXOffset - 5, y);
-    statsCtx.beginPath();
-    statsCtx.strokeStyle = '#E0E0E0';
-    statsCtx.lineWidth = 1;
-    statsCtx.moveTo(axisXOffset, y);
-    statsCtx.lineTo(statsCanvas.width - 10, y);
-    statsCtx.stroke();
   }
 
   // Dessiner l'axe X (abscisse) en bas
@@ -587,12 +579,6 @@ function drawStatsCurve() {
     const x = axisXOffset + (i / numTicksX) * (statsCanvas.width - axisXOffset - 10);
     const time = Math.round((i / numTicksX) * (maxHistoryPoints / 30)); // Temps en secondes
     statsCtx.fillText(time + 's', x, statsCanvas.height - axisYOffset + 5);
-    statsCtx.beginPath();
-    statsCtx.strokeStyle = '#E0E0E0';
-    statsCtx.lineWidth = 1;
-    statsCtx.moveTo(x, 10);
-    statsCtx.lineTo(x, statsCanvas.height - axisYOffset);
-    statsCtx.stroke();
   }
 
   // Dessiner la courbe des créatures (vert clair)

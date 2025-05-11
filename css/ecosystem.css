@@ -75,3 +75,19 @@ button:hover:not(:disabled) {
     box-shadow: 0 0 5px #4B5EAA, 0 0 10px #4B5EAA, 0 0 15px #BBDEFB;
   }
 }
+
+/* Style pour les labels des crans de vitesse */
+#speedTicksLabels {
+  display: flex;
+  justify-content: space-between;
+  width: 200px; /* Ajuster selon la largeur du curseur */
+  margin-top: 5px;
+  font-size: 10px;
+  color: #BBDEFB;
+}
+
+/* Style pour le canvas des statistiques */
+#statsCanvas {
+  border: 1px solid #4B5EAA;
+  animation: glowingBorder 2s infinite;
+}
