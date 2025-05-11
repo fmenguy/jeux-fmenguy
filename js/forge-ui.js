@@ -16,8 +16,8 @@ import {
   explorationActive, explorationTimer,
   villageFounded,
   villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, getTotalPopulation,
-} from './game.js';
-import { drawMap } from './map.js';
+} from './forge-game.js';
+import { drawMap } from './forge-map.js';
 
 // Variables pour stocker l’ordre des sections
 export let fabricationOrder = [

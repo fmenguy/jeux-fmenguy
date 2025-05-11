@@ -1,0 +1,702 @@
+/* Ajoute un préfixe pour éviter les conflits */
+#forgeTab :root {
+  --primary-color: #d4a017;
+  --secondary-color: #e0d5b8;
+  --background-dark: #2f231a;
+  --text-dark: #2b1d0e;
+  --background-body: #4a3f2e;
+  --exploration-progress-color: #4CAF50;
+  --section-bg: #3a2d21;
+  --border-light: #5a4b3a;
+}
+
+/* Préfixe tous les sélecteurs */
+#forgeTab .bg-dark-transparent {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+#forgeTab .border-gold {
+  border: 1px solid var(--primary-color);
+}
+
+.bg-dark-transparent {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.border-gold {
+  border: 1px solid var(--primary-color);
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(--background-body);
+  color: var(--secondary-color);
+  text-align: center;
+  padding: 10px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+#narrative {
+  font-style: italic;
+  margin: 15px auto;
+  color: #c9b68a;
+  padding: 8px 12px;
+  background-color: var(--section-bg);
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  width: 90%;
+  max-width: 600px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Simplification des sections */
+#resources {
+  margin: 10px auto;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: var(--section-bg);
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 90%;
+}
+
+.resource {
+  flex: 1 1 140px;
+  margin: 5px;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  border: none;
+  text-align: center;
+}
+
+.section {
+  margin: 1rem auto;
+  padding: 1rem;
+  background-color: var(--section-bg);
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  width: 90%;
+  max-width: 280px;
+  text-align: center;
+}
+
+.craft,
+.worker,
+.tech {
+  margin: 6px 0;
+  padding: 6px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  border: none;
+}
+
+.columns {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+button {
+  padding: 4px 8px;
+  margin: 2px;
+  cursor: pointer;
+  background-color: var(--primary-color);
+  color: var(--text-dark);
+  border: none;
+  border-radius: 3px;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+button:hover:not(:disabled) {
+  background-color: #e0c040;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background-color: #7a6e4e;
+}
+
+#saveLoadSection {
+  margin: 20px auto;
+  padding: 10px;
+  background-color: var(--section-bg);
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  max-width: 90%;
+}
+
+#saveLoadSection button {
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.icon {
+  font-size: 18px;
+  margin-right: 4px;
+}
+
+.tooltip {
+  font-size: 0.75rem;
+  color: #e0d5b8;
+  display: block;
+}
+
+#hintSection {
+  text-align: center;
+}
+
+#buyHintBtn, #toggleHintsBtn {
+  display: block;
+  margin: 5px auto;
+}
+
+#hintCost, #noHintMessage {
+  display: block;
+  margin: 5px auto;
+}
+
+#purchasedHintsList {
+  font-size: 13px;
+  color: #d4a017;
+  margin-top: 8px;
+  text-align: left;
+}
+
+#noHintMessage {
+  color: #e0d5b8;
+  font-style: italic;
+  font-size: 13px;
+  margin: 8px 0;
+  text-align: center;
+}
+
+footer {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 10px 20px;
+  background-color: #333;
+  color: #c9b68a;
+  font-size: 13px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.footer-left {
+  text-align: left;
+}
+
+.changelog-link {
+  color: #d4a017;
+  text-decoration: none;
+}
+
+@media (max-width: 600px) {
+  .section {
+    width: 100%;
+    max-width: 280px;
+    margin: 8px auto;
+  }
+  .columns {
+    flex-direction: column;
+    align-items: center;
+  }
+  .resource {
+    flex: 1 1 100%;
+    max-width: 180px;
+  }
+  button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  #narrative, #resources {
+    margin: 8px auto;
+    padding: 6px;
+  }
+  .icon {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  .section {
+    width: 45%;
+    max-width: 320px;
+  }
+  .columns {
+    justify-content: space-around;
+  }
+  .resource {
+    flex: 1 1 140px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .section {
+    width: 30%;
+    max-width: 300px;
+  }
+  .columns {
+    justify-content: center;
+  }
+  .resource {
+    flex: 1 1 140px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .changelog-link:hover {
+    color: #e0c040;
+    text-decoration: underline;
+  }
+}
+
+#alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #d9534f;
+  color: #fff;
+  padding: 8px;
+  border-radius: 5px;
+  display: none;
+  font-size: 14px;
+}
+
+#seasonDisplay {
+  margin: 10px auto;
+  padding: 6px;
+  background-color: var(--section-bg);
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  display: inline-block;
+  font-size: 16px;
+  max-width: 90%;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #2b1d0e;
+  border-radius: 4px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background-color: #d4a017;
+  border-radius: 4px;
+}
+
+#explorationDisplay {
+  margin: 10px auto;
+  padding: 6px;
+  background-color: var(--section-bg);
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  font-size: 16px;
+  text-align: center;
+  max-width: 90%;
+  display: block;
+}
+
+.exploration-text {
+  display: block !important;
+  margin-bottom: 4px;
+}
+
+.exploration-progress-bar {
+  width: 100%;
+  height: 5px;
+  background-color: #2b1d0e;
+  border-radius: 8px;
+  overflow: hidden;
+  display: block !important;
+}
+
+.exploration-progress {
+  height: 100%;
+  background-color: var(--exploration-progress-color);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+}
+
+#techBanner {
+  font-style: italic;
+  margin: 10px auto;
+  color: #e0d5b8;
+  padding: 6px 12px;
+  background-color: var(--section-bg);
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  max-width: 300px;
+  font-size: 14px;
+  text-align: center;
+}
+
+#currentAgeDisplay {
+  font-weight: bold;
+}
+
+#villagesDisplay {
+  margin: 15px auto;
+  padding: 10px;
+  background-color: var(--section-bg);
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  width: 90%;
+  max-width: 400px;
+  text-align: left;
+}
+
+#villagesDisplay h2 {
+  color: #e0d5b8;
+  font-size: 16px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+#villagesList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px 0;
+}
+
+#villagesList li {
+  padding: 6px 10px;
+  margin: 3px 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  color: #e0d5b8;
+  font-size: 13px;
+  border-left: 2px solid #d4a017;
+}
+
+#villagesDisplay p {
+  color: #e0d5b8;
+  font-size: 13px;
+  text-align: center;
+}
+
+#totalPopulation {
+  color: #d4a017;
+  font-weight: bold;
+}
+
+#narrative, #villagesList li, .tooltip {
+  overflow-wrap: break-word;
+}
+
+/* Bouton pour ouvrir le bandeau latéral */
+.sidebar-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: var(--primary-color);
+  color: var(--text-dark);
+  border: none;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  z-index: 1001; /* S'assurer qu'il est au-dessus du bandeau */
+}
+
+.sidebar-toggle:hover {
+  background-color: #e0c040;
+}
+
+/* Bandeau latéral pour le contrôle audio */
+#audioSidebar {
+  position: fixed;
+  top: 50px;
+  right: 0;
+  z-index: 1000;
+}
+
+/* Contenu du bandeau latéral */
+.sidebar-content {
+  width: 0;
+  height: 50px; /* Réduit après suppression du h2 */
+  background-color: var(--section-bg);
+  border: 0; /* Supprimer la bordure pour qu'elle ne soit pas visible quand repliée */
+  overflow: hidden;
+  transition: width 0.3s ease, border 0.3s ease; /* Ajout de la transition pour la bordure */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0; /* Supprimer le padding quand replié */
+  visibility: hidden; /* Rendre invisible quand replié */
+}
+
+.sidebar-content.open {
+  width: 220px;
+  border: 1px solid var(--primary-color); /* Réactiver la bordure quand ouvert */
+  border-right: none;
+  border-radius: 5px 0 0 5px;
+  padding: 8px; /* Réactiver le padding quand ouvert */
+  visibility: visible; /* Rendre visible quand ouvert */
+}
+
+/* Conteneur pour les contrôles audio */
+.audio-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* Espacement entre les boutons et le curseur */
+}
+
+/* Boutons Play/Pause */
+.play-pause-buttons {
+  display: flex;
+  flex-direction: row; /* Alignement horizontal */
+  gap: 8px; /* Espacement entre les boutons */
+}
+
+.audio-control-btn {
+  background-color: var(--primary-color);
+  color: var(--text-dark);
+  border: none;
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.audio-control-btn:hover {
+  background-color: #e0c040;
+}
+
+/* Conteneur pour le curseur de volume et le pourcentage */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espacement entre le curseur et le pourcentage */
+}
+
+/* Style du curseur horizontal */
+#volumeSlider {
+  -webkit-appearance: none;
+  width: 80px; /* Largeur du curseur */
+  height: 6px; /* Hauteur de la barre */
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+  border-radius: 5px;
+}
+
+#volumeSlider:hover {
+  opacity: 1;
+}
+
+#volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #4CAF50;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+#volumeSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #4CAF50;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* Affichage du pourcentage */
+.volume-percentage {
+  color: var(--secondary-color);
+  font-size: 12px;
+  width: 35px; /* Largeur fixe pour alignement */
+  text-align: left;
+}
+
+/* Cacher l'élément audio natif */
+#backgroundMusic {
+  display: none;
+}
+
+/* Styles pour les onglets */
+#tabs {
+  margin: 15px auto;
+  text-align: center;
+  background-color: var(--section-bg);
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  max-width: 90%;
+}
+
+.tab-button {
+  padding: 8px 16px;
+  margin: 0 4px;
+  background-color: var(--section-bg);
+  color: var(--secondary-color);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+.tab-button:hover {
+  background-color: #463527;
+}
+
+.tab-button.active {
+  background-color: var(--primary-color);
+  color: var(--text-dark);
+}
+
+#tabContent {
+  background: transparent; /* Assure que le conteneur des onglets n'a pas de fond */
+}
+
+.tab-pane {
+  display: none;
+  background: transparent; /* Assure que chaque onglet n'a pas de fond */
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* Styles pour la section de la carte */
+#mapSection {
+  margin: 15px auto;
+  padding: 10px;
+  max-width: 600px;
+  text-align: center;
+  background: transparent; /* Supprime tout fond */
+}
+
+#mapSection h2 {
+  color: var(--secondary-color);
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+#gameMap {
+  border: 1px solid var(--primary-color);
+  background: transparent; /* Assure que le canvas n'a pas de fond brun */
+  max-width: 100%;
+  height: auto;
+}
+
+/* Styles pour le conteneur de la carte et la légende */
+.map-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+#mapLegend {
+  background-color: var(--section-bg);
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  text-align: left;
+  max-width: 180px;
+}
+
+#mapLegend h3 {
+  color: var(--secondary-color);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+#mapLegend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#mapLegend li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  color: var(--secondary-color);
+  font-size: 12px;
+}
+
+.legend-color {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border: 1px solid #fff;
+}
+
+/* Compatibilité mobile */
+@media (max-width: 600px) {
+  #mapSection {
+    max-width: 90%;
+  }
+
+  #gameMap {
+    width: 100%;
+    height: auto;
+  }
+
+  .map-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #mapLegend {
+    max-width: 100%;
+  }
+
+  .tab-button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  #tabs {
+    padding: 5px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  #mapSection {
+    max-width: 80%;
+  }
+}
