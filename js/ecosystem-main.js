@@ -15,7 +15,7 @@ let frameCount = 0; // Pour l'animation des tentacules et le flottement
 let bubbles = []; // Pour les bulles
 
 // Constante pour le cooldown de déplacement
-const baseCooldown = 60; // Cooldown de base (2 secondes à 30 FPS)
+const baseCooldown = 30;
 
 // Palette de couleurs pour les générations
 const generationColors = [
