@@ -20,7 +20,7 @@ const statsHistory = { creatures: [], food: [] };
 const maxHistoryPoints = 100; // Nombre maximum de points dans la courbe
 
 // Cooldown de base pour le déplacement, modifiable par le curseur
-let baseCooldown = 60; // 2 secondes à 30 FPS
+let baseCooldown = 60; // 2 secondes à 30 FPS (par défaut : lent)
 
 // Mettre à jour baseCooldown avec le curseur
 document.getElementById('speedSlider').addEventListener('input', (event) => {
@@ -539,12 +539,13 @@ function gameLoop() {
   draw();
   updateCounts();
 }
+
 // Dessiner la courbe des statistiques
 function drawStatsCurve() {
   const statsCanvas = document.getElementById('statsCanvas');
   const statsCtx = statsCanvas.getContext('2d');
-  statsCanvas.width = 200; // Taille carrée fixe
-  statsCanvas.height = 200; // Taille carrée fixe
+  statsCanvas.width = gridSize * tileSize + 60; // Ajout de place pour les annotations
+  statsCanvas.height = 120; // Hauteur pour la courbe
 
   // Effacer le canvas
   statsCtx.fillStyle = 'rgba(30, 58, 138, 0.7)';
