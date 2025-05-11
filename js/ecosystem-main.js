@@ -19,8 +19,13 @@ let algae = []; // Liste des abris (algues)
 const statsHistory = { creatures: [], food: [] };
 const maxHistoryPoints = 100; // Nombre maximum de points dans la courbe
 
-// Constante pour le cooldown de déplacement
-const baseCooldown = 60; // Cooldown de base (2 secondes à 30 FPS)
+// Cooldown de base pour le déplacement, modifiable par le curseur
+let baseCooldown = 60; // 2 secondes à 30 FPS
+
+// Mettre à jour baseCooldown avec le curseur
+document.getElementById('speedSlider').addEventListener('input', (event) => {
+  baseCooldown = parseInt(event.target.value);
+});
 
 // Générer des algues comme abris
 function generateAlgae() {
@@ -116,7 +121,7 @@ function updateCounts() {
   drawStatsCurve();
 
   // Agrandir la grille si plus de 30 créatures
-  if (creatures.length > 30 && gridSize < 40) { // Limite maximale arbitraire à 40x40
+  if (creatures.length > 100 && gridSize < 40) { // Limite maximale arbitraire à 40x40
     gridSize += 10; // Augmenter la grille de 10 unités
     canvas.width = gridSize * tileSize;
     canvas.height = gridSize * tileSize;
@@ -535,6 +540,7 @@ function gameLoop() {
   updateCounts();
 }
 // Dessiner la courbe des statistiques
+// Dessiner la courbe des statistiques
 function drawStatsCurve() {
   const statsCanvas = document.getElementById('statsCanvas');
   const statsCtx = statsCanvas.getContext('2d');
@@ -548,14 +554,32 @@ function drawStatsCurve() {
   // Trouver les valeurs maximales pour normaliser la courbe
   const maxCreatures = Math.max(1, ...statsHistory.creatures);
   const maxFood = Math.max(1, ...statsHistory.food);
-  const maxValue = Math.max(maxCreatures, maxFood);
+  const maxValue = Math.max(maxCreatures, maxFood, 10); // Minimum 10 pour l'échelle
+
+  // Dessiner l'axe Y avec numérotation
+  statsCtx.fillStyle = '#E0E0E0';
+  statsCtx.font = '10px Arial';
+  statsCtx.textAlign = 'right';
+  statsCtx.textBaseline = 'middle';
+  const numTicks = 5; // Nombre de graduations sur l'axe Y
+  for (let i = 0; i <= numTicks; i++) {
+    const value = (i / numTicks) * maxValue;
+    const y = statsCanvas.height - (i / numTicks) * statsCanvas.height;
+    statsCtx.fillText(Math.round(value), 30, y);
+    statsCtx.beginPath();
+    statsCtx.strokeStyle = '#E0E0E0';
+    statsCtx.lineWidth = 1;
+    statsCtx.moveTo(35, y);
+    statsCtx.lineTo(statsCanvas.width, y);
+    statsCtx.stroke();
+  }
 
   // Dessiner la courbe des créatures (bleu)
   statsCtx.beginPath();
   statsCtx.strokeStyle = '#BBDEFB'; // Bleu clair
   statsCtx.lineWidth = 2;
   for (let i = 0; i < statsHistory.creatures.length; i++) {
-    const x = (i / (maxHistoryPoints - 1)) * statsCanvas.width;
+    const x = (i / (maxHistoryPoints - 1)) * (statsCanvas.width - 40) + 40; // Décalage pour l'axe Y
     const y = statsCanvas.height - (statsHistory.creatures[i] / maxValue) * statsCanvas.height;
     if (i === 0) {
       statsCtx.moveTo(x, y);
@@ -570,7 +594,7 @@ function drawStatsCurve() {
   statsCtx.strokeStyle = '#FFD700'; // Jaune
   statsCtx.lineWidth = 2;
   for (let i = 0; i < statsHistory.food.length; i++) {
-    const x = (i / (maxHistoryPoints - 1)) * statsCanvas.width;
+    const x = (i / (maxHistoryPoints - 1)) * (statsCanvas.width - 40) + 40; // Décalage pour l'axe Y
     const y = statsCanvas.height - (statsHistory.food[i] / maxValue) * statsCanvas.height;
     if (i === 0) {
       statsCtx.moveTo(x, y);
@@ -583,6 +607,7 @@ function drawStatsCurve() {
   // Ajouter une légende
   statsCtx.fillStyle = '#E0E0E0';
   statsCtx.font = '12px Arial';
+  statsCtx.textAlign = 'left';
   statsCtx.fillText('Créatures', 10, 20);
   statsCtx.fillStyle = '#BBDEFB';
   statsCtx.fillRect(70, 10, 20, 10);
