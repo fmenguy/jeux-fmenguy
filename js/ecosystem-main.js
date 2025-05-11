@@ -25,7 +25,9 @@ window.addCreature = (type) => {
     x: Math.floor(Math.random() * gridSize),
     y: Math.floor(Math.random() * gridSize),
     ...creatureTypes[type],
-    energy: creatureTypes[type].energy
+    energy: creatureTypes[type].energy,
+    age: 0, // Ajout de l'âge pour gérer la durée de vie
+    lastMeal: 0 // Compteur pour suivre le temps depuis le dernier repas (pour les carnivores)
   };
   creatures.push(creature);
   updateCounts();
@@ -75,14 +77,30 @@ function draw() {
 // Boucle de jeu
 function gameLoop() {
   creatures.forEach((creature, index) => {
-    // Perdre de l'énergie
-    creature.energy -= 0.5;
+    // Perdre de l'énergie (augmenté de 0.5 à 1.5)
+    creature.energy -= 1.5;
 
-    // Mourir si plus d'énergie
+    // Augmenter l'âge et le temps depuis le dernier repas
+    creature.age += 1;
+    creature.lastMeal += 1;
+
+    // Mort par manque d'énergie
     if (creature.energy <= 0) {
       creatures.splice(index, 1);
       updateCounts();
       return;
+    }
+
+    // Mort par vieillesse (durée de vie max : 300 ticks ≈ 10 secondes à 30 FPS)
+    if (creature.age >= 300) {
+      creatures.splice(index, 1);
+      updateCounts();
+      return;
+    }
+
+    // Pénalité pour les carnivores s'ils n'ont pas mangé récemment
+    if (creature.type === 'carnivore' && creature.lastMeal > 150) { // 5 secondes sans manger
+      creature.energy -= 3; // Perte d'énergie supplémentaire
     }
 
     // Décider de l'action via l'IA
@@ -109,12 +127,14 @@ function gameLoop() {
         if (foodIndex !== -1) {
           creature.energy = Math.min(creature.energy + foodItems[foodIndex].energy, creature.maxEnergy);
           foodItems.splice(foodIndex, 1);
+          creature.lastMeal = 0; // Réinitialiser le compteur de dernier repas
         }
       } else if (creature.type === 'carnivore') {
         const preyIndex = creatures.findIndex(c => c.type === 'herbivore' && c.x === creature.x && c.y === creature.y);
         if (preyIndex !== -1) {
           creature.energy = Math.min(creature.energy + 50, creature.maxEnergy);
           creatures.splice(preyIndex, 1);
+          creature.lastMeal = 0; // Réinitialiser le compteur de dernier repas
         }
       }
     } else if (action === 'reproduce' && creature.energy > creature.maxEnergy * 0.8) {
@@ -123,8 +143,8 @@ function gameLoop() {
     }
   });
 
-  // Régénérer de la nourriture aléatoirement
-  if (Math.random() < 0.05) addFood();
+  // Régénérer de la nourriture aléatoirement (réduit de 0.05 à 0.005)
+  if (Math.random() < 0.005) addFood();
 
   draw();
   updateCounts();
