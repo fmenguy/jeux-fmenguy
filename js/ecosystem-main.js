@@ -39,6 +39,9 @@ const creatureType = {
   isPredator: false // Indique si la créature est devenue un prédateur
 };
 
+// Taille maximale d'une créature
+const maxSize = 50; // Taille maximale (en pixels)
+
 // Initialisation avec une seule créature
 const initialCreature = {
   x: Math.floor(gridSize / 2),
@@ -198,8 +201,8 @@ function draw() {
 
     // Vérifier si la créature est un prédateur et se dirige vers une autre créature
     if (foodItems.length === 0 && creature.isAdult) {
-      const nearestSmall = creatures.find(c => !c.isAdult);
-      const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult) : null;
+      const nearestSmall = creatures.find(c => !c.isAdult && c.size < creature.size);
+      const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult && c.size < creature.size) : null;
       const targetCreature = nearestSmall || nearestAdult;
       if (targetCreature) {
         path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize);
@@ -236,10 +239,11 @@ function draw() {
     const y = creature.y * tileSize + tileSize / 2 + creature.floatOffset; // Ajout du flottement
     const size = creature.size; // Taille dynamique
     const waveEffect = Math.sin(frameCount * 0.1 + creature.x + creature.y) * 2; // Effet de vague
+    const isMaxSize = creature.size >= maxSize;
 
-    // Corps (cercle ou étoile selon le statut de prédateur)
-    ctx.fillStyle = generationColors[Math.min(creature.generation, generationColors.length - 1)];
-    if (creature.isPredator) {
+    // Corps (cercle ou étoile selon le statut de prédateur et la taille maximale)
+    ctx.fillStyle = isMaxSize ? '#000000' : generationColors[Math.min(creature.generation, generationColors.length - 1)];
+    if (creature.isPredator && !isMaxSize) {
       drawStar(x + waveEffect, y, 5, size, size / 2); // Étoile à 5 branches
     } else {
       ctx.beginPath();
@@ -272,8 +276,8 @@ function draw() {
     ctx.lineTo(x + waveEffect + animationPhase * 3, y + size + tentacleLength);
     ctx.stroke();
 
-    // Tentacule supplémentaire si prédateur
-    if (creature.isPredator) {
+    // Tentacule supplémentaire si prédateur (sauf si taille maximale)
+    if (creature.isPredator && !isMaxSize) {
       ctx.beginPath();
       ctx.moveTo(x + waveEffect, y + size);
       ctx.lineTo(x + waveEffect - animationPhase * 3, y + size + tentacleLength * 1.2); // Légèrement plus long
@@ -307,7 +311,7 @@ function gameLoop() {
     creature.lifespan -= 1;
 
     // Ajuster le cooldown de déplacement en fonction de la taille (plus gros = plus lent)
-    const baseCooldown = 15; // Cooldown de base (0.5 seconde à 30 FPS)
+    const baseCooldown = 60; // Cooldown de base (2 secondes à 30 FPS)
     const sizeFactor = Math.max(1, creature.size / 15); // Plus la créature est grosse, plus elle est lente
     creature.moveCooldown = Math.max(0, creature.moveCooldown - 1 / sizeFactor);
   });
@@ -330,8 +334,10 @@ function gameLoop() {
         if (distance <= eatRadius) {
           // Manger la nourriture
           foodItems.splice(index, 1);
-          creature.size += 2; // Grossir
-          creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+          if (creature.size < maxSize) {
+            creature.size += 1; // Grossir de 1 pixel (réduit par rapport à 2)
+            creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+          }
         }
       });
     }
@@ -347,8 +353,10 @@ function gameLoop() {
         // Manger le petit
         creatures.splice(creatures.indexOf(target), 1);
         creature.isPredator = true; // Devenir prédateur
-        creature.size += 2; // Grossir
-        creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+        if (creature.size < maxSize) {
+          creature.size += 1; // Grossir de 1 pixel
+          creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+        }
         return;
       }
 
@@ -358,8 +366,10 @@ function gameLoop() {
         if (target) {
           // Manger l'autre adulte
           creatures.splice(creatures.indexOf(target), 1);
-          creature.size += 2; // Grossir
-          creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+          if (creature.size < maxSize) {
+            creature.size += 1; // Grossir de 1 pixel
+            creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+          }
           return;
         }
 
@@ -373,6 +383,7 @@ function gameLoop() {
             const nextStep = path[1];
             creature.x = nextStep.x;
             creature.y = nextStep.y;
+            const sizeFactor = Math.max(1, creature.size / 15);
             creature.moveCooldown = baseCooldown * sizeFactor; // Cooldown ajusté
           }
           return;
@@ -404,8 +415,10 @@ function gameLoop() {
 
         // Grossir si adulte
         if (creature.isAdult) {
-          creature.size += 2; // Grossir de 2 pixels
-          creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+          if (creature.size < maxSize) {
+            creature.size += 1; // Grossir de 1 pixel (réduit par rapport à 2)
+            creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+          }
         }
 
         // Duplication après 5 unités de nourriture
