@@ -5,6 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EcoSim</title>
   <link rel="stylesheet" href="css/ecosystem.css">
+  <style>
+    body {
+      background: linear-gradient(to bottom, #0D1B2A, #1B263B); /* Dégradé sombre pour un thème sous-marin */
+      color: #E0E0E0; /* Texte clair pour la lisibilité */
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      min-height: 100vh; /* S'assurer que le dégradé couvre toute la hauteur */
+    }
+
+    h1 {
+      color: #BBDEFB; /* Bleu clair pour le titre */
+      margin-bottom: 20px;
+    }
+
+    #controls {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 5px 10px;
+      margin: 0 5px;
+      background-color: #1E3A8A; /* Bleu foncé pour les boutons */
+      color: #E0E0E0; /* Texte clair */
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #1C2526; /* Gris foncé pour les boutons désactivés */
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #3B82F6; /* Bleu plus clair au survol */
+    }
+
+    #gameCanvas {
+      border: 1px solid #4B5EAA; /* Bordure bleu foncé pour le canvas */
+    }
+
+    .tab-button {
+      color: #BBDEFB; /* Bleu clair pour le bouton "Retour" */
+    }
+  </style>
 </head>
 <body>
   <h1>EcoSim : Simulation d'Écosystème</h1>
@@ -17,7 +63,7 @@
 
   <!-- Bouton Retour en bas à gauche -->
   <div style="position: fixed; bottom: 10px; left: 10px;">
-    <a href="index.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #d4a017; text-decoration: none;">⬅ Retour à Forge des Âges</a>
+    <a href="index.html" class="tab-button" style="font-size: 12px; padding: 5px; text-decoration: none;">⬅ Retour à Forge des Âges</a>
   </div>
 
   <script src="js/ecosystem-main.js" type="module"></script>
