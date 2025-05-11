@@ -355,7 +355,7 @@ function gameLoop() {
 
     // Ajuster le cooldown de déplacement en fonction de la taille (plus gros = plus lent)
     const sizeFactor = Math.max(1, creature.size / 15); // Plus la créature est grosse, plus elle est lente
-    creature.moveCooldown = Math.max(0, creature.moveCooldown - 1 / sizeFactor);
+    creature.moveCooldown = Math.max(0, creature.moveCooldown - 1); // Décrémentation linéaire
 
     // Système de demande de nourriture si affamée (pas mangé depuis 30 secondes)
     if (!creature.lastFoodRequest) creature.lastFoodRequest = 0;
@@ -541,11 +541,12 @@ function gameLoop() {
 }
 // Dessiner la courbe des statistiques
 // Dessiner la courbe des statistiques
+// Dessiner la courbe des statistiques
 function drawStatsCurve() {
   const statsCanvas = document.getElementById('statsCanvas');
   const statsCtx = statsCanvas.getContext('2d');
-  statsCanvas.width = gridSize * tileSize; // Même largeur que le canvas principal
-  statsCanvas.height = 100; // Hauteur fixe pour la courbe
+  statsCanvas.width = gridSize * tileSize + 60; // Ajout de place pour les annotations
+  statsCanvas.height = 120; // Ajout de place pour les annotations
 
   // Effacer le canvas
   statsCtx.fillStyle = 'rgba(30, 58, 138, 0.7)';
@@ -556,31 +557,51 @@ function drawStatsCurve() {
   const maxFood = Math.max(1, ...statsHistory.food);
   const maxValue = Math.max(maxCreatures, maxFood, 10); // Minimum 10 pour l'échelle
 
-  // Dessiner l'axe Y avec numérotation
+  // Dessiner l'axe Y (ordonnée) à gauche
+  const axisXOffset = 40; // Espace pour l'axe Y
+  const axisYOffset = 10; // Espace pour l'axe X
   statsCtx.fillStyle = '#E0E0E0';
   statsCtx.font = '10px Arial';
   statsCtx.textAlign = 'right';
   statsCtx.textBaseline = 'middle';
-  const numTicks = 5; // Nombre de graduations sur l'axe Y
-  for (let i = 0; i <= numTicks; i++) {
-    const value = (i / numTicks) * maxValue;
-    const y = statsCanvas.height - (i / numTicks) * statsCanvas.height;
-    statsCtx.fillText(Math.round(value), 30, y);
+  const numTicksY = 5; // Nombre de graduations sur l'axe Y
+  for (let i = 0; i <= numTicksY; i++) {
+    const value = (i / numTicksY) * maxValue;
+    const y = (statsCanvas.height - axisYOffset) - (i / numTicksY) * (statsCanvas.height - axisYOffset - 10);
+    statsCtx.fillText(Math.round(value), axisXOffset - 5, y);
     statsCtx.beginPath();
     statsCtx.strokeStyle = '#E0E0E0';
     statsCtx.lineWidth = 1;
-    statsCtx.moveTo(35, y);
-    statsCtx.lineTo(statsCanvas.width, y);
+    statsCtx.moveTo(axisXOffset, y);
+    statsCtx.lineTo(statsCanvas.width - 10, y);
     statsCtx.stroke();
   }
 
-  // Dessiner la courbe des créatures (bleu)
+  // Dessiner l'axe X (abscisse) en bas
+  statsCtx.fillStyle = '#E0E0E0';
+  statsCtx.font = '10px Arial';
+  statsCtx.textAlign = 'center';
+  statsCtx.textBaseline = 'top';
+  const numTicksX = 5; // Nombre de graduations sur l'axe X
+  for (let i = 0; i <= numTicksX; i++) {
+    const x = axisXOffset + (i / numTicksX) * (statsCanvas.width - axisXOffset - 10);
+    const time = Math.round((i / numTicksX) * (maxHistoryPoints / 30)); // Temps en secondes
+    statsCtx.fillText(time + 's', x, statsCanvas.height - axisYOffset + 5);
+    statsCtx.beginPath();
+    statsCtx.strokeStyle = '#E0E0E0';
+    statsCtx.lineWidth = 1;
+    statsCtx.moveTo(x, 10);
+    statsCtx.lineTo(x, statsCanvas.height - axisYOffset);
+    statsCtx.stroke();
+  }
+
+  // Dessiner la courbe des créatures (vert clair)
   statsCtx.beginPath();
-  statsCtx.strokeStyle = '#BBDEFB'; // Bleu clair
+  statsCtx.strokeStyle = '#00FF00'; // Vert clair
   statsCtx.lineWidth = 2;
   for (let i = 0; i < statsHistory.creatures.length; i++) {
-    const x = (i / (maxHistoryPoints - 1)) * (statsCanvas.width - 40) + 40; // Décalage pour l'axe Y
-    const y = statsCanvas.height - (statsHistory.creatures[i] / maxValue) * statsCanvas.height;
+    const x = axisXOffset + (i / (maxHistoryPoints - 1)) * (statsCanvas.width - axisXOffset - 10);
+    const y = (statsCanvas.height - axisYOffset) - (statsHistory.creatures[i] / maxValue) * (statsCanvas.height - axisYOffset - 10);
     if (i === 0) {
       statsCtx.moveTo(x, y);
     } else {
@@ -589,13 +610,13 @@ function drawStatsCurve() {
   }
   statsCtx.stroke();
 
-  // Dessiner la courbe de la nourriture (jaune)
+  // Dessiner la courbe de la nourriture (orange)
   statsCtx.beginPath();
-  statsCtx.strokeStyle = '#FFD700'; // Jaune
+  statsCtx.strokeStyle = '#FF4500'; // Orange
   statsCtx.lineWidth = 2;
   for (let i = 0; i < statsHistory.food.length; i++) {
-    const x = (i / (maxHistoryPoints - 1)) * (statsCanvas.width - 40) + 40; // Décalage pour l'axe Y
-    const y = statsCanvas.height - (statsHistory.food[i] / maxValue) * statsCanvas.height;
+    const x = axisXOffset + (i / (maxHistoryPoints - 1)) * (statsCanvas.width - axisXOffset - 10);
+    const y = (statsCanvas.height - axisYOffset) - (statsHistory.food[i] / maxValue) * (statsCanvas.height - axisYOffset - 10);
     if (i === 0) {
       statsCtx.moveTo(x, y);
     } else {
@@ -608,13 +629,14 @@ function drawStatsCurve() {
   statsCtx.fillStyle = '#E0E0E0';
   statsCtx.font = '12px Arial';
   statsCtx.textAlign = 'left';
+  statsCtx.textBaseline = 'middle';
   statsCtx.fillText('Créatures', 10, 20);
-  statsCtx.fillStyle = '#BBDEFB';
-  statsCtx.fillRect(70, 10, 20, 10);
+  statsCtx.fillStyle = '#00FF00';
+  statsCtx.fillRect(70, 15, 20, 10);
   statsCtx.fillStyle = '#E0E0E0';
   statsCtx.fillText('Nourriture', 100, 20);
-  statsCtx.fillStyle = '#FFD700';
-  statsCtx.fillRect(160, 10, 20, 10);
+  statsCtx.fillStyle = '#FF4500';
+  statsCtx.fillRect(160, 15, 20, 10);
 }
 // Lancer le jeu
 setInterval(gameLoop, 1000 / 30); // 30 FPS
