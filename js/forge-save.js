@@ -1,9 +1,9 @@
-import { fabricationOrder, buildingsOrder, updateSeasonDisplay, updateExplorationDisplay, enhancedUpdateDisplay } from './ui.js';
+import { fabricationOrder, buildingsOrder, updateSeasonDisplay, updateExplorationDisplay, enhancedUpdateDisplay } from './forge-ui.js';
 
 import {
   berries, wood, stone, water, maxWater, meat, fibers, metals, herbs, wheat, flour, bread, maxFibers, maxMetals, maxHerbs, maxWheat, maxFlour, maxBread, axes, buckets, wells, pickaxes, bows, coats, metalAxes, remedies, mines, workshops, herbalists, wheatFields, mills, sawmills, stoneQuarries, villagers, chief, tinkers, researchers, pickers, hunters, explorers, miners, farmers, villageFounded, techUnlocked, eternityShards, currentSeason, seasonTimer, deathTimer, explorationTimer, explorationActive, discoveredFibers, discoveredMetals, discoveredHerbs, currentAge, purchasedHints, warehouses, maxWoodStorage, maxStoneStorage, maxWaterStorage, maxMetalsStorage, maxHerbsStorage, maxWheatStorage, maxFlourStorage, bakeries, unlockedAges, dynamicHints, villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, isMusicPlaying,
   setBerries, setWood, setStone, setWater, setMaxWater, setMeat, setFibers, setMetals, setHerbs, setWheat, setFlour, setBread, setMaxFibers, setMaxMetals, setMaxHerbs, setMaxWheat, setMaxFlour, setMaxBread, setAxes, setBuckets, setWells, setPickaxes, setBows, setCoats, setMetalAxes, setRemedies, setMines, setWorkshops, setSawmills, setStoneQuarries, setHerbalists, setWheatFields, setMills, setVillagers, setChief, setTinkers, setResearchers, setPickers, setHunters, setExplorers, setMiners, setFarmers, setVillages, setVillageFounded, setTechUnlocked, setEternityShards, setCurrentSeason, setSeasonTimer, setDeathTimer, setExplorationTimer, setExplorationActive, setDiscoveredFibers, setDiscoveredMetals, setDiscoveredHerbs, setCurrentAge, setPurchasedHints, setWarehouses, setMaxWoodStorage, setMaxStoneStorage, setMaxWaterStorage, setMaxMetalsStorage, setMaxHerbsStorage, setMaxWheatStorage, setMaxFlourStorage, setBakeries, setUnlockedAges, setCurrentHint, setVillagesData, setMaxPopulationPerVillage, setMaxBuildingsPerVillage, setIsMusicPlaying
-} from './game.js';
+} from './forge-game.js';
 
 export function saveGame(slot) {
   console.log("saveGame: villagesData avant sauvegarde", villagesData);

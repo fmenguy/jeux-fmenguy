@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoSim</title>
+  <link rel="stylesheet" href="css/ecosystem.css">
+</head>
+<body>
+  <h1>EcoSim : Simulation d'Écosystème</h1>
+  <div id="controls">
+    <button onclick="addCreature('herbivore')">Ajouter Herbivore</button>
+    <button onclick="addCreature('carnivore')">Ajouter Carnivore</button>
+    <button onclick="addFood()">Ajouter Nourriture</button>
+    <p>Herbivores: <span id="herbivoreCount">0</span> | Carnivores: <span id="carnivoreCount">0</span> | Nourriture: <span id="foodCount">0</span></p>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script src="js/ecosystem-main.js" type="module"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { updateExplorationDisplay } from './ui.js';
+import { updateExplorationDisplay } from './forge-ui.js';
 
 
 // Structure pour représenter un village
