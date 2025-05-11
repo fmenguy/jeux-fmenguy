@@ -489,33 +489,38 @@ function gameLoop() {
     }
 
     // Mouvement aléatoire si pas d'action (errance)
-    if (creature.moveCooldown <= 0) {
-      const hasFoodTarget = foodItems.length > 0;
-      const hasPredatorNearby = creatures.some(c => c.isPredator && c.size > creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < 5);
-      const hasPreyTarget = foodItems.length === 0 && creature.isAdult && (creatures.some(c => !c.isAdult && c.size < creature.size) || (creature.isPredator && creatures.some(c => c !== creature && c.isAdult && c.size < creature.size)));
+// Mouvement aléatoire si pas d'action (errance)
+if (creature.moveCooldown <= 0) {
+  const hasFoodTarget = foodItems.length > 0;
+  const hasPredatorNearby = creatures.some(c => c.isPredator && c.size > creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < 5);
+  const hasPreyTarget = foodItems.length === 0 && creature.isAdult && (creatures.some(c => !c.isAdult && c.size < creature.size) || (creature.isPredator && creatures.some(c => c !== creature && c.isAdult && c.size < creature.size)));
 
-      if (!hasFoodTarget && !hasPredatorNearby && !hasPreyTarget) {
-        // Changer de direction aléatoirement toutes les 5 secondes
-        if (frameCount % 150 === 0) {
-          creature.wanderDirection = { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 };
-        }
+  if (!hasFoodTarget && !hasPredatorNearby && !hasPreyTarget) {
+    // Changer de direction aléatoirement toutes les 5 secondes
+    if (frameCount % 150 === 0) {
+      creature.wanderDirection = { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 };
+    }
 
-        const newX = Math.round(creature.x + creature.wanderDirection.dx);
-        const newY = Math.round(creature.y + creature.wanderDirection.dy);
+    const newX = Math.round(creature.x + creature.wanderDirection.dx);
+    const newY = Math.round(creature.y + creature.wanderDirection.dy);
 
-        // Vérifier si la nouvelle position est valide
-        if (
-          newX >= 0 && newX < gridSize &&
-          newY >= 0 && newY < gridSize &&
-          !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
-          !walls.some(wall => wall.x === newX && wall.y === newY)
-        ) {
-          creature.x = newX;
-          creature.y = newY;
-          creature.moveCooldown = baseCooldown * sizeFactor;
-        }
+    // Vérifier si la nouvelle position est valide
+    if (
+      newX >= 0 && newX < gridSize &&
+      newY >= 0 && newY < gridSize &&
+      !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
+      !walls.some(wall => wall.x === newX && wall.y === newY)
+    ) {
+      // Vérifier que le chemin est libre (pas de mur sur le trajet)
+      const path = findPath(creature, [{ x: newX, y: newY }], gridSize, walls);
+      if (path.length > 1) {
+        creature.x = newX;
+        creature.y = newY;
+        creature.moveCooldown = baseCooldown * sizeFactor;
       }
     }
+  }
+}
   });
 
   // Supprimer les créatures mortes
