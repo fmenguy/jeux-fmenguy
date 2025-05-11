@@ -1,37 +1,58 @@
 body {
   font-family: Arial, sans-serif;
-  background-color: #2f231a;
-  color: #e0d5b8;
-  text-align: center;
+  background: linear-gradient(to bottom, #0D1B2A, #1B263B); /* Dégradé sombre pour un thème sous-marin */
+  color: #E0E0E0; /* Texte clair pour la lisibilité */
   margin: 0;
-  padding: 10px;
+  padding: 20px;
+  min-height: 100vh; /* S'assurer que le dégradé couvre toute la hauteur */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h1 {
+  color: #BBDEFB; /* Bleu clair pour le titre */
   margin-bottom: 20px;
 }
 
 #controls {
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(30, 58, 138, 0.7); /* Fond semi-transparent bleu foncé */
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(187, 222, 251, 0.5); /* Ombre lumineuse */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
 }
 
 button {
   padding: 5px 10px;
-  margin: 0 5px;
-  background-color: #d4a017;
-  color: #2b1d0e;
+  background-color: #1E3A8A; /* Bleu foncé pour les boutons */
+  color: #E0E0E0; /* Texte clair */
   border: none;
   border-radius: 3px;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #e0c040;
+button:disabled {
+  background-color: #1C2526; /* Gris foncé pour les boutons désactivés */
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background-color: #3B82F6; /* Bleu plus clair au survol */
 }
 
 #gameCanvas {
-  border: 1px solid #d4a017;
-  background-color: #d2b48c;
+  border: 1px solid #4B5EAA; /* Bordure bleu foncé */
+  animation: glowingBorder 2s infinite; /* Animation lumineuse */
+}
+
+.tab-button {
+  color: #BBDEFB; /* Bleu clair pour le bouton "Retour" */
 }
 
 /* Style pour les chemins des créatures */
@@ -40,4 +61,17 @@ button:hover {
   stroke-width: 2;
   stroke-dasharray: 5, 5; /* Ligne pointillée */
   opacity: 0.5;
+}
+
+/* Animation de l'effet lumineux sur la bordure du canvas */
+@keyframes glowingBorder {
+  0% {
+    box-shadow: 0 0 5px #4B5EAA, 0 0 10px #4B5EAA, 0 0 15px #BBDEFB;
+  }
+  50% {
+    box-shadow: 0 0 10px #4B5EAA, 0 0 20px #BBDEFB, 0 0 30px #BBDEFB;
+  }
+  100% {
+    box-shadow: 0 0 5px #4B5EAA, 0 0 10px #4B5EAA, 0 0 15px #BBDEFB;
+  }
 }

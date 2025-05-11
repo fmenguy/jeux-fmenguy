@@ -136,6 +136,31 @@ function generateBubble() {
   };
 }
 
+// Dessiner une étoile à 5 branches
+function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
+  let rot = Math.PI / 2 * 3;
+  let x = cx;
+  let y = cy;
+  const step = Math.PI / spikes;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outerRadius);
+  for (let i = 0; i < spikes; i++) {
+    x = cx + Math.cos(rot) * outerRadius;
+    y = cy + Math.sin(rot) * outerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+
+    x = cx + Math.cos(rot) * innerRadius;
+    y = cy + Math.sin(rot) * innerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+  }
+  ctx.lineTo(cx, cy - outerRadius);
+  ctx.closePath();
+  ctx.fill();
+}
+
 // Dessiner le jeu
 function draw() {
   // Créer un dégradé pour le fond (bleu sombre à bleu moyen)
@@ -168,7 +193,20 @@ function draw() {
 
   // Dessiner les chemins des créatures
   creatures.forEach(creature => {
-    const path = findPath(creature, foodItems, gridSize);
+    let path = findPath(creature, foodItems, gridSize);
+    let isAttacking = false;
+
+    // Vérifier si la créature est un prédateur et se dirige vers une autre créature
+    if (foodItems.length === 0 && creature.isAdult) {
+      const nearestSmall = creatures.find(c => !c.isAdult);
+      const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult) : null;
+      const targetCreature = nearestSmall || nearestAdult;
+      if (targetCreature) {
+        path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize);
+        isAttacking = true;
+      }
+    }
+
     if (path.length > 1) {
       ctx.beginPath();
       ctx.moveTo(creature.x * tileSize + tileSize / 2, creature.y * tileSize + tileSize / 2 + creature.floatOffset);
@@ -176,7 +214,7 @@ function draw() {
         const point = path[i];
         ctx.lineTo(point.x * tileSize + tileSize / 2, point.y * tileSize + tileSize / 2 + creature.floatOffset);
       }
-      ctx.strokeStyle = '#FFFFFF';
+      ctx.strokeStyle = isAttacking ? '#FF0000' : '#FFFFFF'; // Rouge si attaque, blanc sinon
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]); // Ligne pointillée
       ctx.stroke();
@@ -199,11 +237,15 @@ function draw() {
     const size = creature.size; // Taille dynamique
     const waveEffect = Math.sin(frameCount * 0.1 + creature.x + creature.y) * 2; // Effet de vague
 
-    // Corps (cercle)
+    // Corps (cercle ou étoile selon le statut de prédateur)
     ctx.fillStyle = generationColors[Math.min(creature.generation, generationColors.length - 1)];
-    ctx.beginPath();
-    ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
-    ctx.fill();
+    if (creature.isPredator) {
+      drawStar(x + waveEffect, y, 5, size, size / 2); // Étoile à 5 branches
+    } else {
+      ctx.beginPath();
+      ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Tentacules (trois ou quatre lignes animées selon le statut de prédateur)
     const tentacleLength = size * 0.8;
@@ -264,23 +306,43 @@ function gameLoop() {
     // Réduire la durée de vie
     creature.lifespan -= 1;
 
-    // Réduire le cooldown de déplacement
-    if (creature.moveCooldown > 0) {
-      creature.moveCooldown -= 1;
-    }
+    // Ajuster le cooldown de déplacement en fonction de la taille (plus gros = plus lent)
+    const baseCooldown = 15; // Cooldown de base (0.5 seconde à 30 FPS)
+    const sizeFactor = Math.max(1, creature.size / 15); // Plus la créature est grosse, plus elle est lente
+    creature.moveCooldown = Math.max(0, creature.moveCooldown - 1 / sizeFactor);
   });
 
   // Supprimer les créatures mortes
   creatures = creatures.filter(creature => creature.lifespan > 0);
 
   creatures.forEach(creature => {
+    // Si prédateur, manger toutes les nourritures dans le rayon
+    if (creature.isPredator) {
+      const eatRadius = creature.size / 2; // Rayon de consommation basé sur la taille
+      const creaturePixelX = creature.x * tileSize + tileSize / 2;
+      const creaturePixelY = creature.y * tileSize + tileSize / 2;
+
+      foodItems.forEach((food, index) => {
+        const foodPixelX = food.x * tileSize + tileSize / 2;
+        const foodPixelY = food.y * tileSize + tileSize / 2;
+        const distance = Math.sqrt((creaturePixelX - foodPixelX) ** 2 + (creaturePixelY - foodPixelY) ** 2);
+
+        if (distance <= eatRadius) {
+          // Manger la nourriture
+          foodItems.splice(index, 1);
+          creature.size += 2; // Grossir
+          creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+        }
+      });
+    }
+
     // Décider de l'action via l'IA
     let action = decideAction(creature, foodItems, gridSize);
 
     // Si pas de nourriture et adulte, chercher à manger un petit ou un autre adulte
     if (foodItems.length === 0 && creature.isAdult && creature.moveCooldown <= 0) {
       // Chercher un petit à manger
-      let target = creatures.find(c => !c.isAdult && Math.round(c.x) === Math.round(creature.x) && Math.round(c.y) === Math.round(creature.y));
+      let target = creatures.find(c => !c.isAdult && Math.round(c.x) === Math.round(creature.x) && Math.round(c.y) === Math.round(creature.y) && c.size < creature.size);
       if (target) {
         // Manger le petit
         creatures.splice(creatures.indexOf(target), 1);
@@ -292,7 +354,7 @@ function gameLoop() {
 
       // Si prédateur, chercher un autre adulte à manger
       if (creature.isPredator) {
-        target = creatures.find(c => c !== creature && c.isAdult && Math.round(c.x) === Math.round(creature.x) && Math.round(c.y) === Math.round(creature.y));
+        target = creatures.find(c => c !== creature && c.isAdult && Math.round(c.x) === Math.round(creature.x) && Math.round(c.y) === Math.round(creature.y) && c.size < creature.size);
         if (target) {
           // Manger l'autre adulte
           creatures.splice(creatures.indexOf(target), 1);
@@ -302,8 +364,8 @@ function gameLoop() {
         }
 
         // Si pas de cible sur la même case, chercher une cible à proximité et se déplacer
-        const nearestSmall = creatures.find(c => !c.isAdult);
-        const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult) : null;
+        const nearestSmall = creatures.find(c => !c.isAdult && c.size < creature.size);
+        const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult && c.size < creature.size) : null;
         const targetCreature = nearestSmall || nearestAdult;
         if (targetCreature) {
           const path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize);
@@ -311,7 +373,7 @@ function gameLoop() {
             const nextStep = path[1];
             creature.x = nextStep.x;
             creature.y = nextStep.y;
-            creature.moveCooldown = 15; // Cooldown de 15 ticks (0.5 seconde à 30 FPS)
+            creature.moveCooldown = baseCooldown * sizeFactor; // Cooldown ajusté
           }
           return;
         }
@@ -326,7 +388,8 @@ function gameLoop() {
         const nextStep = path[1];
         creature.x = nextStep.x;
         creature.y = nextStep.y;
-        creature.moveCooldown = 15; // Cooldown de 15 ticks (0.5 seconde à 30 FPS)
+        const sizeFactor = Math.max(1, creature.size / 15);
+        creature.moveCooldown = baseCooldown * sizeFactor; // Cooldown ajusté
       }
     } else if (action === 'eat') {
       const foodIndex = foodItems.findIndex(food => Math.round(creature.x) === food.x && Math.round(creature.y) === food.y);
