@@ -13,9 +13,22 @@ let creatures = [];
 let foodItems = [];
 let frameCount = 0; // Pour l'animation des tentacules et le flottement
 let bubbles = []; // Pour les bulles
+let algae = []; // Liste des abris (algues)
 
 // Constante pour le cooldown de déplacement
-const baseCooldown = 30;
+const baseCooldown = 60; // Cooldown de base (2 secondes à 30 FPS)
+
+// Générer des algues comme abris
+function generateAlgae() {
+  const numAlgae = 5; // Nombre d'algues
+  for (let i = 0; i < numAlgae; i++) {
+    algae.push({
+      x: Math.floor(Math.random() * gridSize),
+      y: Math.floor(Math.random() * gridSize)
+    });
+  }
+}
+generateAlgae(); // Appeler pour générer les algues au démarrage
 
 // Palette de couleurs pour les générations
 const generationColors = [
@@ -39,7 +52,8 @@ const creatureType = {
   floatOffset: 0, // Pour le flottement
   moveCooldown: 0, // Cooldown pour ralentir le déplacement
   generation: 0, // Génération initiale
-  isPredator: false // Indique si la créature est devenue un prédateur
+  isPredator: false, // Indique si la créature est devenue un prédateur
+  lastFoodRequest: 0 // Compteur pour la demande de nourriture
 };
 
 // Taille maximale d'une créature
@@ -197,6 +211,12 @@ function draw() {
     }
   });
 
+  // Dessiner les algues (carrés verts pour représenter les abris)
+  algae.forEach(alga => {
+    ctx.fillStyle = '#2E7D32'; // Vert foncé pour les algues
+    ctx.fillRect(alga.x * tileSize, alga.y * tileSize, tileSize, tileSize);
+  });
+
   // Dessiner les chemins des créatures
   creatures.forEach(creature => {
     let path = findPath(creature, foodItems, gridSize);
@@ -316,10 +336,35 @@ function gameLoop() {
     // Ajuster le cooldown de déplacement en fonction de la taille (plus gros = plus lent)
     const sizeFactor = Math.max(1, creature.size / 15); // Plus la créature est grosse, plus elle est lente
     creature.moveCooldown = Math.max(0, creature.moveCooldown - 1 / sizeFactor);
+
+    // Système de demande de nourriture si affamée (pas mangé depuis 30 secondes)
+    if (!creature.lastFoodRequest) creature.lastFoodRequest = 0;
+    creature.lastFoodRequest++;
+    if (creature.lastFoodRequest > 900 && foodItems.length === 0) { // 30 secondes à 30 FPS
+      alert(`Une créature de génération ${creature.generation} demande de la nourriture !`);
+      creature.lastFoodRequest = 0; // Réinitialiser le compteur
+    }
   });
 
   // Supprimer les créatures mortes
+  const deadCreatures = creatures.filter(creature => creature.lifespan <= 0);
   creatures = creatures.filter(creature => creature.lifespan > 0);
+
+  // Lâcher de la nourriture en fonction de la taille quand une créature meurt
+  deadCreatures.forEach(deadCreature => {
+    const foodCount = Math.floor(deadCreature.size / 10); // 1 nourriture par tranche de 10 pixels de taille
+    for (let i = 0; i < foodCount; i++) {
+      const offsetX = (Math.random() - 0.5) * 2; // Décalage aléatoire entre -1 et 1
+      const offsetY = (Math.random() - 0.5) * 2;
+      const foodX = Math.min(Math.max(Math.round(deadCreature.x + offsetX), 0), gridSize - 1);
+      const foodY = Math.min(Math.max(Math.round(deadCreature.y + offsetY), 0), gridSize - 1);
+      foodItems.push({
+        x: foodX,
+        y: foodY,
+        energy: 50
+      });
+    }
+  });
 
   creatures.forEach(creature => {
     // Si prédateur, manger toutes les nourritures dans le rayon
@@ -342,6 +387,29 @@ function gameLoop() {
           }
         }
       });
+    }
+
+    // IA pour se cacher sous les algues si un prédateur est à proximité
+    if (!creature.isPredator && creature.moveCooldown <= 0) {
+      const nearestPredator = creatures.find(c => c.isPredator && c.size > creature.size);
+      if (nearestPredator) {
+        const predatorDistance = Math.sqrt((creature.x - nearestPredator.x) ** 2 + (creature.y - nearestPredator.y) ** 2);
+        if (predatorDistance < 5) { // Se cacher si prédateur à moins de 5 cases
+          const nearestAlga = algae.reduce((closest, alga) => {
+            const distance = Math.sqrt((creature.x - alga.x) ** 2 + (creature.y - alga.y) ** 2);
+            return distance < Math.sqrt((creature.x - closest.x) ** 2 + (creature.y - closest.y) ** 2) ? alga : closest;
+          }, algae[0]);
+          const path = findPath(creature, [{ x: nearestAlga.x, y: nearestAlga.y }], gridSize);
+          if (path.length > 1) {
+            const nextStep = path[1];
+            creature.x = nextStep.x;
+            creature.y = nextStep.y;
+            const sizeFactor = Math.max(1, creature.size / 15);
+            creature.moveCooldown = baseCooldown * sizeFactor;
+            return; // Arrêter ici pour éviter d'autres actions
+          }
+        }
+      }
     }
 
     // Décider de l'action via l'IA
@@ -380,6 +448,10 @@ function gameLoop() {
         const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult && c.size < creature.size) : null;
         const targetCreature = nearestSmall || nearestAdult;
         if (targetCreature) {
+          // Ne pas attaquer si la cible est sous une algue
+          const isTargetUnderAlgae = algae.some(alga => Math.round(targetCreature.x) === alga.x && Math.round(targetCreature.y) === alga.y);
+          if (isTargetUnderAlgae) return; // Ne pas attaquer si la cible est protégée
+
           const path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize);
           if (path.length > 1) {
             const nextStep = path[1];
@@ -409,6 +481,7 @@ function gameLoop() {
       if (foodIndex !== -1) {
         creature.foodEaten += 1; // Incrémenter le compteur de nourriture consommée
         foodItems.splice(foodIndex, 1);
+        creature.lastFoodRequest = 0; // Réinitialiser le compteur de demande
 
         // Croissance après avoir mangé 2 unités de nourriture
         if (!creature.isAdult && creature.foodEaten >= 2) {
