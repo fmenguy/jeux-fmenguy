@@ -15,17 +15,16 @@ let frameCount = 0; // Pour l'animation des tentacules et le flottement
 let bubbles = []; // Pour les bulles
 let algae = []; // Liste des abris (algues)
 
-// Données pour la courbe
+// Données pour la courbe (stocke tout depuis le début)
 const statsHistory = { creatures: [], food: [] };
-const maxHistoryPoints = 100; // Nombre maximum de points dans la courbe
 
-// Cooldown de base pour le déplacement, modifiable par le curseur
+// Cooldown de base pour le déplacement, modifiable par les boutons radio
 let baseCooldown = 60; // 2 secondes à 30 FPS (par défaut : lent)
 
-// Mettre à jour baseCooldown avec le curseur
-document.getElementById('speedSlider').addEventListener('input', (event) => {
-  baseCooldown = parseInt(event.target.value);
-});
+// Mettre à jour baseCooldown avec les boutons radio
+window.updateSpeed = (value) => {
+  baseCooldown = parseInt(value);
+};
 
 // Générer des algues comme abris
 function generateAlgae() {
@@ -62,7 +61,8 @@ const creatureType = {
   moveCooldown: 0, // Cooldown pour ralentir le déplacement
   generation: 0, // Génération initiale
   isPredator: false, // Indique si la créature est devenue un prédateur
-  lastFoodRequest: 0 // Compteur pour la demande de nourriture
+  lastFoodRequest: 0, // Compteur pour la demande de nourriture
+  isRequestingFood: false // Indicateur pour l'affichage visuel
 };
 
 // Taille maximale d'une créature
@@ -102,6 +102,28 @@ window.respawnCreature = () => {
   }
 };
 
+// Gérer les bulles de demande de nourriture
+let requestSide = 'left'; // Alterner les côtés des bulles
+function showFoodRequest(generation) {
+  const requestsDiv = document.getElementById('foodRequests');
+  const bubble = document.createElement('div');
+  bubble.className = 'food-request-bubble';
+  bubble.textContent = `Créature (Gen ${generation}) demande de la nourriture !`;
+
+  // Positionner la bulle à gauche ou à droite
+  const side = requestSide;
+  requestSide = requestSide === 'left' ? 'right' : 'left'; // Alterner pour la prochaine bulle
+  bubble.style[side] = '20px';
+  bubble.style.top = `${Math.random() * (window.innerHeight - 100) + 50}px`; // Position aléatoire en hauteur
+
+  requestsDiv.appendChild(bubble);
+
+  // Supprimer la bulle après 5 secondes
+  setTimeout(() => {
+    bubble.remove();
+  }, 5000);
+}
+
 // Mettre à jour les compteurs et l'état du bouton
 function updateCounts() {
   document.getElementById('creatureCount').textContent = creatures.length;
@@ -112,15 +134,11 @@ function updateCounts() {
   // Ajouter les données à l'historique pour la courbe
   statsHistory.creatures.push(creatures.length);
   statsHistory.food.push(foodItems.length);
-  if (statsHistory.creatures.length > maxHistoryPoints) {
-    statsHistory.creatures.shift();
-    statsHistory.food.shift();
-  }
 
   // Dessiner la courbe
   drawStatsCurve();
 
-  // Agrandir la grille si plus de 30 créatures
+  // Agrandir la grille si plus de 100 créatures
   if (creatures.length > 100 && gridSize < 40) { // Limite maximale arbitraire à 40x40
     gridSize += 10; // Augmenter la grille de 10 unités
     canvas.width = gridSize * tileSize;
@@ -233,8 +251,11 @@ function draw() {
 
   // Dessiner les algues (carrés verts pour représenter les abris)
   algae.forEach(alga => {
+    const pulse = 1 + Math.sin(frameCount * 0.05) * 0.1; // Effet de pulsation
     ctx.fillStyle = '#2E7D32'; // Vert foncé pour les algues
+    ctx.globalAlpha = pulse;
     ctx.fillRect(alga.x * tileSize, alga.y * tileSize, tileSize, tileSize);
+    ctx.globalAlpha = 1; // Réinitialiser l'opacité
   });
 
   // Dessiner les chemins des créatures
@@ -292,6 +313,22 @@ function draw() {
       ctx.beginPath();
       ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // Ajouter un contour lumineux
+    ctx.strokeStyle = '#BBDEFB';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Ajouter un indicateur visuel si la créature demande de la nourriture
+    if (creature.isRequestingFood) {
+      ctx.strokeStyle = '#FF0000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x + waveEffect, y, size + 5, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
     // Tentacules (trois ou quatre lignes animées selon le statut de prédateur)
@@ -357,12 +394,16 @@ function gameLoop() {
     const sizeFactor = Math.max(1, creature.size / 15); // Plus la créature est grosse, plus elle est lente
     creature.moveCooldown = Math.max(0, creature.moveCooldown - 1); // Décrémentation linéaire
 
-    // Système de demande de nourriture si affamée (pas mangé depuis 30 secondes)
+    // Système de demande de nourriture si affamée (pas mangé depuis 15 secondes)
     if (!creature.lastFoodRequest) creature.lastFoodRequest = 0;
     creature.lastFoodRequest++;
-    if (creature.lastFoodRequest > 900 && foodItems.length === 0) { // 30 secondes à 30 FPS
-      alert(`Une créature de génération ${creature.generation} demande de la nourriture !`);
+    if (creature.lastFoodRequest > 450 && foodItems.length === 0) { // 15 secondes à 30 FPS
+      showFoodRequest(creature.generation);
+      creature.isRequestingFood = true;
       creature.lastFoodRequest = 0; // Réinitialiser le compteur
+      setTimeout(() => {
+        creature.isRequestingFood = false;
+      }, 5000); // Correspond à la durée de la bulle
     }
   });
 
@@ -502,6 +543,7 @@ function gameLoop() {
         creature.foodEaten += 1; // Incrémenter le compteur de nourriture consommée
         foodItems.splice(foodIndex, 1);
         creature.lastFoodRequest = 0; // Réinitialiser le compteur de demande
+        creature.isRequestingFood = false; // Arrêter l'indicateur visuel
 
         // Croissance après avoir mangé 2 unités de nourriture
         if (!creature.isAdult && creature.foodEaten >= 2) {
@@ -545,7 +587,7 @@ function drawStatsCurve() {
   const statsCanvas = document.getElementById('statsCanvas');
   const statsCtx = statsCanvas.getContext('2d');
   statsCanvas.width = gridSize * tileSize + 60; // Ajout de place pour les annotations
-  statsCanvas.height = 120; // Hauteur pour la courbe
+  statsCanvas.height = 150; // Hauteur augmentée pour la courbe
 
   // Effacer le canvas
   statsCtx.fillStyle = 'rgba(30, 58, 138, 0.7)';
@@ -576,9 +618,10 @@ function drawStatsCurve() {
   statsCtx.textAlign = 'center';
   statsCtx.textBaseline = 'top';
   const numTicksX = 5; // Nombre de graduations sur l'axe X
+  const totalPoints = statsHistory.creatures.length;
   for (let i = 0; i <= numTicksX; i++) {
     const x = axisXOffset + (i / numTicksX) * (statsCanvas.width - axisXOffset - 10);
-    const time = Math.round((i / numTicksX) * (maxHistoryPoints / 30)); // Temps en secondes
+    const time = Math.round((i / numTicksX) * (totalPoints / 30)); // Temps en secondes
     statsCtx.fillText(time + 's', x, statsCanvas.height - axisYOffset + 5);
   }
 
@@ -587,10 +630,10 @@ function drawStatsCurve() {
   statsCtx.strokeStyle = '#00FF00'; // Vert clair
   statsCtx.lineWidth = 2;
   for (let i = 0; i < statsHistory.creatures.length; i++) {
-    const x = axisXOffset + (i / (maxHistoryPoints - 1)) * (statsCanvas.width - axisXOffset - 10);
+    const x = axisXOffset + (i / (statsHistory.creatures.length - 1)) * (statsCanvas.width - axisXOffset - 10);
     const y = (statsCanvas.height - axisYOffset) - (statsHistory.creatures[i] / maxValue) * (statsCanvas.height - axisYOffset - 10);
-    if (i === 0) {
-      statsCtx.moveTo(x, y);
+    if (i === 0 || isNaN(x)) {
+      statsCtx.moveTo(x, statsCanvas.height - axisYOffset);
     } else {
       statsCtx.lineTo(x, y);
     }
@@ -602,10 +645,10 @@ function drawStatsCurve() {
   statsCtx.strokeStyle = '#FF4500'; // Orange
   statsCtx.lineWidth = 2;
   for (let i = 0; i < statsHistory.food.length; i++) {
-    const x = axisXOffset + (i / (maxHistoryPoints - 1)) * (statsCanvas.width - axisXOffset - 10);
+    const x = axisXOffset + (i / (statsHistory.food.length - 1)) * (statsCanvas.width - axisXOffset - 10);
     const y = (statsCanvas.height - axisYOffset) - (statsHistory.food[i] / maxValue) * (statsCanvas.height - axisYOffset - 10);
-    if (i === 0) {
-      statsCtx.moveTo(x, y);
+    if (i === 0 || isNaN(x)) {
+      statsCtx.moveTo(x, statsCanvas.height - axisYOffset);
     } else {
       statsCtx.lineTo(x, y);
     }
@@ -625,6 +668,7 @@ function drawStatsCurve() {
   statsCtx.fillStyle = '#FF4500';
   statsCtx.fillRect(160, 15, 20, 10);
 }
+
 // Lancer le jeu
 setInterval(gameLoop, 1000 / 30); // 30 FPS
 draw();

@@ -12,17 +12,23 @@
     <button onclick="addFood()">Ajouter Nourriture</button>
     <button id="respawnButton" onclick="respawnCreature()" disabled>Réapparaître</button>
     <p>Créatures: <span id="creatureCount">1</span> | Nourriture: <span id="foodCount">0</span></p>
-    <label for="speedSlider">Vitesse: </label>
-    <input type="range" id="speedSlider" min="1" max="60" step="20" value="60" list="speedTicks">
-    <div id="speedTicksLabels">
-      <span>Lent (2s)</span>
-      <span>Normal (1.33s)</span>
-      <span>Rapide (0.66s)</span>
-      <span>Instantané (0.03s)</span>
+    <div>
+      <label>Vitesse: </label>
+      <input type="radio" id="speedInstant" name="speed" value="1" onchange="updateSpeed(this.value)">
+      <label for="speedInstant">Instantané (0.03s)</label>
+      <input type="radio" id="speedFast" name="speed" value="20" onchange="updateSpeed(this.value)">
+      <label for="speedFast">Rapide (0.66s)</label>
+      <input type="radio" id="speedNormal" name="speed" value="40" onchange="updateSpeed(this.value)">
+      <label for="speedNormal">Normal (1.33s)</label>
+      <input type="radio" id="speedSlow" name="speed" value="60" checked onchange="updateSpeed(this.value)">
+      <label for="speedSlow">Lent (2s)</label>
     </div>
   </div>
   <canvas id="statsCanvas" style="margin-bottom: 20px;"></canvas>
   <canvas id="gameCanvas"></canvas>
+
+  <!-- Conteneur pour les bulles de demande de nourriture -->
+  <div id="foodRequests"></div>
 
   <!-- Bouton Retour en bas à gauche -->
   <div style="position: fixed; bottom: 10px; left: 10px;">
