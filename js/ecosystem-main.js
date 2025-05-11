@@ -14,6 +14,9 @@ let foodItems = [];
 let frameCount = 0; // Pour l'animation des tentacules et le flottement
 let bubbles = []; // Pour les bulles
 
+// Constante pour le cooldown de déplacement
+const baseCooldown = 60; // Cooldown de base (2 secondes à 30 FPS)
+
 // Palette de couleurs pour les générations
 const generationColors = [
   '#4B0082', // Génération 0 : Indigo foncé
@@ -311,7 +314,6 @@ function gameLoop() {
     creature.lifespan -= 1;
 
     // Ajuster le cooldown de déplacement en fonction de la taille (plus gros = plus lent)
-    const baseCooldown = 60; // Cooldown de base (2 secondes à 30 FPS)
     const sizeFactor = Math.max(1, creature.size / 15); // Plus la créature est grosse, plus elle est lente
     creature.moveCooldown = Math.max(0, creature.moveCooldown - 1 / sizeFactor);
   });
