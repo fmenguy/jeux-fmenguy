@@ -3,7 +3,7 @@ import { decideAction, findPath } from './ecosystem-ai.js';
 // Configuration du canvas
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const gridSize = 20;
+let gridSize = 20; // Taille initiale de la grille
 const tileSize = 30;
 canvas.width = gridSize * tileSize;
 canvas.height = gridSize * tileSize;
@@ -27,7 +27,7 @@ const generationColors = [
 // Type de créature (méduse-like)
 const creatureType = {
   color: generationColors[0], // Couleur initiale (génération 0)
-  size: 15, // Taille adulte
+  size: 15, // Taille adulte initiale
   speed: 1, // Saut d'une case par tick (ralenti par un cooldown)
   foodEaten: 0, // Compteur de nourriture consommée
   lifespan: 1800, // 60 secondes à 30 FPS (60 * 30 = 1800 ticks) pour tester
@@ -35,7 +35,8 @@ const creatureType = {
   isAdult: true, // Indique si la créature est adulte
   floatOffset: 0, // Pour le flottement
   moveCooldown: 0, // Cooldown pour ralentir le déplacement
-  generation: 0 // Génération initiale
+  generation: 0, // Génération initiale
+  isPredator: false // Indique si la créature est devenue un prédateur
 };
 
 // Initialisation avec une seule créature
@@ -78,6 +79,23 @@ function updateCounts() {
   document.getElementById('foodCount').textContent = foodItems.length;
   const respawnButton = document.getElementById('respawnButton');
   respawnButton.disabled = creatures.length > 0; // Désactiver si des créatures sont présentes
+
+  // Agrandir la grille si plus de 30 créatures
+  if (creatures.length > 30 && gridSize < 40) { // Limite maximale arbitraire à 40x40
+    gridSize += 10; // Augmenter la grille de 10 unités
+    canvas.width = gridSize * tileSize;
+    canvas.height = gridSize * tileSize;
+
+    // Repositionner les créatures et la nourriture si elles dépassent la grille
+    creatures.forEach(creature => {
+      creature.x = Math.min(creature.x, gridSize - 1);
+      creature.y = Math.min(creature.y, gridSize - 1);
+    });
+    foodItems.forEach(food => {
+      food.x = Math.min(food.x, gridSize - 1);
+      food.y = Math.min(food.y, gridSize - 1);
+    });
+  }
 }
 
 // Trouver une position libre autour d'une position donnée
@@ -178,7 +196,7 @@ function draw() {
   creatures.forEach(creature => {
     const x = creature.x * tileSize + tileSize / 2;
     const y = creature.y * tileSize + tileSize / 2 + creature.floatOffset; // Ajout du flottement
-    const size = creature.isAdult ? creatureType.size : creatureType.size * 0.6; // Taille réduite pour les bébés
+    const size = creature.size; // Taille dynamique
     const waveEffect = Math.sin(frameCount * 0.1 + creature.x + creature.y) * 2; // Effet de vague
 
     // Corps (cercle)
@@ -187,7 +205,7 @@ function draw() {
     ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
     ctx.fill();
 
-    // Tentacules (trois lignes animées)
+    // Tentacules (trois ou quatre lignes animées selon le statut de prédateur)
     const tentacleLength = size * 0.8;
     const tentacleOffset = size * 0.5;
     const animationPhase = Math.sin(frameCount * 0.2); // Animation basée sur frameCount
@@ -211,6 +229,14 @@ function draw() {
     ctx.moveTo(x + waveEffect, y + size);
     ctx.lineTo(x + waveEffect + animationPhase * 3, y + size + tentacleLength);
     ctx.stroke();
+
+    // Tentacule supplémentaire si prédateur
+    if (creature.isPredator) {
+      ctx.beginPath();
+      ctx.moveTo(x + waveEffect, y + size);
+      ctx.lineTo(x + waveEffect - animationPhase * 3, y + size + tentacleLength * 1.2); // Légèrement plus long
+      ctx.stroke();
+    }
 
     // Afficher la génération au centre du corps
     ctx.fillStyle = '#FFFFFF';
@@ -249,9 +275,50 @@ function gameLoop() {
 
   creatures.forEach(creature => {
     // Décider de l'action via l'IA
-    const action = decideAction(creature, foodItems, gridSize);
+    let action = decideAction(creature, foodItems, gridSize);
 
-    // Exécuter l'action
+    // Si pas de nourriture et adulte, chercher à manger un petit ou un autre adulte
+    if (foodItems.length === 0 && creature.isAdult && creature.moveCooldown <= 0) {
+      // Chercher un petit à manger
+      let target = creatures.find(c => !c.isAdult && Math.round(c.x) === Math.round(creature.x) && Math.round(c.y) === Math.round(creature.y));
+      if (target) {
+        // Manger le petit
+        creatures.splice(creatures.indexOf(target), 1);
+        creature.isPredator = true; // Devenir prédateur
+        creature.size += 2; // Grossir
+        creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+        return;
+      }
+
+      // Si prédateur, chercher un autre adulte à manger
+      if (creature.isPredator) {
+        target = creatures.find(c => c !== creature && c.isAdult && Math.round(c.x) === Math.round(creature.x) && Math.round(c.y) === Math.round(creature.y));
+        if (target) {
+          // Manger l'autre adulte
+          creatures.splice(creatures.indexOf(target), 1);
+          creature.size += 2; // Grossir
+          creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+          return;
+        }
+
+        // Si pas de cible sur la même case, chercher une cible à proximité et se déplacer
+        const nearestSmall = creatures.find(c => !c.isAdult);
+        const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult) : null;
+        const targetCreature = nearestSmall || nearestAdult;
+        if (targetCreature) {
+          const path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize);
+          if (path.length > 1) {
+            const nextStep = path[1];
+            creature.x = nextStep.x;
+            creature.y = nextStep.y;
+            creature.moveCooldown = 15; // Cooldown de 15 ticks (0.5 seconde à 30 FPS)
+          }
+          return;
+        }
+      }
+    }
+
+    // Exécuter l'action normale (aller vers la nourriture)
     if (action === 'move' && creature.moveCooldown <= 0) {
       const path = findPath(creature, foodItems, gridSize);
       if (path.length > 1) {
@@ -270,6 +337,12 @@ function gameLoop() {
         // Croissance après avoir mangé 2 unités de nourriture
         if (!creature.isAdult && creature.foodEaten >= 2) {
           creature.isAdult = true;
+        }
+
+        // Grossir si adulte
+        if (creature.isAdult) {
+          creature.size += 2; // Grossir de 2 pixels
+          creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
         }
 
         // Duplication après 5 unités de nourriture
