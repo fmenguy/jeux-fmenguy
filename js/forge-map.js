@@ -1,4 +1,4 @@
-import { villagesData, wells, mines, workshops, herbalists, wheatFields, mills, bakeries, sawmills, stoneQuarries, warehouses, discoveredFibers, discoveredMetals, discoveredHerbs, villageFounded } from './game.js';
+import { villagesData, wells, mines, workshops, herbalists, wheatFields, mills, bakeries, sawmills, stoneQuarries, warehouses, discoveredFibers, discoveredMetals, discoveredHerbs, villageFounded } from './forge-game.js';
 
 // Configuration de la carte
 const canvas = document.getElementById('gameMap');
