@@ -15,6 +15,10 @@ let frameCount = 0; // Pour l'animation des tentacules et le flottement
 let bubbles = []; // Pour les bulles
 let algae = []; // Liste des abris (algues)
 
+// Données pour la courbe
+const statsHistory = { creatures: [], food: [] };
+const maxHistoryPoints = 100; // Nombre maximum de points dans la courbe
+
 // Constante pour le cooldown de déplacement
 const baseCooldown = 60; // Cooldown de base (2 secondes à 30 FPS)
 
@@ -99,6 +103,17 @@ function updateCounts() {
   document.getElementById('foodCount').textContent = foodItems.length;
   const respawnButton = document.getElementById('respawnButton');
   respawnButton.disabled = creatures.length > 0; // Désactiver si des créatures sont présentes
+
+  // Ajouter les données à l'historique pour la courbe
+  statsHistory.creatures.push(creatures.length);
+  statsHistory.food.push(foodItems.length);
+  if (statsHistory.creatures.length > maxHistoryPoints) {
+    statsHistory.creatures.shift();
+    statsHistory.food.shift();
+  }
+
+  // Dessiner la courbe
+  drawStatsCurve();
 
   // Agrandir la grille si plus de 30 créatures
   if (creatures.length > 30 && gridSize < 40) { // Limite maximale arbitraire à 40x40
@@ -519,7 +534,63 @@ function gameLoop() {
   draw();
   updateCounts();
 }
+// Dessiner la courbe des statistiques
+function drawStatsCurve() {
+  const statsCanvas = document.getElementById('statsCanvas');
+  const statsCtx = statsCanvas.getContext('2d');
+  statsCanvas.width = gridSize * tileSize; // Même largeur que le canvas principal
+  statsCanvas.height = 100; // Hauteur fixe pour la courbe
 
+  // Effacer le canvas
+  statsCtx.fillStyle = 'rgba(30, 58, 138, 0.7)';
+  statsCtx.fillRect(0, 0, statsCanvas.width, statsCanvas.height);
+
+  // Trouver les valeurs maximales pour normaliser la courbe
+  const maxCreatures = Math.max(1, ...statsHistory.creatures);
+  const maxFood = Math.max(1, ...statsHistory.food);
+  const maxValue = Math.max(maxCreatures, maxFood);
+
+  // Dessiner la courbe des créatures (bleu)
+  statsCtx.beginPath();
+  statsCtx.strokeStyle = '#BBDEFB'; // Bleu clair
+  statsCtx.lineWidth = 2;
+  for (let i = 0; i < statsHistory.creatures.length; i++) {
+    const x = (i / (maxHistoryPoints - 1)) * statsCanvas.width;
+    const y = statsCanvas.height - (statsHistory.creatures[i] / maxValue) * statsCanvas.height;
+    if (i === 0) {
+      statsCtx.moveTo(x, y);
+    } else {
+      statsCtx.lineTo(x, y);
+    }
+  }
+  statsCtx.stroke();
+
+  // Dessiner la courbe de la nourriture (jaune)
+  statsCtx.beginPath();
+  statsCtx.strokeStyle = '#FFD700'; // Jaune
+  statsCtx.lineWidth = 2;
+  for (let i = 0; i < statsHistory.food.length; i++) {
+    const x = (i / (maxHistoryPoints - 1)) * statsCanvas.width;
+    const y = statsCanvas.height - (statsHistory.food[i] / maxValue) * statsCanvas.height;
+    if (i === 0) {
+      statsCtx.moveTo(x, y);
+    } else {
+      statsCtx.lineTo(x, y);
+    }
+  }
+  statsCtx.stroke();
+
+  // Ajouter une légende
+  statsCtx.fillStyle = '#E0E0E0';
+  statsCtx.font = '12px Arial';
+  statsCtx.fillText('Créatures', 10, 20);
+  statsCtx.fillStyle = '#BBDEFB';
+  statsCtx.fillRect(70, 10, 20, 10);
+  statsCtx.fillStyle = '#E0E0E0';
+  statsCtx.fillText('Nourriture', 100, 20);
+  statsCtx.fillStyle = '#FFD700';
+  statsCtx.fillRect(160, 10, 20, 10);
+}
 // Lancer le jeu
 setInterval(gameLoop, 1000 / 30); // 30 FPS
 draw();
