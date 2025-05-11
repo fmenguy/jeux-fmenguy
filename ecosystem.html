@@ -12,6 +12,8 @@
     <button onclick="addFood()">Ajouter Nourriture</button>
     <button id="respawnButton" onclick="respawnCreature()" disabled>Réapparaître</button>
     <p>Créatures: <span id="creatureCount">1</span> | Nourriture: <span id="foodCount">0</span></p>
+    <label for="speedSlider">Vitesse: </label>
+    <input type="range" id="speedSlider" min="30" max="120" step="30" value="60">
   </div>
   <canvas id="statsCanvas" style="margin-bottom: 20px;"></canvas>
   <canvas id="gameCanvas"></canvas>
