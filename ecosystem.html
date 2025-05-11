@@ -13,18 +13,16 @@
     <button id="respawnButton" onclick="respawnCreature()" disabled>Réapparaître</button>
     <p>Créatures: <span id="creatureCount">1</span> | Nourriture: <span id="foodCount">0</span></p>
     <label for="speedSlider">Vitesse: </label>
-    <input type="range" id="speedSlider" min="30" max="120" step="30" value="60" list="speedTicks">
+    <input type="range" id="speedSlider" min="1" max="60" step="20" value="60" list="speedTicks">
     <div id="speedTicksLabels">
-      <span>Rapide (1s)</span>
-      <span>Normal (2s)</span>
-      <span>Lent (3s)</span>
-      <span>Très lent (4s)</span>
+      <span>Lent (2s)</span>
+      <span>Normal (1.33s)</span>
+      <span>Rapide (0.66s)</span>
+      <span>Instantané (0.03s)</span>
     </div>
   </div>
-  <div style="display: flex; gap: 20px;">
-    <canvas id="gameCanvas"></canvas>
-    <canvas id="statsCanvas"></canvas>
-  </div>
+  <canvas id="statsCanvas" style="margin-bottom: 20px;"></canvas>
+  <canvas id="gameCanvas"></canvas>
 
   <!-- Bouton Retour en bas à gauche -->
   <div style="position: fixed; bottom: 10px; left: 10px;">
