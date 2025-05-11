@@ -88,10 +88,10 @@ activeSpecies.add(speciesTypes[0].name); // Ajouter l'espèce initiale à la lé
 updateSpeciesLegend();
 console.log('Créature initiale ajoutée :', initialCreature); // Debug
 
-// Ajouter de la nourriture
-window.addFood = () => {
+window.addFood = (isKeyboard = false) => {
   const baseFoodCount = creatures.length >= 100 ? Math.floor(creatures.length / 20) : 1; // Proportionnel au nombre de créatures
-  for (let i = 0; i < baseFoodCount; i++) {
+  const multiplier = isKeyboard ? 5 : 1; // Ajoute 5x plus de nourriture avec la touche Entrée
+  for (let i = 0; i < baseFoodCount * multiplier; i++) {
     const food = {
       x: Math.floor(Math.random() * gridSize),
       y: Math.floor(Math.random() * gridSize),
@@ -101,6 +101,13 @@ window.addFood = () => {
   }
   updateCounts();
 };
+
+// Ajouter un écouteur pour la touche Entrée
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    window.addFood(true);
+  }
+});
 
 // Faire réapparaître une créature initiale
 window.respawnCreature = () => {
