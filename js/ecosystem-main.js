@@ -12,10 +12,21 @@ canvas.height = gridSize * tileSize;
 let creatures = [];
 let foodItems = [];
 let frameCount = 0; // Pour l'animation des tentacules et le flottement
+let bubbles = []; // Pour les bulles
+
+// Palette de couleurs pour les générations
+const generationColors = [
+  '#4B0082', // Génération 0 : Indigo foncé
+  '#6A0DAD', // Génération 1 : Violet foncé
+  '#AB47BC', // Génération 2 : Violet moyen
+  '#CE93D8', // Génération 3 : Violet clair
+  '#E1BEE7', // Génération 4 : Violet très clair
+  '#F3E5F5'  // Génération 5+ : Presque blanc
+];
 
 // Type de créature (méduse-like)
 const creatureType = {
-  color: '#AB47BC', // Violet pour la créature initiale
+  color: generationColors[0], // Couleur initiale (génération 0)
   size: 15, // Taille adulte
   speed: 1, // Saut d'une case par tick (ralenti par un cooldown)
   foodEaten: 0, // Compteur de nourriture consommée
@@ -23,7 +34,8 @@ const creatureType = {
   isOriginal: true, // Indique si c'est la créature initiale
   isAdult: true, // Indique si la créature est adulte
   floatOffset: 0, // Pour le flottement
-  moveCooldown: 0 // Cooldown pour ralentir le déplacement
+  moveCooldown: 0, // Cooldown pour ralentir le déplacement
+  generation: 0 // Génération initiale
 };
 
 // Initialisation avec une seule créature
@@ -96,11 +108,45 @@ function findFreePosition(x, y) {
   return { x, y };
 }
 
+// Générer des bulles aléatoires
+function generateBubble() {
+  return {
+    x: Math.random() * canvas.width,
+    y: canvas.height,
+    size: Math.random() * 5 + 2, // Taille entre 2 et 7 pixels
+    speed: Math.random() * 2 + 1 // Vitesse de montée entre 1 et 3 pixels par tick
+  };
+}
+
 // Dessiner le jeu
 function draw() {
-  // Effacer le canvas avec un fond bleu (sous-marin)
-  ctx.fillStyle = '#1E88E5';
+  // Créer un dégradé pour le fond (bleu sombre à bleu moyen)
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, '#0D1B2A'); // Bleu très sombre (haut)
+  gradient.addColorStop(1, '#1B263B'); // Bleu sombre (bas)
+
+  // Effacer le canvas avec le dégradé
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Générer des bulles aléatoirement (1 chance sur 50 par tick)
+  if (Math.random() < 0.02) {
+    bubbles.push(generateBubble());
+  }
+
+  // Dessiner et animer les bulles
+  bubbles.forEach((bubble, index) => {
+    bubble.y -= bubble.speed; // Faire remonter la bulle
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.beginPath();
+    ctx.arc(bubble.x, bubble.y, bubble.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Supprimer les bulles qui sortent de l'écran
+    if (bubble.y < -bubble.size) {
+      bubbles.splice(index, 1);
+    }
+  });
 
   // Dessiner les chemins des créatures
   creatures.forEach(creature => {
@@ -133,11 +179,12 @@ function draw() {
     const x = creature.x * tileSize + tileSize / 2;
     const y = creature.y * tileSize + tileSize / 2 + creature.floatOffset; // Ajout du flottement
     const size = creature.isAdult ? creatureType.size : creatureType.size * 0.6; // Taille réduite pour les bébés
+    const waveEffect = Math.sin(frameCount * 0.1 + creature.x + creature.y) * 2; // Effet de vague
 
     // Corps (cercle)
-    ctx.fillStyle = creature.isOriginal ? creatureType.color : '#CE93D8'; // Violet clair pour les duplicatas
+    ctx.fillStyle = generationColors[Math.min(creature.generation, generationColors.length - 1)];
     ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.arc(x + waveEffect, y, size, 0, Math.PI * 2);
     ctx.fill();
 
     // Tentacules (trois lignes animées)
@@ -149,28 +196,34 @@ function draw() {
     ctx.strokeStyle = '#4A148C'; // Violet foncé pour les tentacules
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(x - tentacleOffset, y + size);
-    ctx.lineTo(x - tentacleOffset + animationPhase * 5, y + size + tentacleLength);
+    ctx.moveTo(x + waveEffect - tentacleOffset, y + size);
+    ctx.lineTo(x + waveEffect - tentacleOffset + animationPhase * 5, y + size + tentacleLength);
     ctx.stroke();
 
     // Tentacule droite
     ctx.beginPath();
-    ctx.moveTo(x + tentacleOffset, y + size);
-    ctx.lineTo(x + tentacleOffset - animationPhase * 5, y + size + tentacleLength);
+    ctx.moveTo(x + waveEffect + tentacleOffset, y + size);
+    ctx.lineTo(x + waveEffect + tentacleOffset - animationPhase * 5, y + size + tentacleLength);
     ctx.stroke();
 
     // Tentacule central
     ctx.beginPath();
-    ctx.moveTo(x, y + size);
-    ctx.lineTo(x + animationPhase * 3, y + size + tentacleLength);
+    ctx.moveTo(x + waveEffect, y + size);
+    ctx.lineTo(x + waveEffect + animationPhase * 3, y + size + tentacleLength);
     ctx.stroke();
+
+    // Afficher la génération au centre du corps
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${creature.generation}`, x + waveEffect, y + 4); // +4 pour centrer verticalement
 
     // Afficher le compteur de durée de vie au-dessus de la tête
     const remainingSeconds = Math.ceil(creature.lifespan / 30); // Convertir ticks en secondes (30 FPS)
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`${remainingSeconds}s`, x, y - size - 10);
+    ctx.fillText(`${remainingSeconds}s`, x + waveEffect, y - size - 10);
   });
 }
 
@@ -229,7 +282,8 @@ function gameLoop() {
             foodEaten: 0, // Nouvelle créature commence avec 0 nourriture consommée
             isOriginal: false, // Marquer comme duplicata
             isAdult: false, // Commence comme bébé
-            floatOffset: Math.random() * 10 // Offset de flottement aléatoire
+            floatOffset: Math.random() * 10, // Offset de flottement aléatoire
+            generation: creature.generation + 1 // Incrémenter la génération
           };
           creatures.push(newCreature);
           creature.foodEaten = 0; // Réinitialiser le compteur pour la créature originale
