@@ -100,7 +100,7 @@ button:hover:not(:disabled) {
   height: 150px;
 }
 
-/* Style pour les bulles de demande de nourriture */
+/* Style pour les bulles */
 #foodRequests {
   position: fixed;
   top: 0;
@@ -112,8 +112,6 @@ button:hover:not(:disabled) {
 
 .food-request-bubble {
   position: absolute;
-  background: rgba(255, 255, 255, 0.9);
-  color: #2E7D32;
   padding: 5px;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(187, 222, 251, 0.5);
@@ -121,6 +119,16 @@ button:hover:not(:disabled) {
   max-width: 150px;
   text-align: center;
   animation: fadeOut 5s forwards;
+}
+
+.creature-bubble {
+  background: rgba(255, 255, 255, 0.9);
+  color: #2E7D32;
+}
+
+.human-bubble {
+  background: rgba(255, 215, 0, 0.9); /* Jaune pâle pour les humains */
+  color: #8B4513; /* Brun pour le texte */
 }
 
 @keyframes fadeOut {
@@ -202,8 +210,8 @@ button:hover:not(:disabled) {
   margin-top: 10px;
 }
 
-/* Style pour la map terrestre */
-#gameCanvas.terrestrial {
+/* Style pour la map lorsque les humains apparaissent */
+#gameCanvas.humans-present {
   background: linear-gradient(to bottom, #8B4513 20%, #0D1B2A 20%);
 }
 

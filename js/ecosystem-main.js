@@ -19,7 +19,7 @@ let particles = []; // Liste des particules
 let bloomZone = null; // Zone de bloom de nourriture
 let stormActive = false; // État de la tempête
 let humans = []; // Liste des humains
-let currentMap = 'aquatic'; // Map par défaut
+let humansSpawned = false; // Indicateur pour l'apparition des humains
 
 // Données pour la courbe (stocke tout depuis le début)
 const statsHistory = { creatures: [], food: [] };
@@ -36,6 +36,7 @@ let activeSpecies = new Set();
 // Limites de créatures
 const maxCreaturesPerSpecies = 100; // 100 créatures max par espèce (non prédateurs)
 const maxPredators = 50; // 50 prédateurs max
+const humansSpawnThreshold = 50; // Seuil pour l'apparition des humains
 
 // Score du joueur
 let score = 0;
@@ -45,66 +46,7 @@ window.updateSpeed = (value) => {
   baseCooldown = parseInt(value);
 };
 
-// Changer de map
-window.changeMap = (mapType) => {
-  currentMap = mapType;
-  canvas.className = mapType; // Appliquer la classe pour le style
-  resetGame(); // Réinitialiser le jeu pour la nouvelle map
-};
-
-// Réinitialiser le jeu pour une nouvelle map
-function resetGame() {
-  creatures = [];
-  foodItems = [];
-  walls = [];
-  algae = [];
-  humans = [];
-  bloomZone = null;
-  stormActive = false;
-  frameCount = 0;
-  activeSpecies.clear();
-
-  // Générer des algues pour la map aquatique
-  if (currentMap === 'aquatic') {
-    generateAlgae();
-  }
-
-  // Ajouter une créature initiale
-  const initialCreature = {
-    x: Math.floor(gridSize / 2),
-    y: currentMap === 'aquatic' ? Math.floor(gridSize / 2) : gridSize - 1, // Placer dans l'eau pour la map terrestre
-    species: speciesTypes[0],
-    color: speciesTypes[0].color[0],
-    size: 15,
-    speed: 1,
-    foodEaten: 0,
-    lifespan: 1800,
-    isOriginal: true,
-    isAdult: true,
-    floatOffset: 0,
-    moveCooldown: 0,
-    generation: 0,
-    isPredator: false,
-    lastFoodRequest: 0,
-    isRequestingFood: false,
-    wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 },
-    lastPath: [],
-    lastTarget: null,
-    traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }
-  };
-  creatures.push(initialCreature);
-  activeSpecies.add(speciesTypes[0].name);
-
-  // Générer des humains pour la map terrestre
-  if (currentMap === 'terrestrial') {
-    generateHumans();
-  }
-
-  updateSpeciesLegend();
-  updateCounts();
-}
-
-// Générer des algues comme abris (pour la map aquatique)
+// Générer des algues comme abris
 function generateAlgae() {
   const numAlgae = 5; // Nombre d'algues
   for (let i = 0; i < numAlgae; i++) {
@@ -115,7 +57,7 @@ function generateAlgae() {
   }
 }
 
-// Générer des humains (pour la map terrestre)
+// Générer des humains (quand l'écosystème est développé)
 function generateHumans() {
   const numHumans = 3; // Nombre d'humains
   for (let i = 0; i < numHumans; i++) {
@@ -129,14 +71,15 @@ function generateHumans() {
       foodCollected: 0
     });
   }
+  canvas.className = 'humans-present'; // Appliquer la classe pour le style de la map
 }
 generateAlgae(); // Appeler pour générer les algues au démarrage
 
 // Différentes espèces de méduses
 let speciesTypes = [
-  { name: 'Lunaria', shape: 'circle', color: ['#1E90FF', '#00B7EB', '#00CED1', '#48D1CC', '#87CEEB', '#B0E0E6'], tentacleCount: 3, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } }, // Bleus luminescents
-  { name: 'Coralix', shape: 'hexagon', color: ['#FF4040', '#FF6347', '#FF7F50', '#FF8C00', '#FFA07A', '#FFDAB9'], tentacleCount: 4, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } }, // Corail vibrant
-  { name: 'Abyssal', shape: 'triangle', color: ['#2F0047', '#4B0082', '#483D8B', '#6A5ACD', '#7B68EE', '#9370DB'], tentacleCount: 5, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } } // Tons abyssaux
+  { name: 'Lunaria', shape: 'circle', color: ['#1E90FF', '#00B7EB', '#00CED1', '#48D1CC', '#87CEEB', '#B0E0E6'], tentacleCount: 3, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }, foodValue: 1 }, // Bleus luminescents
+  { name: 'Coralix', shape: 'hexagon', color: ['#FF4040', '#FF6347', '#FF7F50', '#FF8C00', '#FFA07A', '#FFDAB9'], tentacleCount: 4, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }, foodValue: 2 }, // Corail vibrant
+  { name: 'Abyssal', shape: 'triangle', color: ['#2F0047', '#4B0082', '#483D8B', '#6A5ACD', '#7B68EE', '#9370DB'], tentacleCount: 5, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }, foodValue: 3 } // Tons abyssaux
 ];
 
 // Type de créature (méduse-like)
@@ -199,7 +142,7 @@ window.addFood = (isKeyboard = false) => {
     for (let i = 0; i < foodCount; i++) {
       const food = {
         x: Math.floor(Math.random() * gridSize),
-        y: currentMap === 'terrestrial' ? Math.floor(Math.random() * (gridSize - 4)) + 4 : Math.floor(Math.random() * gridSize), // Dans l'eau pour la map terrestre
+        y: Math.floor(Math.random() * gridSize),
         energy: 50
       };
       foodItems.push(food);
@@ -220,7 +163,7 @@ window.respawnCreature = () => {
   if (creatures.length === 0) {
     const newCreature = {
       x: Math.floor(gridSize / 2),
-      y: currentMap === 'terrestrial' ? gridSize - 1 : Math.floor(gridSize / 2),
+      y: Math.floor(gridSize / 2),
       ...creatureType
     };
     creatures.push(newCreature);
@@ -270,19 +213,58 @@ canvas.addEventListener('contextmenu', (event) => {
   }
 });
 
-// Gérer les bulles de demande de nourriture
+// Gérer les bulles de demande
 let requestSide = 'left'; // Alterner les côtés des bulles
-function showFoodRequest(message) {
+
+// Liste de blagues/messages amusants pour inciter à ajouter de la nourriture
+const funnyMessages = [
+  "Je suis affamé, un petit snack me ferait nager de bonheur !",
+  "Pourquoi les méduses ne partagent pas leur nourriture ? Parce qu'elles sont trop jelly !",
+  "J’ai tellement faim que je pourrais manger un mur… mais je préfère de la nourriture !",
+  "Un peu de nourriture, et je te promets un spectacle de tentacules !",
+  "Je suis à sec, donne-moi un coup de pouce… ou de nourriture !"
+];
+
+// Messages si le chemin est bloqué
+const blockedMessages = [
+  "Un mur me bloque, je ne peux pas atteindre la nourriture… Aide-moi à nager librement !",
+  "Ces murs me donnent le tournis, je veux juste un peu de nourriture…",
+  "Je suis coincé derrière un mur, fais quelque chose, s’il te plaît !",
+  "Ce mur est une vraie barrière à mon repas, peux-tu m’aider ?"
+];
+
+// Messages des créatures après l'apparition des humains
+const humanPresentMessages = [
+  "Les humains sont là… J’espère qu’ils ne me pêcheront pas avant que j’aie mangé !",
+  "Ces humains me regardent bizarrement, vite, donne-moi de la nourriture pour que je me cache !",
+  "Je sens une canne à pêche… Un peu de nourriture pour me donner des forces ?"
+];
+
+// Messages initiaux des humains
+const humanIntroMessages = [
+  "On est là pour pêcher, préparez-vous, les poissons !",
+  "Mmmh, ça sent le poisson frais par ici… On va se régaler !",
+  "Les cannes à pêche sont prêtes, qui sera notre premier repas ?"
+];
+
+// Afficher un message dans une bulle
+function showBubble(entityType, message, entity) {
   const requestsDiv = document.getElementById('foodRequests');
   const bubble = document.createElement('div');
-  bubble.className = 'food-request-bubble';
+  bubble.className = `food-request-bubble ${entityType}-bubble`; // Ajouter une classe pour différencier les bulles
+
   bubble.textContent = message;
 
-  // Positionner la bulle à gauche ou à droite
+  // Positionner la bulle différemment selon le type d'entité
   const side = requestSide;
   requestSide = requestSide === 'left' ? 'right' : 'left'; // Alterner pour la prochaine bulle
-  bubble.style[side] = '20px';
-  bubble.style.top = `${Math.random() * (window.innerHeight - 100) + 50}px`; // Position aléatoire en hauteur
+  if (entityType === 'human') {
+    bubble.style[side] = '20px';
+    bubble.style.top = '50px'; // Bulles des humains en haut
+  } else {
+    bubble.style[side] = '20px';
+    bubble.style.top = `${Math.random() * (window.innerHeight - 150) + 100}px`; // Bulles des créatures plus bas
+  }
 
   requestsDiv.appendChild(bubble);
 
@@ -314,7 +296,8 @@ window.createNewSpecies = () => {
     shape: shape,
     color: [color, color, color, color, color, color], // Palette simple
     tentacleCount: tentacleCount,
-    traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }
+    traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 },
+    foodValue: shape === 'circle' ? 1 : shape === 'hexagon' ? 2 : 3 // Valeur de nourriture selon la forme
   };
 
   speciesTypes.push(newSpecies);
@@ -324,9 +307,12 @@ window.createNewSpecies = () => {
   // Introduire la nouvelle espèce immédiatement
   creatures.forEach(creature => {
     if (Math.random() < 0.3) { // 30% de chances pour chaque créature de devenir la nouvelle espèce
-      creature.species = newSpecies;
-      creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
-      creature.traits = { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 };
+      const currentSpeciesCount = creatures.filter(c => c.species.name === newSpecies.name && c.size < maxSize).length;
+      if (currentSpeciesCount < maxCreaturesPerSpecies) {
+        creature.species = newSpecies;
+        creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
+        creature.traits = { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 };
+      }
     }
   });
 
@@ -351,8 +337,8 @@ function updateSpeciesLegend() {
   predatorItem.appendChild(predatorSpan);
   speciesListDiv.appendChild(predatorItem);
 
-  // Compteur des humains (pour la map terrestre)
-  if (currentMap === 'terrestrial') {
+  // Compteur des humains (si présents)
+  if (humans.length > 0) {
     const humanCount = humans.length;
     const humanFood = humans.reduce((sum, human) => sum + human.foodCollected, 0);
     const humanItem = document.createElement('div');
@@ -433,6 +419,7 @@ function findFreePosition(x, y) {
     if (
       newX >= 0 && newX < gridSize &&
       newY >= 0 && newY < gridSize &&
+      (humans.length === 0 || newY > gridSize * 0.2 / tileSize) && // Rester dans l'eau si les humains sont présents
       !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
       !walls.some(wall => wall.x === newX && wall.y === newY)
     ) {
@@ -528,7 +515,7 @@ function drawTriangle(cx, cy, size) {
 function draw() {
   // Créer un dégradé pour le fond
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  if (currentMap === 'aquatic') {
+  if (humans.length === 0) {
     gradient.addColorStop(0, '#0D1B2A'); // Bleu très sombre (haut)
     gradient.addColorStop(1, '#1B263B'); // Bleu sombre (bas)
   } else {
@@ -575,16 +562,14 @@ function draw() {
     }
   });
 
-  // Dessiner les algues (carrés verts pour représenter les abris) - uniquement pour la map aquatique
-  if (currentMap === 'aquatic') {
-    algae.forEach(alga => {
-      const pulse = 1 + Math.sin(frameCount * 0.05) * 0.1; // Effet de pulsation
-      ctx.fillStyle = '#2E7D32'; // Vert foncé pour les algues
-      ctx.globalAlpha = pulse;
-      ctx.fillRect(alga.x * tileSize, alga.y * tileSize, tileSize, tileSize);
-      ctx.globalAlpha = 1; // Réinitialiser l'opacité
-    });
-  }
+  // Dessiner les algues (carrés verts pour représenter les abris)
+  algae.forEach(alga => {
+    const pulse = 1 + Math.sin(frameCount * 0.05) * 0.1; // Effet de pulsation
+    ctx.fillStyle = '#2E7D32'; // Vert foncé pour les algues
+    ctx.globalAlpha = pulse;
+    ctx.fillRect(alga.x * tileSize, alga.y * tileSize, tileSize, tileSize);
+    ctx.globalAlpha = 1; // Réinitialiser l'opacité
+  });
 
   // Dessiner les murs
   walls.forEach(wall => {
@@ -764,8 +749,8 @@ function draw() {
     ctx.fillText(`${remainingSeconds}s`, x + waveEffect, y - size - 10);
   });
 
-  // Dessiner les humains et leurs lignes de pêche (pour la map terrestre)
-  if (currentMap === 'terrestrial') {
+  // Dessiner les humains et leurs lignes de pêche (si présents)
+  if (humans.length > 0) {
     humans.forEach(human => {
       const x = human.x * tileSize + tileSize / 2;
       const y = human.y * tileSize + tileSize / 2;
@@ -797,7 +782,7 @@ function gameLoop() {
   if (frameCount % 3600 === 0) { // 2 minutes (3600 ticks à 30 FPS)
     bloomZone = {
       x: Math.floor(Math.random() * gridSize),
-      y: currentMap === 'terrestrial' ? Math.floor(Math.random() * (gridSize - 4)) + 4 : Math.floor(Math.random() * gridSize), // Dans l'eau pour la map terrestre
+      y: humans.length > 0 ? Math.floor(Math.random() * (gridSize - 4)) + 4 : Math.floor(Math.random() * gridSize), // Dans l'eau si humains présents
     };
     window.addFood(); // Ajouter de la nourriture dans la zone de bloom
     setTimeout(() => {
@@ -833,8 +818,14 @@ function gameLoop() {
     }
   }
 
-  // Gérer les humains (pour la map terrestre)
-  if (currentMap === 'terrestrial') {
+  // Apparition des humains lorsque l'écosystème est développé
+  if (!humansSpawned && creatures.length >= humansSpawnThreshold) {
+    generateHumans();
+    humansSpawned = true;
+  }
+
+  // Gérer les humains (si présents)
+  if (humans.length > 0) {
     humans.forEach(human => {
       // Déplacement horizontal
       human.x += human.direction * 0.1;
@@ -855,23 +846,33 @@ function gameLoop() {
         }
       }
 
-      // Pêcher une créature si elle est à proximité
+      // Pêcher une créature de manière aléatoire si elle est à proximité
       if (human.fishing) {
         const humanPixelX = human.x * tileSize + tileSize / 2;
         const humanPixelY = human.y * tileSize + tileSize / 2;
         const fishingRange = 2 * tileSize; // Portée de la ligne de pêche
 
-        for (let i = creatures.length - 1; i >= 0; i--) {
-          const creature = creatures[i];
+        const nearbyCreatures = creatures.filter(creature => {
           const creaturePixelX = creature.x * tileSize + tileSize / 2;
           const creaturePixelY = creature.y * tileSize + tileSize / 2;
           const distance = Math.sqrt((humanPixelX - creaturePixelX) ** 2 + (humanPixelY - creaturePixelY) ** 2);
+          return distance <= fishingRange && creature.y > gridSize * 0.2 / tileSize; // Créature dans l'eau
+        });
 
-          if (distance <= fishingRange && creature.y > gridSize * 0.2 / tileSize) { // Créature dans l'eau
-            creatures.splice(i, 1); // Supprimer la créature
-            human.foodCollected += 1; // Ajouter de la nourriture à l'humain
-            updateSpeciesLegend();
-            break; // Pêcher une seule créature à la fois
+        if (nearbyCreatures.length > 0 && Math.random() < 0.05) { // 5% de chance de pêcher par tick
+          const creatureIndex = Math.floor(Math.random() * nearbyCreatures.length);
+          const creature = nearbyCreatures[creatureIndex];
+          const isPredator = creature.size >= maxSize;
+          const catchProbability = isPredator ? 0.3 : 0.7; // Prédateurs plus difficiles à attraper
+
+          if (Math.random() < catchProbability) {
+            const creatureIdx = creatures.indexOf(creature);
+            if (creatureIdx !== -1) {
+              const foodValue = isPredator ? 5 : creature.species.foodValue; // Valeur de nourriture selon l'espèce
+              human.foodCollected += foodValue;
+              creatures.splice(creatureIdx, 1); // Supprimer la créature
+              updateSpeciesLegend();
+            }
           }
         }
       }
@@ -922,7 +923,7 @@ function gameLoop() {
         if (
           newX >= 0 && newX < gridSize &&
           newY >= 0 && newY < gridSize &&
-          (currentMap !== 'terrestrial' || newY > gridSize * 0.2 / tileSize) && // Rester dans l'eau pour la map terrestre
+          (humans.length === 0 || newY > gridSize * 0.2 / tileSize) && // Rester dans l'eau si humains présents
           !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
           !walls.some(wall => wall.x === newX && wall.y === newY)
         ) {
@@ -983,8 +984,8 @@ function gameLoop() {
       });
     }
 
-    // IA pour se cacher sous les algues si un prédateur est à proximité (map aquatique uniquement)
-    if (!creature.isPredator && creature.moveCooldown <= 0 && currentMap === 'aquatic') {
+    // IA pour se cacher sous les algues si un prédateur est à proximité
+    if (!creature.isPredator && creature.moveCooldown <= 0) {
       const detectionRange = stormActive ? 2 : 5; // Réduire la portée pendant une tempête
       const nearestPredator = creatures.find(c => c.isPredator && c.size > creature.size);
       if (nearestPredator) {
@@ -1046,8 +1047,8 @@ function gameLoop() {
         const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult && c.size < creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < detectionRange + creature.traits.detectionBonus) : null;
         const targetCreature = nearestSmall || nearestAdult;
         if (targetCreature) {
-          // Ne pas attaquer si la cible est sous une algue (map aquatique)
-          const isTargetUnderAlgae = currentMap === 'aquatic' && algae.some(alga => Math.round(targetCreature.x) === alga.x && Math.round(targetCreature.y) === alga.y);
+          // Ne pas attaquer si la cible est sous une algue
+          const isTargetUnderAlgae = algae.some(alga => Math.round(targetCreature.x) === alga.x && Math.round(targetCreature.y) === alga.y);
           if (isTargetUnderAlgae) return; // Ne pas attaquer si la cible est protégée
 
           const path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize, walls);
@@ -1125,7 +1126,7 @@ function gameLoop() {
 
           const newCreature = {
             x: newPosition.x,
-            y: currentMap === 'terrestrial' && newPosition.y <= gridSize * 0.2 / tileSize ? gridSize - 1 : newPosition.y, // Forcer dans l'eau pour la map terrestre
+            y: humans.length > 0 && newPosition.y <= gridSize * 0.2 / tileSize ? gridSize - 1 : newPosition.y, // Forcer dans l'eau si humains présents
             ...creatureType,
             species: newSpecies, // Hérite ou mute
             color: newSpecies.color[Math.min(creature.generation + 1, newSpecies.color.length - 1)],

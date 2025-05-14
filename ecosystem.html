@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="assets/ecosim.ico" type="image/x-icon">
   <title>EcoSim</title>
   <link rel="stylesheet" href="css/ecosystem.css">
 </head>
 <body>
-  <h1>EcoSim : Simulation d'Écosystème</h1>
+  <h1>EcoSim</h1>
   <div id="speciesLegend">
     <h2>Légende des espèces</h2>
     <div id="speciesList"></div>
@@ -19,13 +20,6 @@
     <button id="addWallButton" onclick="toggleAddWallMode()">Ajouter Mur</button>
     <button onclick="showCreateSpeciesMenu()">Créer Espèce</button>
     <p>Créatures: <span id="creatureCount">1</span> | Nourriture: <span id="foodCount">0</span></p>
-    <div>
-      <label>Map: </label>
-      <select id="mapSelect" onchange="changeMap(this.value)">
-        <option value="aquatic">Aquatique</option>
-        <option value="terrestrial">Terrestre</option>
-      </select>
-    </div>
     <div>
       <label>Vitesse: </label>
       <input type="radio" id="speedInstant" name="speed" value="1" onchange="updateSpeed(this.value)">
