@@ -68,7 +68,8 @@ function generateHumans() {
       direction: Math.random() < 0.5 ? 1 : -1, // Déplacement horizontal
       fishing: false,
       fishingCooldown: 0,
-      foodCollected: 0
+      foodCollected: 0,
+      lastBubbleTime: 0
     });
   }
   canvas.className = 'humans-present'; // Appliquer la classe pour le style de la map
@@ -96,8 +97,7 @@ const creatureType = {
   moveCooldown: 0, // Cooldown pour ralentir le déplacement
   generation: 0, // Génération initiale
   isPredator: false, // Indique si la créature est devenue un prédateur
-  lastFoodRequest: 0, // Compteur pour la demande de nourriture
-  isRequestingFood: false, // Indicateur pour l'affichage visuel
+  lastBubbleTime: 0, // Compteur pour les bulles
   wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 }, // Direction aléatoire pour le mouvement
   lastPath: [], // Dernier chemin calculé
   lastTarget: null, // Dernière cible utilisée pour le pathfinding
@@ -111,7 +111,8 @@ const maxSize = 50; // Taille maximale (en pixels)
 const initialCreature = {
   x: Math.floor(gridSize / 2),
   y: Math.floor(gridSize / 2),
-  ...creatureType
+  ...creatureType,
+  lastBubbleTime: 0
 };
 creatures.push(initialCreature);
 activeSpecies.add(speciesTypes[0].name); // Ajouter l'espèce initiale à la légende
@@ -164,7 +165,8 @@ window.respawnCreature = () => {
     const newCreature = {
       x: Math.floor(gridSize / 2),
       y: Math.floor(gridSize / 2),
-      ...creatureType
+      ...creatureType,
+      lastBubbleTime: 0
     };
     creatures.push(newCreature);
     activeSpecies.add(newCreature.species.name); // Mettre à jour la légende
@@ -274,50 +276,10 @@ function showBubble(entityType, message, entity) {
   }, 5000);
 }
 
-// Afficher le menu de création d'espèce
-window.showCreateSpeciesMenu = () => {
-  document.getElementById('createSpeciesMenu').style.display = 'block';
-};
-
-// Fermer le menu de création d'espèce
-window.closeCreateSpeciesMenu = () => {
-  document.getElementById('createSpeciesMenu').style.display = 'none';
-};
-
-// Créer une nouvelle espèce
-window.createNewSpecies = () => {
-  const name = document.getElementById('speciesName').value || 'Nouvelle Espèce';
-  const shape = document.getElementById('speciesShape').value;
-  const color = document.getElementById('speciesColor').value;
-  const tentacleCount = parseInt(document.getElementById('tentacleCount').value);
-
-  const newSpecies = {
-    name: name,
-    shape: shape,
-    color: [color, color, color, color, color, color], // Palette simple
-    tentacleCount: tentacleCount,
-    traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 },
-    foodValue: shape === 'circle' ? 1 : shape === 'hexagon' ? 2 : 3 // Valeur de nourriture selon la forme
-  };
-
-  speciesTypes.push(newSpecies);
-  activeSpecies.add(newSpecies.name);
-  updateSpeciesLegend();
-
-  // Introduire la nouvelle espèce immédiatement
-  creatures.forEach(creature => {
-    if (Math.random() < 0.3) { // 30% de chances pour chaque créature de devenir la nouvelle espèce
-      const currentSpeciesCount = creatures.filter(c => c.species.name === newSpecies.name && c.size < maxSize).length;
-      if (currentSpeciesCount < maxCreaturesPerSpecies) {
-        creature.species = newSpecies;
-        creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
-        creature.traits = { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 };
-      }
-    }
-  });
-
-  closeCreateSpeciesMenu();
-};
+// Afficher un message de limite dans la console
+function showLimitMessage(message) {
+  console.log(message);
+}
 
 // Mettre à jour la légende des espèces
 function updateSpeciesLegend() {
@@ -696,23 +658,6 @@ function draw() {
       ctx.stroke();
     }
 
-    // Ajouter un indicateur visuel si la créature demande de la nourriture
-    if (creature.isRequestingFood) {
-      ctx.strokeStyle = '#FF0000';
-      ctx.lineWidth = 2;
-      if (creature.species.shape === 'circle') {
-        ctx.beginPath();
-        ctx.arc(x + waveEffect, y, size + 5, 0, Math.PI * 2);
-        ctx.stroke();
-      } else if (creature.species.shape === 'hexagon') {
-        drawHexagon(x + waveEffect, y, size + 5);
-        ctx.stroke();
-      } else if (creature.species.shape === 'triangle') {
-        drawTriangle(x + waveEffect, y, size + 5);
-        ctx.stroke();
-      }
-    }
-
     // Tentacules (selon l'espèce et les traits)
     const tentacleLength = size * 0.8 * (1 + creature.traits.detectionBonus * 0.5); // Plus long si détection augmentée
     const tentacleOffset = size * 0.5;
@@ -822,6 +767,10 @@ function gameLoop() {
   if (!humansSpawned && creatures.length >= humansSpawnThreshold) {
     generateHumans();
     humansSpawned = true;
+    humans.forEach(human => {
+      const message = humanIntroMessages[Math.floor(Math.random() * humanIntroMessages.length)];
+      showBubble('human', message, human);
+    });
   }
 
   // Gérer les humains (si présents)
@@ -891,16 +840,27 @@ function gameLoop() {
     const speedFactor = 1 + creature.traits.speedBonus * 0.5; // Bonus de vitesse
     creature.moveCooldown = Math.max(0, creature.moveCooldown - speedFactor); // Décrémentation ajustée
 
-    // Système de demande de nourriture si affamée (pas mangé depuis 15 secondes)
-    if (!creature.lastFoodRequest) creature.lastFoodRequest = 0;
-    creature.lastFoodRequest++;
-    if (creature.lastFoodRequest > 450 && foodItems.length === 0) { // 15 secondes à 30 FPS
-      showFoodRequest(`Créature (Gen ${creature.generation}) demande de la nourriture !`);
-      creature.isRequestingFood = true;
-      creature.lastFoodRequest = 0; // Réinitialiser le compteur
-      setTimeout(() => {
-        creature.isRequestingFood = false;
-      }, 5000); // Correspond à la durée de la bulle
+    // Système de messages amusants pour inciter à ajouter de la nourriture (toutes les 15 secondes)
+    creature.lastBubbleTime++;
+    if (creature.lastBubbleTime > 450) { // 15 secondes à 30 FPS
+      let message;
+      // Vérifier si le chemin est bloqué
+      let pathToFood = [];
+      if (foodItems.length > 0) {
+        pathToFood = findPath(creature, foodItems, gridSize, walls);
+      }
+      const isPathBlocked = foodItems.length > 0 && pathToFood.length === 0;
+
+      if (isPathBlocked) {
+        message = blockedMessages[Math.floor(Math.random() * blockedMessages.length)];
+      } else if (humans.length > 0) {
+        message = humanPresentMessages[Math.floor(Math.random() * humanPresentMessages.length)];
+      } else {
+        message = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+      }
+
+      showBubble('creature', message, creature);
+      creature.lastBubbleTime = 0; // Réinitialiser le compteur
     }
 
     // Mouvement aléatoire si pas d'action (errance)
@@ -1084,8 +1044,6 @@ function gameLoop() {
       if (foodIndex !== -1) {
         creature.foodEaten += 1; // Incrémenter le compteur de nourriture consommée
         foodItems.splice(foodIndex, 1);
-        creature.lastFoodRequest = 0; // Réinitialiser le compteur de demande
-        creature.isRequestingFood = false; // Arrêter l'indicateur visuel
 
         // Croissance après avoir mangé 2 unités de nourriture
         if (!creature.isAdult && creature.foodEaten >= 2) {
@@ -1106,11 +1064,11 @@ function gameLoop() {
           const predatorCount = creatures.filter(c => c.size >= maxSize).length;
 
           if (speciesCount >= maxCreaturesPerSpecies) {
-            showFoodRequest(`Limite de ${maxCreaturesPerSpecies} créatures atteinte pour l'espèce ${creature.species.name} !`);
+            showLimitMessage(`Limite de ${maxCreaturesPerSpecies} créatures atteinte pour l'espèce ${creature.species.name} !`);
             return;
           }
           if (predatorCount >= maxPredators && creature.size >= maxSize) {
-            showFoodRequest(`Limite de ${maxPredators} prédateurs atteinte !`);
+            showLimitMessage(`Limite de ${maxPredators} prédateurs atteinte !`);
             return;
           }
 
@@ -1120,7 +1078,7 @@ function gameLoop() {
           // Vérifier la limite pour la nouvelle espèce
           const newSpeciesCount = creatures.filter(c => c.species.name === newSpecies.name && c.size < maxSize).length;
           if (newSpeciesCount >= maxCreaturesPerSpecies) {
-            showFoodRequest(`Limite de ${maxCreaturesPerSpecies} créatures atteinte pour l'espèce ${newSpecies.name} !`);
+            showLimitMessage(`Limite de ${maxCreaturesPerSpecies} créatures atteinte pour l'espèce ${newSpecies.name} !`);
             return;
           }
 
@@ -1130,13 +1088,14 @@ function gameLoop() {
             ...creatureType,
             species: newSpecies, // Hérite ou mute
             color: newSpecies.color[Math.min(creature.generation + 1, newSpecies.color.length - 1)],
-            foodEaten: 0, // Nouvelle créature commence avec 0 nourriture consommée
-            isOriginal: false, // Marquer comme duplicata
-            isAdult: false, // Commence comme bébé
-            floatOffset: Math.random() * 10, // Offset de flottement aléatoire
-            generation: creature.generation + 1, // Incrémenter la génération
+            foodEaten: 0,
+            isOriginal: false,
+            isAdult: false,
+            floatOffset: Math.random() * 10,
+            generation: creature.generation + 1,
             wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 },
-            traits: { ...creature.traits } // Hériter des traits du parent
+            traits: { ...creature.traits },
+            lastBubbleTime: 0
           };
 
           // Évolution des traits
