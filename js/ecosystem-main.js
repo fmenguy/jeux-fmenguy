@@ -18,6 +18,8 @@ let walls = []; // Liste des murs
 let particles = []; // Liste des particules
 let bloomZone = null; // Zone de bloom de nourriture
 let stormActive = false; // État de la tempête
+let humans = []; // Liste des humains
+let currentMap = 'aquatic'; // Map par défaut
 
 // Données pour la courbe (stocke tout depuis le début)
 const statsHistory = { creatures: [], food: [] };
@@ -42,13 +44,88 @@ window.updateSpeed = (value) => {
   baseCooldown = parseInt(value);
 };
 
-// Générer des algues comme abris
+// Changer de map
+window.changeMap = (mapType) => {
+  currentMap = mapType;
+  canvas.className = mapType; // Appliquer la classe pour le style
+  resetGame(); // Réinitialiser le jeu pour la nouvelle map
+};
+
+// Réinitialiser le jeu pour une nouvelle map
+function resetGame() {
+  creatures = [];
+  foodItems = [];
+  walls = [];
+  algae = [];
+  humans = [];
+  bloomZone = null;
+  stormActive = false;
+  frameCount = 0;
+  activeSpecies.clear();
+
+  // Générer des algues pour la map aquatique
+  if (currentMap === 'aquatic') {
+    generateAlgae();
+  }
+
+  // Ajouter une créature initiale
+  const initialCreature = {
+    x: Math.floor(gridSize / 2),
+    y: currentMap === 'aquatic' ? Math.floor(gridSize / 2) : gridSize - 1, // Placer dans l'eau pour la map terrestre
+    species: speciesTypes[0],
+    color: speciesTypes[0].color[0],
+    size: 15,
+    speed: 1,
+    foodEaten: 0,
+    lifespan: 1800,
+    isOriginal: true,
+    isAdult: true,
+    floatOffset: 0,
+    moveCooldown: 0,
+    generation: 0,
+    isPredator: false,
+    lastFoodRequest: 0,
+    isRequestingFood: false,
+    wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 },
+    lastPath: [],
+    lastTarget: null,
+    traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }
+  };
+  creatures.push(initialCreature);
+  activeSpecies.add(speciesTypes[0].name);
+
+  // Générer des humains pour la map terrestre
+  if (currentMap === 'terrestrial') {
+    generateHumans();
+  }
+
+  updateSpeciesLegend();
+  updateCounts();
+}
+
+// Générer des algues comme abris (pour la map aquatique)
 function generateAlgae() {
   const numAlgae = 5; // Nombre d'algues
   for (let i = 0; i < numAlgae; i++) {
     algae.push({
       x: Math.floor(Math.random() * gridSize),
       y: Math.floor(Math.random() * gridSize)
+    });
+  }
+}
+
+// Générer des humains (pour la map terrestre)
+function generateHumans() {
+  const numHumans = 3; // Nombre d'humains
+  for (let i = 0; i < numHumans; i++) {
+    humans.push({
+      x: i * (gridSize / numHumans),
+      y: 1, // Sur la terre (en haut)
+      gender: Math.random() < 0.5 ? 'male' : 'female',
+      direction: Math.random() < 0.5 ? 1 : -1, // Déplacement horizontal
+      fishing: false,
+      fishingCooldown: 0,
+      foodCollected: 0
     });
   }
 }
@@ -121,7 +198,7 @@ window.addFood = (isKeyboard = false) => {
     for (let i = 0; i < foodCount; i++) {
       const food = {
         x: Math.floor(Math.random() * gridSize),
-        y: Math.floor(Math.random() * gridSize),
+        y: currentMap === 'terrestrial' ? Math.floor(Math.random() * (gridSize - 4)) + 4 : Math.floor(Math.random() * gridSize), // Dans l'eau pour la map terrestre
         energy: 50
       };
       foodItems.push(food);
@@ -142,7 +219,7 @@ window.respawnCreature = () => {
   if (creatures.length === 0) {
     const newCreature = {
       x: Math.floor(gridSize / 2),
-      y: Math.floor(gridSize / 2),
+      y: currentMap === 'terrestrial' ? gridSize - 1 : Math.floor(gridSize / 2),
       ...creatureType
     };
     creatures.push(newCreature);
@@ -160,7 +237,7 @@ window.toggleAddWallMode = () => {
   button.style.backgroundColor = addWallMode ? '#FF4500' : '#1E3A8A'; // Rouge si actif, bleu sinon
 };
 
-// Ajouter un mur avec la souris
+// Ajouter un mur avec le clic gauche
 canvas.addEventListener('click', (event) => {
   if (!addWallMode) return;
 
@@ -173,6 +250,22 @@ canvas.addEventListener('click', (event) => {
   // Vérifier si la position est déjà occupée par un mur
   if (!walls.some(wall => wall.x === gridX && wall.y === gridY)) {
     walls.push({ x: gridX, y: gridY });
+  }
+});
+
+// Supprimer un mur avec le clic droit
+canvas.addEventListener('contextmenu', (event) => {
+  event.preventDefault(); // Empêcher le menu contextuel par défaut
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  const gridX = Math.floor(x / tileSize);
+  const gridY = Math.floor(y / tileSize);
+
+  // Vérifier si la position contient un mur
+  const wallIndex = walls.findIndex(wall => wall.x === gridX && wall.y === gridY);
+  if (wallIndex !== -1) {
+    walls.splice(wallIndex, 1); // Supprimer le mur
   }
 });
 
@@ -257,6 +350,22 @@ function updateSpeciesLegend() {
   predatorItem.appendChild(predatorSpan);
   speciesListDiv.appendChild(predatorItem);
 
+  // Compteur des humains (pour la map terrestre)
+  if (currentMap === 'terrestrial') {
+    const humanCount = humans.length;
+    const humanFood = humans.reduce((sum, human) => sum + human.foodCollected, 0);
+    const humanItem = document.createElement('div');
+    humanItem.className = 'species-item';
+    const humanColorDiv = document.createElement('div');
+    humanColorDiv.className = 'species-color';
+    humanColorDiv.style.backgroundColor = '#FFD700'; // Jaune pour représenter les humains
+    const humanSpan = document.createElement('span');
+    humanSpan.textContent = `Humains: ${humanCount} (Nourriture: ${humanFood})`;
+    humanItem.appendChild(humanColorDiv);
+    humanItem.appendChild(humanSpan);
+    speciesListDiv.appendChild(humanItem);
+  }
+
   // Compteur par espèce
   activeSpecies.forEach(speciesName => {
     const species = speciesTypes.find(s => s.name === speciesName);
@@ -317,6 +426,11 @@ function updateCounts() {
     foodItems.forEach(food => {
       food.x = Math.min(food.x, gridSize - 1);
       food.y = Math.min(food.y, gridSize - 1);
+    });
+
+    // Repositionner les humains
+    humans.forEach(human => {
+      human.x = Math.min(human.x, gridSize - 1);
     });
   }
 }
@@ -433,10 +547,17 @@ function drawTriangle(cx, cy, size) {
 
 // Dessiner le jeu
 function draw() {
-  // Créer un dégradé pour le fond (bleu sombre à bleu moyen)
+  // Créer un dégradé pour le fond
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, '#0D1B2A'); // Bleu très sombre (haut)
-  gradient.addColorStop(1, '#1B263B'); // Bleu sombre (bas)
+  if (currentMap === 'aquatic') {
+    gradient.addColorStop(0, '#0D1B2A'); // Bleu très sombre (haut)
+    gradient.addColorStop(1, '#1B263B'); // Bleu sombre (bas)
+  } else {
+    gradient.addColorStop(0, '#8B4513'); // Terre (brun) en haut
+    gradient.addColorStop(0.2, '#8B4513');
+    gradient.addColorStop(0.2, '#0D1B2A'); // Eau (bleu) en bas
+    gradient.addColorStop(1, '#1B263B');
+  }
 
   // Effacer le canvas avec le dégradé
   ctx.fillStyle = gradient;
@@ -475,14 +596,16 @@ function draw() {
     }
   });
 
-  // Dessiner les algues (carrés verts pour représenter les abris)
-  algae.forEach(alga => {
-    const pulse = 1 + Math.sin(frameCount * 0.05) * 0.1; // Effet de pulsation
-    ctx.fillStyle = '#2E7D32'; // Vert foncé pour les algues
-    ctx.globalAlpha = pulse;
-    ctx.fillRect(alga.x * tileSize, alga.y * tileSize, tileSize, tileSize);
-    ctx.globalAlpha = 1; // Réinitialiser l'opacité
-  });
+  // Dessiner les algues (carrés verts pour représenter les abris) - uniquement pour la map aquatique
+  if (currentMap === 'aquatic') {
+    algae.forEach(alga => {
+      const pulse = 1 + Math.sin(frameCount * 0.05) * 0.1; // Effet de pulsation
+      ctx.fillStyle = '#2E7D32'; // Vert foncé pour les algues
+      ctx.globalAlpha = pulse;
+      ctx.fillRect(alga.x * tileSize, alga.y * tileSize, tileSize, tileSize);
+      ctx.globalAlpha = 1; // Réinitialiser l'opacité
+    });
+  }
 
   // Dessiner les murs
   walls.forEach(wall => {
@@ -661,6 +784,30 @@ function draw() {
     ctx.textAlign = 'center';
     ctx.fillText(`${remainingSeconds}s`, x + waveEffect, y - size - 10);
   });
+
+  // Dessiner les humains et leurs lignes de pêche (pour la map terrestre)
+  if (currentMap === 'terrestrial') {
+    humans.forEach(human => {
+      const x = human.x * tileSize + tileSize / 2;
+      const y = human.y * tileSize + tileSize / 2;
+
+      // Dessiner l'humain
+      ctx.fillStyle = human.gender === 'male' ? '#FFD700' : '#FF69B4';
+      ctx.fillRect(x - 10, y - 10, 20, 20);
+
+      // Dessiner la ligne de pêche si en train de pêcher
+      if (human.fishing) {
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, canvas.height - tileSize); // Ligne jusqu'au bas de l'eau
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  }
 }
 
 // Boucle de jeu
@@ -671,7 +818,7 @@ function gameLoop() {
   if (frameCount % 3600 === 0) { // 2 minutes (3600 ticks à 30 FPS)
     bloomZone = {
       x: Math.floor(Math.random() * gridSize),
-      y: Math.floor(Math.random() * gridSize)
+      y: currentMap === 'terrestrial' ? Math.floor(Math.random() * (gridSize - 4)) + 4 : Math.floor(Math.random() * gridSize), // Dans l'eau pour la map terrestre
     };
     window.addFood(); // Ajouter de la nourriture dans la zone de bloom
     setTimeout(() => {
@@ -697,6 +844,51 @@ function gameLoop() {
         creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
         activeSpecies.add(newSpecies.name); // Mettre à jour la légende
         updateSpeciesLegend();
+      }
+    });
+  }
+
+  // Gérer les humains (pour la map terrestre)
+  if (currentMap === 'terrestrial') {
+    humans.forEach(human => {
+      // Déplacement horizontal
+      human.x += human.direction * 0.1;
+      if (human.x <= 0 || human.x >= gridSize - 1) {
+        human.direction *= -1; // Inverser la direction
+      }
+
+      // Gestion de la pêche
+      if (human.fishingCooldown > 0) {
+        human.fishingCooldown--;
+      } else {
+        if (!human.fishing) {
+          human.fishing = true;
+          human.fishingCooldown = 300; // Pêche pendant 10 secondes
+        } else {
+          human.fishing = false;
+          human.fishingCooldown = 150; // Attendre 5 secondes avant de repêcher
+        }
+      }
+
+      // Pêcher une créature si elle est à proximité
+      if (human.fishing) {
+        const humanPixelX = human.x * tileSize + tileSize / 2;
+        const humanPixelY = human.y * tileSize + tileSize / 2;
+        const fishingRange = 2 * tileSize; // Portée de la ligne de pêche
+
+        for (let i = creatures.length - 1; i >= 0; i--) {
+          const creature = creatures[i];
+          const creaturePixelX = creature.x * tileSize + tileSize / 2;
+          const creaturePixelY = creature.y * tileSize + tileSize / 2;
+          const distance = Math.sqrt((humanPixelX - creaturePixelX) ** 2 + (humanPixelY - creaturePixelY) ** 2);
+
+          if (distance <= fishingRange && creature.y > gridSize * 0.2 / tileSize) { // Créature dans l'eau
+            creatures.splice(i, 1); // Supprimer la créature
+            human.foodCollected += 1; // Ajouter de la nourriture à l'humain
+            updateSpeciesLegend();
+            break; // Pêcher une seule créature à la fois
+          }
+        }
       }
     });
   }
@@ -745,6 +937,7 @@ function gameLoop() {
         if (
           newX >= 0 && newX < gridSize &&
           newY >= 0 && newY < gridSize &&
+          (currentMap !== 'terrestrial' || newY > gridSize * 0.2 / tileSize) && // Rester dans l'eau pour la map terrestre
           !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
           !walls.some(wall => wall.x === newX && wall.y === newY)
         ) {
@@ -805,8 +998,8 @@ function gameLoop() {
       });
     }
 
-    // IA pour se cacher sous les algues si un prédateur est à proximité
-    if (!creature.isPredator && creature.moveCooldown <= 0) {
+    // IA pour se cacher sous les algues si un prédateur est à proximité (map aquatique uniquement)
+    if (!creature.isPredator && creature.moveCooldown <= 0 && currentMap === 'aquatic') {
       const detectionRange = stormActive ? 2 : 5; // Réduire la portée pendant une tempête
       const nearestPredator = creatures.find(c => c.isPredator && c.size > creature.size);
       if (nearestPredator) {
@@ -868,8 +1061,8 @@ function gameLoop() {
         const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult && c.size < creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < detectionRange + creature.traits.detectionBonus) : null;
         const targetCreature = nearestSmall || nearestAdult;
         if (targetCreature) {
-          // Ne pas attaquer si la cible est sous une algue
-          const isTargetUnderAlgae = algae.some(alga => Math.round(targetCreature.x) === alga.x && Math.round(targetCreature.y) === alga.y);
+          // Ne pas attaquer si la cible est sous une algue (map aquatique)
+          const isTargetUnderAlgae = currentMap === 'aquatic' && algae.some(alga => Math.round(targetCreature.x) === alga.x && Math.round(targetCreature.y) === alga.y);
           if (isTargetUnderAlgae) return; // Ne pas attaquer si la cible est protégée
 
           const path = findPath(creature, [{ x: Math.round(targetCreature.x), y: Math.round(targetCreature.y) }], gridSize, walls);
@@ -931,7 +1124,7 @@ function gameLoop() {
           const newSpecies = Math.random() < 0.1 ? speciesTypes[Math.floor(Math.random() * speciesTypes.length)] : creature.species; // 10% de chance de muter
           const newCreature = {
             x: newPosition.x,
-            y: newPosition.y,
+            y: currentMap === 'terrestrial' && newPosition.y <= gridSize * 0.2 / tileSize ? gridSize - 1 : newPosition.y, // Forcer dans l'eau pour la map terrestre
             ...creatureType,
             species: newSpecies, // Hérite ou mute
             color: newSpecies.color[Math.min(creature.generation + 1, newSpecies.color.length - 1)],
@@ -996,7 +1189,7 @@ function drawStatsCurve() {
   for (let i = 0; i <= numTicksY; i++) {
     const value = (i / numTicksY) * maxValue;
     const y = (statsCanvas.height - axisYOffset) - (i / numTicksY) * (statsCanvas.height - axisYOffset - 10);
-    statsCtx.fillText(Math.round(value), axisXOffset - 5, y);
+statsCtx.fillText(Math.round(value), axisXOffset - 5, y);
   }
 
   // Dessiner l'axe X (abscisse) en bas
@@ -1055,8 +1248,4 @@ function drawStatsCurve() {
   statsCtx.fillStyle = '#FF4500';
   statsCtx.fillRect(160, 15, 20, 10);
 }
-
-// Lancer le jeu
-setInterval(gameLoop, 1000 / 30); // 30 FPS
-draw();
-updateCounts();
+    
