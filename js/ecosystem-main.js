@@ -18,8 +18,6 @@ let walls = []; // Liste des murs
 let particles = []; // Liste des particules
 let bloomZone = null; // Zone de bloom de nourriture
 let stormActive = false; // État de la tempête
-let humans = []; // Liste des humains
-let humansSpawned = false; // Indicateur pour l'apparition des humains
 
 // Données pour la courbe (stocke tout depuis le début)
 const statsHistory = { creatures: [], food: [] };
@@ -36,7 +34,6 @@ let activeSpecies = new Set();
 // Limites de créatures
 const maxCreaturesPerSpecies = 100; // 100 créatures max par espèce (non prédateurs)
 const maxPredators = 50; // 50 prédateurs max
-const humansSpawnThreshold = 50; // Seuil pour l'apparition des humains
 
 // Score du joueur
 let score = 0;
@@ -55,24 +52,6 @@ function generateAlgae() {
       y: Math.floor(Math.random() * gridSize)
     });
   }
-}
-
-// Générer des humains (quand l'écosystème est développé)
-function generateHumans() {
-  const numHumans = 3; // Nombre d'humains
-  for (let i = 0; i < numHumans; i++) {
-    humans.push({
-      x: i * (gridSize / numHumans),
-      y: 1, // Sur la terre (en haut)
-      gender: Math.random() < 0.5 ? 'male' : 'female',
-      direction: Math.random() < 0.5 ? 1 : -1, // Déplacement horizontal
-      fishing: false,
-      fishingCooldown: 0,
-      foodCollected: 0,
-      lastBubbleTime: 0
-    });
-  }
-  canvas.className = 'humans-present'; // Appliquer la classe pour le style de la map
 }
 generateAlgae(); // Appeler pour générer les algues au démarrage
 
@@ -128,10 +107,13 @@ window.addFood = (isKeyboard = false) => {
   if (bloomZone) {
     // Ajouter de la nourriture dans la zone de bloom
     for (let i = 0; i < foodCount; i++) {
-      const offsetX = Math.floor(Math.random() * 5) - 2; // ±2 cases autour du centre
-      const offsetY = Math.floor(Math.random() * 5) - 2;
-      const foodX = Math.min(Math.max(bloomZone.x + offsetX, 0), gridSize - 1);
-      const foodY = Math.min(Math.max(bloomZone.y + offsetY, 0), gridSize - 1);
+      let foodX, foodY;
+      do {
+        const offsetX = Math.floor(Math.random() * 5) - 2; // ±2 cases autour du centre
+        const offsetY = Math.floor(Math.random() * 5) - 2;
+        foodX = Math.min(Math.max(bloomZone.x + offsetX, 0), gridSize - 1);
+        foodY = Math.min(Math.max(bloomZone.y + offsetY, 0), gridSize - 1);
+      } while (walls.some(wall => wall.x === foodX && wall.y === foodY)); // Vérifier que la position est libre
       foodItems.push({
         x: foodX,
         y: foodY,
@@ -141,12 +123,16 @@ window.addFood = (isKeyboard = false) => {
   } else {
     // Ajout normal
     for (let i = 0; i < foodCount; i++) {
-      const food = {
-        x: Math.floor(Math.random() * gridSize),
-        y: Math.floor(Math.random() * gridSize),
+      let foodX, foodY;
+      do {
+        foodX = Math.floor(Math.random() * gridSize);
+        foodY = Math.floor(Math.random() * gridSize);
+      } while (walls.some(wall => wall.x === foodX && wall.y === foodY)); // Vérifier que la position est libre
+      foodItems.push({
+        x: foodX,
+        y: foodY,
         energy: 50
-      };
-      foodItems.push(food);
+      });
     }
   }
   updateCounts();
@@ -235,20 +221,6 @@ const blockedMessages = [
   "Ce mur est une vraie barrière à mon repas, peux-tu m’aider ?"
 ];
 
-// Messages des créatures après l'apparition des humains
-const humanPresentMessages = [
-  "Les humains sont là… J’espère qu’ils ne me pêcheront pas avant que j’aie mangé !",
-  "Ces humains me regardent bizarrement, vite, donne-moi de la nourriture pour que je me cache !",
-  "Je sens une canne à pêche… Un peu de nourriture pour me donner des forces ?"
-];
-
-// Messages initiaux des humains
-const humanIntroMessages = [
-  "On est là pour pêcher, préparez-vous, les poissons !",
-  "Mmmh, ça sent le poisson frais par ici… On va se régaler !",
-  "Les cannes à pêche sont prêtes, qui sera notre premier repas ?"
-];
-
 // Afficher un message dans une bulle
 function showBubble(entityType, message, entity) {
   const requestsDiv = document.getElementById('foodRequests');
@@ -257,16 +229,11 @@ function showBubble(entityType, message, entity) {
 
   bubble.textContent = message;
 
-  // Positionner la bulle différemment selon le type d'entité
+  // Positionner la bulle
   const side = requestSide;
   requestSide = requestSide === 'left' ? 'right' : 'left'; // Alterner pour la prochaine bulle
-  if (entityType === 'human') {
-    bubble.style[side] = '20px';
-    bubble.style.top = '50px'; // Bulles des humains en haut
-  } else {
-    bubble.style[side] = '20px';
-    bubble.style.top = `${Math.random() * (window.innerHeight - 150) + 100}px`; // Bulles des créatures plus bas
-  }
+  bubble.style[side] = '20px';
+  bubble.style.top = `${Math.random() * (window.innerHeight - 150) + 100}px`; // Bulles des créatures
 
   requestsDiv.appendChild(bubble);
 
@@ -280,6 +247,51 @@ function showBubble(entityType, message, entity) {
 function showLimitMessage(message) {
   console.log(message);
 }
+
+// Afficher le menu de création d'espèce
+window.showCreateSpeciesMenu = () => {
+  document.getElementById('createSpeciesMenu').style.display = 'block';
+};
+
+// Fermer le menu de création d'espèce
+window.closeCreateSpeciesMenu = () => {
+  document.getElementById('createSpeciesMenu').style.display = 'none';
+};
+
+// Créer une nouvelle espèce
+window.createNewSpecies = () => {
+  const name = document.getElementById('speciesName').value || 'Nouvelle Espèce';
+  const shape = document.getElementById('speciesShape').value;
+  const color = document.getElementById('speciesColor').value;
+  const tentacleCount = parseInt(document.getElementById('tentacleCount').value);
+
+  const newSpecies = {
+    name: name,
+    shape: shape,
+    color: [color, color, color, color, color, color], // Palette simple
+    tentacleCount: tentacleCount,
+    traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 },
+    foodValue: shape === 'circle' ? 1 : shape === 'hexagon' ? 2 : 3 // Valeur de nourriture selon la forme
+  };
+
+  speciesTypes.push(newSpecies);
+  activeSpecies.add(newSpecies.name);
+  updateSpeciesLegend();
+
+  // Introduire la nouvelle espèce immédiatement
+  creatures.forEach(creature => {
+    if (Math.random() < 0.3) { // 30% de chances pour chaque créature de devenir la nouvelle espèce
+      const currentSpeciesCount = creatures.filter(c => c.species.name === newSpecies.name && c.size < maxSize).length;
+      if (currentSpeciesCount < maxCreaturesPerSpecies) {
+        creature.species = newSpecies;
+        creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
+        creature.traits = { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 };
+      }
+    }
+  });
+
+  window.closeCreateSpeciesMenu();
+};
 
 // Mettre à jour la légende des espèces
 function updateSpeciesLegend() {
@@ -298,22 +310,6 @@ function updateSpeciesLegend() {
   predatorItem.appendChild(predatorColorDiv);
   predatorItem.appendChild(predatorSpan);
   speciesListDiv.appendChild(predatorItem);
-
-  // Compteur des humains (si présents)
-  if (humans.length > 0) {
-    const humanCount = humans.length;
-    const humanFood = humans.reduce((sum, human) => sum + human.foodCollected, 0);
-    const humanItem = document.createElement('div');
-    humanItem.className = 'species-item';
-    const humanColorDiv = document.createElement('div');
-    humanColorDiv.className = 'species-color';
-    humanColorDiv.style.backgroundColor = '#FFD700'; // Jaune pour représenter les humains
-    const humanSpan = document.createElement('span');
-    humanSpan.textContent = `Humains: ${humanCount} (Nourriture: ${humanFood})`;
-    humanItem.appendChild(humanColorDiv);
-    humanItem.appendChild(humanSpan);
-    speciesListDiv.appendChild(humanItem);
-  }
 
   // Compteur par espèce
   activeSpecies.forEach(speciesName => {
@@ -381,7 +377,6 @@ function findFreePosition(x, y) {
     if (
       newX >= 0 && newX < gridSize &&
       newY >= 0 && newY < gridSize &&
-      (humans.length === 0 || newY > gridSize * 0.2 / tileSize) && // Rester dans l'eau si les humains sont présents
       !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
       !walls.some(wall => wall.x === newX && wall.y === newY)
     ) {
@@ -477,15 +472,8 @@ function drawTriangle(cx, cy, size) {
 function draw() {
   // Créer un dégradé pour le fond
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  if (humans.length === 0) {
-    gradient.addColorStop(0, '#0D1B2A'); // Bleu très sombre (haut)
-    gradient.addColorStop(1, '#1B263B'); // Bleu sombre (bas)
-  } else {
-    gradient.addColorStop(0, '#8B4513'); // Terre (brun) en haut
-    gradient.addColorStop(0.2, '#8B4513');
-    gradient.addColorStop(0.2, '#0D1B2A'); // Eau (bleu) en bas
-    gradient.addColorStop(1, '#1B263B');
-  }
+  gradient.addColorStop(0, '#0D1B2A'); // Bleu très sombre (haut)
+  gradient.addColorStop(1, '#1B263B'); // Bleu sombre (bas)
 
   // Effacer le canvas avec le dégradé
   ctx.fillStyle = gradient;
@@ -693,30 +681,6 @@ function draw() {
     ctx.textAlign = 'center';
     ctx.fillText(`${remainingSeconds}s`, x + waveEffect, y - size - 10);
   });
-
-  // Dessiner les humains et leurs lignes de pêche (si présents)
-  if (humans.length > 0) {
-    humans.forEach(human => {
-      const x = human.x * tileSize + tileSize / 2;
-      const y = human.y * tileSize + tileSize / 2;
-
-      // Dessiner l'humain
-      ctx.fillStyle = human.gender === 'male' ? '#FFD700' : '#FF69B4';
-      ctx.fillRect(x - 10, y - 10, 20, 20);
-
-      // Dessiner la ligne de pêche si en train de pêcher
-      if (human.fishing) {
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([2, 2]);
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x, canvas.height - tileSize); // Ligne jusqu'au bas de l'eau
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    });
-  }
 }
 
 // Boucle de jeu
@@ -727,7 +691,7 @@ function gameLoop() {
   if (frameCount % 3600 === 0) { // 2 minutes (3600 ticks à 30 FPS)
     bloomZone = {
       x: Math.floor(Math.random() * gridSize),
-      y: humans.length > 0 ? Math.floor(Math.random() * (gridSize - 4)) + 4 : Math.floor(Math.random() * gridSize), // Dans l'eau si humains présents
+      y: Math.floor(Math.random() * gridSize),
     };
     window.addFood(); // Ajouter de la nourriture dans la zone de bloom
     setTimeout(() => {
@@ -763,71 +727,6 @@ function gameLoop() {
     }
   }
 
-  // Apparition des humains lorsque l'écosystème est développé
-  if (!humansSpawned && creatures.length >= humansSpawnThreshold) {
-    generateHumans();
-    humansSpawned = true;
-    humans.forEach(human => {
-      const message = humanIntroMessages[Math.floor(Math.random() * humanIntroMessages.length)];
-      showBubble('human', message, human);
-    });
-  }
-
-  // Gérer les humains (si présents)
-  if (humans.length > 0) {
-    humans.forEach(human => {
-      // Déplacement horizontal
-      human.x += human.direction * 0.1;
-      if (human.x <= 0 || human.x >= gridSize - 1) {
-        human.direction *= -1; // Inverser la direction
-      }
-
-      // Gestion de la pêche
-      if (human.fishingCooldown > 0) {
-        human.fishingCooldown--;
-      } else {
-        if (!human.fishing) {
-          human.fishing = true;
-          human.fishingCooldown = 300; // Pêche pendant 10 secondes
-        } else {
-          human.fishing = false;
-          human.fishingCooldown = 150; // Attendre 5 secondes avant de repêcher
-        }
-      }
-
-      // Pêcher une créature de manière aléatoire si elle est à proximité
-      if (human.fishing) {
-        const humanPixelX = human.x * tileSize + tileSize / 2;
-        const humanPixelY = human.y * tileSize + tileSize / 2;
-        const fishingRange = 2 * tileSize; // Portée de la ligne de pêche
-
-        const nearbyCreatures = creatures.filter(creature => {
-          const creaturePixelX = creature.x * tileSize + tileSize / 2;
-          const creaturePixelY = creature.y * tileSize + tileSize / 2;
-          const distance = Math.sqrt((humanPixelX - creaturePixelX) ** 2 + (humanPixelY - creaturePixelY) ** 2);
-          return distance <= fishingRange && creature.y > gridSize * 0.2 / tileSize; // Créature dans l'eau
-        });
-
-        if (nearbyCreatures.length > 0 && Math.random() < 0.05) { // 5% de chance de pêcher par tick
-          const creatureIndex = Math.floor(Math.random() * nearbyCreatures.length);
-          const creature = nearbyCreatures[creatureIndex];
-          const isPredator = creature.size >= maxSize;
-          const catchProbability = isPredator ? 0.3 : 0.7; // Prédateurs plus difficiles à attraper
-
-          if (Math.random() < catchProbability) {
-            const creatureIdx = creatures.indexOf(creature);
-            if (creatureIdx !== -1) {
-              const foodValue = isPredator ? 5 : creature.species.foodValue; // Valeur de nourriture selon l'espèce
-              human.foodCollected += foodValue;
-              creatures.splice(creatureIdx, 1); // Supprimer la créature
-              updateSpeciesLegend();
-            }
-          }
-        }
-      }
-    });
-  }
-
   creatures.forEach(creature => {
     // Ajouter un effet de flottement
     creature.floatOffset = Math.sin(frameCount * 0.05 + creature.x + creature.y) * 5; // Léger mouvement vertical
@@ -853,8 +752,6 @@ function gameLoop() {
 
       if (isPathBlocked) {
         message = blockedMessages[Math.floor(Math.random() * blockedMessages.length)];
-      } else if (humans.length > 0) {
-        message = humanPresentMessages[Math.floor(Math.random() * humanPresentMessages.length)];
       } else {
         message = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
       }
@@ -883,7 +780,6 @@ function gameLoop() {
         if (
           newX >= 0 && newX < gridSize &&
           newY >= 0 && newY < gridSize &&
-          (humans.length === 0 || newY > gridSize * 0.2 / tileSize) && // Rester dans l'eau si humains présents
           !creatures.some(c => Math.round(c.x) === newX && Math.round(c.y) === newY) &&
           !walls.some(wall => wall.x === newX && wall.y === newY)
         ) {
@@ -900,6 +796,16 @@ function gameLoop() {
       }
     }
   });
+
+  // Vérifier si la créature est bloquée par un mur après avoir grossi
+  function checkAndMoveIfBlocked(creature) {
+    const isBlocked = walls.some(wall => wall.x === Math.round(creature.x) && wall.y === Math.round(creature.y));
+    if (isBlocked) {
+      const newPosition = findFreePosition(Math.round(creature.x), Math.round(creature.y));
+      creature.x = newPosition.x;
+      creature.y = newPosition.y;
+    }
+  }
 
   // Supprimer les créatures mortes
   const deadCreatures = creatures.filter(creature => creature.lifespan <= 0);
@@ -938,6 +844,7 @@ function gameLoop() {
           foodItems.splice(index, 1);
           if (creature.size < maxSize) {
             creature.size += 1; // Grossir de 1 pixel (réduit par rapport à 2)
+            checkAndMoveIfBlocked(creature); // Déplacer si bloqué
             creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
           }
         }
@@ -984,6 +891,7 @@ function gameLoop() {
         creature.isPredator = true; // Devenir prédateur
         if (creature.size < maxSize) {
           creature.size += 1; // Grossir de 1 pixel
+          checkAndMoveIfBlocked(creature); // Déplacer si bloqué
           creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
         }
         return;
@@ -997,6 +905,7 @@ function gameLoop() {
           creatures.splice(creatures.indexOf(target), 1);
           if (creature.size < maxSize) {
             creature.size += 1; // Grossir de 1 pixel
+            checkAndMoveIfBlocked(creature); // Déplacer si bloqué
             creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
           }
           return;
@@ -1054,6 +963,7 @@ function gameLoop() {
         if (creature.isAdult) {
           if (creature.size < maxSize) {
             creature.size += 1; // Grossir de 1 pixel (réduit par rapport à 2)
+            checkAndMoveIfBlocked(creature); // Déplacer si bloqué
             creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
           }
         }
@@ -1084,7 +994,7 @@ function gameLoop() {
 
           const newCreature = {
             x: newPosition.x,
-            y: humans.length > 0 && newPosition.y <= gridSize * 0.2 / tileSize ? gridSize - 1 : newPosition.y, // Forcer dans l'eau si humains présents
+            y: newPosition.y,
             ...creatureType,
             species: newSpecies, // Hérite ou mute
             color: newSpecies.color[Math.min(creature.generation + 1, newSpecies.color.length - 1)],

@@ -126,11 +126,6 @@ button:hover:not(:disabled) {
   color: #2E7D32;
 }
 
-.human-bubble {
-  background: rgba(255, 215, 0, 0.9); /* Jaune pâle pour les humains */
-  color: #8B4513; /* Brun pour le texte */
-}
-
 @keyframes fadeOut {
   0% { opacity: 1; }
   80% { opacity: 1; }
@@ -208,27 +203,6 @@ button:hover:not(:disabled) {
 
 #createSpeciesMenu button {
   margin-top: 10px;
-}
-
-/* Style pour la map lorsque les humains apparaissent */
-#gameCanvas.humans-present {
-  background: linear-gradient(to bottom, #8B4513 20%, #0D1B2A 20%);
-}
-
-/* Style pour les humains */
-.human-male {
-  fill: #FFD700; /* Jaune pour les hommes */
-}
-
-.human-female {
-  fill: #FF69B4; /* Rose pour les femmes */
-}
-
-/* Style pour la ligne de pêche */
-.fishing-line {
-  stroke: #FFFFFF;
-  stroke-width: 1;
-  stroke-dasharray: 2, 2;
 }
 
 /* Responsive design pour mobile */
