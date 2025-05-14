@@ -16,6 +16,8 @@ let bubbles = []; // Pour les bulles
 let algae = []; // Liste des abris (algues)
 let walls = []; // Liste des murs
 let particles = []; // Liste des particules
+let bloomZone = null; // Zone de bloom de nourriture
+let stormActive = false; // État de la tempête
 
 // Données pour la courbe (stocke tout depuis le début)
 const statsHistory = { creatures: [], food: [] };
@@ -28,6 +30,12 @@ let addWallMode = false;
 
 // Liste des espèces présentes pour la légende
 let activeSpecies = new Set();
+
+// Limite de créatures
+const maxCreatures = 1000;
+
+// Score du joueur
+let score = 0;
 
 // Mettre à jour baseCooldown avec les boutons radio
 window.updateSpeed = (value) => {
@@ -47,10 +55,10 @@ function generateAlgae() {
 generateAlgae(); // Appeler pour générer les algues au démarrage
 
 // Différentes espèces de méduses
-const speciesTypes = [
-  { name: 'Lunaria', shape: 'circle', color: ['#1E90FF', '#00B7EB', '#00CED1', '#48D1CC', '#87CEEB', '#B0E0E6'], tentacleCount: 3 }, // Bleus luminescents
-  { name: 'Coralix', shape: 'hexagon', color: ['#FF4040', '#FF6347', '#FF7F50', '#FF8C00', '#FFA07A', '#FFDAB9'], tentacleCount: 4 }, // Corail vibrant
-  { name: 'Abyssal', shape: 'triangle', color: ['#2F0047', '#4B0082', '#483D8B', '#6A5ACD', '#7B68EE', '#9370DB'], tentacleCount: 5 } // Tons abyssaux
+let speciesTypes = [
+  { name: 'Lunaria', shape: 'circle', color: ['#1E90FF', '#00B7EB', '#00CED1', '#48D1CC', '#87CEEB', '#B0E0E6'], tentacleCount: 3, speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }, // Bleus luminescents
+  { name: 'Coralix', shape: 'hexagon', color: ['#FF4040', '#FF6347', '#FF7F50', '#FF8C00', '#FFA07A', '#FFDAB9'], tentacleCount: 4, speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }, // Corail vibrant
+  { name: 'Abyssal', shape: 'triangle', color: ['#2F0047', '#4B0082', '#483D8B', '#6A5ACD', '#7B68EE', '#9370DB'], tentacleCount: 5, speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } // Tons abyssaux
 ];
 
 // Type de créature (méduse-like)
@@ -71,7 +79,8 @@ const creatureType = {
   isRequestingFood: false, // Indicateur pour l'affichage visuel
   wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 }, // Direction aléatoire pour le mouvement
   lastPath: [], // Dernier chemin calculé
-  lastTarget: null // Dernière cible utilisée pour le pathfinding
+  lastTarget: null, // Dernière cible utilisée pour le pathfinding
+  traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } // Traits évolutifs
 };
 
 // Taille maximale d'une créature
@@ -88,16 +97,35 @@ activeSpecies.add(speciesTypes[0].name); // Ajouter l'espèce initiale à la lé
 updateSpeciesLegend();
 console.log('Créature initiale ajoutée :', initialCreature); // Debug
 
+// Ajouter de la nourriture
 window.addFood = (isKeyboard = false) => {
   const baseFoodCount = creatures.length >= 100 ? Math.floor(creatures.length / 20) : 1; // Proportionnel au nombre de créatures
   const multiplier = isKeyboard ? 5 : 1; // Ajoute 5x plus de nourriture avec la touche Entrée
-  for (let i = 0; i < baseFoodCount * multiplier; i++) {
-    const food = {
-      x: Math.floor(Math.random() * gridSize),
-      y: Math.floor(Math.random() * gridSize),
-      energy: 50
-    };
-    foodItems.push(food);
+  let foodCount = baseFoodCount * multiplier;
+
+  if (bloomZone) {
+    // Ajouter de la nourriture dans la zone de bloom
+    for (let i = 0; i < foodCount; i++) {
+      const offsetX = Math.floor(Math.random() * 5) - 2; // ±2 cases autour du centre
+      const offsetY = Math.floor(Math.random() * 5) - 2;
+      const foodX = Math.min(Math.max(bloomZone.x + offsetX, 0), gridSize - 1);
+      const foodY = Math.min(Math.max(bloomZone.y + offsetY, 0), gridSize - 1);
+      foodItems.push({
+        x: foodX,
+        y: foodY,
+        energy: 50
+      });
+    }
+  } else {
+    // Ajout normal
+    for (let i = 0; i < foodCount; i++) {
+      const food = {
+        x: Math.floor(Math.random() * gridSize),
+        y: Math.floor(Math.random() * gridSize),
+        energy: 50
+      };
+      foodItems.push(food);
+    }
   }
   updateCounts();
 };
@@ -170,14 +198,72 @@ function showFoodRequest(generation) {
   }, 5000);
 }
 
+// Afficher le menu de création d'espèce
+window.showCreateSpeciesMenu = () => {
+  document.getElementById('createSpeciesMenu').style.display = 'block';
+};
+
+// Fermer le menu de création d'espèce
+window.closeCreateSpeciesMenu = () => {
+  document.getElementById('createSpeciesMenu').style.display = 'none';
+};
+
+// Créer une nouvelle espèce
+window.createNewSpecies = () => {
+  const name = document.getElementById('speciesName').value || 'Nouvelle Espèce';
+  const shape = document.getElementById('speciesShape').value;
+  const color = document.getElementById('speciesColor').value;
+  const tentacleCount = parseInt(document.getElementById('tentacleCount').value);
+
+  const newSpecies = {
+    name: name,
+    shape: shape,
+    color: [color, color, color, color, color, color], // Palette simple
+    tentacleCount: tentacleCount,
+    speedBonus: 0,
+    lifespanBonus: 0,
+    detectionBonus: 0
+  };
+
+  speciesTypes.push(newSpecies);
+  activeSpecies.add(newSpecies.name);
+  updateSpeciesLegend();
+
+  // Introduire la nouvelle espèce immédiatement
+  creatures.forEach(creature => {
+    if (Math.random() < 0.3) { // 30% de chances pour chaque créature de devenir la nouvelle espèce
+      creature.species = newSpecies;
+      creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
+      creature.traits = { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 };
+    }
+  });
+
+  closeCreateSpeciesMenu();
+};
+
 // Mettre à jour la légende des espèces
 function updateSpeciesLegend() {
   const speciesListDiv = document.getElementById('speciesList');
   speciesListDiv.innerHTML = ''; // Vider la légende actuelle
 
+  // Compteur des prédateurs (noirs)
+  const predatorCount = creatures.filter(creature => creature.size >= maxSize).length;
+  const predatorItem = document.createElement('div');
+  predatorItem.className = 'species-item';
+  const predatorColorDiv = document.createElement('div');
+  predatorColorDiv.className = 'species-color';
+  predatorColorDiv.style.backgroundColor = '#000000'; // Noir pour les prédateurs
+  const predatorSpan = document.createElement('span');
+  predatorSpan.textContent = `Prédateurs: ${predatorCount}`;
+  predatorItem.appendChild(predatorColorDiv);
+  predatorItem.appendChild(predatorSpan);
+  speciesListDiv.appendChild(predatorItem);
+
+  // Compteur par espèce
   activeSpecies.forEach(speciesName => {
     const species = speciesTypes.find(s => s.name === speciesName);
     if (species) {
+      const speciesCount = creatures.filter(creature => creature.species.name === speciesName && creature.size < maxSize).length; // Exclure les prédateurs
       const speciesItem = document.createElement('div');
       speciesItem.className = 'species-item';
 
@@ -186,13 +272,20 @@ function updateSpeciesLegend() {
       colorDiv.style.backgroundColor = species.color[0];
 
       const nameSpan = document.createElement('span');
-      nameSpan.textContent = species.name;
+      nameSpan.textContent = `${species.name}: ${speciesCount} (${species.traits.speedBonus > 0 ? '+Vitesse' : ''}${species.traits.lifespanBonus > 0 ? '+Vie' : ''}${species.traits.detectionBonus > 0 ? '+Détection' : ''})`;
 
       speciesItem.appendChild(colorDiv);
       speciesItem.appendChild(nameSpan);
       speciesListDiv.appendChild(speciesItem);
     }
   });
+
+  // Mettre à jour le score
+  const speciesDiversity = activeSpecies.size * 10; // 10 points par espèce
+  const generationScore = creatures.reduce((sum, creature) => sum + creature.generation, 0); // 1 point par génération
+  const predatorScore = predatorCount * 50; // 50 points par prédateur
+  score = speciesDiversity + generationScore + predatorScore;
+  document.getElementById('scoreDisplay').textContent = `Score: ${score}`;
 }
 
 // Mettre à jour les compteurs et l'état du bouton
@@ -205,6 +298,9 @@ function updateCounts() {
   // Ajouter les données à l'historique pour la courbe
   statsHistory.creatures.push(creatures.length);
   statsHistory.food.push(foodItems.length);
+
+  // Mettre à jour la légende
+  updateSpeciesLegend();
 
   // Dessiner la courbe
   drawStatsCurve();
@@ -347,6 +443,20 @@ function draw() {
   // Effacer le canvas avec le dégradé
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Dessiner la zone de bloom si active
+  if (bloomZone) {
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+    ctx.beginPath();
+    ctx.arc(bloomZone.x * tileSize + tileSize / 2, bloomZone.y * tileSize + tileSize / 2, 3 * tileSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Dessiner l'effet de tempête si active
+  if (stormActive) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
   // Générer des bulles aléatoirement (1 chance sur 50 par tick)
   if (Math.random() < 0.02) {
@@ -518,8 +628,8 @@ function draw() {
       }
     }
 
-    // Tentacules (selon l'espèce)
-    const tentacleLength = size * 0.8;
+    // Tentacules (selon l'espèce et les traits)
+    const tentacleLength = size * 0.8 * (1 + creature.traits.detectionBonus * 0.5); // Plus long si détection augmentée
     const tentacleOffset = size * 0.5;
     const animationPhase = Math.sin(frameCount * 0.2); // Animation basée sur frameCount
     const tentacleCount = creature.species.tentacleCount;
@@ -559,6 +669,26 @@ function draw() {
 function gameLoop() {
   frameCount++; // Incrémenter pour l'animation des tentacules et le flottement
 
+  // Événement : Bloom de nourriture toutes les 2 minutes
+  if (frameCount % 3600 === 0) { // 2 minutes (3600 ticks à 30 FPS)
+    bloomZone = {
+      x: Math.floor(Math.random() * gridSize),
+      y: Math.floor(Math.random() * gridSize)
+    };
+    window.addFood(); // Ajouter de la nourriture dans la zone de bloom
+    setTimeout(() => {
+      bloomZone = null;
+    }, 15000); // Bloom dure 15 secondes
+  }
+
+  // Événement : Tempête toutes les 3 minutes
+  if (frameCount % 5400 === 0) { // 3 minutes (5400 ticks à 30 FPS)
+    stormActive = true;
+    setTimeout(() => {
+      stormActive = false;
+    }, 20000); // Tempête dure 20 secondes
+  }
+
   // Introduire de nouvelles espèces après un certain temps
   if (frameCount % 1800 === 0) { // Toutes les 1 minute (1800 ticks à 30 FPS)
     const newSpeciesIndex = Math.floor(frameCount / 1800) % speciesTypes.length;
@@ -580,9 +710,10 @@ function gameLoop() {
     // Réduire la durée de vie
     creature.lifespan -= 1;
 
-    // Ajuster le cooldown de déplacement en fonction de la taille (plus gros = plus lent)
+    // Ajuster le cooldown de déplacement en fonction de la taille et des traits
     const sizeFactor = Math.max(1, creature.size / 15); // Plus la créature est grosse, plus elle est lente
-    creature.moveCooldown = Math.max(0, creature.moveCooldown - 1); // Décrémentation linéaire
+    const speedFactor = 1 + creature.traits.speedBonus * 0.5; // Bonus de vitesse
+    creature.moveCooldown = Math.max(0, creature.moveCooldown - speedFactor); // Décrémentation ajustée
 
     // Système de demande de nourriture si affamée (pas mangé depuis 15 secondes)
     if (!creature.lastFoodRequest) creature.lastFoodRequest = 0;
@@ -598,9 +729,10 @@ function gameLoop() {
 
     // Mouvement aléatoire si pas d'action (errance)
     if (creature.moveCooldown <= 0) {
+      const detectionRange = stormActive ? 2 : 5; // Réduire la portée pendant une tempête
       const hasFoodTarget = foodItems.length > 0;
-      const hasPredatorNearby = creatures.some(c => c.isPredator && c.size > creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < 5);
-      const hasPreyTarget = foodItems.length === 0 && creature.isAdult && (creatures.some(c => !c.isAdult && c.size < creature.size) || (creature.isPredator && creatures.some(c => c !== creature && c.isAdult && c.size < creature.size)));
+      const hasPredatorNearby = creatures.some(c => c.isPredator && c.size > creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < detectionRange + creature.traits.detectionBonus);
+      const hasPreyTarget = foodItems.length === 0 && creature.isAdult && (creatures.some(c => !c.isAdult && c.size < creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < detectionRange + creature.traits.detectionBonus) || (creature.isPredator && creatures.some(c => c !== creature && c.isAdult && c.size < creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < detectionRange + creature.traits.detectionBonus)));
 
       if (!hasFoodTarget && !hasPredatorNearby && !hasPreyTarget) {
         // Changer de direction aléatoirement toutes les 5 secondes
@@ -669,7 +801,7 @@ function gameLoop() {
           foodItems.splice(index, 1);
           if (creature.size < maxSize) {
             creature.size += 1; // Grossir de 1 pixel (réduit par rapport à 2)
-            creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+            creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
           }
         }
       });
@@ -677,10 +809,11 @@ function gameLoop() {
 
     // IA pour se cacher sous les algues si un prédateur est à proximité
     if (!creature.isPredator && creature.moveCooldown <= 0) {
+      const detectionRange = stormActive ? 2 : 5; // Réduire la portée pendant une tempête
       const nearestPredator = creatures.find(c => c.isPredator && c.size > creature.size);
       if (nearestPredator) {
         const predatorDistance = Math.sqrt((creature.x - nearestPredator.x) ** 2 + (creature.y - nearestPredator.y) ** 2);
-        if (predatorDistance < 5) { // Se cacher si prédateur à moins de 5 cases
+        if (predatorDistance < detectionRange + creature.traits.detectionBonus) { // Se cacher si prédateur à moins de 5 cases
           const nearestAlga = algae.reduce((closest, alga) => {
             const distance = Math.sqrt((creature.x - alga.x) ** 2 + (creature.y - alga.y) ** 2);
             return distance < Math.sqrt((creature.x - closest.x) ** 2 + (creature.y - closest.y) ** 2) ? alga : closest;
@@ -705,6 +838,7 @@ function gameLoop() {
 
     // Si pas de nourriture et adulte, chercher à manger un petit ou un autre adulte
     if (foodItems.length === 0 && creature.isAdult && creature.moveCooldown <= 0) {
+      const detectionRange = stormActive ? 2 : 5; // Réduire la portée pendant une tempête
       // Chercher un petit à manger
       let target = creatures.find(c => !c.isAdult && Math.round(c.x) === Math.round(creature.x) && Math.round(c.y) === Math.round(creature.y) && c.size < creature.size);
       if (target) {
@@ -713,7 +847,7 @@ function gameLoop() {
         creature.isPredator = true; // Devenir prédateur
         if (creature.size < maxSize) {
           creature.size += 1; // Grossir de 1 pixel
-          creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+          creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
         }
         return;
       }
@@ -726,14 +860,14 @@ function gameLoop() {
           creatures.splice(creatures.indexOf(target), 1);
           if (creature.size < maxSize) {
             creature.size += 1; // Grossir de 1 pixel
-            creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+            creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
           }
           return;
         }
 
         // Si pas de cible sur la même case, chercher une cible à proximité et se déplacer
-        const nearestSmall = creatures.find(c => !c.isAdult && c.size < creature.size);
-        const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult && c.size < creature.size) : null;
+        const nearestSmall = creatures.find(c => !c.isAdult && c.size < creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < detectionRange + creature.traits.detectionBonus);
+        const nearestAdult = creature.isPredator ? creatures.find(c => c !== creature && c.isAdult && c.size < creature.size && Math.sqrt((creature.x - c.x) ** 2 + (creature.y - c.y) ** 2) < detectionRange + creature.traits.detectionBonus) : null;
         const targetCreature = nearestSmall || nearestAdult;
         if (targetCreature) {
           // Ne pas attaquer si la cible est sous une algue
@@ -784,13 +918,17 @@ function gameLoop() {
         // Grossir si adulte
         if (creature.isAdult) {
           if (creature.size < maxSize) {
-            creature.size += 1; // Grossir de 1 pixel (réduit par rapport à 2)
-            creature.lifespan = Math.min(creature.lifespan + 300, 1800); // Ajouter 10 secondes de vie (max 60s)
+            creature.size += 1; // Grossir de 1 pixel
+            creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
           }
         }
 
         // Duplication après 5 unités de nourriture
         if (creature.foodEaten >= 5) {
+          if (creatures.length >= maxCreatures) {
+            showFoodRequest("Limite de créatures atteinte (" + maxCreatures + ") !");
+            return;
+          }
           const newPosition = findFreePosition(Math.round(creature.x), Math.round(creature.y));
           const newSpecies = Math.random() < 0.1 ? speciesTypes[Math.floor(Math.random() * speciesTypes.length)] : creature.species; // 10% de chance de muter
           const newCreature = {
@@ -804,8 +942,22 @@ function gameLoop() {
             isAdult: false, // Commence comme bébé
             floatOffset: Math.random() * 10, // Offset de flottement aléatoire
             generation: creature.generation + 1, // Incrémenter la génération
-            wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 }
+            wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 },
+            traits: { ...creature.traits } // Hériter des traits du parent
           };
+
+          // Évolution des traits
+          if (Math.random() < 0.2) { // 20% de chance d'évolution
+            const trait = Math.floor(Math.random() * 3);
+            if (trait === 0) newCreature.traits.speedBonus += 1;
+            else if (trait === 1) newCreature.traits.lifespanBonus += 1;
+            else newCreature.traits.detectionBonus += 1;
+
+            // Appliquer les traits à l'espèce
+            const speciesToUpdate = speciesTypes.find(s => s.name === newCreature.species.name);
+            speciesToUpdate.traits = { ...newCreature.traits };
+          }
+
           creatures.push(newCreature);
           activeSpecies.add(newCreature.species.name); // Mettre à jour la légende
           updateSpeciesLegend();

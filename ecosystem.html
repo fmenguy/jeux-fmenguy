@@ -9,13 +9,15 @@
 <body>
   <h1>EcoSim : Simulation d'Écosystème</h1>
   <div id="speciesLegend">
-  <h2>Légende des espèces</h2>
-  <div id="speciesList"></div>
-</div>
+    <h2>Légende des espèces</h2>
+    <div id="speciesList"></div>
+    <div id="scoreDisplay"></div>
+  </div>
   <div id="controls">
     <button onclick="addFood()">Ajouter Nourriture</button>
     <button id="respawnButton" onclick="respawnCreature()" disabled>Réapparaître</button>
     <button id="addWallButton" onclick="toggleAddWallMode()">Ajouter Mur</button>
+    <button onclick="showCreateSpeciesMenu()">Créer Espèce</button>
     <p>Créatures: <span id="creatureCount">1</span> | Nourriture: <span id="foodCount">0</span></p>
     <div>
       <label>Vitesse: </label>
@@ -34,6 +36,23 @@
 
   <!-- Conteneur pour les bulles de demande de nourriture -->
   <div id="foodRequests"></div>
+
+  <!-- Menu de création d'espèce -->
+  <div id="createSpeciesMenu" style="display: none;">
+    <h2>Créer une nouvelle espèce</h2>
+    <label>Nom: <input type="text" id="speciesName" value="Nouvelle Espèce"></label><br>
+    <label>Forme:
+      <select id="speciesShape">
+        <option value="circle">Cercle</option>
+        <option value="hexagon">Hexagone</option>
+        <option value="triangle">Triangle</option>
+      </select>
+    </label><br>
+    <label>Couleur: <input type="color" id="speciesColor" value="#1E90FF"></label><br>
+    <label>Tentacules: <input type="number" id="tentacleCount" min="1" max="6" value="3"></label><br>
+    <button onclick="createNewSpecies()">Créer</button>
+    <button onclick="closeCreateSpeciesMenu()">Annuler</button>
+  </div>
 
   <!-- Bouton Retour en bas à gauche -->
   <div style="position: fixed; bottom: 10px; left: 10px;">
