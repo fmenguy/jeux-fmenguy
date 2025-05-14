@@ -20,6 +20,13 @@
     <button onclick="showCreateSpeciesMenu()">Créer Espèce</button>
     <p>Créatures: <span id="creatureCount">1</span> | Nourriture: <span id="foodCount">0</span></p>
     <div>
+      <label>Map: </label>
+      <select id="mapSelect" onchange="changeMap(this.value)">
+        <option value="aquatic">Aquatique</option>
+        <option value="terrestrial">Terrestre</option>
+      </select>
+    </div>
+    <div>
       <label>Vitesse: </label>
       <input type="radio" id="speedInstant" name="speed" value="1" onchange="updateSpeed(this.value)">
       <label for="speedInstant">Instantané (0.03s)</label>
