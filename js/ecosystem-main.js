@@ -56,9 +56,9 @@ generateAlgae(); // Appeler pour générer les algues au démarrage
 
 // Différentes espèces de méduses
 let speciesTypes = [
-  { name: 'Lunaria', shape: 'circle', color: ['#1E90FF', '#00B7EB', '#00CED1', '#48D1CC', '#87CEEB', '#B0E0E6'], tentacleCount: 3, speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }, // Bleus luminescents
-  { name: 'Coralix', shape: 'hexagon', color: ['#FF4040', '#FF6347', '#FF7F50', '#FF8C00', '#FFA07A', '#FFDAB9'], tentacleCount: 4, speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }, // Corail vibrant
-  { name: 'Abyssal', shape: 'triangle', color: ['#2F0047', '#4B0082', '#483D8B', '#6A5ACD', '#7B68EE', '#9370DB'], tentacleCount: 5, speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } // Tons abyssaux
+  { name: 'Lunaria', shape: 'circle', color: ['#1E90FF', '#00B7EB', '#00CED1', '#48D1CC', '#87CEEB', '#B0E0E6'], tentacleCount: 3, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } }, // Bleus luminescents
+  { name: 'Coralix', shape: 'hexagon', color: ['#FF4040', '#FF6347', '#FF7F50', '#FF8C00', '#FFA07A', '#FFDAB9'], tentacleCount: 4, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } }, // Corail vibrant
+  { name: 'Abyssal', shape: 'triangle', color: ['#2F0047', '#4B0082', '#483D8B', '#6A5ACD', '#7B68EE', '#9370DB'], tentacleCount: 5, traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 } } // Tons abyssaux
 ];
 
 // Type de créature (méduse-like)
@@ -178,11 +178,11 @@ canvas.addEventListener('click', (event) => {
 
 // Gérer les bulles de demande de nourriture
 let requestSide = 'left'; // Alterner les côtés des bulles
-function showFoodRequest(generation) {
+function showFoodRequest(message) {
   const requestsDiv = document.getElementById('foodRequests');
   const bubble = document.createElement('div');
   bubble.className = 'food-request-bubble';
-  bubble.textContent = `Créature (Gen ${generation}) demande de la nourriture !`;
+  bubble.textContent = message;
 
   // Positionner la bulle à gauche ou à droite
   const side = requestSide;
@@ -220,9 +220,7 @@ window.createNewSpecies = () => {
     shape: shape,
     color: [color, color, color, color, color, color], // Palette simple
     tentacleCount: tentacleCount,
-    speedBonus: 0,
-    lifespanBonus: 0,
-    detectionBonus: 0
+    traits: { speedBonus: 0, lifespanBonus: 0, detectionBonus: 0 }
   };
 
   speciesTypes.push(newSpecies);
@@ -719,7 +717,7 @@ function gameLoop() {
     if (!creature.lastFoodRequest) creature.lastFoodRequest = 0;
     creature.lastFoodRequest++;
     if (creature.lastFoodRequest > 450 && foodItems.length === 0) { // 15 secondes à 30 FPS
-      showFoodRequest(creature.generation);
+      showFoodRequest(`Créature (Gen ${creature.generation}) demande de la nourriture !`);
       creature.isRequestingFood = true;
       creature.lastFoodRequest = 0; // Réinitialiser le compteur
       setTimeout(() => {
@@ -918,7 +916,7 @@ function gameLoop() {
         // Grossir si adulte
         if (creature.isAdult) {
           if (creature.size < maxSize) {
-            creature.size += 1; // Grossir de 1 pixel
+            creature.size += 1; // Grossir de 1 pixel (réduit par rapport à 2)
             creature.lifespan = Math.min(creature.lifespan + 300, 1800 + creature.traits.lifespanBonus * 900); // Ajouter 10 secondes de vie (max 60s)
           }
         }
