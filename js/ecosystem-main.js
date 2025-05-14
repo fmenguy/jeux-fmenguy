@@ -33,8 +33,9 @@ let addWallMode = false;
 // Liste des espèces présentes pour la légende
 let activeSpecies = new Set();
 
-// Limite de créatures
-const maxCreatures = 1000;
+// Limites de créatures
+const maxCreaturesPerSpecies = 100; // 100 créatures max par espèce (non prédateurs)
+const maxPredators = 50; // 50 prédateurs max
 
 // Score du joueur
 let score = 0;
@@ -411,28 +412,6 @@ function updateCounts() {
 
   // Dessiner la courbe
   drawStatsCurve();
-
-  // Agrandir la grille si plus de 100 créatures
-  if (creatures.length > 100 && gridSize < 40) { // Limite maximale arbitraire à 40x40
-    gridSize += 10; // Augmenter la grille de 10 unités
-    canvas.width = gridSize * tileSize;
-    canvas.height = gridSize * tileSize;
-
-    // Repositionner les créatures et la nourriture si elles dépassent la grille
-    creatures.forEach(creature => {
-      creature.x = Math.min(creature.x, gridSize - 1);
-      creature.y = Math.min(creature.y, gridSize - 1);
-    });
-    foodItems.forEach(food => {
-      food.x = Math.min(food.x, gridSize - 1);
-      food.y = Math.min(food.y, gridSize - 1);
-    });
-
-    // Repositionner les humains
-    humans.forEach(human => {
-      human.x = Math.min(human.x, gridSize - 1);
-    });
-  }
 }
 
 // Trouver une position libre autour d'une position donnée
@@ -838,14 +817,20 @@ function gameLoop() {
   if (frameCount % 1800 === 0) { // Toutes les 1 minute (1800 ticks à 30 FPS)
     const newSpeciesIndex = Math.floor(frameCount / 1800) % speciesTypes.length;
     const newSpecies = speciesTypes[newSpeciesIndex];
-    creatures.forEach(creature => {
-      if (Math.random() < 0.5) { // 50% de chances pour chaque créature de changer d'espèce
-        creature.species = newSpecies;
-        creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
-        activeSpecies.add(newSpecies.name); // Mettre à jour la légende
-        updateSpeciesLegend();
-      }
-    });
+    const speciesCount = creatures.filter(creature => creature.species.name === newSpecies.name && creature.size < maxSize).length;
+    if (speciesCount < maxCreaturesPerSpecies) { // Vérifier la limite par espèce
+      creatures.forEach(creature => {
+        if (Math.random() < 0.5) { // 50% de chances pour chaque créature de changer d'espèce
+          const currentSpeciesCount = creatures.filter(c => c.species.name === newSpecies.name && c.size < maxSize).length;
+          if (currentSpeciesCount < maxCreaturesPerSpecies) {
+            creature.species = newSpecies;
+            creature.color = newSpecies.color[Math.min(creature.generation, newSpecies.color.length - 1)];
+            activeSpecies.add(newSpecies.name); // Mettre à jour la légende
+            updateSpeciesLegend();
+          }
+        }
+      });
+    }
   }
 
   // Gérer les humains (pour la map terrestre)
@@ -1116,12 +1101,28 @@ function gameLoop() {
 
         // Duplication après 5 unités de nourriture
         if (creature.foodEaten >= 5) {
-          if (creatures.length >= maxCreatures) {
-            showFoodRequest("Limite de créatures atteinte (" + maxCreatures + ") !");
+          const speciesCount = creatures.filter(c => c.species.name === creature.species.name && c.size < maxSize).length;
+          const predatorCount = creatures.filter(c => c.size >= maxSize).length;
+
+          if (speciesCount >= maxCreaturesPerSpecies) {
+            showFoodRequest(`Limite de ${maxCreaturesPerSpecies} créatures atteinte pour l'espèce ${creature.species.name} !`);
             return;
           }
+          if (predatorCount >= maxPredators && creature.size >= maxSize) {
+            showFoodRequest(`Limite de ${maxPredators} prédateurs atteinte !`);
+            return;
+          }
+
           const newPosition = findFreePosition(Math.round(creature.x), Math.round(creature.y));
           const newSpecies = Math.random() < 0.1 ? speciesTypes[Math.floor(Math.random() * speciesTypes.length)] : creature.species; // 10% de chance de muter
+
+          // Vérifier la limite pour la nouvelle espèce
+          const newSpeciesCount = creatures.filter(c => c.species.name === newSpecies.name && c.size < maxSize).length;
+          if (newSpeciesCount >= maxCreaturesPerSpecies) {
+            showFoodRequest(`Limite de ${maxCreaturesPerSpecies} créatures atteinte pour l'espèce ${newSpecies.name} !`);
+            return;
+          }
+
           const newCreature = {
             x: newPosition.x,
             y: currentMap === 'terrestrial' && newPosition.y <= gridSize * 0.2 / tileSize ? gridSize - 1 : newPosition.y, // Forcer dans l'eau pour la map terrestre
@@ -1189,7 +1190,7 @@ function drawStatsCurve() {
   for (let i = 0; i <= numTicksY; i++) {
     const value = (i / numTicksY) * maxValue;
     const y = (statsCanvas.height - axisYOffset) - (i / numTicksY) * (statsCanvas.height - axisYOffset - 10);
-statsCtx.fillText(Math.round(value), axisXOffset - 5, y);
+    statsCtx.fillText(Math.round(value), axisXOffset - 5, y);
   }
 
   // Dessiner l'axe X (abscisse) en bas
@@ -1248,4 +1249,8 @@ statsCtx.fillText(Math.round(value), axisXOffset - 5, y);
   statsCtx.fillStyle = '#FF4500';
   statsCtx.fillRect(160, 15, 20, 10);
 }
-    
+
+// Lancer le jeu
+setInterval(gameLoop, 1000 / 30); // 30 FPS
+draw();
+updateCounts();
