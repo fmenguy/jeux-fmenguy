@@ -36,7 +36,7 @@ let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
 
 function setup() {
   let canvas = createCanvas(GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
-  canvas.parent('game-area'); // Attacher au #game-area au lieu de #map-container
+  canvas.parent('game-area');
   textAlign(CENTER, CENTER);
   textSize(14);
   initializeGrid();
@@ -112,6 +112,17 @@ function findPath(startX, startY, goalX, goalY) {
     }
   }
   return [];
+}
+
+// Vérifier si un chemin existe depuis n'importe quelle position de départ (colonne 0) jusqu'à la base
+function hasPathToBase() {
+  for (let startY = 0; startY < GRID_HEIGHT; startY++) {
+    let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+    if (path.length > 0) {
+      return true; // Au moins un chemin existe
+    }
+  }
+  return false; // Aucun chemin trouvé
 }
 
 function draw() {
@@ -217,7 +228,6 @@ function drawProjectiles() {
 }
 
 function drawBase() {
-  // Afficher la santé de la base dans l'interface plutôt que sur le canvas
   document.getElementById('base-hp').textContent = base.hp;
 }
 
@@ -232,9 +242,11 @@ function updateGame() {
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
       xp += enemy.xp;
-      energy += enemy.energy;
+      energy += enemy.energy; // Ajout de l'énergie lorsque l'ennemi est tué
       updateStats();
       if (enemies.length === 0) {
+        // Récompense d'XP à la fin de la vague
+        xp += wave * 5; // Par exemple, 5 XP par numéro de vague
         document.getElementById('upgrade-modal').style.display = 'flex';
         document.getElementById('upgrade-options').querySelector('p').textContent = `XP disponible: ${xp}`;
       }
@@ -263,7 +275,6 @@ function updateStats() {
   document.getElementById('xp').textContent = xp;
   document.getElementById('base-hp').textContent = base.hp;
 
-  // Mettre à jour l'état des boutons de tourelles
   ['melee', 'defense', 'projectile', 'wall'].forEach(type => {
     const btn = document.getElementById(`${type}-btn`);
     const cost = TURRET_TYPES[type].cost;
@@ -289,9 +300,34 @@ function mousePressed() {
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT && (gameState === 'playing' || gameState === 'paused')) {
     if (selectedModule && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost && xp >= TURRET_TYPES[selectedModule].xpRequired) {
+      // Si c'est un mur, vérifier qu'il ne bloque pas tous les chemins
+      if (selectedModule === 'wall') {
+        // Simuler le placement du mur
+        grid[gridX][gridY] = selectedModule;
+        if (!hasPathToBase()) {
+          grid[gridX][gridY] = null; // Annuler le placement
+          return; // Ne pas placer le mur si ça bloque tous les chemins
+        }
+      }
+      // Si ce n'est pas un mur, vérifier que la cellule n'est pas occupée par un mur
+      if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
+        return; // Ne pas placer une tourelle alliée sur un mur
+      }
+      // Placer le module
       grid[gridX][gridY] = selectedModule;
       modules.push({ x: gridX, y: gridY, type: selectedModule });
       energy -= TURRET_TYPES[selectedModule].cost;
+      // Recalculer les chemins des ennemis si un mur est placé
+      if (selectedModule === 'wall') {
+        enemies.forEach(enemy => {
+          if (enemy.path.length > 0) {
+            let startX = floor(enemy.x / CELL_SIZE);
+            let startY = floor(enemy.y / CELL_SIZE);
+            enemy.path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            enemy.pathIndex = 0;
+          }
+        });
+      }
       updateStats();
     }
   }
@@ -303,7 +339,7 @@ document.getElementById('melee-btn').addEventListener('click', () => {
   updateStats();
 });
 document.getElementById('defense-btn').addEventListener('click', () => {
-  if (xp >= TURRET_TYPES.defence.xpRequired) {
+  if (xp >= TURRET_TYPES.defense.xpRequired) {
     selectedModule = selectedModule === 'defense' ? null : 'defense';
     updateStats();
   }
@@ -368,6 +404,15 @@ document.getElementById('upgrade-damage').addEventListener('click', () => {
   if (xp >= 5) {
     upgrades.damage += 0.1;
     xp -= 5;
+    updateStats();
+  }
+});
+
+// Échange XP contre énergie
+document.getElementById('exchange-xp-energy').addEventListener('click', () => {
+  if (xp >= 5) {
+    xp -= 5;
+    energy += 10; // Par exemple, 5 XP pour 10 énergie
     updateStats();
   }
 });
