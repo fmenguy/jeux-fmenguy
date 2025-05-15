@@ -51,7 +51,16 @@
         </div>
       </div>
       <div id="controls">
-        <button class="game-button" id="start-wave">Lancer Vague</button>
+        <div class="wave-control">
+          <button class="game-button" id="start-wave">Lancer Vague</button>
+          <select id="wave-count" class="game-button">
+            <option value="1">1 vague</option>
+            <option value="2">2 vagues</option>
+            <option value="3">3 vagues</option>
+            <option value="4">4 vagues</option>
+            <option value="5">5 vagues</option>
+          </select>
+        </div>
         <button class="game-button" id="pause">Pause</button>
         <button class="game-button" id="restart">Relancer</button>
         <button class="game-button" id="exchange-xp-energy">Échanger XP > Énergie</button>
@@ -88,6 +97,7 @@
     <div class="modal-content">
       <h2>Amélioration des Tourelles</h2>
       <p>Vague terminée! Utilisez votre XP pour améliorer vos tourelles</p>
+      <p id="xp-available">XP disponible: 0</p>
       <div id="upgrade-options">
         <div class="upgrade-option" id="upgrade-range">
           <h3>Portée</h3>
@@ -113,7 +123,7 @@
     <div class="modal-content">
       <h2>Essai encore !</h2>
       <p>Oh le gros nul!</p>
-      <p>Victoire !<span id="final-wave">0</span> vagues</p>
+      <p>Victoire ! <span id="final-wave">0</span> vagues</p>
       <button class="game-button" id="restart-game">Recommencer</button>
     </div>
   </div>
