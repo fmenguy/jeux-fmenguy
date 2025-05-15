@@ -3,12 +3,13 @@ let moveForward = false, moveBackward = false, moveLeft = false, moveRight = fal
 let debugMode = false;
 let debugInfo;
 let velocityY = 0;
-let heightMap = []; // Grille pour stocker les hauteurs du terrain
+let heightMap = [];
 const terrainSize = 50;
-const terrainResolution = 1; // Taille de chaque cube (1x1)
+const terrainResolution = 1;
 const moveSpeed = 0.1;
 const jumpForce = 0.2;
 const gravity = -0.01;
+const playerHeight = 1; // Hauteur totale du joueur (cylindre)
 
 // Configuration des touches pour AZERTY
 const controlsConfig = {
@@ -61,14 +62,14 @@ function init() {
 
     // Générer une surface cubique grise
     const cubeGeometry = new THREE.BoxGeometry(terrainResolution, 1, terrainResolution);
-    const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0x808080, shininess: 10 }); // Gris
+    const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0x808080, shininess: 10 });
     for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
             const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             const worldX = (x - gridSize / 2) * terrainResolution;
             const worldZ = (z - gridSize / 2) * terrainResolution;
             const height = heightMap[x][z];
-            cube.position.set(worldX + terrainResolution / 2, height + 0.5, worldZ + terrainResolution / 2); // +0.5 pour centrer le cube sur la hauteur
+            cube.position.set(worldX + terrainResolution / 2, height, worldZ + terrainResolution / 2); // Position ajustée
             cube.receiveShadow = true;
             scene.add(cube);
         }
@@ -98,7 +99,7 @@ function init() {
 
     // Position initiale du joueur
     const initialTerrainHeight = heightMap[Math.floor(gridSize / 2)][Math.floor(gridSize / 2)];
-    player.position.set(0, initialTerrainHeight + 0.5, 0);
+    player.position.set(0, initialTerrainHeight + playerHeight, 0); // Touche le dessus des cubes
     player.rotation.y = 0;
     scene.add(player);
     console.log("Position initiale du joueur:", player.position.y);
@@ -206,27 +207,11 @@ function getTerrainHeight(x, z) {
 
     // Vérifier les limites de la grille
     if (gridX < 0 || gridX >= heightMap.length || gridZ < 0 || gridZ >= heightMap[0].length) {
-        return 0; // Hauteur par défaut si hors limites
+        return 0;
     }
 
-    // Interpolation bilinéaire pour une hauteur plus lisse
-    const x0 = Math.floor(gridX);
-    const x1 = Math.min(x0 + 1, heightMap.length - 1);
-    const z0 = Math.floor(gridZ);
-    const z1 = Math.min(z0 + 1, heightMap[0].length - 1);
-
-    const fx = gridX - x0;
-    const fz = gridZ - z0;
-
-    const h00 = heightMap[x0][z0];
-    const h10 = heightMap[x1][z0];
-    const h01 = heightMap[x0][z1];
-    const h11 = heightMap[x1][z1];
-
-    // Interpolation bilinéaire
-    const h0 = h00 + (h10 - h00) * fx;
-    const h1 = h01 + (h11 - h01) * fx;
-    return h0 + (h1 - h0) * fz;
+    // Retourner la hauteur directement (sans interpolation pour plus de précision)
+    return heightMap[gridX][gridZ];
 }
 
 function animate() {
@@ -271,8 +256,8 @@ function animate() {
 
     // Ajuster la hauteur du joueur en fonction du terrain
     const terrainHeight = getTerrainHeight(player.position.x, player.position.z);
-    if (player.position.y <= terrainHeight + 0.5) {
-        player.position.y = terrainHeight + 0.5;
+    if (player.position.y <= terrainHeight + playerHeight) {
+        player.position.y = terrainHeight + playerHeight;
         velocityY = 0;
         isJumping = false;
     }
