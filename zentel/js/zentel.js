@@ -128,8 +128,8 @@ function drawStats() {
 }
 
 function drawControlButtons() {
-  let buttonX = (width - GRID_WIDTH * CELL_SIZE) / 2 + GRID_WIDTH * CELL_SIZE / 2 - 170;
-  let buttonY = 50;
+  let buttonX = (width - 320) / 2; // Centré
+  let buttonY = 20;
 
   fill(enemies.length === 0 ? BUTTON_COLOR : TEXT_COLOR);
   stroke(255);
@@ -141,17 +141,17 @@ function drawControlButtons() {
 
   fill(gameState === 'paused' ? BUTTON_COLOR : TEXT_COLOR);
   stroke(255);
-  rect(buttonX + 120, buttonY, 100, 30, 5);
+  rect(buttonX + 110, buttonY, 100, 30, 5);
   noStroke();
   fill(255);
-  text('Pause', buttonX + 170, buttonY + 15);
+  text('Pause', buttonX + 160, buttonY + 15);
 
   fill(BUTTON_COLOR);
   stroke(255);
-  rect(buttonX + 240, buttonY, 100, 30, 5);
+  rect(buttonX + 220, buttonY, 100, 30, 5);
   noStroke();
   fill(255);
-  text('Relancer', buttonX + 290, buttonY + 15);
+  text('Relancer', buttonX + 270, buttonY + 15);
 }
 
 function drawGrid() {
@@ -230,6 +230,7 @@ function drawEnemies() {
       }
     }
   }
+  enemies = enemies.filter(enemy => enemy.hp > 0 && enemy.x < width);
 }
 
 function drawProjectiles() {
@@ -256,8 +257,8 @@ function drawBase() {
 }
 
 function drawTurretButtons() {
-  let offsetX = (width - GRID_WIDTH * CELL_SIZE) / 2;
-  let buttonY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + GRID_HEIGHT * CELL_SIZE + 70;
+  let offsetX = (width - 480) / 2; // Centré (4 boutons de 120px)
+  let buttonY = height - 60;
   let buttonSpacing = 120;
 
   fill(selectedModule === 'melee' ? BUTTON_COLOR : TEXT_COLOR);
@@ -273,14 +274,14 @@ function drawTurretButtons() {
   rect(offsetX + buttonSpacing, buttonY, 110, 35, 5);
   noStroke();
   fill(255);
-  text(`${TURRET_TYPES.defense.symbol} Bouclier (${TURRET_TYPES.defense.cost}, ${TURRET_TYPES.defense.xpRequired} XP)`, offsetX + buttonSpacing + 55, buttonY + 17);
+  text(`${TURRET_TYPES.defense.symbol} Bouclier (${TURRET_TYPES.defense.cost})`, offsetX + buttonSpacing + 55, buttonY + 17);
 
   fill(xp >= TURRET_TYPES.projectile.xpRequired ? (selectedModule === 'projectile' ? BUTTON_COLOR : TEXT_COLOR) : '#555555');
   stroke(255);
   rect(offsetX + buttonSpacing * 2, buttonY, 110, 35, 5);
   noStroke();
   fill(255);
-  text(`${TURRET_TYPES.projectile.symbol} Archer (${TURRET_TYPES.projectile.cost}, ${TURRET_TYPES.projectile.xpRequired} XP)`, offsetX + buttonSpacing * 2 + 55, buttonY + 17);
+  text(`${TURRET_TYPES.projectile.symbol} Archer (${TURRET_TYPES.projectile.cost})`, offsetX + buttonSpacing * 2 + 55, buttonY + 17);
 
   fill(selectedModule === 'wall' ? BUTTON_COLOR : TEXT_COLOR);
   stroke(255);
@@ -288,6 +289,17 @@ function drawTurretButtons() {
   noStroke();
   fill(255);
   text(`${TURRET_TYPES.wall.symbol} Barrière (${TURRET_TYPES.wall.cost})`, offsetX + buttonSpacing * 3 + 55, buttonY + 17);
+}
+
+function drawLegend() {
+  let legendX = (width - GRID_WIDTH * CELL_SIZE) / 2 - 150;
+  let legendY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + 50;
+  fill(TEXT_COLOR);
+  text('Légende', legendX + 50, legendY);
+  text(`${TURRET_TYPES.melee.symbol} Sabreur Quantique: ${TURRET_TYPES.melee.damage} dégâts, portée ${TURRET_TYPES.melee.range}`, legendX + 50, legendY + 30);
+  text(`${TURRET_TYPES.defense.symbol} Bouclier Nova: +${TURRET_TYPES.defense.hpBoost} HP à la base`, legendX + 50, legendY + 60);
+  text(`${TURRET_TYPES.projectile.symbol} Archer Plasma: ${TURRET_TYPES.projectile.damage} dégâts, portée ${TURRET_TYPES.projectile.range}`, legendX + 50, legendY + 90);
+  text(`${TURRET_TYPES.wall.symbol} Barrière Énergétique: Bloque les ennemis`, legendX + 50, legendY + 120);
 }
 
 function updateGame() {
@@ -326,31 +338,32 @@ function mousePressed() {
   let offsetY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + 30;
   let gridX = floor((mouseX - offsetX) / CELL_SIZE);
   let gridY = floor((mouseY - offsetY) / CELL_SIZE);
-  let buttonY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + GRID_HEIGHT * CELL_SIZE + 70;
+  let buttonY = height - 60;
   let buttonSpacing = 120;
 
   // Boutons de contrôle
-  let controlButtonX = (width - GRID_WIDTH * CELL_SIZE) / 2 + GRID_WIDTH * CELL_SIZE / 2 - 170;
-  let controlButtonY = 50;
-  if (mouseY > controlButtonY && mouseY < controlButtonY + 30) {
-    if (mouseX > controlButtonX && mouseX < controlButtonX + 100 && enemies.length === 0 && gameState === 'playing') {
+  let controlButtonX = (width - 320) / 2;
+  let controlButtonY = 20;
+  if (mouseY >= controlButtonY && mouseY <= controlButtonY + 30) {
+    if (mouseX >= controlButtonX && mouseX <= controlButtonX + 100 && enemies.length === 0 && gameState === 'playing') {
       spawnWave();
-    } else if (mouseX > controlButtonX + 120 && mouseX < controlButtonX + 220) {
+    } else if (mouseX >= controlButtonX + 110 && mouseX <= controlButtonX + 210) {
       gameState = gameState === 'playing' ? 'paused' : 'playing';
-    } else if (mouseX > controlButtonX + 240 && mouseX < controlButtonX + 340) {
+    } else if (mouseX >= controlButtonX + 220 && mouseX <= controlButtonX + 320) {
       resetGame();
     }
   }
 
   // Boutons des tourelles
-  if (mouseY > buttonY && mouseY < buttonY + 35) {
-    if (mouseX > offsetX && mouseX < offsetX + 110) {
+  let turretButtonX = (width - 480) / 2;
+  if (mouseY >= buttonY && mouseY <= buttonY + 35) {
+    if (mouseX >= turretButtonX && mouseX <= turretButtonX + 110) {
       selectedModule = 'melee';
-    } else if (mouseX > offsetX + buttonSpacing && mouseX < offsetX + buttonSpacing + 110 && xp >= TURRET_TYPES.defense.xpRequired) {
+    } else if (mouseX >= turretButtonX + buttonSpacing && mouseX <= turretButtonX + buttonSpacing + 110 && xp >= TURRET_TYPES.defense.xpRequired) {
       selectedModule = 'defense';
-    } else if (mouseX > offsetX + buttonSpacing * 2 && mouseX < offsetX + buttonSpacing * 2 + 110 && xp >= TURRET_TYPES.projectile.xpRequired) {
+    } else if (mouseX >= turretButtonX + buttonSpacing * 2 && mouseX <= turretButtonX + buttonSpacing * 2 + 110 && xp >= TURRET_TYPES.projectile.xpRequired) {
       selectedModule = 'projectile';
-    } else if (mouseX > offsetX + buttonSpacing * 3 && mouseX < offsetX + buttonSpacing * 3 + 110) {
+    } else if (mouseX >= turretButtonX + buttonSpacing * 3 && mouseX <= turretButtonX + buttonSpacing * 3 + 110) {
       selectedModule = 'wall';
     }
   }
