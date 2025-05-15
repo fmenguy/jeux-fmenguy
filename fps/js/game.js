@@ -3,6 +3,9 @@ let moveForward = false, moveBackward = false, moveLeft = false, moveRight = fal
 let debugMode = false;
 let debugInfo;
 let velocityY = 0;
+let heightMap = []; // Grille pour stocker les hauteurs du terrain
+const terrainSize = 50;
+const terrainResolution = 1; // Taille de chaque cube (1x1)
 const moveSpeed = 0.1;
 const jumpForce = 0.2;
 const gravity = -0.01;
@@ -20,7 +23,7 @@ const controlsConfig = {
 const noise = new SimplexNoise();
 
 function init() {
-    console.log("Initialisation du jeu..."); // Log pour confirmer le démarrage
+    console.log("Initialisation du jeu...");
 
     // Scène
     scene = new THREE.Scene();
@@ -45,34 +48,31 @@ function init() {
     const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
     scene.add(skybox);
 
-    // Générer un terrain procédural
-    const terrainSize = 50;
-    const terrainSegments = 200;
-    const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
-    
-    const vertices = terrainGeometry.attributes.position.array;
-    for (let i = 0; i < vertices.length; i += 3) {
-        const x = vertices[i];
-        const y = vertices[i + 1];
-        const height = noise.noise2D(x * 0.05, y * 0.05) * 3;
-        vertices[i + 2] = height;
+    // Générer une grille de hauteurs pour le terrain
+    const gridSize = Math.floor(terrainSize / terrainResolution);
+    for (let x = 0; x <= gridSize; x++) {
+        heightMap[x] = [];
+        for (let z = 0; z <= gridSize; z++) {
+            const worldX = (x - gridSize / 2) * terrainResolution;
+            const worldZ = (z - gridSize / 2) * terrainResolution;
+            heightMap[x][z] = noise.noise2D(worldX * 0.05, worldZ * 0.05) * 3;
+        }
     }
-    terrainGeometry.attributes.position.needsUpdate = true;
-    terrainGeometry.computeVertexNormals();
 
-    const textureLoader = new THREE.TextureLoader();
-    const grassTexture = textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
-    grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
-    grassTexture.repeat.set(10, 10);
-
-    const terrainMaterial = new THREE.MeshPhongMaterial({
-        map: grassTexture,
-        shininess: 10
-    });
-    const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
-    terrain.rotation.x = -Math.PI / 2;
-    terrain.receiveShadow = true;
-    scene.add(terrain);
+    // Générer une surface cubique grise
+    const cubeGeometry = new THREE.BoxGeometry(terrainResolution, 1, terrainResolution);
+    const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0x808080, shininess: 10 }); // Gris
+    for (let x = 0; x < gridSize; x++) {
+        for (let z = 0; z < gridSize; z++) {
+            const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            const worldX = (x - gridSize / 2) * terrainResolution;
+            const worldZ = (z - gridSize / 2) * terrainResolution;
+            const height = heightMap[x][z];
+            cube.position.set(worldX + terrainResolution / 2, height + 0.5, worldZ + terrainResolution / 2); // +0.5 pour centrer le cube sur la hauteur
+            cube.receiveShadow = true;
+            scene.add(cube);
+        }
+    }
 
     // Joueur (modèle humanoïde : cylindre pour le corps, sphère pour la tête)
     player = new THREE.Group();
@@ -97,8 +97,8 @@ function init() {
     player.add(head);
 
     // Position initiale du joueur
-    const initialTerrainHeight = noise.noise2D(0 * 0.1, 0 * 0.1) * 3;
-    player.position.set(0, initialTerrainHeight + 0.5, 0); // Ajusté pour toucher le sol (hauteur du cylindre = 1, donc +0.5)
+    const initialTerrainHeight = heightMap[Math.floor(gridSize / 2)][Math.floor(gridSize / 2)];
+    player.position.set(0, initialTerrainHeight + 0.5, 0);
     player.rotation.y = 0;
     scene.add(player);
     console.log("Position initiale du joueur:", player.position.y);
@@ -199,6 +199,36 @@ function updateCameraPosition() {
     camera.lookAt(player.position);
 }
 
+function getTerrainHeight(x, z) {
+    // Convertir les coordonnées mondiales en indices de la grille
+    const gridX = Math.floor((x + terrainSize / 2) / terrainResolution);
+    const gridZ = Math.floor((z + terrainSize / 2) / terrainResolution);
+
+    // Vérifier les limites de la grille
+    if (gridX < 0 || gridX >= heightMap.length || gridZ < 0 || gridZ >= heightMap[0].length) {
+        return 0; // Hauteur par défaut si hors limites
+    }
+
+    // Interpolation bilinéaire pour une hauteur plus lisse
+    const x0 = Math.floor(gridX);
+    const x1 = Math.min(x0 + 1, heightMap.length - 1);
+    const z0 = Math.floor(gridZ);
+    const z1 = Math.min(z0 + 1, heightMap[0].length - 1);
+
+    const fx = gridX - x0;
+    const fz = gridZ - z0;
+
+    const h00 = heightMap[x0][z0];
+    const h10 = heightMap[x1][z0];
+    const h01 = heightMap[x0][z1];
+    const h11 = heightMap[x1][z1];
+
+    // Interpolation bilinéaire
+    const h0 = h00 + (h10 - h00) * fx;
+    const h1 = h01 + (h11 - h01) * fx;
+    return h0 + (h1 - h0) * fz;
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -240,8 +270,8 @@ function animate() {
     }
 
     // Ajuster la hauteur du joueur en fonction du terrain
-    const terrainHeight = noise.noise2D(player.position.x * 0.1, player.position.z * 0.1) * 3;
-    if (player.position.y <= terrainHeight + 0.5) { // Ajusté pour la hauteur du cylindre
+    const terrainHeight = getTerrainHeight(player.position.x, player.position.z);
+    if (player.position.y <= terrainHeight + 0.5) {
         player.position.y = terrainHeight + 0.5;
         velocityY = 0;
         isJumping = false;
