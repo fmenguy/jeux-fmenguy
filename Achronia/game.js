@@ -2,6 +2,14 @@ let scene, camera, renderer, player, controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 const moveSpeed = 0.1;
 
+// Configuration des touches pour AZERTY
+const controlsConfig = {
+    forward: 'KeyW',  // Z sur AZERTY (détecté comme KeyW)
+    backward: 'KeyS', // S sur AZERTY
+    left: 'KeyQ',     // Q sur AZERTY (détecté comme KeyQ, mais A sur le clavier)
+    right: 'KeyD'     // D sur AZERTY
+};
+
 // Initialisation de Simplex Noise
 const noise = new SimplexNoise();
 
@@ -50,24 +58,24 @@ function init() {
     camera.position.set(player.position.x, player.position.y + 2, player.position.z + 5);
     camera.lookAt(player.position);
 
-    // Contrôles adaptés pour AZERTY (ZQSD)
+    // Contrôles avec configuration
     window.addEventListener('keydown', (e) => {
         console.log('Touche pressée:', e.code); // Débogage
         switch (e.code) {
-            case 'KeyW': moveForward = true; break; // Z sur AZERTY
-            case 'KeyS': moveBackward = true; break; // S sur AZERTY
-            case 'KeyQ': moveLeft = true; break; // A sur AZERTY
-            case 'KeyD': moveRight = true; break; // D sur AZERTY
+            case controlsConfig.forward: moveForward = true; break;
+            case controlsConfig.backward: moveBackward = true; break;
+            case controlsConfig.left: moveLeft = true; break;
+            case controlsConfig.right: moveRight = true; break;
         }
     });
 
     window.addEventListener('keyup', (e) => {
         console.log('Touche relâchée:', e.code); // Débogage
         switch (e.code) {
-            case 'KeyW': moveForward = false; break; // Z sur AZERTY
-            case 'KeyS': moveBackward = false; break; // S sur AZERTY
-            case 'KeyQ': moveLeft = false; break; // A sur AZERTY
-            case 'KeyD': moveRight = false; break; // D sur AZERTY
+            case controlsConfig.forward: moveForward = false; break;
+            case controlsConfig.backward: moveBackward = false; break;
+            case controlsConfig.left: moveLeft = false; break;
+            case controlsConfig.right: moveRight = false; break;
         }
     });
 
@@ -93,7 +101,7 @@ function animate() {
 
     // Calculer les directions en fonction de l'orientation du joueur
     const forwardDirection = new THREE.Vector3(
-        -Math.sin(player.rotation.y), // Direction devant
+        -Math.sin(player.rotation.y), // Direction devant (corrigé)
         0,
         -Math.cos(player.rotation.y)
     ).normalize();
