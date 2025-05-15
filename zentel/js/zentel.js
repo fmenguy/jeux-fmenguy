@@ -6,11 +6,16 @@ const MODULE_COST = 10;
 const XP_PER_ENEMY = 5;
 const BASE_HP = 100;
 
-// Types de tourelles
+// Couleurs ajustées
+const TEXT_COLOR = '#4682b4'; // Bleu acier
+const BUTTON_COLOR = '#6a5acd'; // Violet ardoise
+const ENEMY_COLOR = '#ff0000'; // Rouge pour les vaisseaux ennemis
+
+// Types de tourelles avec symboles
 const TURRET_TYPES = {
-  melee: { name: "Corps à Corps", damage: 10, range: 50, color: null, attackRate: 60 }, // Attaque au contact
-  defense: { name: "Défense", damage: 0, range: 0, color: null, hpBoost: 20 }, // Augmente les HP de la base
-  projectile: { name: "Distance", damage: 5, range: 150, color: null, attackRate: 90 } // Tire des projectiles
+  melee: { name: "Corps à Corps", symbol: "⚔️", damage: 10, range: 50, color: null, attackRate: 60 },
+  defense: { name: "Défense", symbol: "🛡️", damage: 0, range: 0, color: null, hpBoost: 20 },
+  projectile: { name: "Distance", symbol: "🏹", damage: 5, range: 150, color: null, attackRate: 90 }
 };
 
 let grid = [];
@@ -39,7 +44,6 @@ function initializeGrid() {
       grid[x][y] = null;
     }
   }
-  // Placer la base spatiale sur la dernière colonne
   for (let y = 0; y < GRID_HEIGHT; y++) {
     grid[GRID_WIDTH - 1][y] = 'base';
   }
@@ -75,13 +79,13 @@ function draw() {
 }
 
 function drawColorSelect() {
-  fill('#00f0ff');
+  fill(TEXT_COLOR);
   text('Choisissez la couleur de vos tourelles', width / 2, height / 2 - 50);
-  fill(255, 0, 0); // Rouge
+  fill(255, 0, 0);
   rect(width / 2 - 60, height / 2, 50, 30);
-  fill(0, 255, 0); // Vert
+  fill(0, 255, 0);
   rect(width / 2, height / 2, 50, 30);
-  fill(0, 0, 255); // Bleu
+  fill(0, 0, 255);
   rect(width / 2 + 60, height / 2, 50, 30);
 }
 
@@ -98,14 +102,13 @@ function drawGrid() {
 
 function drawModules() {
   for (let module of modules) {
-    fill(playerColor || '#00f0ff');
+    fill(playerColor || TEXT_COLOR);
     noStroke();
-    let symbol = module.type === 'melee' ? 'M' : module.type === 'defense' ? 'D' : 'P';
+    let symbol = TURRET_TYPES[module.type].symbol;
     ellipse(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, 25);
     fill(255);
     text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
 
-    // Attaque des tourelles
     if (frameCount % TURRET_TYPES[module.type].attackRate === 0) {
       for (let enemy of enemies) {
         let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
@@ -128,7 +131,7 @@ function drawModules() {
 function drawProjectiles() {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     let p = projectiles[i];
-    fill(playerColor || '#00f0ff');
+    fill(playerColor || TEXT_COLOR);
     ellipse(p.x, p.y, 10);
     let angle = atan2(p.target.y - p.y, p.target.x - p.x);
     p.x += p.speed * cos(angle);
@@ -143,11 +146,11 @@ function drawProjectiles() {
 
 function drawEnemies() {
   for (let enemy of enemies) {
-    fill('#ff0000'); // Vaisseaux rouges
+    fill(ENEMY_COLOR);
     noStroke();
     ellipse(enemy.x, enemy.y, 20);
     if (gameState === 'playing') {
-      enemy.x += enemy.speed; // Déplacement de gauche à droite
+      enemy.x += enemy.speed;
     }
   }
   enemies = enemies.filter(enemy => enemy.hp > 0 && enemy.x < width);
@@ -159,34 +162,32 @@ function drawBase() {
 }
 
 function drawUI() {
-  fill('#00f0ff');
+  fill(TEXT_COLOR);
   noStroke();
   text(`ZENTEL  Niveau ${wave}`, width / 2, 20);
   text(`Énergie: ${energy}`, width - 100, 50);
   text(`XP: ${xp}`, width - 100, 70);
 
-  // Menu des boutons
   let menuX = GRID_WIDTH * CELL_SIZE + 50;
   let menuY = 100;
   text('Placer Tourelle:', menuX + 50, menuY - 20);
-  fill(selectedModule === 'melee' ? '#ff00ff' : '#00f0ff');
+  fill(selectedModule === 'melee' ? BUTTON_COLOR : TEXT_COLOR);
   rect(menuX, menuY, 100, 20);
   text('Corps à Corps', menuX + 50, menuY + 10);
-  fill(selectedModule === 'defense' ? '#ff00ff' : '#00f0ff');
+  fill(selectedModule === 'defense' ? BUTTON_COLOR : TEXT_COLOR);
   rect(menuX, menuY + 30, 100, 20);
   text('Défense', menuX + 50, menuY + 40);
-  fill(selectedModule === 'projectile' ? '#ff00ff' : '#00f0ff');
+  fill(selectedModule === 'projectile' ? BUTTON_COLOR : TEXT_COLOR);
   rect(menuX, menuY + 60, 100, 20);
   text('Distance', menuX + 50, menuY + 70);
 
-  // Boutons de contrôle
-  fill(gameState === 'setup' ? '#ff00ff' : '#00f0ff');
+  fill(gameState === 'setup' ? BUTTON_COLOR : TEXT_COLOR);
   rect(menuX, menuY + 100, 100, 20);
   text('Lancer', menuX + 50, menuY + 110);
-  fill(gameState === 'paused' ? '#ff00ff' : '#00f0ff');
+  fill(gameState === 'paused' ? BUTTON_COLOR : TEXT_COLOR);
   rect(menuX, menuY + 130, 100, 20);
   text('Pause', menuX + 50, menuY + 140);
-  fill('#ff00ff');
+  fill(BUTTON_COLOR);
   rect(menuX, menuY + 160, 100, 20);
   text('Relancer', menuX + 50, menuY + 170);
 }
@@ -194,11 +195,11 @@ function drawUI() {
 function drawLegend() {
   let legendX = GRID_WIDTH * CELL_SIZE + 50;
   let legendY = 300;
-  fill('#00f0ff');
+  fill(TEXT_COLOR);
   text('Légende des Tourelles', legendX + 50, legendY);
-  text(`Corps à Corps (M) : ${TURRET_TYPES.melee.damage} dégâts, portée ${TURRET_TYPES.melee.range}`, legendX + 50, legendY + 20);
-  text(`Défense (D) : +${TURRET_TYPES.defense.hpBoost} HP à la base`, legendX + 50, legendY + 40);
-  text(`Distance (P) : ${TURRET_TYPES.projectile.damage} dégâts, portée ${TURRET_TYPES.projectile.range}`, legendX + 50, legendY + 60);
+  text(`${TURRET_TYPES.melee.symbol} Corps à Corps : ${TURRET_TYPES.melee.damage} dégâts, portée ${TURRET_TYPES.melee.range}`, legendX + 50, legendY + 20);
+  text(`${TURRET_TYPES.defense.symbol} Défense : +${TURRET_TYPES.defense.hpBoost} HP à la base`, legendX + 50, legendY + 40);
+  text(`${TURRET_TYPES.projectile.symbol} Distance : ${TURRET_TYPES.projectile.damage} dégâts, portée ${TURRET_TYPES.projectile.range}`, legendX + 50, legendY + 60);
 }
 
 function updateGame() {
@@ -214,13 +215,13 @@ function updateGame() {
   enemies = enemies.filter(enemy => enemy.hp > 0);
   if (base.hp <= 0) {
     gameState = 'gameover';
-    fill('#ff00ff');
+    fill(BUTTON_COLOR);
     text('Game Over', width / 2, height / 2);
     noLoop();
   }
   for (let module of modules) {
     if (module.type === 'defense') {
-      base.hp = min(BASE_HP + TURRET_TYPES.defense.hpBoost, base.hp + 1); // Régénération lente
+      base.hp = min(BASE_HP + TURRET_TYPES.defense.hpBoost, base.hp + 1);
     }
   }
 }
@@ -233,18 +234,17 @@ function mousePressed() {
   if (gameState === 'colorSelect') {
     if (mouseY > height / 2 && mouseY < height / 2 + 30) {
       if (mouseX > width / 2 - 60 && mouseX < width / 2 - 10) {
-        playerColor = [255, 0, 0]; // Rouge
+        playerColor = [255, 0, 0];
       } else if (mouseX > width / 2 && mouseX < width / 2 + 50) {
-        playerColor = [0, 255, 0]; // Vert
+        playerColor = [0, 255, 0];
       } else if (mouseX > width / 2 + 60 && mouseX < width / 2 + 110) {
-        playerColor = [0, 0, 255]; // Bleu
+        playerColor = [0, 0, 255];
       }
       gameState = 'setup';
     }
     return;
   }
 
-  // Menu des tourelles
   if (mouseX > menuX && mouseX < menuX + 100) {
     if (mouseY > 100 && mouseY < 120) {
       selectedModule = 'melee';
@@ -262,7 +262,6 @@ function mousePressed() {
     }
   }
 
-  // Placement des tourelles
   if (x >= 0 && x < GRID_WIDTH - 1 && y >= 0 && y < GRID_HEIGHT && gameState === 'setup') {
     if (selectedModule && !grid[x][y] && energy >= MODULE_COST) {
       grid[x][y] = selectedModule;
