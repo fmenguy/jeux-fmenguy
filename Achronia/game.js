@@ -1,20 +1,17 @@
-let scene, camera, renderer, player;
+let scene, camera, renderer, player, debugInfo, forwardArrow;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 const moveSpeed = 0.1;
 
-// Configuration des touches pour AZERTY (basée sur les touches physiques)
+// Configuration des touches pour AZERTY
 const controlsConfig = {
-    forward: 'z',  // Touche Z (physique) sur AZERTY
+    forward: 'z',  // Touche Z sur AZERTY
     backward: 's', // Touche S
-    left: 'q',     // Touche Q (physique, détecté comme A)
+    left: 'q',     // Touche Q
     right: 'd'     // Touche D
 };
 
 // Initialisation de Simplex Noise
 const noise = new SimplexNoise();
-
-// Élément pour afficher les logs dans le jeu
-let debugInfo;
 
 function init() {
     // Scène
@@ -23,7 +20,7 @@ function init() {
 
     // Caméra
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, 10);
+    camera.position.set(0, 5, 5); // Position initiale derrière le joueur
 
     // Rendu
     renderer = new THREE.WebGLRenderer();
@@ -58,9 +55,16 @@ function init() {
     player.rotation.y = 0; // Orientation initiale explicite
     scene.add(player);
 
-    // Caméra troisième personne
-    camera.position.set(player.position.x, player.position.y + 2, player.position.z + 5);
-    camera.lookAt(player.position);
+    // Ajouter une flèche pour indiquer la direction "avant" du joueur
+    const arrowGeometry = new THREE.ConeGeometry(0.2, 0.5, 8);
+    const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Bleu pour la flèche
+    forwardArrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+    forwardArrow.rotation.x = Math.PI / 2; // Orienter la flèche vers l'avant
+    forwardArrow.position.set(0, 1, -0.5); // Placer devant le joueur
+    player.add(forwardArrow); // Attacher la flèche au joueur
+
+    // Positionner la caméra derrière le joueur
+    updateCameraPosition();
 
     // Créer un élément pour afficher les logs dans le jeu
     debugInfo = document.createElement('div');
@@ -72,7 +76,7 @@ function init() {
     debugInfo.style.padding = '5px';
     document.body.appendChild(debugInfo);
 
-    // Contrôles simplifiés pour AZERTY (utilisation de e.key.toLowerCase())
+    // Contrôles simplifiés pour AZERTY
     window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
         console.log('Touche pressée:', key);
@@ -99,10 +103,7 @@ function init() {
     document.addEventListener('mousemove', (e) => {
         const sensitivity = 0.002;
         player.rotation.y -= e.movementX * sensitivity;
-        camera.position.x = player.position.x - Math.sin(player.rotation.y) * 5;
-        camera.position.z = player.position.z - Math.cos(player.rotation.y) * 5;
-        camera.position.y = player.position.y + 2;
-        camera.lookAt(player.position);
+        updateCameraPosition();
     });
 
     window.addEventListener('resize', () => {
@@ -110,6 +111,15 @@ function init() {
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
+}
+
+function updateCameraPosition() {
+    // Positionner la caméra derrière le joueur en fonction de son orientation
+    const distance = 5; // Distance de la caméra derrière le joueur
+    camera.position.x = player.position.x + Math.sin(player.rotation.y) * distance;
+    camera.position.z = player.position.z + Math.cos(player.rotation.y) * distance;
+    camera.position.y = player.position.y + 2;
+    camera.lookAt(player.position);
 }
 
 function animate() {
@@ -151,10 +161,7 @@ function animate() {
     player.position.y = terrainHeight + 1;
 
     // Mettre à jour la caméra
-    camera.position.x = player.position.x - Math.sin(player.rotation.y) * 5;
-    camera.position.z = player.position.z - Math.cos(player.rotation.y) * 5;
-    camera.position.y = player.position.y + 2;
-    camera.lookAt(player.position);
+    updateCameraPosition();
 
     // Mettre à jour les logs visuels
     debugInfo.innerHTML = `
