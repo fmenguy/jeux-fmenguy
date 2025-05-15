@@ -2,18 +2,18 @@ let scene, camera, renderer, player;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, isJumping = false;
 let debugMode = false;
 let debugInfo;
-let velocityY = 0; // Vélocité verticale pour le saut
+let velocityY = 0;
 const moveSpeed = 0.1;
-const jumpForce = 0.2; // Force du saut
-const gravity = -0.01; // Gravité pour faire redescendre le joueur
+const jumpForce = 0.2;
+const gravity = -0.01;
 
 // Configuration des touches pour AZERTY
 const controlsConfig = {
-    forward: 'z',  // Touche Z sur AZERTY
-    backward: 's', // Touche S
-    left: 'q',     // Touche Q
-    right: 'd',    // Touche D
-    jump: ' '      // Touche Espace pour sauter
+    forward: 'z',
+    backward: 's',
+    left: 'q',
+    right: 'd',
+    jump: ' '
 };
 
 // Initialisation de Simplex Noise
@@ -30,8 +30,8 @@ function init() {
     // Rendu
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true; // Activer les ombres
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Ombres douces
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
     // Ajouter un ciel (skybox)
@@ -45,25 +45,23 @@ function init() {
 
     // Générer un terrain procédural
     const terrainSize = 50;
-    const terrainSegments = 200; // Plus de segments pour plus de détails
+    const terrainSegments = 200;
     const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
     
-    // Ajuster les hauteurs avec du bruit
     const vertices = terrainGeometry.attributes.position.array;
     for (let i = 0; i < vertices.length; i += 3) {
         const x = vertices[i];
         const y = vertices[i + 1];
-        const height = noise.noise2D(x * 0.05, y * 0.05) * 3; // Hauteur plus variée
+        const height = noise.noise2D(x * 0.05, y * 0.05) * 3;
         vertices[i + 2] = height;
     }
     terrainGeometry.attributes.position.needsUpdate = true;
     terrainGeometry.computeVertexNormals();
 
-    // Texture pour le terrain (style herbe)
     const textureLoader = new THREE.TextureLoader();
     const grassTexture = textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
     grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
-    grassTexture.repeat.set(10, 10); // Répéter la texture pour couvrir le terrain
+    grassTexture.repeat.set(10, 10);
 
     const terrainMaterial = new THREE.MeshPhongMaterial({
         map: grassTexture,
@@ -71,25 +69,38 @@ function init() {
     });
     const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     terrain.rotation.x = -Math.PI / 2;
-    terrain.receiveShadow = true; // Le terrain reçoit des ombres
+    terrain.receiveShadow = true;
     scene.add(terrain);
 
-    // Joueur (modèle simple avec texture)
-    const playerGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
-    const playerTexture = textureLoader.load('https://threejs.org/examples/textures/crate.gif'); // Texture simple pour le joueur
-    const playerMaterial = new THREE.MeshPhongMaterial({
-        map: playerTexture,
-        shininess: 30
-    });
-    player = new THREE.Mesh(playerGeometry, playerMaterial);
-    player.position.set(0, 2, 0);
+    // Joueur (modèle humanoïde simple : cylindre pour le corps, sphère pour la tête)
+    player = new THREE.Group(); // Utiliser un groupe pour combiner plusieurs formes
+
+    // Corps (cylindre)
+    const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 32);
+    const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x1e90ff, shininess: 30 }); // Bleu Dodger
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.y = 0.5; // Centré à mi-hauteur
+    body.castShadow = true;
+    body.receiveShadow = true;
+    player.add(body);
+
+    // Tête (sphère)
+    const headGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+    const headMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700, shininess: 30 }); // Jaune Doré
+    const head = new THREE.Mesh(headGeometry, headMaterial);
+    head.position.y = 1.1; // Au-dessus du corps
+    head.castShadow = true;
+    head.receiveShadow = true;
+    player.add(head);
+
+    // Position initiale du joueur
+    const initialTerrainHeight = noise.noise2D(0 * 0.1, 0 * 0.1) * 3;
+    player.position.set(0, initialTerrainHeight + 1, 0); // Touche le sol au démarrage
     player.rotation.y = 0;
-    player.castShadow = true; // Le joueur projette une ombre
-    player.receiveShadow = true;
     scene.add(player);
 
     // Éclairage
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Lumière ambiante douce
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -106,7 +117,7 @@ function init() {
     // Positionner la caméra derrière le joueur
     updateCameraPosition();
 
-    // Créer un élément pour afficher les infos de debug (initialement caché)
+    // Créer un élément pour afficher les infos de debug
     debugInfo = document.createElement('div');
     debugInfo.style.position = 'absolute';
     debugInfo.style.top = '50px';
@@ -126,7 +137,7 @@ function init() {
             case controlsConfig.left: moveLeft = true; break;
             case controlsConfig.right: moveRight = true; break;
             case controlsConfig.jump: 
-                if (!isJumping) { // Sauter uniquement si le joueur est au sol
+                if (!isJumping) {
                     velocityY = jumpForce;
                     isJumping = true;
                 }
@@ -148,11 +159,23 @@ function init() {
         }
     });
 
-    // Contrôle de la caméra avec la souris
+    // Pointer Lock API pour verrouiller la souris
+    let isLocked = false;
+    document.addEventListener('click', () => {
+        document.body.requestPointerLock();
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+        isLocked = document.pointerLockElement === document.body;
+    });
+
+    // Contrôle de la caméra avec la souris (seulement si verrouillé)
     document.addEventListener('mousemove', (e) => {
-        const sensitivity = 0.002;
-        player.rotation.y -= e.movementX * sensitivity;
-        updateCameraPosition();
+        if (isLocked) {
+            const sensitivity = 0.002;
+            player.rotation.y -= e.movementX * sensitivity;
+            updateCameraPosition();
+        }
     });
 
     window.addEventListener('resize', () => {
@@ -206,7 +229,7 @@ function animate() {
 
     // Gestion du saut et de la gravité
     if (isJumping) {
-        velocityY += gravity; // Appliquer la gravité
+        velocityY += gravity;
         player.position.y += velocityY;
     }
 
@@ -215,7 +238,7 @@ function animate() {
     if (player.position.y <= terrainHeight + 1) {
         player.position.y = terrainHeight + 1;
         velocityY = 0;
-        isJumping = false; // Le joueur a atterri
+        isJumping = false;
     }
 
     // Mettre à jour la caméra
