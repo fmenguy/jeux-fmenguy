@@ -384,3 +384,9 @@ body {
   max-width: 600px;
   max-height: 400px;
 }
+
+.wave-control {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
