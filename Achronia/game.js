@@ -54,20 +54,20 @@ function init() {
     window.addEventListener('keydown', (e) => {
         console.log('Touche pressée:', e.code); // Débogage
         switch (e.code) {
-            case 'KeyZ': moveForward = true; break;
-            case 'KeyS': moveBackward = true; break;
-            case 'KeyQ': moveLeft = true; break;
-            case 'KeyD': moveRight = true; break;
+            case 'KeyW': moveForward = true; break; // Z sur AZERTY
+            case 'KeyS': moveBackward = true; break; // S sur AZERTY
+            case 'KeyQ': moveLeft = true; break; // A sur AZERTY
+            case 'KeyD': moveRight = true; break; // D sur AZERTY
         }
     });
 
     window.addEventListener('keyup', (e) => {
         console.log('Touche relâchée:', e.code); // Débogage
         switch (e.code) {
-            case 'KeyZ': moveForward = false; break;
-            case 'KeyS': moveBackward = false; break;
-            case 'KeyQ': moveLeft = false; break;
-            case 'KeyD': moveRight = false; break;
+            case 'KeyW': moveForward = false; break; // Z sur AZERTY
+            case 'KeyS': moveBackward = false; break; // S sur AZERTY
+            case 'KeyQ': moveLeft = false; break; // A sur AZERTY
+            case 'KeyD': moveRight = false; break; // D sur AZERTY
         }
     });
 
@@ -108,10 +108,12 @@ function animate() {
     if (moveForward) {
         player.position.x += forwardDirection.x * moveSpeed;
         player.position.z += forwardDirection.z * moveSpeed;
+        console.log('Avancer:', forwardDirection); // Débogage
     }
     if (moveBackward) {
         player.position.x -= forwardDirection.x * moveSpeed;
         player.position.z -= forwardDirection.z * moveSpeed;
+        console.log('Reculer:', forwardDirection); // Débogage
     }
     if (moveLeft) {
         player.position.x -= rightDirection.x * moveSpeed;
