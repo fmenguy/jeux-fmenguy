@@ -20,6 +20,8 @@ const controlsConfig = {
 const noise = new SimplexNoise();
 
 function init() {
+    console.log("Initialisation du jeu..."); // Log pour confirmer le démarrage
+
     // Scène
     scene = new THREE.Scene();
 
@@ -72,32 +74,34 @@ function init() {
     terrain.receiveShadow = true;
     scene.add(terrain);
 
-    // Joueur (modèle humanoïde simple : cylindre pour le corps, sphère pour la tête)
-    player = new THREE.Group(); // Utiliser un groupe pour combiner plusieurs formes
+    // Joueur (modèle humanoïde : cylindre pour le corps, sphère pour la tête)
+    player = new THREE.Group();
+    console.log("Création du joueur (cylindre + sphère)...");
 
     // Corps (cylindre)
     const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 32);
-    const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x1e90ff, shininess: 30 }); // Bleu Dodger
+    const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x1e90ff, shininess: 30 });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.position.y = 0.5; // Centré à mi-hauteur
+    body.position.y = 0.5;
     body.castShadow = true;
     body.receiveShadow = true;
     player.add(body);
 
     // Tête (sphère)
     const headGeometry = new THREE.SphereGeometry(0.2, 32, 32);
-    const headMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700, shininess: 30 }); // Jaune Doré
+    const headMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700, shininess: 30 });
     const head = new THREE.Mesh(headGeometry, headMaterial);
-    head.position.y = 1.1; // Au-dessus du corps
+    head.position.y = 1.1;
     head.castShadow = true;
     head.receiveShadow = true;
     player.add(head);
 
     // Position initiale du joueur
     const initialTerrainHeight = noise.noise2D(0 * 0.1, 0 * 0.1) * 3;
-    player.position.set(0, initialTerrainHeight + 1, 0); // Touche le sol au démarrage
+    player.position.set(0, initialTerrainHeight + 0.5, 0); // Ajusté pour toucher le sol (hauteur du cylindre = 1, donc +0.5)
     player.rotation.y = 0;
     scene.add(player);
+    console.log("Position initiale du joueur:", player.position.y);
 
     // Éclairage
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
@@ -140,6 +144,7 @@ function init() {
                 if (!isJumping) {
                     velocityY = jumpForce;
                     isJumping = true;
+                    console.log("Saut déclenché");
                 }
                 break;
             case '$':
@@ -163,13 +168,14 @@ function init() {
     let isLocked = false;
     document.addEventListener('click', () => {
         document.body.requestPointerLock();
+        console.log("Demande de verrouillage de la souris...");
     });
 
     document.addEventListener('pointerlockchange', () => {
         isLocked = document.pointerLockElement === document.body;
+        console.log("État du verrouillage:", isLocked ? "Verrouillé" : "Déverrouillé");
     });
 
-    // Contrôle de la caméra avec la souris (seulement si verrouillé)
     document.addEventListener('mousemove', (e) => {
         if (isLocked) {
             const sensitivity = 0.002;
@@ -235,8 +241,8 @@ function animate() {
 
     // Ajuster la hauteur du joueur en fonction du terrain
     const terrainHeight = noise.noise2D(player.position.x * 0.1, player.position.z * 0.1) * 3;
-    if (player.position.y <= terrainHeight + 1) {
-        player.position.y = terrainHeight + 1;
+    if (player.position.y <= terrainHeight + 0.5) { // Ajusté pour la hauteur du cylindre
+        player.position.y = terrainHeight + 0.5;
         velocityY = 0;
         isJumping = false;
     }
