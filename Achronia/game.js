@@ -1,4 +1,4 @@
-let scene, camera, renderer, player, debugInfo, forwardArrow;
+let scene, camera, renderer, player;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 const moveSpeed = 0.1;
 
@@ -20,7 +20,7 @@ function init() {
 
     // Caméra
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, 5); // Position initiale derrière le joueur
+    camera.position.set(0, 5, 5);
 
     // Rendu
     renderer = new THREE.WebGLRenderer();
@@ -52,34 +52,15 @@ function init() {
     const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     player = new THREE.Mesh(playerGeometry, playerMaterial);
     player.position.set(0, 2, 0);
-    player.rotation.y = 0; // Orientation initiale explicite
+    player.rotation.y = 0;
     scene.add(player);
-
-    // Ajouter une flèche pour indiquer la direction "avant" du joueur
-    const arrowGeometry = new THREE.ConeGeometry(0.2, 0.5, 8);
-    const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Bleu pour la flèche
-    forwardArrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
-    forwardArrow.rotation.x = Math.PI / 2; // Orienter la flèche vers l'avant
-    forwardArrow.position.set(0, 1, -0.5); // Placer devant le joueur
-    player.add(forwardArrow); // Attacher la flèche au joueur
 
     // Positionner la caméra derrière le joueur
     updateCameraPosition();
 
-    // Créer un élément pour afficher les logs dans le jeu
-    debugInfo = document.createElement('div');
-    debugInfo.style.position = 'absolute';
-    debugInfo.style.top = '50px';
-    debugInfo.style.left = '10px';
-    debugInfo.style.color = 'white';
-    debugInfo.style.background = 'rgba(0, 0, 0, 0.5)';
-    debugInfo.style.padding = '5px';
-    document.body.appendChild(debugInfo);
-
-    // Contrôles simplifiés pour AZERTY
+    // Contrôles pour AZERTY
     window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
-        console.log('Touche pressée:', key);
         switch (key) {
             case controlsConfig.forward: moveForward = true; break;
             case controlsConfig.backward: moveBackward = true; break;
@@ -90,7 +71,6 @@ function init() {
 
     window.addEventListener('keyup', (e) => {
         const key = e.key.toLowerCase();
-        console.log('Touche relâchée:', key);
         switch (key) {
             case controlsConfig.forward: moveForward = false; break;
             case controlsConfig.backward: moveBackward = false; break;
@@ -114,8 +94,7 @@ function init() {
 }
 
 function updateCameraPosition() {
-    // Positionner la caméra derrière le joueur en fonction de son orientation
-    const distance = 5; // Distance de la caméra derrière le joueur
+    const distance = 5;
     camera.position.x = player.position.x + Math.sin(player.rotation.y) * distance;
     camera.position.z = player.position.z + Math.cos(player.rotation.y) * distance;
     camera.position.y = player.position.y + 2;
@@ -127,13 +106,13 @@ function animate() {
 
     // Calculer les directions en fonction de l'orientation du joueur
     const forwardDirection = new THREE.Vector3(
-        -Math.sin(player.rotation.y), // Direction devant
+        -Math.sin(player.rotation.y),
         0,
         -Math.cos(player.rotation.y)
     ).normalize();
 
     const rightDirection = new THREE.Vector3(
-        Math.cos(player.rotation.y), // Direction à droite
+        Math.cos(player.rotation.y),
         0,
         -Math.sin(player.rotation.y)
     ).normalize();
@@ -162,17 +141,6 @@ function animate() {
 
     // Mettre à jour la caméra
     updateCameraPosition();
-
-    // Mettre à jour les logs visuels
-    debugInfo.innerHTML = `
-        Touches actives:<br>
-        Avancer (Z): ${moveForward}<br>
-        Reculer (S): ${moveBackward}<br>
-        Gauche (Q): ${moveLeft}<br>
-        Droite (D): ${moveRight}<br>
-        Rotation Y: ${player.rotation.y.toFixed(2)} rad<br>
-        Direction Avant: x=${forwardDirection.x.toFixed(2)}, z=${forwardDirection.z.toFixed(2)}
-    `;
 
     renderer.render(scene, camera);
 }
