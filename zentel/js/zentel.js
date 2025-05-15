@@ -4,13 +4,11 @@ const CELL_SIZE = 40;
 const ENEMY_SPEED = 0.5;
 const BASE_HP = 100;
 
-// Couleurs
 const TEXT_COLOR = '#4682b4';
 const BUTTON_COLOR = '#6a5acd';
 const ENEMY_COLOR = '#ff0000';
 const TURRET_COLOR = '#00ff00';
 
-// Types de tourelles
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 50, attackRate: 60, xpRequired: 0, cost: 10 },
   defense: { name: "Bouclier Nova", symbol: "🛡️", damage: 0, range: 0, hpBoost: 20, xpRequired: 20, cost: 15 },
@@ -112,7 +110,6 @@ function draw() {
   drawProjectiles();
   drawBase();
   drawTurretButtons();
-  drawLegend();
   
   if (gameState !== 'paused') {
     updateGame();
@@ -128,7 +125,7 @@ function drawStats() {
 }
 
 function drawControlButtons() {
-  let buttonX = (width - 320) / 2; // Centré
+  let buttonX = (width - 320) / 2;
   let buttonY = 20;
 
   fill(enemies.length === 0 ? BUTTON_COLOR : TEXT_COLOR);
@@ -257,7 +254,7 @@ function drawBase() {
 }
 
 function drawTurretButtons() {
-  let offsetX = (width - 480) / 2; // Centré (4 boutons de 120px)
+  let offsetX = (width - 480) / 2;
   let buttonY = height - 60;
   let buttonSpacing = 120;
 
@@ -289,17 +286,6 @@ function drawTurretButtons() {
   noStroke();
   fill(255);
   text(`${TURRET_TYPES.wall.symbol} Barrière (${TURRET_TYPES.wall.cost})`, offsetX + buttonSpacing * 3 + 55, buttonY + 17);
-}
-
-function drawLegend() {
-  let legendX = (width - GRID_WIDTH * CELL_SIZE) / 2 - 150;
-  let legendY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + 50;
-  fill(TEXT_COLOR);
-  text('Légende', legendX + 50, legendY);
-  text(`${TURRET_TYPES.melee.symbol} Sabreur Quantique: ${TURRET_TYPES.melee.damage} dégâts, portée ${TURRET_TYPES.melee.range}`, legendX + 50, legendY + 30);
-  text(`${TURRET_TYPES.defense.symbol} Bouclier Nova: +${TURRET_TYPES.defense.hpBoost} HP à la base`, legendX + 50, legendY + 60);
-  text(`${TURRET_TYPES.projectile.symbol} Archer Plasma: ${TURRET_TYPES.projectile.damage} dégâts, portée ${TURRET_TYPES.projectile.range}`, legendX + 50, legendY + 90);
-  text(`${TURRET_TYPES.wall.symbol} Barrière Énergétique: Bloque les ennemis`, legendX + 50, legendY + 120);
 }
 
 function updateGame() {
@@ -341,7 +327,6 @@ function mousePressed() {
   let buttonY = height - 60;
   let buttonSpacing = 120;
 
-  // Boutons de contrôle
   let controlButtonX = (width - 320) / 2;
   let controlButtonY = 20;
   if (mouseY >= controlButtonY && mouseY <= controlButtonY + 30) {
@@ -354,7 +339,6 @@ function mousePressed() {
     }
   }
 
-  // Boutons des tourelles
   let turretButtonX = (width - 480) / 2;
   if (mouseY >= buttonY && mouseY <= buttonY + 35) {
     if (mouseX >= turretButtonX && mouseX <= turretButtonX + 110) {
@@ -368,12 +352,15 @@ function mousePressed() {
     }
   }
 
-  // Placement des tourelles
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT && (gameState === 'playing' || gameState === 'paused')) {
     if (selectedModule && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       grid[gridX][gridY] = selectedModule;
       modules.push({ x: gridX, y: gridY, type: selectedModule });
       energy -= TURRET_TYPES[selectedModule].cost;
+    } else if (grid[gridX][gridY]) {
+      console.log("Emplacement déjà occupé");
+    } else if (energy < TURRET_TYPES[selectedModule].cost) {
+      console.log("Pas assez d'énergie");
     }
   }
 }
@@ -391,3 +378,19 @@ function resetGame() {
   initializeGrid();
   loop();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  const deviceModal = document.getElementById('device-modal');
+  const pcButton = document.getElementById('pc-button');
+  const mobileButton = document.getElementById('mobile-button');
+
+  pcButton.addEventListener('click', function() {
+    deviceModal.style.display = 'none';
+    document.body.classList.add('pc');
+  });
+
+  mobileButton.addEventListener('click', function() {
+    deviceModal.style.display = 'none';
+    document.body.classList.add('mobile');
+  });
+});
