@@ -1,4 +1,5 @@
 import { decideAction, findPath } from './ecosystem-ai.js';
+import blagues from './blagues.js';
 
 // Configuration du canvas
 const canvas = document.getElementById('gameCanvas');
@@ -77,6 +78,7 @@ const creatureType = {
   generation: 0, // Génération initiale
   isPredator: false, // Indique si la créature est devenue un prédateur
   lastBubbleTime: 0, // Compteur pour les bulles
+  lastJoke: null, // Dernière blague affichée
   wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 }, // Direction aléatoire pour le mouvement
   lastPath: [], // Dernier chemin calculé
   lastTarget: null, // Dernière cible utilisée pour le pathfinding
@@ -91,7 +93,8 @@ const initialCreature = {
   x: Math.floor(gridSize / 2),
   y: Math.floor(gridSize / 2),
   ...creatureType,
-  lastBubbleTime: 0
+  lastBubbleTime: 0,
+  lastJoke: null
 };
 creatures.push(initialCreature);
 activeSpecies.add(speciesTypes[0].name); // Ajouter l'espèce initiale à la légende
@@ -152,7 +155,8 @@ window.respawnCreature = () => {
       x: Math.floor(gridSize / 2),
       y: Math.floor(gridSize / 2),
       ...creatureType,
-      lastBubbleTime: 0
+      lastBubbleTime: 0,
+      lastJoke: null
     };
     creatures.push(newCreature);
     activeSpecies.add(newCreature.species.name); // Mettre à jour la légende
@@ -204,23 +208,6 @@ canvas.addEventListener('contextmenu', (event) => {
 // Gérer les bulles de demande
 let requestSide = 'left'; // Alterner les côtés des bulles
 
-// Liste de blagues/messages amusants pour inciter à ajouter de la nourriture
-const funnyMessages = [
-  "Je suis affamé, un petit snack me ferait nager de bonheur !",
-  "Pourquoi les méduses ne partagent pas leur nourriture ? Parce qu'elles sont trop jelly !",
-  "J’ai tellement faim que je pourrais manger un mur… mais je préfère de la nourriture !",
-  "Un peu de nourriture, et je te promets un spectacle de tentacules !",
-  "Je suis à sec, donne-moi un coup de pouce… ou de nourriture !"
-];
-
-// Messages si le chemin est bloqué
-const blockedMessages = [
-  "Un mur me bloque, je ne peux pas atteindre la nourriture… Aide-moi à nager librement !",
-  "Ces murs me donnent le tournis, je veux juste un peu de nourriture…",
-  "Je suis coincé derrière un mur, fais quelque chose, s’il te plaît !",
-  "Ce mur est une vraie barrière à mon repas, peux-tu m’aider ?"
-];
-
 // Afficher un message dans une bulle
 function showBubble(entityType, message, entity) {
   const requestsDiv = document.getElementById('foodRequests');
@@ -240,7 +227,13 @@ function showBubble(entityType, message, entity) {
   // Supprimer la bulle après 5 secondes
   setTimeout(() => {
     bubble.remove();
+    // Réinitialiser lastJoke après que la bulle a disparu
+    if (entity) {
+      entity.lastJoke = null;
+    }
   }, 5000);
+
+  return message; // Retourner le message pour le stocker dans lastJoke
 }
 
 // Afficher un message de limite dans la console
@@ -743,6 +736,8 @@ function gameLoop() {
     creature.lastBubbleTime++;
     if (creature.lastBubbleTime > 450) { // 15 secondes à 30 FPS
       let message;
+      let jokeArray;
+
       // Vérifier si le chemin est bloqué
       let pathToFood = [];
       if (foodItems.length > 0) {
@@ -750,13 +745,22 @@ function gameLoop() {
       }
       const isPathBlocked = foodItems.length > 0 && pathToFood.length === 0;
 
+      // Choisir la catégorie de blague en fonction de la situation
       if (isPathBlocked) {
-        message = blockedMessages[Math.floor(Math.random() * blockedMessages.length)];
+        jokeArray = blagues.blocked;
+      } else if (foodItems.length === 0) {
+        jokeArray = blagues.hungry;
       } else {
-        message = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+        jokeArray = blagues.general;
       }
 
-      showBubble('creature', message, creature);
+      // Sélectionner une blague qui n'est pas la même que la dernière
+      do {
+        message = jokeArray[Math.floor(Math.random() * jokeArray.length)];
+      } while (message === creature.lastJoke && jokeArray.length > 1); // Éviter de répéter si possible
+
+      // Afficher la blague et stocker la dernière blague utilisée
+      creature.lastJoke = showBubble('creature', message, creature);
       creature.lastBubbleTime = 0; // Réinitialiser le compteur
     }
 
@@ -1005,7 +1009,8 @@ function gameLoop() {
             generation: creature.generation + 1,
             wanderDirection: { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 },
             traits: { ...creature.traits },
-            lastBubbleTime: 0
+            lastBubbleTime: 0,
+            lastJoke: null
           };
 
           // Évolution des traits
