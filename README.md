@@ -15,4 +15,12 @@ Le jeu est actuellement en développement, lien : [fmenguy.fr/fda](https://fmeng
 
 - Gestion des ressources
 - Gestion de la technologie
-- Éléments 4X (exploration, expansion, exploitation
+- Éléments 4X (exploration, expansion, exploitation)
+
+## Mes autres jeux/tests en cours
+
+Voici une liste de mes autres projets de jeux ou tests en développement, accessibles depuis la page principale :
+
+- 🐟 **Ecosim** : Un simulateur d'écosystème. [Ecosim](https://fda.fmenguy.fr/ecosim/ecosystem.html)
+- ⛰️ **Achronia** : Un jeu d'exploration en 3D avec un terrain procédural. [Achronia](https://fda.fmenguy.fr/fps/index.html)
+- 🛡️ **Zentel** : Un autre projet en cours. [Zentel](https://fda.fmenguy.fr/zentel/zentel.html)
