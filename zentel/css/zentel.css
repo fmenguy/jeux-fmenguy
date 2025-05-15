@@ -18,12 +18,84 @@ body {
   max-width: 1200px;
   padding: 20px;
   box-sizing: border-box;
+  border: 5px solid #4682b4;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(70, 130, 180, 0.5);
+  background: linear-gradient(to bottom, #1a1a2e, #0a0a1e);
+}
+
+#map-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
 }
 
 canvas {
   border: 2px solid #d2b48c;
   max-width: 100%;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+#legend-container {
+  margin-top: 20px;
+  padding: 10px;
+  background: #1a1a2e;
+  border: 2px solid #d2b48c;
+  border-radius: 5px;
+  color: #4682b4;
+  text-align: center;
+}
+
+#legend-container h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+#legend-container p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+#device-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #1a1a2e;
+  padding: 20px;
+  border: 2px solid #d2b48c;
+  border-radius: 5px;
+  z-index: 1000;
+  color: #4682b4;
+  text-align: center;
+}
+
+#device-modal p {
+  margin: 0 0 15px;
+}
+
+#device-modal button {
+  margin: 10px;
+  padding: 10px 20px;
+  background: #6a5acd;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+body.mobile #game-container {
+  max-width: 100%;
+  padding: 10px;
+}
+
+body.mobile canvas {
+  width: 100%;
+  height: auto;
+}
+
+body.mobile #legend-container {
+  font-size: 12px;
 }
 
 @media (max-width: 768px) {

@@ -5,12 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zentel</title>
   <link rel="icon" href="assets/zentel.ico" type="image/x-icon">
-  <link rel="stylesheet" href="css/zentel.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <link rel="stylesheet" href="zentel.css">
 </head>
 <body>
   <div id="game-container">
-    <script src="js/zentel.js"></script>
+    <div id="map-container">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+    <div id="legend-container">
+      <h2>Légende</h2>
+      <p>⚔️ Sabreur Quantique : 10 dégâts, portée 50</p>
+      <p>🛡️ Bouclier Nova : +20 HP à la base</p>
+      <p>🏹 Archer Plasma : 5 dégâts, portée 150</p>
+      <p>█ Barrière Énergétique : Bloque les ennemis</p>
+    </div>
   </div>
+  <div id="device-modal">
+    <p>Êtes-vous sur PC ou mobile ?</p>
+    <button id="pc-button">PC</button>
+    <button id="mobile-button">Mobile</button>
+  </div>
+  <script src="zentel.js"></script>
 </body>
 </html>
