@@ -1,4 +1,4 @@
-// Constantes alignées avec Bolt.new
+// Constantes
 const GRID_WIDTH = 15;
 const GRID_HEIGHT = 10;
 const CELL_SIZE = 40;
@@ -10,16 +10,16 @@ const ENEMY_COLOR = '#ff5555';
 const TURRET_COLOR = '#55ff55';
 
 const TURRET_TYPES = {
-  melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, xpRequired: 0, cost: 10 },
-  defense: { name: "Bouclier Nova", symbol: "🛡️", damage: 0, range: 0, hpBoost: 20, xpRequired: 20, cost: 15 },
-  projectile: { name: "Archer Plasma", symbol: "🏹", damage: 5, range: 150, attackRate: 90, xpRequired: 50, cost: 20 },
-  wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', xpRequired: 0, cost: 5 }
+  melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10 },
+  defense: { name: "Bouclier Nova", symbol: "🛡️", damage: 0, range: 0, hpBoost: 20, cost: 15 },
+  projectile: { name: "Archer Plasma", symbol: "🏹", damage: 5, range: 150, attackRate: 90, cost: 20 },
+  wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', cost: 5 }
 };
 
 const ENEMY_TYPES = [
-  { hp: 10, speed: 0.5, xp: 5, energy: 2 },
-  { hp: 20, speed: 0.7, xp: 10, energy: 3 },
-  { hp: 30, speed: 0.3, xp: 15, energy: 5 },
+  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 2 },  // Vitesse augmentée (x1.5)
+  { hp: 20, speed: 0.7 * 1.5, xp: 10, energy: 3 },
+  { hp: 30, speed: 0.3 * 1.5, xp: 15, energy: 5 },
 ];
 
 let grid = [];
@@ -114,15 +114,14 @@ function findPath(startX, startY, goalX, goalY) {
   return [];
 }
 
-// Vérifier si un chemin existe depuis n'importe quelle position de départ (colonne 0) jusqu'à la base
 function hasPathToBase() {
   for (let startY = 0; startY < GRID_HEIGHT; startY++) {
     let path = findPath(0, startY, GRID_WIDTH - 1, startY);
     if (path.length > 0) {
-      return true; // Au moins un chemin existe
+      return true;
     }
   }
-  return false; // Aucun chemin trouvé
+  return false;
 }
 
 function draw() {
@@ -242,13 +241,12 @@ function updateGame() {
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
       xp += enemy.xp;
-      energy += enemy.energy; // Ajout de l'énergie lorsque l'ennemi est tué
+      energy += enemy.energy;
       updateStats();
       if (enemies.length === 0) {
-        // Récompense d'XP à la fin de la vague
-        xp += wave * 5; // Par exemple, 5 XP par numéro de vague
+        xp += wave * 10 + 10; // Plus d'XP par vague
         document.getElementById('upgrade-modal').style.display = 'flex';
-        document.getElementById('upgrade-options').querySelector('p').textContent = `XP disponible: ${xp}`;
+        document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
       }
       return false;
     }
@@ -278,10 +276,9 @@ function updateStats() {
   ['melee', 'defense', 'projectile', 'wall'].forEach(type => {
     const btn = document.getElementById(`${type}-btn`);
     const cost = TURRET_TYPES[type].cost;
-    const xpRequired = TURRET_TYPES[type].xpRequired;
-    if (xp < xpRequired || energy < cost) {
+    if (energy < cost) {
       btn.classList.add('locked');
-      btn.querySelector('.turret-cost').textContent = xp < xpRequired ? `${xpRequired} XP req.` : `${cost} E (manque ${cost - energy})`;
+      btn.querySelector('.turret-cost').textContent = `${cost} E (manque ${cost - energy})`;
     } else {
       btn.classList.remove('locked');
       btn.querySelector('.turret-cost').textContent = `${cost} E`;
@@ -292,6 +289,16 @@ function updateStats() {
       btn.classList.remove('selected');
     }
   });
+
+  // Désactiver le bouton d'échange si pas assez d'XP
+  const exchangeBtn = document.getElementById('exchange-xp-energy');
+  if (xp < 5) {
+    exchangeBtn.classList.add('locked');
+    exchangeBtn.textContent = `Échanger XP > Énergie (manque ${5 - xp} XP)`;
+  } else {
+    exchangeBtn.classList.remove('locked');
+    exchangeBtn.textContent = `Échanger XP > Énergie`;
+  }
 }
 
 function mousePressed() {
@@ -299,25 +306,20 @@ function mousePressed() {
   let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT && (gameState === 'playing' || gameState === 'paused')) {
-    if (selectedModule && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost && xp >= TURRET_TYPES[selectedModule].xpRequired) {
-      // Si c'est un mur, vérifier qu'il ne bloque pas tous les chemins
+    if (selectedModule && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       if (selectedModule === 'wall') {
-        // Simuler le placement du mur
         grid[gridX][gridY] = selectedModule;
         if (!hasPathToBase()) {
-          grid[gridX][gridY] = null; // Annuler le placement
-          return; // Ne pas placer le mur si ça bloque tous les chemins
+          grid[gridX][gridY] = null;
+          return;
         }
       }
-      // Si ce n'est pas un mur, vérifier que la cellule n'est pas occupée par un mur
       if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
-        return; // Ne pas placer une tourelle alliée sur un mur
+        return;
       }
-      // Placer le module
       grid[gridX][gridY] = selectedModule;
       modules.push({ x: gridX, y: gridY, type: selectedModule });
       energy -= TURRET_TYPES[selectedModule].cost;
-      // Recalculer les chemins des ennemis si un mur est placé
       if (selectedModule === 'wall') {
         enemies.forEach(enemy => {
           if (enemy.path.length > 0) {
@@ -339,16 +341,12 @@ document.getElementById('melee-btn').addEventListener('click', () => {
   updateStats();
 });
 document.getElementById('defense-btn').addEventListener('click', () => {
-  if (xp >= TURRET_TYPES.defense.xpRequired) {
-    selectedModule = selectedModule === 'defense' ? null : 'defense';
-    updateStats();
-  }
+  selectedModule = selectedModule === 'defense' ? null : 'defense';
+  updateStats();
 });
 document.getElementById('projectile-btn').addEventListener('click', () => {
-  if (xp >= TURRET_TYPES.projectile.xpRequired) {
-    selectedModule = selectedModule === 'projectile' ? null : 'projectile';
-    updateStats();
-  }
+  selectedModule = selectedModule === 'projectile' ? null : 'projectile';
+  updateStats();
 });
 document.getElementById('wall-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'wall' ? null : 'wall';
@@ -389,6 +387,7 @@ document.getElementById('upgrade-range').addEventListener('click', () => {
     upgrades.range += 0.1;
     xp -= 5;
     updateStats();
+    document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
   }
 });
 
@@ -397,6 +396,7 @@ document.getElementById('upgrade-attack-speed').addEventListener('click', () => 
     upgrades.attackSpeed += 0.1;
     xp -= 5;
     updateStats();
+    document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
   }
 });
 
@@ -405,6 +405,7 @@ document.getElementById('upgrade-damage').addEventListener('click', () => {
     upgrades.damage += 0.1;
     xp -= 5;
     updateStats();
+    document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
   }
 });
 
@@ -412,7 +413,7 @@ document.getElementById('upgrade-damage').addEventListener('click', () => {
 document.getElementById('exchange-xp-energy').addEventListener('click', () => {
   if (xp >= 5) {
     xp -= 5;
-    energy += 10; // Par exemple, 5 XP pour 10 énergie
+    energy += 10;
     updateStats();
   }
 });
