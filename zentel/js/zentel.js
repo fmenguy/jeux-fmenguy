@@ -16,6 +16,12 @@ const TURRET_TYPES = {
   wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', xpRequired: 0, cost: 5 }
 };
 
+const ENEMY_TYPES = [
+  { hp: 10, speed: 0.5, xp: 5 },
+  { hp: 20, speed: 0.7, xp: 10 },
+  { hp: 30, speed: 0.3, xp: 15 },
+];
+
 let grid = [];
 let modules = [];
 let enemies = [];
@@ -26,12 +32,15 @@ let gameState = 'playing';
 let selectedModule = null;
 let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
 let projectiles = [];
+let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
 
 function setup() {
-  createCanvas(GRID_WIDTH * CELL_SIZE + 200, GRID_HEIGHT * CELL_SIZE + 200);
+  let canvas = createCanvas(GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
+  canvas.parent('map-container');
   textAlign(CENTER, CENTER);
   textSize(14);
   initializeGrid();
+  updateStats();
 }
 
 function initializeGrid() {
@@ -48,18 +57,23 @@ function initializeGrid() {
 
 function spawnWave() {
   wave++;
-  for (let i = 0; i < wave * 2; i++) {
+  let enemyCount = wave * 2;
+  let enemyTypeIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+  for (let i = 0; i < enemyCount; i++) {
     let startY = floor(random(GRID_HEIGHT));
     let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+    let enemyType = ENEMY_TYPES[enemyTypeIndex];
     enemies.push({
       x: 0,
       y: startY * CELL_SIZE + CELL_SIZE / 2,
-      hp: 10 + wave * 5,
-      speed: ENEMY_SPEED,
+      hp: enemyType.hp + wave * 5,
+      speed: enemyType.speed,
       path: path,
-      pathIndex: 0
+      pathIndex: 0,
+      xp: enemyType.xp
     });
   }
+  updateStats();
 }
 
 function findPath(startX, startY, goalX, goalY) {
@@ -101,99 +115,56 @@ function findPath(startX, startY, goalX, goalY) {
 
 function draw() {
   background('#0a0a1e');
-  
-  drawStats();
-  drawControlButtons();
   drawGrid();
   drawModules();
   drawEnemies();
   drawProjectiles();
   drawBase();
-  drawTurretButtons();
-  
+
   if (gameState !== 'paused') {
     updateGame();
   }
 }
 
-function drawStats() {
-  fill(TEXT_COLOR);
-  noStroke();
-  text(`Vague: ${wave}`, width - 100, 20);
-  text(`Énergie: ${energy}`, width - 100, 40);
-  text(`XP: ${xp}`, width - 100, 60);
-}
-
-function drawControlButtons() {
-  let buttonX = (width - 320) / 2;
-  let buttonY = 20;
-
-  fill(enemies.length === 0 ? BUTTON_COLOR : TEXT_COLOR);
-  stroke(255);
-  strokeWeight(1);
-  rect(buttonX, buttonY, 100, 30, 5);
-  noStroke();
-  fill(255);
-  text('Lancer', buttonX + 50, buttonY + 15);
-
-  fill(gameState === 'paused' ? BUTTON_COLOR : TEXT_COLOR);
-  stroke(255);
-  rect(buttonX + 110, buttonY, 100, 30, 5);
-  noStroke();
-  fill(255);
-  text('Pause', buttonX + 160, buttonY + 15);
-
-  fill(BUTTON_COLOR);
-  stroke(255);
-  rect(buttonX + 220, buttonY, 100, 30, 5);
-  noStroke();
-  fill(255);
-  text('Relancer', buttonX + 270, buttonY + 15);
-}
-
 function drawGrid() {
   stroke('#d2b48c');
   strokeWeight(1);
-  let offsetX = (width - GRID_WIDTH * CELL_SIZE) / 2;
-  let offsetY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + 30;
   for (let x = 0; x < GRID_WIDTH; x++) {
     for (let y = 0; y < GRID_HEIGHT; y++) {
       fill(grid[x][y] === 'base' ? '#4682b4' : '#f5deb3');
-      rect(offsetX + x * CELL_SIZE, offsetY + y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
   }
 }
 
 function drawModules() {
-  let offsetX = (width - GRID_WIDTH * CELL_SIZE) / 2;
-  let offsetY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + 30;
   for (let module of modules) {
     if (module.type === 'wall') {
       fill(TURRET_TYPES.wall.color);
       noStroke();
-      rect(offsetX + module.x * CELL_SIZE, offsetY + module.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      rect(module.x * CELL_SIZE, module.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
       fill(255);
-      text(TURRET_TYPES.wall.symbol, offsetX + module.x * CELL_SIZE + CELL_SIZE / 2, offsetY + module.y * CELL_SIZE + CELL_SIZE / 2);
+      text(TURRET_TYPES.wall.symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
     } else {
       fill(TURRET_COLOR);
       noStroke();
       let symbol = TURRET_TYPES[module.type].symbol;
-      ellipse(offsetX + module.x * CELL_SIZE + CELL_SIZE / 2, offsetY + module.y * CELL_SIZE + CELL_SIZE / 2, 25);
+      ellipse(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, 25);
       fill(255);
-      text(symbol, offsetX + module.x * CELL_SIZE + CELL_SIZE / 2, offsetY + module.y * CELL_SIZE + CELL_SIZE / 2);
+      text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
 
-      if (frameCount % TURRET_TYPES[module.type].attackRate === 0 && gameState !== 'paused') {
+      if (frameCount % (TURRET_TYPES[module.type].attackRate / upgrades.attackSpeed) === 0 && gameState !== 'paused') {
         for (let enemy of enemies) {
-          let d = dist(offsetX + module.x * CELL_SIZE + CELL_SIZE / 2, offsetY + module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
-          if (module.type === 'melee' && d < TURRET_TYPES.melee.range) {
-            enemy.hp -= TURRET_TYPES.melee.damage;
-          } else if (module.type === 'projectile' && d < TURRET_TYPES.projectile.range) {
+          let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
+          if (module.type === 'melee' && d < TURRET_TYPES.melee.range * upgrades.range) {
+            enemy.hp -= TURRET_TYPES.melee.damage * upgrades.damage;
+          } else if (module.type === 'projectile' && d < TURRET_TYPES.projectile.range * upgrades.range) {
             projectiles.push({
-              x: offsetX + module.x * CELL_SIZE + CELL_SIZE / 2,
-              y: offsetY + module.y * CELL_SIZE + CELL_SIZE / 2,
+              x: module.x * CELL_SIZE + CELL_SIZE / 2,
+              y: module.y * CELL_SIZE + CELL_SIZE / 2,
               target: enemy,
               speed: 3,
-              damage: TURRET_TYPES.projectile.damage
+              damage: TURRET_TYPES.projectile.damage * upgrades.damage
             });
           }
         }
@@ -203,16 +174,14 @@ function drawModules() {
 }
 
 function drawEnemies() {
-  let offsetX = (width - GRID_WIDTH * CELL_SIZE) / 2;
-  let offsetY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + 30;
   for (let enemy of enemies) {
     fill(ENEMY_COLOR);
     noStroke();
     ellipse(enemy.x, enemy.y, 20);
     if (gameState !== 'paused' && enemy.path.length > 0) {
       let nextPoint = enemy.path[enemy.pathIndex];
-      let targetX = offsetX + nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
-      let targetY = offsetY + nextPoint.y * CELL_SIZE + CELL_SIZE / 2;
+      let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
+      let targetY = nextPoint.y * CELL_SIZE + CELL_SIZE / 2;
       let dx = targetX - enemy.x;
       let dy = targetY - enemy.y;
       let distToTarget = dist(enemy.x, enemy.y, targetX, targetY);
@@ -247,50 +216,13 @@ function drawProjectiles() {
 }
 
 function drawBase() {
-  let offsetX = (width - GRID_WIDTH * CELL_SIZE) / 2;
-  let offsetY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + 30;
   fill(255);
-  text(`Base HP: ${base.hp}`, offsetX + (GRID_WIDTH - 1) * CELL_SIZE + CELL_SIZE / 2, offsetY + GRID_HEIGHT * CELL_SIZE + 20);
-}
-
-function drawTurretButtons() {
-  let offsetX = (width - 480) / 2;
-  let buttonY = height - 60;
-  let buttonSpacing = 120;
-
-  fill(selectedModule === 'melee' ? BUTTON_COLOR : TEXT_COLOR);
-  stroke(255);
-  strokeWeight(1);
-  rect(offsetX, buttonY, 110, 35, 5);
-  noStroke();
-  fill(255);
-  text(`${TURRET_TYPES.melee.symbol} Sabreur (${TURRET_TYPES.melee.cost})`, offsetX + 55, buttonY + 17);
-
-  fill(xp >= TURRET_TYPES.defense.xpRequired ? (selectedModule === 'defense' ? BUTTON_COLOR : TEXT_COLOR) : '#555555');
-  stroke(255);
-  rect(offsetX + buttonSpacing, buttonY, 110, 35, 5);
-  noStroke();
-  fill(255);
-  text(`${TURRET_TYPES.defense.symbol} Bouclier (${TURRET_TYPES.defense.cost})`, offsetX + buttonSpacing + 55, buttonY + 17);
-
-  fill(xp >= TURRET_TYPES.projectile.xpRequired ? (selectedModule === 'projectile' ? BUTTON_COLOR : TEXT_COLOR) : '#555555');
-  stroke(255);
-  rect(offsetX + buttonSpacing * 2, buttonY, 110, 35, 5);
-  noStroke();
-  fill(255);
-  text(`${TURRET_TYPES.projectile.symbol} Archer (${TURRET_TYPES.projectile.cost})`, offsetX + buttonSpacing * 2 + 55, buttonY + 17);
-
-  fill(selectedModule === 'wall' ? BUTTON_COLOR : TEXT_COLOR);
-  stroke(255);
-  rect(offsetX + buttonSpacing * 3, buttonY, 110, 35, 5);
-  noStroke();
-  fill(255);
-  text(`${TURRET_TYPES.wall.symbol} Barrière (${TURRET_TYPES.wall.cost})`, offsetX + buttonSpacing * 3 + 55, buttonY + 17);
+  text(`Base HP: ${base.hp}`, (GRID_WIDTH - 1) * CELL_SIZE + CELL_SIZE / 2, GRID_HEIGHT * CELL_SIZE + 20);
 }
 
 function updateGame() {
   for (let enemy of enemies) {
-    if (enemy.x > (width - GRID_WIDTH * CELL_SIZE) / 2 + (GRID_WIDTH - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
+    if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
       base.hp -= 10;
       enemy.hp = 0;
     }
@@ -298,8 +230,13 @@ function updateGame() {
   
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
-      xp += 5;
+      xp += enemy.xp;
       energy += 2;
+      updateStats();
+      if (enemies.length === 0) {
+        document.getElementById('upgrade-menu').style.display = 'block';
+        document.getElementById('xp-available').textContent = xp;
+      }
       return false;
     }
     return true;
@@ -319,51 +256,76 @@ function updateGame() {
   }
 }
 
+function updateStats() {
+  document.getElementById('wave').textContent = `Vague: ${wave}`;
+  document.getElementById('energy').textContent = `Énergie: ${energy}`;
+  document.getElementById('xp').textContent = `XP: ${xp}`;
+}
+
 function mousePressed() {
-  let offsetX = (width - GRID_WIDTH * CELL_SIZE) / 2;
-  let offsetY = (height - GRID_HEIGHT * CELL_SIZE) / 2 + 30;
-  let gridX = floor((mouseX - offsetX) / CELL_SIZE);
-  let gridY = floor((mouseY - offsetY) / CELL_SIZE);
-  let buttonY = height - 60;
-  let buttonSpacing = 120;
-
-  let controlButtonX = (width - 320) / 2;
-  let controlButtonY = 20;
-  if (mouseY >= controlButtonY && mouseY <= controlButtonY + 30) {
-    if (mouseX >= controlButtonX && mouseX <= controlButtonX + 100 && enemies.length === 0 && gameState === 'playing') {
-      spawnWave();
-    } else if (mouseX >= controlButtonX + 110 && mouseX <= controlButtonX + 210) {
-      gameState = gameState === 'playing' ? 'paused' : 'playing';
-    } else if (mouseX >= controlButtonX + 220 && mouseX <= controlButtonX + 320) {
-      resetGame();
-    }
-  }
-
-  let turretButtonX = (width - 480) / 2;
-  if (mouseY >= buttonY && mouseY <= buttonY + 35) {
-    if (mouseX >= turretButtonX && mouseX <= turretButtonX + 110) {
-      selectedModule = 'melee';
-    } else if (mouseX >= turretButtonX + buttonSpacing && mouseX <= turretButtonX + buttonSpacing + 110 && xp >= TURRET_TYPES.defense.xpRequired) {
-      selectedModule = 'defense';
-    } else if (mouseX >= turretButtonX + buttonSpacing * 2 && mouseX <= turretButtonX + buttonSpacing * 2 + 110 && xp >= TURRET_TYPES.projectile.xpRequired) {
-      selectedModule = 'projectile';
-    } else if (mouseX >= turretButtonX + buttonSpacing * 3 && mouseX <= turretButtonX + buttonSpacing * 3 + 110) {
-      selectedModule = 'wall';
-    }
-  }
+  let gridX = floor(mouseX / CELL_SIZE);
+  let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT && (gameState === 'playing' || gameState === 'paused')) {
     if (selectedModule && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       grid[gridX][gridY] = selectedModule;
       modules.push({ x: gridX, y: gridY, type: selectedModule });
       energy -= TURRET_TYPES[selectedModule].cost;
-    } else if (grid[gridX][gridY]) {
-      console.log("Emplacement déjà occupé");
-    } else if (energy < TURRET_TYPES[selectedModule].cost) {
-      console.log("Pas assez d'énergie");
+      updateStats();
     }
   }
 }
+
+document.getElementById('melee-btn').addEventListener('click', () => selectedModule = 'melee');
+document.getElementById('defense-btn').addEventListener('click', () => {
+  if (xp >= TURRET_TYPES.defense.xpRequired) selectedModule = 'defense';
+});
+document.getElementById('projectile-btn').addEventListener('click', () => {
+  if (xp >= TURRET_TYPES.projectile.xpRequired) selectedModule = 'projectile';
+});
+document.getElementById('wall-btn').addEventListener('click', () => selectedModule = 'wall');
+
+document.getElementById('start-wave').addEventListener('click', () => {
+  if (enemies.length === 0 && gameState === 'playing') {
+    spawnWave();
+  }
+});
+
+document.getElementById('pause').addEventListener('click', () => {
+  gameState = gameState === 'playing' ? 'paused' : 'playing';
+});
+
+document.getElementById('restart').addEventListener('click', () => {
+  resetGame();
+});
+
+document.getElementById('upgrade-range').addEventListener('click', () => {
+  if (xp >= 5) {
+    upgrades.range += 0.1;
+    xp -= 5;
+    updateStats();
+  }
+});
+
+document.getElementById('upgrade-attack-speed').addEventListener('click', () => {
+  if (xp >= 5) {
+    upgrades.attackSpeed += 0.1;
+    xp -= 5;
+    updateStats();
+  }
+});
+
+document.getElementById('upgrade-damage').addEventListener('click', () => {
+  if (xp >= 5) {
+    upgrades.damage += 0.1;
+    xp -= 5;
+    updateStats();
+  }
+});
+
+document.getElementById('close-upgrade').addEventListener('click', () => {
+  document.getElementById('upgrade-menu').style.display = 'none';
+});
 
 function resetGame() {
   grid = [];
@@ -375,7 +337,9 @@ function resetGame() {
   wave = 0;
   base.hp = BASE_HP;
   gameState = 'playing';
+  upgrades = { range: 1, attackSpeed: 1, damage: 1 };
   initializeGrid();
+  updateStats();
   loop();
 }
 

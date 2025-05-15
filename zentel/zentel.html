@@ -3,29 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zentel</title>
-  <link rel="icon" href="assets/zentel.ico" type="image/x-icon">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <title>Zentel - Tower Defense</title>
   <link rel="stylesheet" href="css/zentel.css">
 </head>
 <body>
   <div id="game-container">
+    <div id="left-panel">
+      <div id="legend">
+        <h2>Légende</h2>
+        <p>⚔️ Sabreur Quantique : 10 dégâts, portée 50</p>
+        <p>🛡️ Bouclier Nova : +20 HP à la base</p>
+        <p>🏹 Archer Plasma : 5 dégâts, portée 150</p>
+        <p>█ Barrière Énergétique : Bloque les ennemis</p>
+      </div>
+      <div id="stats">
+        <p id="wave">Vague: 0</p>
+        <p id="energy">Énergie: 20</p>
+        <p id="xp">XP: 0</p>
+      </div>
+    </div>
     <div id="map-container">
       <canvas id="gameCanvas"></canvas>
     </div>
-    <div id="legend-container">
-      <h2>Légende</h2>
-      <p>⚔️ Sabreur Quantique : 10 dégâts, portée 50</p>
-      <p>🛡️ Bouclier Nova : +20 HP à la base</p>
-      <p>🏹 Archer Plasma : 5 dégâts, portée 150</p>
-      <p>█ Barrière Énergétique : Bloque les ennemis</p>
+    <div id="right-panel">
+      <div id="turret-buttons">
+        <button id="melee-btn">⚔️ Sabreur (10)</button>
+        <button id="defense-btn">🛡️ Bouclier (15)</button>
+        <button id="projectile-btn">🏹 Archer (20)</button>
+        <button id="wall-btn">█ Barrière (5)</button>
+      </div>
+      <div id="control-buttons">
+        <button id="start-wave">Lancer Vague</button>
+        <button id="pause">Pause</button>
+        <button id="restart">Relancer</button>
+      </div>
     </div>
+  </div>
+  <div id="upgrade-menu" style="display: none;">
+    <h2>Améliorer Tourelles</h2>
+    <p>XP disponible: <span id="xp-available">0</span></p>
+    <button id="upgrade-range">Améliorer Portée (5 XP)</button>
+    <button id="upgrade-attack-speed">Améliorer Vitesse d'Attaque (5 XP)</button>
+    <button id="upgrade-damage">Améliorer Dégâts (5 XP)</button>
+    <button id="close-upgrade">Fermer</button>
   </div>
   <div id="device-modal">
     <p>Êtes-vous sur PC ou mobile ?</p>
     <button id="pc-button">PC</button>
     <button id="mobile-button">Mobile</button>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
   <script src="js/zentel.js"></script>
 </body>
 </html>
