@@ -17,7 +17,7 @@ const TURRET_TYPES = {
 };
 
 const ENEMY_TYPES = [
-  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 2 },  // Vitesse augmentée (x1.5)
+  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 2 },
   { hp: 20, speed: 0.7 * 1.5, xp: 10, energy: 3 },
   { hp: 30, speed: 0.3 * 1.5, xp: 15, energy: 5 },
 ];
@@ -67,6 +67,7 @@ function spawnWave() {
       x: 0,
       y: startY * CELL_SIZE + CELL_SIZE / 2,
       hp: enemyType.hp + wave * 5,
+      maxHp: enemyType.hp + wave * 5, // Ajout de maxHp pour la barre de vie
       speed: enemyType.speed,
       path: path,
       pathIndex: 0,
@@ -75,6 +76,12 @@ function spawnWave() {
     });
   }
   updateStats();
+}
+
+function spawnMultipleWaves(count) {
+  for (let i = 0; i < count; i++) {
+    spawnWave();
+  }
 }
 
 function findPath(startX, startY, goalX, goalY) {
@@ -186,9 +193,21 @@ function drawModules() {
 
 function drawEnemies() {
   for (let enemy of enemies) {
+    // Dessiner l'ennemi
     fill(ENEMY_COLOR);
     noStroke();
     ellipse(enemy.x, enemy.y, 20);
+
+    // Dessiner la barre de vie circulaire à l'intérieur
+    let hpRatio = enemy.hp / enemy.maxHp;
+    let healthColor = hpRatio > 0.6 ? '#55ff55' : hpRatio > 0.3 ? '#ffff55' : '#ff5555';
+    stroke(healthColor);
+    strokeWeight(2);
+    noFill();
+    let angle = map(hpRatio, 0, 1, 0, TWO_PI);
+    arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2); // Arc de cercle pour la vie
+
+    // Déplacement de l'ennemi
     if (gameState !== 'paused' && enemy.path.length > 0) {
       let nextPoint = enemy.path[enemy.pathIndex];
       let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
@@ -244,7 +263,7 @@ function updateGame() {
       energy += enemy.energy;
       updateStats();
       if (enemies.length === 0) {
-        xp += wave * 10 + 10; // Plus d'XP par vague
+        xp += wave * 10 + 10;
         document.getElementById('upgrade-modal').style.display = 'flex';
         document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
       }
@@ -290,7 +309,6 @@ function updateStats() {
     }
   });
 
-  // Désactiver le bouton d'échange si pas assez d'XP
   const exchangeBtn = document.getElementById('exchange-xp-energy');
   if (xp < 5) {
     exchangeBtn.classList.add('locked');
@@ -356,7 +374,8 @@ document.getElementById('wall-btn').addEventListener('click', () => {
 // Boutons de contrôle
 document.getElementById('start-wave').addEventListener('click', () => {
   if (enemies.length === 0 && gameState === 'playing') {
-    spawnWave();
+    let waveCount = parseInt(document.getElementById('wave-count').value);
+    spawnMultipleWaves(waveCount);
   }
 });
 
