@@ -1,25 +1,25 @@
+// Constantes alignées avec Bolt.new
 const GRID_WIDTH = 15;
 const GRID_HEIGHT = 10;
 const CELL_SIZE = 40;
-const ENEMY_SPEED = 0.5;
 const BASE_HP = 100;
 
-const TEXT_COLOR = '#4682b4';
+const TEXT_COLOR = '#e0e0ff';
 const BUTTON_COLOR = '#6a5acd';
-const ENEMY_COLOR = '#ff0000';
-const TURRET_COLOR = '#00ff00';
+const ENEMY_COLOR = '#ff5555';
+const TURRET_COLOR = '#55ff55';
 
 const TURRET_TYPES = {
-  melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 50, attackRate: 60, xpRequired: 0, cost: 10 },
+  melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, xpRequired: 0, cost: 10 },
   defense: { name: "Bouclier Nova", symbol: "🛡️", damage: 0, range: 0, hpBoost: 20, xpRequired: 20, cost: 15 },
   projectile: { name: "Archer Plasma", symbol: "🏹", damage: 5, range: 150, attackRate: 90, xpRequired: 50, cost: 20 },
   wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', xpRequired: 0, cost: 5 }
 };
 
 const ENEMY_TYPES = [
-  { hp: 10, speed: 0.5, xp: 5 },
-  { hp: 20, speed: 0.7, xp: 10 },
-  { hp: 30, speed: 0.3, xp: 15 },
+  { hp: 10, speed: 0.5, xp: 5, energy: 2 },
+  { hp: 20, speed: 0.7, xp: 10, energy: 3 },
+  { hp: 30, speed: 0.3, xp: 15, energy: 5 },
 ];
 
 let grid = [];
@@ -36,7 +36,7 @@ let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
 
 function setup() {
   let canvas = createCanvas(GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
-  canvas.parent('map-container');
+  canvas.parent('game-area'); // Attacher au #game-area au lieu de #map-container
   textAlign(CENTER, CENTER);
   textSize(14);
   initializeGrid();
@@ -70,7 +70,8 @@ function spawnWave() {
       speed: enemyType.speed,
       path: path,
       pathIndex: 0,
-      xp: enemyType.xp
+      xp: enemyType.xp,
+      energy: enemyType.energy
     });
   }
   updateStats();
@@ -83,7 +84,7 @@ function findPath(startX, startY, goalX, goalY) {
 
   while (queue.length > 0) {
     let { x, y, path } = queue.shift();
-    if (x === goalX && y === goalY) {
+    if (x === goalX) {
       return path;
     }
 
@@ -127,11 +128,11 @@ function draw() {
 }
 
 function drawGrid() {
-  stroke('#d2b48c');
+  stroke('#2a2a4a');
   strokeWeight(1);
   for (let x = 0; x < GRID_WIDTH; x++) {
     for (let y = 0; y < GRID_HEIGHT; y++) {
-      fill(grid[x][y] === 'base' ? '#4682b4' : '#f5deb3');
+      fill(grid[x][y] === 'base' ? '#4682b4' : '#1a1a2e');
       rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
   }
@@ -216,8 +217,8 @@ function drawProjectiles() {
 }
 
 function drawBase() {
-  fill(255);
-  text(`Base HP: ${base.hp}`, (GRID_WIDTH - 1) * CELL_SIZE + CELL_SIZE / 2, GRID_HEIGHT * CELL_SIZE + 20);
+  // Afficher la santé de la base dans l'interface plutôt que sur le canvas
+  document.getElementById('base-hp').textContent = base.hp;
 }
 
 function updateGame() {
@@ -227,28 +228,28 @@ function updateGame() {
       enemy.hp = 0;
     }
   }
-  
+
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
       xp += enemy.xp;
-      energy += 2;
+      energy += enemy.energy;
       updateStats();
       if (enemies.length === 0) {
-        document.getElementById('upgrade-menu').style.display = 'block';
-        document.getElementById('xp-available').textContent = xp;
+        document.getElementById('upgrade-modal').style.display = 'flex';
+        document.getElementById('upgrade-options').querySelector('p').textContent = `XP disponible: ${xp}`;
       }
       return false;
     }
     return true;
   });
-  
+
   if (base.hp <= 0) {
     gameState = 'gameover';
-    fill(BUTTON_COLOR);
-    text('Game Over', width / 2, height / 2);
+    document.getElementById('final-wave').textContent = wave;
+    document.getElementById('game-over-modal').style.display = 'flex';
     noLoop();
   }
-  
+
   for (let module of modules) {
     if (module.type === 'defense') {
       base.hp = min(BASE_HP + TURRET_TYPES.defense.hpBoost, base.hp + 1);
@@ -257,9 +258,29 @@ function updateGame() {
 }
 
 function updateStats() {
-  document.getElementById('wave').textContent = `Vague: ${wave}`;
-  document.getElementById('energy').textContent = `Énergie: ${energy}`;
-  document.getElementById('xp').textContent = `XP: ${xp}`;
+  document.getElementById('wave').textContent = wave;
+  document.getElementById('energy').textContent = energy;
+  document.getElementById('xp').textContent = xp;
+  document.getElementById('base-hp').textContent = base.hp;
+
+  // Mettre à jour l'état des boutons de tourelles
+  ['melee', 'defense', 'projectile', 'wall'].forEach(type => {
+    const btn = document.getElementById(`${type}-btn`);
+    const cost = TURRET_TYPES[type].cost;
+    const xpRequired = TURRET_TYPES[type].xpRequired;
+    if (xp < xpRequired || energy < cost) {
+      btn.classList.add('locked');
+      btn.querySelector('.turret-cost').textContent = xp < xpRequired ? `${xpRequired} XP req.` : `${cost} E (manque ${cost - energy})`;
+    } else {
+      btn.classList.remove('locked');
+      btn.querySelector('.turret-cost').textContent = `${cost} E`;
+    }
+    if (selectedModule === type) {
+      btn.classList.add('selected');
+    } else {
+      btn.classList.remove('selected');
+    }
+  });
 }
 
 function mousePressed() {
@@ -267,7 +288,7 @@ function mousePressed() {
   let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT && (gameState === 'playing' || gameState === 'paused')) {
-    if (selectedModule && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
+    if (selectedModule && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost && xp >= TURRET_TYPES[selectedModule].xpRequired) {
       grid[gridX][gridY] = selectedModule;
       modules.push({ x: gridX, y: gridY, type: selectedModule });
       energy -= TURRET_TYPES[selectedModule].cost;
@@ -276,15 +297,29 @@ function mousePressed() {
   }
 }
 
-document.getElementById('melee-btn').addEventListener('click', () => selectedModule = 'melee');
+// Gestion des boutons de tourelles
+document.getElementById('melee-btn').addEventListener('click', () => {
+  selectedModule = selectedModule === 'melee' ? null : 'melee';
+  updateStats();
+});
 document.getElementById('defense-btn').addEventListener('click', () => {
-  if (xp >= TURRET_TYPES.defense.xpRequired) selectedModule = 'defense';
+  if (xp >= TURRET_TYPES.defence.xpRequired) {
+    selectedModule = selectedModule === 'defense' ? null : 'defense';
+    updateStats();
+  }
 });
 document.getElementById('projectile-btn').addEventListener('click', () => {
-  if (xp >= TURRET_TYPES.projectile.xpRequired) selectedModule = 'projectile';
+  if (xp >= TURRET_TYPES.projectile.xpRequired) {
+    selectedModule = selectedModule === 'projectile' ? null : 'projectile';
+    updateStats();
+  }
 });
-document.getElementById('wall-btn').addEventListener('click', () => selectedModule = 'wall');
+document.getElementById('wall-btn').addEventListener('click', () => {
+  selectedModule = selectedModule === 'wall' ? null : 'wall';
+  updateStats();
+});
 
+// Boutons de contrôle
 document.getElementById('start-wave').addEventListener('click', () => {
   if (enemies.length === 0 && gameState === 'playing') {
     spawnWave();
@@ -293,12 +328,26 @@ document.getElementById('start-wave').addEventListener('click', () => {
 
 document.getElementById('pause').addEventListener('click', () => {
   gameState = gameState === 'playing' ? 'paused' : 'playing';
+  document.getElementById('pause').textContent = gameState === 'paused' ? 'Reprendre' : 'Pause';
 });
 
 document.getElementById('restart').addEventListener('click', () => {
   resetGame();
 });
 
+document.getElementById('continue-game').addEventListener('click', () => {
+  document.getElementById('upgrade-modal').style.display = 'none';
+  if (enemies.length === 0) {
+    spawnWave();
+  }
+});
+
+document.getElementById('restart-game').addEventListener('click', () => {
+  resetGame();
+  document.getElementById('game-over-modal').style.display = 'none';
+});
+
+// Gestion des améliorations
 document.getElementById('upgrade-range').addEventListener('click', () => {
   if (xp >= 5) {
     upgrades.range += 0.1;
@@ -323,10 +372,6 @@ document.getElementById('upgrade-damage').addEventListener('click', () => {
   }
 });
 
-document.getElementById('close-upgrade').addEventListener('click', () => {
-  document.getElementById('upgrade-menu').style.display = 'none';
-});
-
 function resetGame() {
   grid = [];
   modules = [];
@@ -337,24 +382,9 @@ function resetGame() {
   wave = 0;
   base.hp = BASE_HP;
   gameState = 'playing';
+  selectedModule = null;
   upgrades = { range: 1, attackSpeed: 1, damage: 1 };
   initializeGrid();
   updateStats();
   loop();
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-  const deviceModal = document.getElementById('device-modal');
-  const pcButton = document.getElementById('pc-button');
-  const mobileButton = document.getElementById('mobile-button');
-
-  pcButton.addEventListener('click', function() {
-    deviceModal.style.display = 'none';
-    document.body.classList.add('pc');
-  });
-
-  mobileButton.addEventListener('click', function() {
-    deviceModal.style.display = 'none';
-    document.body.classList.add('mobile');
-  });
-});
