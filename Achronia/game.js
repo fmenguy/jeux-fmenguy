@@ -1,22 +1,25 @@
-let scene, camera, renderer, player, controls;
+let scene, camera, renderer, player;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 const moveSpeed = 0.1;
 
-// Configuration des touches pour AZERTY
+// Configuration des touches pour AZERTY (basée sur les touches physiques)
 const controlsConfig = {
-    forward: 'KeyW',  // Z sur AZERTY (détecté comme KeyW)
-    backward: 'KeyS', // S sur AZERTY
-    left: 'KeyQ',     // Q sur AZERTY (détecté comme KeyQ, mais A sur le clavier)
-    right: 'KeyD'     // D sur AZERTY
+    forward: 'z',  // Touche Z (physique) sur AZERTY
+    backward: 's', // Touche S
+    left: 'q',     // Touche Q (physique, détecté comme A)
+    right: 'd'     // Touche D
 };
 
 // Initialisation de Simplex Noise
 const noise = new SimplexNoise();
 
+// Élément pour afficher les logs dans le jeu
+let debugInfo;
+
 function init() {
     // Scène
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb); // Ciel bleu
+    scene.background = new THREE.Color(0x87ceeb);
 
     // Caméra
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -52,16 +55,28 @@ function init() {
     const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     player = new THREE.Mesh(playerGeometry, playerMaterial);
     player.position.set(0, 2, 0);
+    player.rotation.y = 0; // Orientation initiale explicite
     scene.add(player);
 
     // Caméra troisième personne
     camera.position.set(player.position.x, player.position.y + 2, player.position.z + 5);
     camera.lookAt(player.position);
 
-    // Contrôles avec configuration
+    // Créer un élément pour afficher les logs dans le jeu
+    debugInfo = document.createElement('div');
+    debugInfo.style.position = 'absolute';
+    debugInfo.style.top = '50px';
+    debugInfo.style.left = '10px';
+    debugInfo.style.color = 'white';
+    debugInfo.style.background = 'rgba(0, 0, 0, 0.5)';
+    debugInfo.style.padding = '5px';
+    document.body.appendChild(debugInfo);
+
+    // Contrôles simplifiés pour AZERTY (utilisation de e.key.toLowerCase())
     window.addEventListener('keydown', (e) => {
-        console.log('Touche pressée:', e.code); // Débogage
-        switch (e.code) {
+        const key = e.key.toLowerCase();
+        console.log('Touche pressée:', key);
+        switch (key) {
             case controlsConfig.forward: moveForward = true; break;
             case controlsConfig.backward: moveBackward = true; break;
             case controlsConfig.left: moveLeft = true; break;
@@ -70,8 +85,9 @@ function init() {
     });
 
     window.addEventListener('keyup', (e) => {
-        console.log('Touche relâchée:', e.code); // Débogage
-        switch (e.code) {
+        const key = e.key.toLowerCase();
+        console.log('Touche relâchée:', key);
+        switch (key) {
             case controlsConfig.forward: moveForward = false; break;
             case controlsConfig.backward: moveBackward = false; break;
             case controlsConfig.left: moveLeft = false; break;
@@ -101,7 +117,7 @@ function animate() {
 
     // Calculer les directions en fonction de l'orientation du joueur
     const forwardDirection = new THREE.Vector3(
-        -Math.sin(player.rotation.y), // Direction devant (corrigé)
+        -Math.sin(player.rotation.y), // Direction devant
         0,
         -Math.cos(player.rotation.y)
     ).normalize();
@@ -116,12 +132,10 @@ function animate() {
     if (moveForward) {
         player.position.x += forwardDirection.x * moveSpeed;
         player.position.z += forwardDirection.z * moveSpeed;
-        console.log('Avancer:', forwardDirection); // Débogage
     }
     if (moveBackward) {
         player.position.x -= forwardDirection.x * moveSpeed;
         player.position.z -= forwardDirection.z * moveSpeed;
-        console.log('Reculer:', forwardDirection); // Débogage
     }
     if (moveLeft) {
         player.position.x -= rightDirection.x * moveSpeed;
@@ -141,6 +155,17 @@ function animate() {
     camera.position.z = player.position.z - Math.cos(player.rotation.y) * 5;
     camera.position.y = player.position.y + 2;
     camera.lookAt(player.position);
+
+    // Mettre à jour les logs visuels
+    debugInfo.innerHTML = `
+        Touches actives:<br>
+        Avancer (Z): ${moveForward}<br>
+        Reculer (S): ${moveBackward}<br>
+        Gauche (Q): ${moveLeft}<br>
+        Droite (D): ${moveRight}<br>
+        Rotation Y: ${player.rotation.y.toFixed(2)} rad<br>
+        Direction Avant: x=${forwardDirection.x.toFixed(2)}, z=${forwardDirection.z.toFixed(2)}
+    `;
 
     renderer.render(scene, camera);
 }
