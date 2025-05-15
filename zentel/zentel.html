@@ -1,58 +1,121 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zentel - Tower Defense</title>
-  <link rel="stylesheet" href="css/zentel.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZENTEL DEFENSE</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
 </head>
 <body>
   <div id="game-container">
-    <div id="left-panel">
+    <div id="info-panel">
       <div id="legend">
         <h2>Légende</h2>
-        <p>⚔️ Sabreur Quantique : 10 dégâts, portée 50</p>
-        <p>🛡️ Bouclier Nova : +20 HP à la base</p>
-        <p>🏹 Archer Plasma : 5 dégâts, portée 150</p>
-        <p>█ Barrière Énergétique : Bloque les ennemis</p>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-icon">⚔️</span>
+            Sabreur Quantique : 10 dégâts, portée 50
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">🛡️</span>
+            Bouclier Nova : +20 HP à la base
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">🏹</span>
+            Archer Plasma : 5 dégâts, portée 150
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">█</span>
+            Barrière Énergétique : Bloque les ennemis
+          </div>
+        </div>
       </div>
-      <div id="stats">
-        <p id="wave">Vague: 0</p>
-        <p id="energy">Énergie: 20</p>
-        <p id="xp">XP: 0</p>
+      <div id="game-stats">
+        <div class="stat-item">
+          <span class="stat-label">Vague:</span>
+          <span class="stat-value" id="wave">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Énergie:</span>
+          <span class="stat-value" id="energy">20</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">XP:</span>
+          <span class="stat-value" id="xp">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Base HP:</span>
+          <span class="stat-value" id="base-hp">100</span>
+        </div>
+      </div>
+      <div id="controls">
+        <button class="game-button" id="start-wave">Lancer Vague</button>
+        <button class="game-button" id="pause">Pause</button>
+        <button class="game-button" id="restart">Relancer</button>
       </div>
     </div>
-    <div id="map-container">
-      <canvas id="gameCanvas"></canvas>
+    <div id="game-area">
+      <canvas id="game-canvas"></canvas>
     </div>
-    <div id="right-panel">
-      <div id="turret-buttons">
-        <button id="melee-btn">⚔️ Sabreur (10)</button>
-        <button id="defense-btn">🛡️ Bouclier (15)</button>
-        <button id="projectile-btn">🏹 Archer (20)</button>
-        <button id="wall-btn">█ Barrière (5)</button>
+    <div id="turret-selection">
+      <div class="turret-button" id="melee-btn" data-type="melee">
+        <span class="turret-icon">⚔️</span>
+        <span class="turret-name">Sabreur</span>
+        <span class="turret-cost">10 E</span>
       </div>
-      <div id="control-buttons">
-        <button id="start-wave">Lancer Vague</button>
-        <button id="pause">Pause</button>
-        <button id="restart">Relancer</button>
+      <div class="turret-button" id="defense-btn" data-type="defense">
+        <span class="turret-icon">🛡️</span>
+        <span class="turret-name">Bouclier</span>
+        <span class="turret-cost">15 E</span>
+      </div>
+      <div class="turret-button" id="projectile-btn" data-type="projectile">
+        <span class="turret-icon">🏹</span>
+        <span class="turret-name">Archer</span>
+        <span class="turret-cost">20 E</span>
+      </div>
+      <div class="turret-button" id="wall-btn" data-type="wall">
+        <span class="turret-icon">█</span>
+        <span class="turret-name">Barrière</span>
+        <span class="turret-cost">5 E</span>
       </div>
     </div>
   </div>
-  <div id="upgrade-menu" style="display: none;">
-    <h2>Améliorer Tourelles</h2>
-    <p>XP disponible: <span id="xp-available">0</span></p>
-    <button id="upgrade-range">Améliorer Portée (5 XP)</button>
-    <button id="upgrade-attack-speed">Améliorer Vitesse d'Attaque (5 XP)</button>
-    <button id="upgrade-damage">Améliorer Dégâts (5 XP)</button>
-    <button id="close-upgrade">Fermer</button>
+
+  <div id="upgrade-modal" class="modal">
+    <div class="modal-content">
+      <h2>Amélioration des Tourelles</h2>
+      <p>Vague terminée! Utilisez votre XP pour améliorer vos tourelles</p>
+      <div id="upgrade-options">
+        <div class="upgrade-option" id="upgrade-range">
+          <h3>Portée</h3>
+          <p>Augmente la portée des tourelles</p>
+          <p class="upgrade-cost">Coût: 5 XP</p>
+        </div>
+        <div class="upgrade-option" id="upgrade-attack-speed">
+          <h3>Vitesse d'Attaque</h3>
+          <p>Augmente la vitesse d'attaque</p>
+          <p class="upgrade-cost">Coût: 5 XP</p>
+        </div>
+        <div class="upgrade-option" id="upgrade-damage">
+          <h3>Dégâts</h3>
+          <p>Augmente les dégâts des tourelles</p>
+          <p class="upgrade-cost">Coût: 5 XP</p>
+        </div>
+      </div>
+      <button class="game-button" id="continue-game">Continuer</button>
+    </div>
   </div>
-  <div id="device-modal">
-    <p>Êtes-vous sur PC ou mobile ?</p>
-    <button id="pc-button">PC</button>
-    <button id="mobile-button">Mobile</button>
+
+  <div id="game-over-modal" class="modal">
+    <div class="modal-content">
+      <h2>GAME OVER</h2>
+      <p>Votre base a été détruite!</p>
+      <p>Vous avez survécu <span id="final-wave">0</span> vagues</p>
+      <button class="game-button" id="restart-game">Recommencer</button>
+    </div>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
-  <script src="js/zentel.js"></script>
+
+  <script src="zentel.js"></script>
 </body>
 </html>
