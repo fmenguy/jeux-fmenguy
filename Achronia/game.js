@@ -50,8 +50,9 @@ function init() {
     camera.position.set(player.position.x, player.position.y + 2, player.position.z + 5);
     camera.lookAt(player.position);
 
-    // Contrôles adaptés pour AZERTY (ZQSD uniquement)
+    // Contrôles adaptés pour AZERTY (ZQSD)
     window.addEventListener('keydown', (e) => {
+        console.log('Touche pressée:', e.code); // Débogage
         switch (e.code) {
             case 'KeyZ': moveForward = true; break;
             case 'KeyS': moveBackward = true; break;
@@ -61,6 +62,7 @@ function init() {
     });
 
     window.addEventListener('keyup', (e) => {
+        console.log('Touche relâchée:', e.code); // Débogage
         switch (e.code) {
             case 'KeyZ': moveForward = false; break;
             case 'KeyS': moveBackward = false; break;
@@ -89,19 +91,20 @@ function init() {
 function animate() {
     requestAnimationFrame(animate);
 
-    // Déplacement du joueur
+    // Calculer les directions en fonction de l'orientation du joueur
     const forwardDirection = new THREE.Vector3(
-        -Math.sin(player.rotation.y),
+        -Math.sin(player.rotation.y), // Direction devant
         0,
         -Math.cos(player.rotation.y)
     ).normalize();
 
     const rightDirection = new THREE.Vector3(
-        Math.cos(player.rotation.y),
+        Math.cos(player.rotation.y), // Direction à droite
         0,
         -Math.sin(player.rotation.y)
     ).normalize();
 
+    // Déplacement du joueur
     if (moveForward) {
         player.position.x += forwardDirection.x * moveSpeed;
         player.position.z += forwardDirection.z * moveSpeed;
