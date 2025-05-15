@@ -6,8 +6,22 @@ body {
   align-items: center;
   height: 100vh;
   font-family: Arial, sans-serif;
+  overflow: auto;
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 canvas {
   border: 2px solid #d2b48c;
+  max-width: 100%;
 }
