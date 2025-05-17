@@ -11,7 +11,6 @@ const TURRET_COLOR = '#55ff55';
 
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10 },
-  defense: { name: "Bouclier Nova", symbol: "🛡️", damage: 0, range: 0, hpBoost: 20, cost: 15 },
   projectile: { name: "Archer Plasma", symbol: "🏹", damage: 5, range: 150, attackRate: 90, cost: 20 },
   wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', cost: 5 }
 };
@@ -33,6 +32,20 @@ let selectedModule = null;
 let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
 let projectiles = [];
 let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
+
+function calculateCellCost(x, y) {
+  let cost = 1;
+  for (let module of modules) {
+    if (module.type === 'wall') continue;
+    let turretRange = TURRET_TYPES[module.type].range * upgrades.range;
+    let distance = dist(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+    if (distance <= turretRange) {
+      let proximityFactor = 1 - (distance / turretRange);
+      cost += 10 * proximityFactor;
+    }
+  }
+  return cost;
+}
 
 function setup() {
   let canvas = createCanvas(GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
@@ -67,7 +80,7 @@ function spawnWave() {
       x: 0,
       y: startY * CELL_SIZE + CELL_SIZE / 2,
       hp: enemyType.hp + wave * 5,
-      maxHp: enemyType.hp + wave * 5, // Ajout de maxHp pour la barre de vie
+      maxHp: enemyType.hp + wave * 5,
       speed: enemyType.speed,
       path: path,
       pathIndex: 0,
@@ -78,19 +91,16 @@ function spawnWave() {
   updateStats();
 }
 
-function spawnMultipleWaves(count) {
-  for (let i = 0; i < count; i++) {
-    spawnWave();
-  }
-}
-
 function findPath(startX, startY, goalX, goalY) {
-  let queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
+  let queue = [{ x: startX, y: startY, cost: 0, path: [{ x: startX, y: startY }] }];
   let visited = new Set();
+  let costs = Array(GRID_WIDTH).fill().map(() => Array(GRID_HEIGHT).fill(Infinity));
+  costs[startX][startY] = 0;
   visited.add(`${startX},${startY}`);
 
   while (queue.length > 0) {
-    let { x, y, path } = queue.shift();
+    queue.sort((a, b) => a.cost - b.cost);
+    let { x, y, cost, path } = queue.shift();
     if (x === goalX) {
       return path;
     }
@@ -113,8 +123,19 @@ function findPath(startX, startY, goalX, goalY) {
         !visited.has(key) &&
         (grid[newX][newY] === null || grid[newX][newY] === 'base')
       ) {
-        visited.add(key);
-        queue.push({ x: newX, y: newY, path: [...path, { x: newX, y: newY }] });
+        let cellCost = calculateCellCost(newX, newY);
+        let newCost = cost + cellCost;
+
+        if (newCost < costs[newX][newY]) {
+          costs[newX][newY] = newCost;
+          visited.add(key);
+          queue.push({
+            x: newX,
+            y: newY,
+            cost: newCost,
+            path: [...path, { x: newX, y: newY }]
+          });
+        }
       }
     }
   }
@@ -174,15 +195,20 @@ function drawModules() {
       if (frameCount % (TURRET_TYPES[module.type].attackRate / upgrades.attackSpeed) === 0 && gameState !== 'paused') {
         for (let enemy of enemies) {
           let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
+          let effectiveDamage = TURRET_TYPES[module.type].damage * upgrades.damage;
+          // Augmentation des dégâts à partir de la vague 5
+          if (wave >= 5) {
+            effectiveDamage *= 1.5; // 50% de dégâts en plus
+          }
           if (module.type === 'melee' && d < TURRET_TYPES.melee.range * upgrades.range) {
-            enemy.hp -= TURRET_TYPES.melee.damage * upgrades.damage;
+            enemy.hp -= effectiveDamage;
           } else if (module.type === 'projectile' && d < TURRET_TYPES.projectile.range * upgrades.range) {
             projectiles.push({
               x: module.x * CELL_SIZE + CELL_SIZE / 2,
               y: module.y * CELL_SIZE + CELL_SIZE / 2,
               target: enemy,
               speed: 3,
-              damage: TURRET_TYPES.projectile.damage * upgrades.damage
+              damage: effectiveDamage
             });
           }
         }
@@ -193,21 +219,18 @@ function drawModules() {
 
 function drawEnemies() {
   for (let enemy of enemies) {
-    // Dessiner l'ennemi
     fill(ENEMY_COLOR);
     noStroke();
     ellipse(enemy.x, enemy.y, 20);
 
-    // Dessiner la barre de vie circulaire à l'intérieur
     let hpRatio = enemy.hp / enemy.maxHp;
     let healthColor = hpRatio > 0.6 ? '#55ff55' : hpRatio > 0.3 ? '#ffff55' : '#ff5555';
     stroke(healthColor);
     strokeWeight(2);
     noFill();
     let angle = map(hpRatio, 0, 1, 0, TWO_PI);
-    arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2); // Arc de cercle pour la vie
+    arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2);
 
-    // Déplacement de l'ennemi
     if (gameState !== 'paused' && enemy.path.length > 0) {
       let nextPoint = enemy.path[enemy.pathIndex];
       let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
@@ -278,12 +301,6 @@ function updateGame() {
     document.getElementById('game-over-modal').style.display = 'flex';
     noLoop();
   }
-
-  for (let module of modules) {
-    if (module.type === 'defense') {
-      base.hp = min(BASE_HP + TURRET_TYPES.defense.hpBoost, base.hp + 1);
-    }
-  }
 }
 
 function updateStats() {
@@ -292,7 +309,7 @@ function updateStats() {
   document.getElementById('xp').textContent = xp;
   document.getElementById('base-hp').textContent = base.hp;
 
-  ['melee', 'defense', 'projectile', 'wall'].forEach(type => {
+  ['melee', 'projectile', 'wall'].forEach(type => {
     const btn = document.getElementById(`${type}-btn`);
     const cost = TURRET_TYPES[type].cost;
     if (energy < cost) {
@@ -338,7 +355,7 @@ function mousePressed() {
       grid[gridX][gridY] = selectedModule;
       modules.push({ x: gridX, y: gridY, type: selectedModule });
       energy -= TURRET_TYPES[selectedModule].cost;
-      if (selectedModule === 'wall') {
+      if (selectedModule === 'wall' || selectedModule === 'melee' || selectedModule === 'projectile') {
         enemies.forEach(enemy => {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
@@ -358,10 +375,6 @@ document.getElementById('melee-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'melee' ? null : 'melee';
   updateStats();
 });
-document.getElementById('defense-btn').addEventListener('click', () => {
-  selectedModule = selectedModule === 'defense' ? null : 'defense';
-  updateStats();
-});
 document.getElementById('projectile-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'projectile' ? null : 'projectile';
   updateStats();
@@ -374,8 +387,7 @@ document.getElementById('wall-btn').addEventListener('click', () => {
 // Boutons de contrôle
 document.getElementById('start-wave').addEventListener('click', () => {
   if (enemies.length === 0 && gameState === 'playing') {
-    let waveCount = parseInt(document.getElementById('wave-count').value);
-    spawnMultipleWaves(waveCount);
+    spawnWave();
   }
 });
 
@@ -405,6 +417,14 @@ document.getElementById('upgrade-range').addEventListener('click', () => {
   if (xp >= 5) {
     upgrades.range += 0.1;
     xp -= 5;
+    enemies.forEach(enemy => {
+      if (enemy.path.length > 0) {
+        let startX = floor(enemy.x / CELL_SIZE);
+        let startY = floor(enemy.y / CELL_SIZE);
+        enemy.path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+        enemy.pathIndex = 0;
+      }
+    });
     updateStats();
     document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
   }
