@@ -196,9 +196,8 @@ function drawModules() {
         for (let enemy of enemies) {
           let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
           let effectiveDamage = TURRET_TYPES[module.type].damage * upgrades.damage;
-          // Augmentation des dégâts à partir de la vague 5
           if (wave >= 5) {
-            effectiveDamage *= 1.5; // 50% de dégâts en plus
+            effectiveDamage *= 1.5;
           }
           if (module.type === 'melee' && d < TURRET_TYPES.melee.range * upgrades.range) {
             enemy.hp -= effectiveDamage;
@@ -334,6 +333,15 @@ function updateStats() {
     exchangeBtn.classList.remove('locked');
     exchangeBtn.textContent = `Échanger XP > Énergie`;
   }
+
+  const healBtn = document.getElementById('heal-base');
+  if (wave < 5 || xp < 500 || base.hp >= BASE_HP) {
+    healBtn.classList.add('locked');
+    healBtn.textContent = wave < 5 ? `Soigner Base (vague 5+)` : xp < 500 ? `Soigner Base (manque ${500 - xp} XP)` : `Soigner Base (HP max)`;
+  } else {
+    healBtn.classList.remove('locked');
+    healBtn.textContent = `Soigner Base (500 XP → 10 HP)`;
+  }
 }
 
 function mousePressed() {
@@ -450,9 +458,26 @@ document.getElementById('upgrade-damage').addEventListener('click', () => {
 
 // Échange XP contre énergie
 document.getElementById('exchange-xp-energy').addEventListener('click', () => {
-  if (xp >= 5) {
+  const amount = document.getElementById('exchange-amount').value;
+  if (amount === '5xp' && xp >= 5) {
     xp -= 5;
     energy += 10;
+  } else if (amount === '50percent' && xp >= 5) {
+    const xpToConvert = Math.floor(xp / 2);
+    xp -= xpToConvert;
+    energy += xpToConvert * 2; // 1 XP = 2 énergie
+  } else if (amount === 'all' && xp >= 5) {
+    energy += xp * 2; // 1 XP = 2 énergie
+    xp = 0;
+  }
+  updateStats();
+});
+
+// Soigner la base
+document.getElementById('heal-base').addEventListener('click', () => {
+  if (wave >= 5 && xp >= 500 && base.hp < BASE_HP) {
+    xp -= 500;
+    base.hp = min(BASE_HP, base.hp + 10);
     updateStats();
   }
 });

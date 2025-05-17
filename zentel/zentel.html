@@ -50,7 +50,15 @@
         <button class="game-button" id="start-wave">Lancer Vague</button>
         <button class="game-button" id="pause">Pause</button>
         <button class="game-button" id="restart">Relancer</button>
-        <button class="game-button" id="exchange-xp-energy">Échanger XP > Énergie</button>
+        <div class="exchange-control">
+          <button class="game-button" id="exchange-xp-energy">Échanger XP > Énergie</button>
+          <select id="exchange-amount" class="game-button">
+            <option value="5xp">5 XP → 10 E</option>
+            <option value="50percent">50% XP</option>
+            <option value="all">Tout l'XP</option>
+          </select>
+        </div>
+        <button class="game-button" id="heal-base">Soigner Base (500 XP → 10 HP)</button>
       </div>
     </div>
     <div id="game-area">
