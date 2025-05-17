@@ -1,7 +1,7 @@
 // Constantes pour mobile
-const GRID_WIDTH = 6;  // Largeur de la grille
-const GRID_HEIGHT = 9; // Hauteur de la grille
-let CELL_SIZE;        // Sera calculé dynamiquement pour un ratio 9:16
+const GRID_WIDTH = 6;
+const GRID_HEIGHT = 9;
+let CELL_SIZE;
 
 const TEXT_COLOR = '#e0e0ff';
 const BUTTON_COLOR = '#6a5acd';
@@ -39,7 +39,7 @@ let xp = 0;
 let wave = 0;
 let gameState = 'playing';
 let selectedModule = null;
-let base = { y: GRID_HEIGHT - 1, hp: BASE_HP }; // Base en bas
+let base = { y: GRID_HEIGHT - 1, hp: BASE_HP };
 let projectiles = [];
 let enemyProjectiles = [];
 let isDeleteModeActive = false;
@@ -61,19 +61,16 @@ function calculateCellCost(x, y) {
 }
 
 function setup() {
-  // Calculer CELL_SIZE pour un ratio 9:16
   let gameArea = document.getElementById('mobile-game-area');
   let areaWidth = gameArea.clientWidth;
   let areaHeight = gameArea.clientHeight;
-  let targetRatio = 9 / 16; // Ratio 9:16
-  let gridRatio = GRID_HEIGHT / GRID_WIDTH; // Ratio de la grille (9/6 = 1.5)
+  let targetRatio = 9 / 16;
+  let gridRatio = GRID_HEIGHT / GRID_WIDTH;
 
-  // Ajuster CELL_SIZE pour que la grille remplisse l'espace disponible tout en respectant le ratio
   let maxWidth = areaWidth / GRID_WIDTH;
   let maxHeight = areaHeight / GRID_HEIGHT;
   CELL_SIZE = Math.min(maxWidth, maxHeight);
 
-  // Ajuster la taille du canvas
   let canvasWidth = CELL_SIZE * GRID_WIDTH;
   let canvasHeight = CELL_SIZE * GRID_HEIGHT;
   let canvas = createCanvas(canvasWidth, canvasHeight);
@@ -93,7 +90,7 @@ function initializeGrid() {
     }
   }
   for (let x = 0; x < GRID_WIDTH; x++) {
-    grid[x][GRID_HEIGHT - 1] = 'base'; // Base en bas
+    grid[x][GRID_HEIGHT - 1] = 'base';
   }
 }
 
@@ -133,22 +130,33 @@ function spawnWave() {
 
     for (let i = 0; i < enemiesPerType; i++) {
       let startX = floor(random(GRID_WIDTH));
-      let path = isBoss ? findPathAerial(startX, 0, startX, GRID_HEIGHT - 1) : findPath(startX, 0, startX, GRID_HEIGHT - 1);
+      let path = isBoss ? findPathAerial(startX, 0, startX, GRID_HEIGHT - 1) : findPath(startX, 0, startX, GRID_HEIGHT - 1, false);
       if (path.length === 0) {
         let foundPath = false;
         for (let x = 0; x < GRID_WIDTH; x++) {
-          path = isBoss ? findPathAerial(x, 0, x, GRID_HEIGHT - 1) : findPath(x, 0, x, GRID_HEIGHT - 1);
+          path = isBoss ? findPathAerial(x, 0, x, GRID_HEIGHT - 1) : findPath(x, 0, x, GRID_HEIGHT - 1, false);
           if (path.length > 0) {
             startX = x;
             foundPath = true;
             break;
           }
         }
+        if (!foundPath) {
+          // Si aucun chemin n'est trouvé, essayer en autorisant le passage à travers les tourelles
+          for (let x = 0; x < GRID_WIDTH; x++) {
+            path = findPath(x, 0, x, GRID_HEIGHT - 1, true);
+            if (path.length > 0) {
+              startX = x;
+              foundPath = true;
+              break;
+            }
+          }
+        }
         if (!foundPath) continue;
       }
       enemies.push({
         x: startX * CELL_SIZE + CELL_SIZE / 2,
-        y: 0, // Apparition en haut
+        y: 0,
         hp: baseHp * (1 + wave * 0.1),
         maxHp: baseHp * (1 + wave * 0.1),
         speed: enemyType.speed,
@@ -165,7 +173,7 @@ function spawnWave() {
   updateStats();
 }
 
-function findPath(startX, startY, goalX, goalY) {
+function findPath(startX, startY, goalX, goalY, allowThroughTurrets = false) {
   let queue = [{ x: startX, y: startY, cost: 0, path: [{ x: startX, y: startY }] }];
   let visited = new Set();
   let costs = Array(GRID_WIDTH).fill().map(() => Array(GRID_HEIGHT).fill(Infinity));
@@ -180,10 +188,10 @@ function findPath(startX, startY, goalX, goalY) {
     }
 
     let directions = [
-      { dx: 0, dy: 1 },  // Bas
-      { dx: 1, dy: 0 },  // Droite
-      { dx: -1, dy: 0 }, // Gauche
-      { dx: 0, dy: -1 }  // Haut
+      { dx: 0, dy: 1 },
+      { dx: 1, dy: 0 },
+      { dx: -1, dy: 0 },
+      { dx: 0, dy: -1 }
     ];
 
     for (let dir of directions) {
@@ -194,21 +202,29 @@ function findPath(startX, startY, goalX, goalY) {
       if (
         newX >= 0 && newX < GRID_WIDTH &&
         newY >= 0 && newY < GRID_HEIGHT &&
-        !visited.has(key) &&
-        (grid[newX][newY] === null || grid[newX][newY] === 'base')
+        !visited.has(key)
       ) {
-        let cellCost = calculateCellCost(newX, newY);
-        let newCost = cost + cellCost;
+        let isValid = false;
+        if (grid[newX][newY] === null || grid[newX][newY] === 'base') {
+          isValid = true;
+        } else if (allowThroughTurrets && (grid[newX][newY] === 'melee' || grid[newX][newY] === 'projectile')) {
+          isValid = true;
+        }
 
-        if (newCost < costs[newX][newY]) {
-          costs[newX][newY] = newCost;
-          visited.add(key);
-          queue.push({
-            x: newX,
-            y: newY,
-            cost: newCost,
-            path: [...path, { x: newX, y: newY }]
-          });
+        if (isValid) {
+          let cellCost = calculateCellCost(newX, newY);
+          let newCost = cost + cellCost;
+
+          if (newCost < costs[newX][newY]) {
+            costs[newX][newY] = newCost;
+            visited.add(key);
+            queue.push({
+              x: newX,
+              y: newY,
+              cost: newCost,
+              path: [...path, { x: newX, y: newY }]
+            });
+          }
         }
       }
     }
@@ -235,15 +251,23 @@ function findPath(startX, startY, goalX, goalY) {
       if (
         newX >= 0 && newX < GRID_WIDTH &&
         newY >= 0 && newY < GRID_HEIGHT &&
-        !visited.has(key) &&
-        (grid[newX][newY] === null || grid[newX][newY] === 'base')
+        !visited.has(key)
       ) {
-        visited.add(key);
-        queue.push({
-          x: newX,
-          y: newY,
-          path: [...path, { x: newX, y: newY }]
-        });
+        let isValid = false;
+        if (grid[newX][newY] === null || grid[newX][newY] === 'base') {
+          isValid = true;
+        } else if (allowThroughTurrets && (grid[newX][newY] === 'melee' || grid[newX][newY] === 'projectile')) {
+          isValid = true;
+        }
+
+        if (isValid) {
+          visited.add(key);
+          queue.push({
+            x: newX,
+            y: newY,
+            path: [...path, { x: newX, y: newY }]
+          });
+        }
       }
     }
   }
@@ -268,9 +292,12 @@ function findPathAerial(startX, startY, goalX, goalY) {
 
 function hasPathToBase() {
   for (let startX = 0; startX < GRID_WIDTH; startX++) {
-    let path = findPath(startX, 0, startX, GRID_HEIGHT - 1);
+    let path = findPath(startX, 0, startX, GRID_HEIGHT - 1, false);
     if (path.length === 0) {
-      return false;
+      path = findPath(startX, 0, startX, GRID_HEIGHT - 1, true);
+      if (path.length === 0) {
+        return false;
+      }
     }
   }
   return true;
@@ -346,7 +373,7 @@ function drawModules() {
     if (module.level >= 2) {
       color = UPGRADE_COLOR_LVL2;
       width = CELL_SIZE;
-      height = CELL_SIZE * 2; // S'étend vers le bas
+      height = CELL_SIZE * 2;
     }
     if (module.level >= 3) {
       color = UPGRADE_COLOR_LVL3;
@@ -485,7 +512,7 @@ function drawEnemies() {
       let nextGridX = floor(targetX / CELL_SIZE);
       let nextGridY = floor(targetY / CELL_SIZE);
       let canMove = true;
-      if (!enemy.isBoss && grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
+      if (!enemy.isBoss && grid[nextGridX][nextGridY] === 'wall') {
         canMove = false;
       }
 
@@ -494,10 +521,13 @@ function drawEnemies() {
         if (enemy.pathIndex >= enemy.path.length) {
           enemy.path = [];
         } else {
-          if (!enemy.isBoss && grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
+          if (!enemy.isBoss && grid[nextGridX][nextGridY] === 'wall') {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            let path = findPath(startX, startY, startX, GRID_HEIGHT - 1);
+            let path = findPath(startX, startY, startX, GRID_HEIGHT - 1, false);
+            if (path.length === 0) {
+              path = findPath(startX, startY, startX, GRID_HEIGHT - 1, true);
+            }
             if (path.length > 0) {
               enemy.path = path;
               enemy.pathIndex = 0;
@@ -512,7 +542,10 @@ function drawEnemies() {
       } else {
         let startX = floor(enemy.x / CELL_SIZE);
         let startY = floor(enemy.y / CELL_SIZE);
-        let path = findPath(startX, startY, startX, GRID_HEIGHT - 1);
+        let path = findPath(startX, startY, startX, GRID_HEIGHT - 1, false);
+        if (path.length === 0) {
+          path = findPath(startX, startY, startX, GRID_HEIGHT - 1, true);
+        }
         if (path.length > 0) {
           enemy.path = path;
           enemy.pathIndex = 0;
@@ -523,7 +556,10 @@ function drawEnemies() {
     } else {
       let startX = floor(enemy.x / CELL_SIZE);
       let startY = floor(enemy.y / CELL_SIZE);
-      let path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1);
+      let path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1, false);
+      if (path.length === 0 && !enemy.isBoss) {
+        path = findPath(startX, startY, startX, GRID_HEIGHT - 1, true);
+      }
       if (path.length > 0) {
         enemy.path = path;
         enemy.pathIndex = 0;
@@ -541,11 +577,11 @@ function drawEnemies() {
           if (
             newGridX >= 0 && newGridX < GRID_WIDTH &&
             newGridY >= 0 && newGridY < GRID_HEIGHT - 1 &&
-            (grid[newGridX][newGridY] === null || grid[newGridX][newGridY] === 'base')
+            (grid[newGridX][newGridY] === null || grid[newGridX][newGridY] === 'base' || grid[newGridX][newGridY] === 'melee' || grid[newGridX][newGridY] === 'projectile')
           ) {
             enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
             enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
-            path = enemy.isBoss ? findPathAerial(newGridX, newGridY, newGridX, GRID_HEIGHT - 1) : findPath(newGridX, newGridY, newGridX, GRID_HEIGHT - 1);
+            path = enemy.isBoss ? findPathAerial(newGridX, newGridY, newGridX, GRID_HEIGHT - 1) : findPath(newGridX, newGridY, newGridX, GRID_HEIGHT - 1, true);
             if (path.length > 0) {
               enemy.path = path;
               enemy.pathIndex = 0;
@@ -558,7 +594,7 @@ function drawEnemies() {
           enemy.y += enemy.speed;
           let startX = floor(enemy.x / CELL_SIZE);
           let startY = floor(enemy.y / CELL_SIZE);
-          path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1);
+          path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1, true);
           enemy.path = path;
           enemy.pathIndex = 0;
         }
@@ -629,7 +665,10 @@ function drawEnemyProjectiles() {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            let path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1);
+            let path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1, false);
+            if (path.length === 0 && !enemy.isBoss) {
+              path = findPath(startX, startY, startX, GRID_HEIGHT - 1, true);
+            }
             enemy.path = path;
             enemy.pathIndex = 0;
           }
@@ -714,7 +753,7 @@ function touchStarted() {
             document.getElementById('mobile-space-warning-modal').style.display = 'flex';
           }
           updateStats();
-          isEvolveModeActive = false;
+          // Ne pas désactiver isEvolveModeActive pour permettre plusieurs évolutions consécutives
           return;
         }
         if (wave >= 17 && module.level === 2 && xp >= 10000) {
@@ -739,7 +778,7 @@ function touchStarted() {
             occupyArea(module.x, module.y, width, height, module.type);
           }
           updateStats();
-          isEvolveModeActive = false;
+          // Ne pas désactiver isEvolveModeActive pour permettre plusieurs évolutions consécutives
           return;
         }
       }
@@ -766,7 +805,10 @@ function touchStarted() {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            let path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1);
+            let path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1, false);
+            if (path.length === 0 && !enemy.isBoss) {
+              path = findPath(startX, startY, startX, GRID_HEIGHT - 1, true);
+            }
             enemy.path = path;
             enemy.pathIndex = 0;
           }
@@ -814,7 +856,10 @@ function touchStarted() {
           ) {
             enemyOnCell.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
             enemyOnCell.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
-            let path = enemyOnCell.isBoss ? findPathAerial(newGridX, newGridY, newGridX, GRID_HEIGHT - 1) : findPath(newGridX, newGridY, newGridX, GRID_HEIGHT - 1);
+            let path = enemyOnCell.isBoss ? findPathAerial(newGridX, newGridY, newGridX, GRID_HEIGHT - 1) : findPath(newGridX, newGridY, newGridX, GRID_HEIGHT - 1, false);
+            if (path.length === 0 && !enemyOnCell.isBoss) {
+              path = findPath(newGridX, newGridY, newGridX, GRID_HEIGHT - 1, true);
+            }
             enemyOnCell.path = path;
             enemyOnCell.pathIndex = 0;
             moved = true;
@@ -833,7 +878,10 @@ function touchStarted() {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            let path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1);
+            let path = enemy.isBoss ? findPathAerial(startX, startY, startX, GRID_HEIGHT - 1) : findPath(startX, startY, startX, GRID_HEIGHT - 1, false);
+            if (path.length === 0 && !enemy.isBoss) {
+              path = findPath(startX, startY, startX, GRID_HEIGHT - 1, true);
+            }
             enemy.path = path;
             enemy.pathIndex = 0;
           }
