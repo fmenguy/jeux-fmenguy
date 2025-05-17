@@ -128,7 +128,6 @@ function spawnWave() {
           }
         }
         if (!foundPath) {
-          // Si aucun chemin n'est trouvé, essayer en autorisant le passage à travers les tourelles
           for (let y = 0; y < GRID_HEIGHT; y++) {
             path = findPath(0, y, GRID_WIDTH - 1, y, true);
             if (path.length > 0) {
@@ -524,9 +523,50 @@ function drawEnemies() {
       let startX = floor(enemy.x / CELL_SIZE);
       let startY = floor(enemy.y / CELL_SIZE);
       let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
+
+      // Si aucun chemin n'est trouvé, essayer de trouver une ouverture dans la colonne 2
       if (path.length === 0 && !enemy.isBoss) {
-        path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
+        let foundPath = false;
+        let bestPath = [];
+        let shortestDist = Infinity;
+
+        // Vérifier chaque ligne pour trouver une ouverture dans la colonne 2
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          // Vérifier si la colonne 2 (x = 1) est libre à cette ligne
+          if (grid[1][y] !== 'wall') {
+            // Essayer de trouver un chemin jusqu'à cette ouverture (x = 1, y)
+            let intermediatePath = findPath(startX, startY, 1, y, false);
+            if (intermediatePath.length === 0) {
+              intermediatePath = findPath(startX, startY, 1, y, true);
+            }
+            if (intermediatePath.length > 0) {
+              // Trouver un chemin de l'ouverture (x = 1, y) jusqu'à la base
+              let pathToBase = findPath(1, y, GRID_WIDTH - 1, y, false);
+              if (pathToBase.length === 0) {
+                pathToBase = findPath(1, y, GRID_WIDTH - 1, y, true);
+              }
+              if (pathToBase.length > 0) {
+                // Combiner les deux chemins
+                let combinedPath = intermediatePath.concat(pathToBase.slice(1));
+                let distToOpening = Math.abs(startY - y); // Distance en y jusqu'à l'ouverture
+                if (distToOpening < shortestDist) {
+                  shortestDist = distToOpening;
+                  bestPath = combinedPath;
+                  foundPath = true;
+                }
+              }
+            }
+          }
+        }
+
+        if (foundPath) {
+          path = bestPath;
+        } else {
+          // Si aucune ouverture n'est trouvée, essayer un chemin direct en passant par les tourelles
+          path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
+        }
       }
+
       if (path.length > 0) {
         enemy.path = path;
         enemy.pathIndex = 0;
@@ -548,7 +588,10 @@ function drawEnemies() {
           ) {
             enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
             enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
-            path = enemy.isBoss ? findPathAerial(newGridX, newGridY, GRID_WIDTH - 1, newGridY) : findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, true);
+            path = enemy.isBoss ? findPathAerial(newGridX, newGridY, GRID_WIDTH - 1, newGridY) : findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, false);
+            if (path.length === 0 && !enemy.isBoss) {
+              path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, true);
+            }
             if (path.length > 0) {
               enemy.path = path;
               enemy.pathIndex = 0;
@@ -751,7 +794,7 @@ function mousePressed() {
   if (gameState === 'paused') return;
 
   let gridX = floor(mouseX / CELL_SIZE);
-  let gridY = floor(mouseY / CELL_SIZE);
+  let gridY = floor(mouseX / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT) {
     if (gridX === 0) {
@@ -776,7 +819,6 @@ function mousePressed() {
             document.getElementById('space-warning-modal').style.display = 'flex';
           }
           updateStats();
-          // Ne pas désactiver isEvolveModeActive pour permettre plusieurs évolutions consécutives
           return;
         }
         if (wave >= 17 && module.level === 2 && xp >= 10000) {
@@ -801,7 +843,6 @@ function mousePressed() {
             occupyArea(module.x, module.y, 2, 1, module.type);
           }
           updateStats();
-          // Ne pas désactiver isEvolveModeActive pour permettre plusieurs évolutions consécutives
           return;
         }
       }
