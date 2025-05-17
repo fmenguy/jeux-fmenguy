@@ -43,6 +43,7 @@ let projectiles = [];
 let enemyProjectiles = [];
 let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
 let isDeleteModeActive = false;
+let waveCompleted = false; // Nouvelle variable pour contrôler la fin de vague
 
 function calculateCellCost(x, y) {
   let cost = 1;
@@ -81,6 +82,7 @@ function initializeGrid() {
 
 function spawnWave() {
   wave++;
+  waveCompleted = false; // Réinitialiser à chaque nouvelle vague
   let enemyCount = wave * 5;
 
   let enemyTypesToSpawn = [];
@@ -371,7 +373,7 @@ function drawModules() {
           if (module.type === 'melee' && d < effectiveRange) {
             enemy.hp -= effectiveDamage;
             if (enemy.hp <= 0) {
-              xp += enemy.xp; // Ajout de l'XP immédiatement
+              xp += enemy.xp;
               updateStats();
             }
           } else if (module.type === 'projectile' && d < effectiveRange) {
@@ -520,7 +522,7 @@ function drawProjectiles() {
     if (d < 10) {
       p.target.hp -= p.damage;
       if (p.target.hp <= 0) {
-        xp += p.target.xp; // Ajout de l'XP immédiatement
+        xp += p.target.xp;
         updateStats();
       }
       projectiles.splice(i, 1);
@@ -589,20 +591,19 @@ function updateGame() {
     if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
       base.hp -= 10;
       enemy.hp = 0;
-      // Plus d'XP attribué ici lorsqu'un ennemi atteint la base
     }
   }
 
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
-      // L'XP est maintenant attribué dans drawModules et drawProjectiles
       return false;
     }
     return true;
   });
 
-  if (enemies.length === 0 && gameState === 'playing') {
-    xp += wave * 10 + 10; // Bonus d'XP à la fin de la vague
+  if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
+    waveCompleted = true; // Marquer la vague comme terminée
+    xp += wave * 10 + 10;
     document.getElementById('upgrade-modal').style.display = 'flex';
     document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
     updateStats();
@@ -939,6 +940,7 @@ function resetGame() {
   gameState = 'playing';
   selectedModule = null;
   isDeleteModeActive = false;
+  waveCompleted = false; // Réinitialiser lors du reset
   upgrades = { range: 1, attackSpeed: 1, damage: 1 };
   initializeGrid();
   updateStats();
