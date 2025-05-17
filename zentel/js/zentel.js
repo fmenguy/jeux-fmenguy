@@ -41,15 +41,15 @@ let selectedModule = null;
 let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
 let projectiles = [];
 let enemyProjectiles = [];
-let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
 let isDeleteModeActive = false;
-let waveCompleted = false; // Nouvelle variable pour contrôler la fin de vague
+let isEvolveModeActive = false; // Nouveau mode pour évoluer les tourelles
+let waveCompleted = false;
 
 function calculateCellCost(x, y) {
   let cost = 1;
   for (let module of modules) {
     if (module.type === 'wall') continue;
-    let turretRange = TURRET_TYPES[module.type].range * upgrades.range;
+    let turretRange = TURRET_TYPES[module.type].range;
     let distance = dist(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
     if (distance <= turretRange) {
       let proximityFactor = 1 - (distance / turretRange);
@@ -82,7 +82,7 @@ function initializeGrid() {
 
 function spawnWave() {
   wave++;
-  waveCompleted = false; // Réinitialiser à chaque nouvelle vague
+  waveCompleted = false;
   let enemyCount = wave * 5;
 
   let enemyTypesToSpawn = [];
@@ -290,6 +290,8 @@ function occupyArea(startX, startY, width, height, moduleType) {
 }
 
 function draw() {
+  if (gameState === 'paused') return; // Ne pas dessiner si le jeu est en pause
+
   background('#0a0a1e');
   drawGrid();
   drawModules();
@@ -355,14 +357,14 @@ function drawModules() {
         textSize(14);
       }
 
-      if (frameCount % (TURRET_TYPES[module.type].attackRate / upgrades.attackSpeed) === 0) {
+      if (frameCount % (TURRET_TYPES[module.type].attackRate) === 0) {
         for (let i = 0; i < enemies.length; i++) {
           let enemy = enemies[i];
           if (enemy.isBoss && module.type !== 'projectile') continue;
 
           let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
-          let effectiveDamage = TURRET_TYPES[module.type].damage * upgrades.damage * (1 + wave * 0.05);
-          let effectiveRange = TURRET_TYPES[module.type].range * upgrades.range * (1 + wave * 0.02);
+          let effectiveDamage = TURRET_TYPES[module.type].damage * (1 + wave * 0.05);
+          let effectiveRange = TURRET_TYPES[module.type].range * (1 + wave * 0.02);
           if (module.level > 1) {
             effectiveDamage *= (1 + module.level * 0.3);
             effectiveRange *= (1 + module.level * 0.1);
@@ -602,10 +604,8 @@ function updateGame() {
   });
 
   if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
-    waveCompleted = true; // Marquer la vague comme terminée
+    waveCompleted = true;
     xp += wave * 10 + 10;
-    document.getElementById('upgrade-modal').style.display = 'flex';
-    document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
     updateStats();
   }
 
@@ -669,9 +669,18 @@ function updateStats() {
   } else {
     deleteBtn.classList.remove('active');
   }
+
+  const evolveBtn = document.getElementById('evolve-turret-btn');
+  if (isEvolveModeActive) {
+    evolveBtn.classList.add('active');
+  } else {
+    evolveBtn.classList.remove('active');
+  }
 }
 
 function mousePressed() {
+  if (gameState === 'paused') return; // Ne rien faire si le jeu est en pause
+
   let gridX = floor(mouseX / CELL_SIZE);
   let gridY = floor(mouseY / CELL_SIZE);
 
@@ -680,21 +689,40 @@ function mousePressed() {
       return;
     }
 
-    if (isMapFull() && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
-      let module = modules.find(m => m.x === gridX && m.y === gridY);
-      if (module) {
+    if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
+      let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
+      if (moduleIndex !== -1) {
+        let module = modules[moduleIndex];
         if (wave >= 7 && module.level === 1 && xp >= 2000) {
           xp -= 2000;
           module.level = 2;
+          let width = 2;
+          let height = 1;
+          let canEvolve = false;
+          let startX = module.x;
+          let startY = module.y;
+
+          // Essayer d'étendre vers la droite (2x1)
           if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
-            occupyArea(gridX, gridY, 2, 1, module.type);
-          } else if (gridY + 1 < GRID_HEIGHT && grid[gridX][gridY + 1] === null) {
-            occupyArea(gridX, gridY, 1, 2, module.type);
-          } else {
+            canEvolve = true;
+            occupyArea(gridX, gridY, width, height, module.type);
+          }
+          // Sinon, essayer vers le bas (1x2)
+          else if (gridY + 1 < GRID_HEIGHT && grid[gridX][gridY + 1] === null) {
+            canEvolve = true;
+            width = 1;
+            height = 2;
+            occupyArea(gridX, gridY, width, height, module.type);
+          }
+
+          if (!canEvolve) {
             module.level = 1;
             xp += 2000;
+            gameState = 'paused';
+            document.getElementById('space-warning-modal').style.display = 'flex';
           }
           updateStats();
+          isEvolveModeActive = false; // Désactiver le mode évoluer après une tentative
           return;
         }
         if (wave >= 17 && module.level === 2 && xp >= 10000) {
@@ -714,9 +742,12 @@ function mousePressed() {
           } else {
             module.level = 2;
             xp += 10000;
-            occupyArea(module.x, module.y, 2, 1, module.type);
+            gameState = 'paused';
+            document.getElementById('space-warning-modal').style.display = 'flex';
+            occupyArea(module.x, module.y, width, height, module.type);
           }
           updateStats();
+          isEvolveModeActive = false; // Désactiver le mode évoluer après une tentative
           return;
         }
       }
@@ -753,7 +784,7 @@ function mousePressed() {
       }
     }
 
-    if (selectedModule && !isDeleteModeActive && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
+    if (selectedModule && !isDeleteModeActive && !isEvolveModeActive && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       if (selectedModule === 'projectile' && wave < 5) {
         return;
       }
@@ -825,25 +856,43 @@ function mousePressed() {
 document.getElementById('melee-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'melee' ? null : 'melee';
   isDeleteModeActive = false;
+  isEvolveModeActive = false;
   updateStats();
 });
 document.getElementById('projectile-btn').addEventListener('click', () => {
   if (wave < 5) return;
   selectedModule = selectedModule === 'projectile' ? null : 'projectile';
   isDeleteModeActive = false;
+  isEvolveModeActive = false;
   updateStats();
 });
 document.getElementById('wall-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'wall' ? null : 'wall';
   isDeleteModeActive = false;
+  isEvolveModeActive = false;
   updateStats();
 });
 
 // Bouton pour supprimer une tourelle
 document.getElementById('delete-turret-btn').addEventListener('click', () => {
   isDeleteModeActive = !isDeleteModeActive;
+  isEvolveModeActive = false;
   selectedModule = null;
   updateStats();
+});
+
+// Bouton pour évoluer une tourelle
+document.getElementById('evolve-turret-btn').addEventListener('click', () => {
+  isEvolveModeActive = !isEvolveModeActive;
+  isDeleteModeActive = false;
+  selectedModule = null;
+  updateStats();
+});
+
+// Bouton pour reprendre le jeu après un avertissement d'espace
+document.getElementById('resume-game').addEventListener('click', () => {
+  document.getElementById('space-warning-modal').style.display = 'none';
+  gameState = 'playing';
 });
 
 // Boutons de contrôle
@@ -853,57 +902,9 @@ document.getElementById('start-wave').addEventListener('click', () => {
   }
 });
 
-document.getElementById('restart').addEventListener('click', () => {
-  resetGame();
-});
-
-document.getElementById('continue-game').addEventListener('click', () => {
-  document.getElementById('upgrade-modal').style.display = 'none';
-  if (enemies.length === 0) {
-    spawnWave();
-  }
-});
-
 document.getElementById('restart-game').addEventListener('click', () => {
   resetGame();
   document.getElementById('game-over-modal').style.display = 'none';
-});
-
-// Gestion des améliorations
-document.getElementById('upgrade-range').addEventListener('click', () => {
-  if (xp >= 5) {
-    upgrades.range += 0.1;
-    xp -= 5;
-    enemies.forEach(enemy => {
-      if (enemy.path.length > 0) {
-        let startX = floor(enemy.x / CELL_SIZE);
-        let startY = floor(enemy.y / CELL_SIZE);
-        let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY);
-        enemy.path = path;
-        enemy.pathIndex = 0;
-      }
-    });
-    updateStats();
-    document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
-  }
-});
-
-document.getElementById('upgrade-attack-speed').addEventListener('click', () => {
-  if (xp >= 5) {
-    upgrades.attackSpeed += 0.1;
-    xp -= 5;
-    updateStats();
-    document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
-  }
-});
-
-document.getElementById('upgrade-damage').addEventListener('click', () => {
-  if (xp >= 5) {
-    upgrades.damage += 0.1;
-    xp -= 5;
-    updateStats();
-    document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
-  }
 });
 
 // Échange XP contre énergie
@@ -940,8 +941,8 @@ function resetGame() {
   gameState = 'playing';
   selectedModule = null;
   isDeleteModeActive = false;
-  waveCompleted = false; // Réinitialiser lors du reset
-  upgrades = { range: 1, attackSpeed: 1, damage: 1 };
+  isEvolveModeActive = false;
+  waveCompleted = false;
   initializeGrid();
   updateStats();
   loop();
