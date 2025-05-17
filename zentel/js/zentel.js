@@ -33,7 +33,7 @@ const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 40, energy: 0, attackRate
 let grid = [];
 let modules = [];
 let enemies = [];
-let energy = 20;
+let energy = 20; // Confirmé : 20 d'énergie au départ
 let xp = 0;
 let wave = 0;
 let gameState = 'playing';
@@ -247,15 +247,14 @@ function findPathAerial(startX, startY, goalX, goalY) {
   return path;
 }
 
-// Vérifie si un chemin terrestre existe pour chaque ligne de départ
 function hasPathToBase() {
   for (let startY = 0; startY < GRID_HEIGHT; startY++) {
     let path = findPath(0, startY, GRID_WIDTH - 1, startY);
     if (path.length === 0) {
-      return false; // Si une ligne est bloquée, on considère qu'il n'y a pas de chemin
+      return false;
     }
   }
-  return true; // Un chemin existe pour chaque ligne
+  return true;
 }
 
 function isMapFull() {
@@ -615,7 +614,10 @@ function updateStats() {
   ['melee', 'projectile', 'wall'].forEach(type => {
     const btn = document.getElementById(`${type}-btn`);
     const cost = TURRET_TYPES[type].cost;
-    if (energy < cost) {
+    if (type === 'projectile' && wave < 5) {
+      btn.classList.add('locked');
+      btn.querySelector('.turret-cost').textContent = `Vague 5+`;
+    } else if (energy < cost) {
       btn.classList.add('locked');
       btn.querySelector('.turret-cost').textContent = `${cost} E (manque ${cost - energy})`;
     } else {
@@ -740,14 +742,17 @@ function mousePressed() {
     }
 
     if (selectedModule && !isDeleteModeActive && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
+      // Empêcher le placement des archers avant la vague 5
+      if (selectedModule === 'projectile' && wave < 5) {
+        return;
+      }
+
       if (selectedModule === 'wall') {
-        // Vérifier si le placement du mur bloque tous les chemins
-        grid[gridX][gridY] = selectedModule; // Placement temporaire
+        grid[gridX][gridY] = selectedModule;
         if (!hasPathToBase()) {
-          grid[gridX][gridY] = null; // Annuler si ça bloque tous les chemins
+          grid[gridX][gridY] = null;
           return;
         }
-        grid[gridX][gridY] = null; // Annuler le placement temporaire
       }
       if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
         return;
@@ -812,6 +817,7 @@ document.getElementById('melee-btn').addEventListener('click', () => {
   updateStats();
 });
 document.getElementById('projectile-btn').addEventListener('click', () => {
+  if (wave < 5) return; // Empêche l'activation des archers avant la vague 5
   selectedModule = selectedModule === 'projectile' ? null : 'projectile';
   isDeleteModeActive = false;
   updateStats();
@@ -916,7 +922,7 @@ function resetGame() {
   enemies = [];
   projectiles = [];
   enemyProjectiles = [];
-  energy = 20;
+  energy = 40;
   xp = 0;
   wave = 0;
   base.hp = BASE_HP;
