@@ -5,101 +5,179 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZENTEL</title>
   <link rel="icon" type="image/x-icon" href="assets/zentel.ico" />
-  <link rel="stylesheet" href="css/zentel.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
 </head>
 <body>
-  <div id="game-container">
-    <div id="info-panel">
-      <div id="legend">
-        <h2>Légende</h2>
-        <div class="legend-items">
-          <div class="legend-item">
-            <span class="legend-icon">⚔️</span>
-            Sabreur Quantique : 10 dégâts, portée 50
-          </div>
-          <div class="legend-item">
-            <span class="legend-icon">🏹</span>
-            Archer Plasma : 5 dégâts, portée 150
-          </div>
-          <div class="legend-item">
-            <span class="legend-icon">█</span>
-            Barrière Énergétique : Bloque les ennemis
+  <div id="desktop-view">
+    <div id="game-container">
+      <div id="info-panel">
+        <div id="legend">
+          <h2>Légende</h2>
+          <div class="legend-items">
+            <div class="legend-item">
+              <span class="legend-icon">⚔️</span>
+              Sabreur Quantique : 10 dégâts, portée 50
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🏹</span>
+              Archer Plasma : 5 dégâts, portée 150
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">█</span>
+              Barrière Énergétique : Bloque les ennemis
+            </div>
           </div>
         </div>
+        <div id="game-stats">
+          <div class="stat-item">
+            <span class="stat-label">Vague:</span>
+            <span class="stat-value" id="wave">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Énergie:</span>
+            <span class="stat-value" id="energy">40</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">XP:</span>
+            <span class="stat-value" id="xp">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Base HP:</span>
+            <span class="stat-value" id="base-hp">100</span>
+          </div>
+        </div>
+        <div id="controls">
+          <button class="game-button" id="start-wave">Lancer Vague</button>
+          <div class="exchange-control">
+            <button class="game-button" id="exchange-xp-energy">Échange</button>
+            <div class="exchange-options">
+              <label><input type="radio" name="exchange-amount" value="1xp" checked> 1 XP</label>
+              <label><input type="radio" name="exchange-amount" value="50xp"> 50 XP</label>
+              <label><input type="radio" name="exchange-amount" value="100xp"> 100 XP</label>
+            </div>
+          </div>
+          <button class="game-button" id="heal-base">Soigner Base (500 XP → 10 HP)</button>
+          <button class="game-button" id="delete-turret-btn">Supprimer Tourelle</button>
+          <button class="game-button" id="evolve-turret-btn">Évoluer Tourelle</button>
+        </div>
       </div>
-      <div id="game-stats">
+      <div id="game-area">
+        <canvas id="game-canvas"></canvas>
+      </div>
+      <div id="turret-selection">
+        <div class="turret-button" id="melee-btn" data-type="melee">
+          <span class="turret-icon">⚔️</span>
+          <span class="turret-name">Sabreur</span>
+          <span class="turret-cost">10 E</span>
+        </div>
+        <div class="turret-button" id="projectile-btn" data-type="projectile">
+          <span class="turret-icon">🏹</span>
+          <span class="turret-name">Archer</span>
+          <span class="turret-cost">20 E</span>
+        </div>
+        <div class="turret-button" id="wall-btn" data-type="wall">
+          <span class="turret-icon">█</span>
+          <span class="turret-name">Barrière</span>
+          <span class="turret-cost">5 E</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="space-warning-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h2>Pas assez de place !</h2>
+        <p>Fait de la place !</p>
+        <button class="game-button" id="resume-game">Reprendre</button>
+      </div>
+    </div>
+
+    <div id="game-over-modal" class="modal">
+      <div class="modal-content">
+        <h2>Essai encore !</h2>
+        <p>Oh le gros nul!</p>
+        <p>Victoire ! <span id="final-wave">0</span> vagues</p>
+        <button class="game-button" id="restart-game">Recommencer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mobile-view" style="display: none;">
+    <div id="mobile-game-container">
+      <div id="mobile-stats">
         <div class="stat-item">
           <span class="stat-label">Vague:</span>
-          <span class="stat-value" id="wave">0</span>
+          <span class="stat-value" id="mobile-wave">0</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Énergie:</span>
-          <span class="stat-value" id="energy">40</span>
+          <span class="stat-value" id="mobile-energy">40</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">XP:</span>
-          <span class="stat-value" id="xp">0</span>
+          <span class="stat-value" id="mobile-xp">0</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Base HP:</span>
-          <span class="stat-value" id="base-hp">100</span>
+          <span class="stat-value" id="mobile-base-hp">100</span>
         </div>
       </div>
-      <div id="controls">
-        <button class="game-button" id="start-wave">Lancer Vague</button>
-        <div class="exchange-control">
-          <button class="game-button" id="exchange-xp-energy">Échange</button>
-          <div class="exchange-options">
-            <label><input type="radio" name="exchange-amount" value="1xp" checked> 1 XP</label>
-            <label><input type="radio" name="exchange-amount" value="50xp"> 50 XP</label>
-            <label><input type="radio" name="exchange-amount" value="100xp"> 100 XP</label>
-          </div>
-        </div>
-        <button class="game-button" id="heal-base">Soigner Base (500 XP → 10 HP)</button>
-        <button class="game-button" id="delete-turret-btn">Supprimer Tourelle</button>
-        <button class="game-button" id="evolve-turret-btn">Évoluer Tourelle</button>
+      <div id="mobile-game-area">
+        <canvas id="mobile-game-canvas"></canvas>
+      </div>
+      <div id="mobile-controls">
+        <button class="mobile-button" id="mobile-start-wave">Lancer Vague</button>
+        <button class="mobile-button" id="mobile-melee-btn" data-type="melee">Sabreur (10 E)</button>
+        <button class="mobile-button" id="mobile-projectile-btn" data-type="projectile">Archer (20 E)</button>
+        <button class="mobile-button" id="mobile-wall-btn" data-type="wall">Barrière (5 E)</button>
+        <button class="mobile-button" id="mobile-delete-btn">Supprimer</button>
+        <button class="mobile-button" id="mobile-evolve-btn">Évoluer</button>
+        <button class="mobile-button" id="mobile-exchange-btn">Échange XP</button>
+        <button class="mobile-button" id="mobile-heal-btn">Soigner (500 XP)</button>
       </div>
     </div>
-    <div id="game-area">
-      <canvas id="game-canvas"></canvas>
+
+    <div id="mobile-space-warning-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h2>Pas assez de place !</h2>
+        <p>Fait de la place !</p>
+        <button class="mobile-button" id="mobile-resume-game">Reprendre</button>
+      </div>
     </div>
-    <div id="turret-selection">
-      <div class="turret-button" id="melee-btn" data-type="melee">
-        <span class="turret-icon">⚔️</span>
-        <span class="turret-name">Sabreur</span>
-        <span class="turret-cost">10 E</span>
-      </div>
-      <div class="turret-button" id="projectile-btn" data-type="projectile">
-        <span class="turret-icon">🏹</span>
-        <span class="turret-name">Archer</span>
-        <span class="turret-cost">20 E</span>
-      </div>
-      <div class="turret-button" id="wall-btn" data-type="wall">
-        <span class="turret-icon">█</span>
-        <span class="turret-name">Barrière</span>
-        <span class="turret-cost">5 E</span>
+
+    <div id="mobile-game-over-modal" class="modal">
+      <div class="modal-content">
+        <h2>Essai encore !</h2>
+        <p>Oh le gros nul!</p>
+        <p>Victoire ! <span id="mobile-final-wave">0</span> vagues</p>
+        <button class="mobile-button" id="mobile-restart-game">Recommencer</button>
       </div>
     </div>
   </div>
 
-  <div id="space-warning-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <h2>Pas assez de place !</h2>
-      <p>Fait de la place !</p>
-      <button class="game-button" id="resume-game">Reprendre</button>
-    </div>
-  </div>
+  <script>
+    function isMobileDevice() {
+      return window.innerWidth <= 768 || /Mobi|Android|iPhone/i.test(navigator.userAgent);
+    }
 
-  <div id="game-over-modal" class="modal">
-    <div class="modal-content">
-      <h2>Essai encore !</h2>
-      <p>Oh le gros nul!</p>
-      <p>Victoire ! <span id="final-wave">0</span> vagues</p>
-      <button class="game-button" id="restart-game">Recommencer</button>
-    </div>
-  </div>
-
-  <script src="js/zentel.js"></script>
+    if (isMobileDevice()) {
+      document.getElementById('desktop-view').style.display = 'none';
+      document.getElementById('mobile-view').style.display = 'block';
+      const mobileStyles = document.createElement('link');
+      mobileStyles.rel = 'stylesheet';
+      mobileStyles.href = 'css/zentel-mobile.css';
+      document.head.appendChild(mobileStyles);
+      const mobileScript = document.createElement('script');
+      mobileScript.src = 'js/zentel-mobile.js';
+      document.body.appendChild(mobileScript);
+    } else {
+      const desktopStyles = document.createElement('link');
+      desktopStyles.rel = 'stylesheet';
+      desktopStyles.href = 'css/zentel.css';
+      document.head.appendChild(desktopStyles);
+      const desktopScript = document.createElement('script');
+      desktopScript.src = 'js/zentel.js';
+      document.body.appendChild(desktopScript);
+    }
+  </script>
 </body>
 </html>
