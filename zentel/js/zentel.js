@@ -13,6 +13,7 @@ const TURRET_COLOR = '#55ff55';
 const ENEMY_ZONE_COLOR = '#ff0000';
 const UPGRADE_COLOR_LVL2 = '#ffcc00';
 const UPGRADE_COLOR_LVL3 = '#ff00ff';
+const WARNING_COLOR = '#ffcc00'; // Couleur jaune pour les conditions et coûts
 
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
@@ -42,7 +43,7 @@ let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
 let projectiles = [];
 let enemyProjectiles = [];
 let isDeleteModeActive = false;
-let isEvolveModeActive = false; // Nouveau mode pour évoluer les tourelles
+let isEvolveModeActive = false;
 let waveCompleted = false;
 
 function calculateCellCost(x, y) {
@@ -290,7 +291,7 @@ function occupyArea(startX, startY, width, height, moduleType) {
 }
 
 function draw() {
-  if (gameState === 'paused') return; // Ne pas dessiner si le jeu est en pause
+  if (gameState === 'paused') return;
 
   background('#0a0a1e');
   drawGrid();
@@ -354,6 +355,26 @@ function drawModules() {
         fill('#ffffff');
         textSize(10);
         text(module.level, module.x * CELL_SIZE + width / 2, module.y * CELL_SIZE + height / 2 + 15);
+        textSize(14);
+      }
+
+      // Afficher le coût et le niveau d'évolution sous la tourelle en mode "Évoluer"
+      if (isEvolveModeActive && module.type !== 'wall') {
+        fill(WARNING_COLOR);
+        textSize(10);
+        let evolveText = '';
+        if (module.level === 1 && wave >= 7) {
+          evolveText = `Niveau 2: 2000 XP`;
+        } else if (module.level === 2 && wave >= 17) {
+          evolveText = `Niveau 3: 10000 XP`;
+        } else if (module.level === 3) {
+          evolveText = `Niveau max`;
+        } else if (wave < 7) {
+          evolveText = `Vague 7+`;
+        } else if (wave < 17 && module.level === 2) {
+          evolveText = `Vague 17+`;
+        }
+        text(evolveText, module.x * CELL_SIZE + width / 2, module.y * CELL_SIZE + height + 15);
         textSize(14);
       }
 
@@ -671,6 +692,13 @@ function updateStats() {
   }
 
   const evolveBtn = document.getElementById('evolve-turret-btn');
+  if (wave < 7) {
+    evolveBtn.classList.add('locked');
+    evolveBtn.textContent = `Évoluer (vague 7+)`;
+  } else {
+    evolveBtn.classList.remove('locked');
+    evolveBtn.textContent = `Évoluer`;
+  }
   if (isEvolveModeActive) {
     evolveBtn.classList.add('active');
   } else {
@@ -679,7 +707,7 @@ function updateStats() {
 }
 
 function mousePressed() {
-  if (gameState === 'paused') return; // Ne rien faire si le jeu est en pause
+  if (gameState === 'paused') return;
 
   let gridX = floor(mouseX / CELL_SIZE);
   let gridY = floor(mouseY / CELL_SIZE);
@@ -702,13 +730,10 @@ function mousePressed() {
           let startX = module.x;
           let startY = module.y;
 
-          // Essayer d'étendre vers la droite (2x1)
           if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
             canEvolve = true;
             occupyArea(gridX, gridY, width, height, module.type);
-          }
-          // Sinon, essayer vers le bas (1x2)
-          else if (gridY + 1 < GRID_HEIGHT && grid[gridX][gridY + 1] === null) {
+          } else if (gridY + 1 < GRID_HEIGHT && grid[gridX][gridY + 1] === null) {
             canEvolve = true;
             width = 1;
             height = 2;
@@ -722,7 +747,7 @@ function mousePressed() {
             document.getElementById('space-warning-modal').style.display = 'flex';
           }
           updateStats();
-          isEvolveModeActive = false; // Désactiver le mode évoluer après une tentative
+          isEvolveModeActive = false;
           return;
         }
         if (wave >= 17 && module.level === 2 && xp >= 10000) {
@@ -747,7 +772,7 @@ function mousePressed() {
             occupyArea(module.x, module.y, width, height, module.type);
           }
           updateStats();
-          isEvolveModeActive = false; // Désactiver le mode évoluer après une tentative
+          isEvolveModeActive = false;
           return;
         }
       }
@@ -883,6 +908,7 @@ document.getElementById('delete-turret-btn').addEventListener('click', () => {
 
 // Bouton pour évoluer une tourelle
 document.getElementById('evolve-turret-btn').addEventListener('click', () => {
+  if (wave < 7) return; // Ne rien faire si la vague est < 7
   isEvolveModeActive = !isEvolveModeActive;
   isDeleteModeActive = false;
   selectedModule = null;
