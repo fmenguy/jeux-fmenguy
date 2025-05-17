@@ -33,7 +33,7 @@ const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 40, energy: 0, attackRate
 let grid = [];
 let modules = [];
 let enemies = [];
-let energy = 40; // Énergie de départ mise à 40
+let energy = 40;
 let xp = 0;
 let wave = 0;
 let gameState = 'playing';
@@ -135,7 +135,7 @@ function spawnWave() {
         speed: enemyType.speed,
         path: path,
         pathIndex: 0,
-        xp: enemyType.xp, // Vérifié : chaque ennemi a bien un XP défini
+        xp: enemyType.xp,
         energy: enemyType.energy,
         isBoss: isBoss,
         isTriangle: isTriangle,
@@ -354,7 +354,8 @@ function drawModules() {
       }
 
       if (frameCount % (TURRET_TYPES[module.type].attackRate / upgrades.attackSpeed) === 0) {
-        for (let enemy of enemies) {
+        for (let i = 0; i < enemies.length; i++) {
+          let enemy = enemies[i];
           if (enemy.isBoss && module.type !== 'projectile') continue;
 
           let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
@@ -369,6 +370,10 @@ function drawModules() {
           }
           if (module.type === 'melee' && d < effectiveRange) {
             enemy.hp -= effectiveDamage;
+            if (enemy.hp <= 0) {
+              xp += enemy.xp; // Ajout de l'XP immédiatement
+              updateStats();
+            }
           } else if (module.type === 'projectile' && d < effectiveRange) {
             projectiles.push({
               x: module.x * CELL_SIZE + CELL_SIZE / 2,
@@ -514,6 +519,10 @@ function drawProjectiles() {
     let d = dist(p.x, p.y, p.target.x, p.target.y);
     if (d < 10) {
       p.target.hp -= p.damage;
+      if (p.target.hp <= 0) {
+        xp += p.target.xp; // Ajout de l'XP immédiatement
+        updateStats();
+      }
       projectiles.splice(i, 1);
     }
   }
@@ -580,24 +589,24 @@ function updateGame() {
     if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
       base.hp -= 10;
       enemy.hp = 0;
+      // Plus d'XP attribué ici lorsqu'un ennemi atteint la base
     }
   }
 
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
-      // Vérifié : l'XP est bien ajouté ici
-      console.log(`Enemy killed, adding XP: ${enemy.xp}`); // Debug pour vérifier
-      xp += enemy.xp;
-      updateStats();
-      if (enemies.length === 0) {
-        xp += wave * 10 + 10;
-        document.getElementById('upgrade-modal').style.display = 'flex';
-        document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
-      }
+      // L'XP est maintenant attribué dans drawModules et drawProjectiles
       return false;
     }
     return true;
   });
+
+  if (enemies.length === 0 && gameState === 'playing') {
+    xp += wave * 10 + 10; // Bonus d'XP à la fin de la vague
+    document.getElementById('upgrade-modal').style.display = 'flex';
+    document.getElementById('xp-available').textContent = `XP disponible: ${xp}`;
+    updateStats();
+  }
 
   if (base.hp <= 0) {
     gameState = 'gameover';
@@ -923,7 +932,7 @@ function resetGame() {
   enemies = [];
   projectiles = [];
   enemyProjectiles = [];
-  energy = 40; // Énergie de départ mise à 40
+  energy = 40;
   xp = 0;
   wave = 0;
   base.hp = BASE_HP;
