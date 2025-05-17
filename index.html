@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="assets/fda.ico" type="image/x-icon">
   <title>Forge des Âges</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link id="mobileStyles" rel="stylesheet" href="css/styles-mobile.css" disabled />
@@ -29,7 +29,7 @@
   </div>
 
   <div style="text-align: center; margin-bottom: 20px;">
-    <img src="assets/logo_fda.webp" alt="Forge des Âges Logo" style="width: 180px; height: auto;">
+    <img src="assets/fda.webp" alt="Forge des Âges Logo" style="width: 180px; height: auto;">
   </div>
 
   <!-- Bouton pour basculer vers la version mobile -->
@@ -134,7 +134,7 @@
             <button id="craftAxeBtn" onclick="craftAxe()">Fabriquer (5 Bois, 2 Pierre)</button><span class="tooltip">Une hache coupe le bois plus vite.</span>
           </div>
           <div class="craft" id="bucketSection" draggable="true">
-            <p><span class="icon">� reminiscente de l’icône de seau ⚱️</span> Seau: <span id="buckets">0</span></p>
+            <p><span class="icon">⚱️</span> Seau: <span id="buckets">0</span></p>
             <button id="craftBucketBtn" onclick="craftBucket()">Fabriquer (5 Bois, 2 Pierre)</button><span class="tooltip">Un seau récolte plus d'eau</span>
           </div>
           <div class="craft" id="pickaxeSection" style="display: none" draggable="true">
@@ -300,6 +300,20 @@
     </div>
   </div>
 
+  <!-- Conteneur pour les onglets (bas à droite) -->
+  <div id="hiddenTabs" style="position: fixed; bottom: 10px; right: 10px; opacity: 0.3; transition: opacity 0.3s; display: flex; align-items: center;">
+    <!-- Message à gauche -->
+    <span style="font-size: 12px; color: #ffffff; margin-right: 10px;">Mes autres jeux/tests en cours :</span>
+    <!-- Onglet discret pour Ecosystem -->
+    <a href="ecosim/ecosystem.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #6bb0e9; text-decoration: none;">🐟 Ecosim...</a>
+    <!-- Onglet discret pour Achronia -->
+    <a href="fps/index.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #58c75e; text-decoration: none; margin-left: 10px;">⛰️ Achronia...</a>
+    <!-- Onglet discret pour TDM -->
+    <a href="zentel/zentel.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #c75858; text-decoration: none; margin-left: 10px;">🛡️ Zentel...</a>
+  </div>
+
+
+
   <footer>
     <div class="footer-left">
       <span>Forge des Âges - Version 2.3</span><br />
@@ -307,7 +321,7 @@
     </div>
   </footer>
 
-  <script src="js/main.js" type="module"></script>
+  <script src="js/forge-main.js" type="module"></script>
 
   <audio id="backgroundMusic" loop>
     <source src="assets/audio/ambiance_fda.mp3" type="audio/mpeg">
@@ -330,70 +344,21 @@
     const toggleMobileViewBtn = document.getElementById('toggleMobileViewBtn');
 
     // Vérifie l'état initial dans localStorage
-    let isMobileView = localStorage.getItem('mobileView') === 'true';
+    const isMobileView = localStorage.getItem('mobileView') === 'true';
     mobileStyles.disabled = !isMobileView;
     toggleMobileViewBtn.textContent = isMobileView ? 'Version Standard' : 'Version Mobile';
 
     toggleMobileViewBtn.addEventListener('click', () => {
-      isMobileView = !mobileStyles.disabled;
-      mobileStyles.disabled = isMobileView;
-      toggleMobileViewBtn.textContent = isMobileView ? 'Version Mobile' : 'Version Standard';
-      localStorage.setItem('mobileView', !isMobileView);
-      updateLongPressListeners();
+      const isCurrentlyMobile = !mobileStyles.disabled;
+      mobileStyles.disabled = isCurrentlyMobile;
+      toggleMobileViewBtn.textContent = isCurrentlyMobile ? 'Version Mobile' : 'Version Standard';
+      localStorage.setItem('mobileView', !isCurrentlyMobile);
     });
 
-    // Gestion des clics longs pour simuler plusieurs clics (version mobile uniquement)
-    let longPressInterval = null;
-    const longPressDelay = 500; // Délai avant de considérer un appui comme long (en ms)
-    const clickInterval = 200; // Intervalle entre les clics simulés (en ms)
-
-    function setupLongPress(button) {
-      let timeout;
-
-      const startLongPress = () => {
-        timeout = setTimeout(() => {
-          if (button.onclick && !button.disabled) {
-            longPressInterval = setInterval(() => {
-              button.onclick();
-            }, clickInterval);
-          }
-        }, longPressDelay);
-      };
-
-      const stopLongPress = () => {
-        clearTimeout(timeout);
-        if (longPressInterval) {
-          clearInterval(longPressInterval);
-          longPressInterval = null;
-        }
-      };
-
-      button.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Empêche le comportement par défaut (comme le scroll)
-        startLongPress();
-      });
-
-      button.addEventListener('touchend', stopLongPress);
-      button.addEventListener('touchcancel', stopLongPress);
-    }
-
-    function updateLongPressListeners() {
-      const buttons = document.querySelectorAll('button');
-      buttons.forEach(button => {
-        // Supprime les écouteurs existants pour éviter les doublons
-        button.removeEventListener('touchstart', startLongPress);
-        button.removeEventListener('touchend', stopLongPress);
-        button.removeEventListener('touchcancel', stopLongPress);
-
-        // Ajoute les écouteurs uniquement si la vue mobile est activée
-        if (!mobileStyles.disabled) {
-          setupLongPress(button);
-        }
-      });
-    }
-
-    // Initialisation des écouteurs au chargement
-    updateLongPressListeners();
+    // Effet de survol pour l'onglet discret
+    const hiddenTabs = document.getElementById('hiddenTabs');
+    hiddenTabs.addEventListener('mouseover', () => { hiddenTabs.style.opacity = '1'; });
+    hiddenTabs.addEventListener('mouseout', () => { hiddenTabs.style.opacity = '0.3'; });
   </script>
 </body>
 </html>
