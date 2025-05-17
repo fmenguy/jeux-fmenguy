@@ -129,8 +129,25 @@ body {
 
 .exchange-control {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 5px;
   align-items: center;
+}
+
+.exchange-options {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+}
+
+.exchange-options label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.exchange-options input[type="radio"] {
+  margin: 0;
 }
 
 .game-button {
