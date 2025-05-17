@@ -8,9 +8,11 @@ const TEXT_COLOR = '#e0e0ff';
 const BUTTON_COLOR = '#6a5acd';
 const ENEMY_COLOR = '#ff5555';
 const BOSS_COLOR = '#000000';
-const TRIANGLE_COLOR = '#00ff00'; // Vert pour les triangles
+const TRIANGLE_COLOR = '#00ff00';
 const TURRET_COLOR = '#55ff55';
 const ENEMY_ZONE_COLOR = '#ff0000';
+const UPGRADE_COLOR_LVL2 = '#ffcc00'; // Jaune pour niveau 2
+const UPGRADE_COLOR_LVL3 = '#ff00ff'; // Magenta pour niveau 3
 
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
@@ -38,7 +40,7 @@ let gameState = 'playing';
 let selectedModule = null;
 let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
 let projectiles = [];
-let enemyProjectiles = []; // Projectiles lancés par les triangles
+let enemyProjectiles = [];
 let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
 let isDeleteModeActive = false;
 
@@ -79,80 +81,44 @@ function initializeGrid() {
 
 function spawnWave() {
   wave++;
-  let enemyCount = wave * 2;
+  let enemyCount = wave * 5; // Augmentation significative du nombre d'ennemis (5 par vague)
 
+  // À partir de la vague 5, inclure tous les types d'ennemis précédents
+  let enemyTypesToSpawn = [];
   if (wave < 5) {
-    // Vagues 1-4 : ennemis normaux
+    // Vagues 1-4 : ennemis normaux uniquement
     let enemyTypeIndex = min(wave - 1, ENEMY_TYPES.length - 1);
-    let enemyType = ENEMY_TYPES[enemyTypeIndex];
-    let baseHp = enemyType.hp + wave * 5;
-    for (let i = 0; i < enemyCount; i++) {
-      let startY = floor(random(GRID_HEIGHT));
-      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
-      if (path.length === 0) {
-        let foundPath = false;
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-          path = findPath(0, y, GRID_WIDTH - 1, y);
-          if (path.length > 0) {
-            startY = y;
-            foundPath = true;
-            break;
-          }
-        }
-        if (!foundPath) continue;
-      }
-      enemies.push({
-        x: 0,
-        y: startY * CELL_SIZE + CELL_SIZE / 2,
-        hp: baseHp * (1 + wave * 0.1),
-        maxHp: baseHp * (1 + wave * 0.1),
-        speed: enemyType.speed,
-        path: path,
-        pathIndex: 0,
-        xp: enemyType.xp,
-        energy: enemyType.energy,
-        isBoss: false,
-        isTriangle: false
-      });
-    }
+    enemyTypesToSpawn.push({ type: ENEMY_TYPES[enemyTypeIndex], isBoss: false, isTriangle: false });
   } else if (wave < 10) {
-    // Vagues 5-9 : boss noirs
-    let enemyType = BOSS_TYPE;
-    let baseHp = enemyType.hp + wave * 5;
-    for (let i = 0; i < enemyCount; i++) {
-      let startY = floor(random(GRID_HEIGHT));
-      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
-      if (path.length === 0) {
-        let foundPath = false;
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-          path = findPath(0, y, GRID_WIDTH - 1, y);
-          if (path.length > 0) {
-            startY = y;
-            foundPath = true;
-            break;
-          }
-        }
-        if (!foundPath) continue;
-      }
-      enemies.push({
-        x: 0,
-        y: startY * CELL_SIZE + CELL_SIZE / 2,
-        hp: baseHp * (1 + wave * 0.1),
-        maxHp: baseHp * (1 + wave * 0.1),
-        speed: enemyType.speed,
-        path: path,
-        pathIndex: 0,
-        xp: enemyType.xp,
-        energy: enemyType.energy,
-        isBoss: true,
-        isTriangle: false
-      });
-    }
+    // Vagues 5-9 : boss noirs + ennemis normaux
+    let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+    enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
+    enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
   } else if (wave < 20) {
-    // Vagues 10-19 : super boss
-    let enemyType = SUPER_BOSS_TYPE;
+    // Vagues 10-19 : super boss + boss noirs + ennemis normaux
+    let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+    enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
+    enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+  } else {
+    // Vague 20+ : triangles + super boss + boss noirs + ennemis normaux
+    let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+    enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
+    enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+  }
+
+  // Répartir les ennemis entre les différents types
+  let enemiesPerType = Math.floor(enemyCount / enemyTypesToSpawn.length);
+  for (let enemyTypeData of enemyTypesToSpawn) {
+    let enemyType = enemyTypeData.type;
+    let isBoss = enemyTypeData.isBoss;
+    let isTriangle = enemyTypeData.isTriangle;
     let baseHp = enemyType.hp + wave * 5;
-    for (let i = 0; i < enemyCount; i++) {
+    let attackRate = enemyType.attackRate || 0;
+
+    for (let i = 0; i < enemiesPerType; i++) {
       let startY = floor(random(GRID_HEIGHT));
       let path = findPath(0, startY, GRID_WIDTH - 1, startY);
       if (path.length === 0) {
@@ -177,61 +143,10 @@ function spawnWave() {
         pathIndex: 0,
         xp: enemyType.xp,
         energy: enemyType.energy,
-        isBoss: true,
-        isTriangle: false
+        isBoss: isBoss,
+        isTriangle: isTriangle,
+        attackRate: attackRate
       });
-    }
-  } else {
-    // Vague 20+ : triangles + super boss
-    let enemyType = SUPER_BOSS_TYPE;
-    let triangleType = TRIANGLE_TYPE;
-    let baseHp = enemyType.hp + wave * 5;
-    let triangleHp = triangleType.hp + wave * 5;
-    for (let i = 0; i < enemyCount; i++) {
-      let startY = floor(random(GRID_HEIGHT));
-      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
-      if (path.length === 0) {
-        let foundPath = false;
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-          path = findPath(0, y, GRID_WIDTH - 1, y);
-          if (path.length > 0) {
-            startY = y;
-            foundPath = true;
-            break;
-          }
-        }
-        if (!foundPath) continue;
-      }
-      if (i % 2 === 0) { // Moitié de triangles
-        enemies.push({
-          x: 0,
-          y: startY * CELL_SIZE + CELL_SIZE / 2,
-          hp: triangleHp * (1 + wave * 0.1),
-          maxHp: triangleHp * (1 + wave * 0.1),
-          speed: triangleType.speed,
-          path: path,
-          pathIndex: 0,
-          xp: triangleType.xp,
-          energy: triangleType.energy,
-          isBoss: false,
-          isTriangle: true,
-          attackRate: triangleType.attackRate
-        });
-      } else { // Moitié de super boss
-        enemies.push({
-          x: 0,
-          y: startY * CELL_SIZE + CELL_SIZE / 2,
-          hp: baseHp * (1 + wave * 0.1),
-          maxHp: baseHp * (1 + wave * 0.1),
-          speed: enemyType.speed,
-          path: path,
-          pathIndex: 0,
-          xp: enemyType.xp,
-          energy: enemyType.energy,
-          isBoss: true,
-          isTriangle: false
-        });
-      }
     }
   }
   updateStats();
@@ -349,6 +264,27 @@ function isMapFull() {
   return true;
 }
 
+// Vérifier si une zone est libre pour une tourelle améliorée
+function isAreaFree(startX, startY, width, height) {
+  for (let x = startX; x < startX + width; x++) {
+    for (let y = startY; y < startY + height; y++) {
+      if (x >= GRID_WIDTH - 1 || y >= GRID_HEIGHT || x < 1 || grid[x][y] !== null) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// Occuper une zone pour une tourelle améliorée
+function occupyArea(startX, startY, width, height, moduleType) {
+  for (let x = startX; x < startX + width; x++) {
+    for (let y = startY; y < startY + height; y++) {
+      grid[x][y] = moduleType;
+    }
+  }
+}
+
 function draw() {
   background('#0a0a1e');
   drawGrid();
@@ -379,24 +315,39 @@ function drawGrid() {
 
 function drawModules() {
   for (let module of modules) {
+    let symbol = TURRET_TYPES[module.type].symbol;
+    let color = TURRET_COLOR;
+    let width = CELL_SIZE;
+    let height = CELL_SIZE;
+
+    if (module.level >= 2) {
+      color = UPGRADE_COLOR_LVL2;
+      width = CELL_SIZE * 2; // 2 cases en largeur
+      height = CELL_SIZE; // 1 case en hauteur
+    }
+    if (module.level >= 3) {
+      color = UPGRADE_COLOR_LVL3;
+      width = CELL_SIZE * 2; // 2 cases en largeur
+      height = CELL_SIZE * 2; // 2 cases en hauteur
+    }
+
     if (module.type === 'wall') {
       fill(TURRET_TYPES.wall.color);
       noStroke();
       rect(module.x * CELL_SIZE, module.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
       fill(255);
-      text(TURRET_TYPES.wall.symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
-    } else {
-      fill(TURRET_COLOR);
-      noStroke();
-      let symbol = TURRET_TYPES[module.type].symbol;
-      ellipse(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, 25);
-      fill(255);
       text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+    } else {
+      fill(color);
+      noStroke();
+      rect(module.x * CELL_SIZE, module.y * CELL_SIZE, width, height);
+      fill(255);
+      text(symbol, module.x * CELL_SIZE + width / 2, module.y * CELL_SIZE + height / 2);
 
       if (module.level > 1) {
-        fill('#ffcc00');
+        fill('#ffffff');
         textSize(10);
-        text(module.level, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2 + 15);
+        text(module.level, module.x * CELL_SIZE + width / 2, module.y * CELL_SIZE + height / 2 + 15);
         textSize(14);
       }
 
@@ -436,7 +387,7 @@ function drawEnemies() {
       noStroke();
       push();
       translate(enemy.x, enemy.y);
-      triangle(-10, 10, 0, -10, 10, 10); // Dessin d'un triangle
+      triangle(-10, 10, 0, -10, 10, 10);
       pop();
     } else {
       fill(enemy.isBoss ? BOSS_COLOR : ENEMY_COLOR);
@@ -453,7 +404,6 @@ function drawEnemies() {
     arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2);
 
     if (enemy.isTriangle && frameCount % enemy.attackRate === 0) {
-      // Les triangles lancent des projectiles vers la tourelle ou le mur le plus proche
       let closestModule = null;
       let closestDist = Infinity;
       for (let module of modules) {
@@ -470,7 +420,7 @@ function drawEnemies() {
           targetX: closestModule.x * CELL_SIZE + CELL_SIZE / 2,
           targetY: closestModule.y * CELL_SIZE + CELL_SIZE / 2,
           speed: 2,
-          damage: 10 // Dégâts infligés aux murs/tourelles
+          damage: 10
         });
       }
     }
@@ -575,27 +525,33 @@ function drawEnemyProjectiles() {
     p.y += p.speed * sin(angle);
     let d = dist(p.x, p.y, p.targetX, p.targetY);
     if (d < 5) {
-      // Trouver le module ciblé
       let targetGridX = floor(p.targetX / CELL_SIZE);
       let targetGridY = floor(p.targetY / CELL_SIZE);
       let moduleIndex = modules.findIndex(m => m.x === targetGridX && m.y === targetGridY);
       if (moduleIndex !== -1) {
         let module = modules[moduleIndex];
-        // Infliger des dégâts au module (mur ou tourelle)
         if (module.type === 'wall') {
-          // Les murs sont détruits en un coup
           modules.splice(moduleIndex, 1);
           grid[targetGridX][targetGridY] = null;
         } else {
-          // Les tourelles subissent des dégâts
-          module.hp = (module.hp || TURRET_TYPES[module.type].damage * 5); // HP initial = 5x les dégâts
+          module.hp = (module.hp || TURRET_TYPES[module.type].damage * 5);
           module.hp -= p.damage;
           if (module.hp <= 0) {
+            if (module.level >= 2) {
+              let width = module.level >= 3 ? 2 : 2;
+              let height = module.level >= 3 ? 2 : 1;
+              for (let x = module.x; x < module.x + width; x++) {
+                for (let y = module.y; y < module.y + height; y++) {
+                  if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+                    grid[x][y] = null;
+                  }
+                }
+              }
+            }
             modules.splice(moduleIndex, 1);
             grid[targetGridX][targetGridY] = null;
           }
         }
-        // Recalculer les chemins des ennemis après destruction
         enemies.forEach(enemy => {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
@@ -707,22 +663,71 @@ function mousePressed() {
 
     if (isMapFull() && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
       let module = modules.find(m => m.x === gridX && m.y === gridY);
-      if (module && xp >= 10) {
-        xp -= 10;
-        module.level += 1;
-        updateStats();
-        return;
+      if (module) {
+        // Amélioration au niveau 2 (vague 7+, coût 2000 XP)
+        if (wave >= 7 && module.level === 1 && xp >= 2000) {
+          xp -= 2000;
+          module.level = 2;
+          // Étendre la tourelle sur 2 cases (1x2)
+          if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
+            occupyArea(gridX, gridY, 2, 1, module.type);
+          } else if (gridY + 1 < GRID_HEIGHT && grid[gridX][gridY + 1] === null) {
+            occupyArea(gridX, gridY, 1, 2, module.type);
+          } else {
+            module.level = 1; // Revenir en arrière si pas assez de place
+            xp += 2000;
+          }
+          updateStats();
+          return;
+        }
+        // Amélioration au niveau 3 (vague 17+, coût 10 000 XP)
+        if (wave >= 17 && module.level === 2 && xp >= 10000) {
+          xp -= 10000;
+          module.level = 3;
+          // Étendre la tourelle sur 4 cases (2x2)
+          let width = module.level >= 3 ? 2 : 2;
+          let height = module.level >= 3 ? 2 : 1;
+          // Libérer l'ancienne zone
+          for (let x = module.x; x < module.x + width; x++) {
+            for (let y = module.y; y < module.y + height; y++) {
+              if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+                grid[x][y] = null;
+              }
+            }
+          }
+          // Étendre à 2x2
+          if (isAreaFree(module.x, module.y, 2, 2)) {
+            occupyArea(module.x, module.y, 2, 2, module.type);
+          } else {
+            // Si pas assez de place, revenir au niveau 2
+            module.level = 2;
+            xp += 10000;
+            occupyArea(module.x, module.y, 2, 1, module.type);
+          }
+          updateStats();
+          return;
+        }
       }
     }
 
     if (isDeleteModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
       let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
       if (moduleIndex !== -1) {
+        let module = modules[moduleIndex];
         let moduleType = grid[gridX][gridY];
         let refundEnergy = Math.floor(TURRET_TYPES[moduleType].cost / 2);
         energy += refundEnergy;
+        // Libérer la zone occupée par la tourelle
+        let width = module.level >= 3 ? 2 : module.level === 2 ? 2 : 1;
+        let height = module.level >= 3 ? 2 : module.level === 2 ? 1 : 1;
+        for (let x = module.x; x < module.x + width; x++) {
+          for (let y = module.y; y < module.y + height; y++) {
+            if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+              grid[x][y] = null;
+            }
+          }
+        }
         modules.splice(moduleIndex, 1);
-        grid[gridX][gridY] = null;
         enemies.forEach(enemy => {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
