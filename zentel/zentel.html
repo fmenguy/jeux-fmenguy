@@ -35,7 +35,7 @@
         </div>
         <div class="stat-item">
           <span class="stat-label">Énergie:</span>
-          <span class="stat-value" id="energy">20</span>
+          <span class="stat-value" id="energy">40</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">XP:</span>
@@ -48,7 +48,6 @@
       </div>
       <div id="controls">
         <button class="game-button" id="start-wave">Lancer Vague</button>
-        <button class="game-button" id="restart">Relancer</button>
         <div class="exchange-control">
           <button class="game-button" id="exchange-xp-energy">Échange</button>
           <div class="exchange-options">
@@ -59,6 +58,7 @@
         </div>
         <button class="game-button" id="heal-base">Soigner Base (500 XP → 10 HP)</button>
         <button class="game-button" id="delete-turret-btn">Supprimer Tourelle</button>
+        <button class="game-button" id="evolve-turret-btn">Évoluer Tourelle</button>
       </div>
     </div>
     <div id="game-area">
@@ -83,36 +83,19 @@
     </div>
   </div>
 
-  <div id="upgrade-modal" class="modal">
+  <div id="space-warning-modal" class="modal" style="display: none;">
     <div class="modal-content">
-      <h2>Amélioration des Tourelles</h2>
-      <p>Vague terminée! Utilisez votre XP pour améliorer vos tourelles</p>
-      <p id="xp-available">XP disponible: 0</p>
-      <div id="upgrade-options">
-        <div class="upgrade-option" id="upgrade-range">
-          <h3>Portée</h3>
-          <p>Augmente la portée des tourelles</p>
-          <p class="upgrade-cost">Coût: 5 XP</p>
-        </div>
-        <div class="upgrade-option" id="upgrade-attack-speed">
-          <h3>Vitesse d'Attaque</h3>
-          <p>Augmente la vitesse d'attaque</p>
-          <p class="upgrade-cost">Coût: 5 XP</p>
-        </div>
-        <div class="upgrade-option" id="upgrade-damage">
-          <h3>Dégâts</h3>
-          <p>Augmente les dégâts des tourelles</p>
-          <p class="upgrade-cost">Coût: 5 XP</p>
-        </div>
-      </div>
-      <button class="game-button" id="continue-game">Continuer</button>
+      <h2>Pas assez de place !</h2>
+      <p>Fait de la place !</p>
+      <button class="game-button" id="resume-game">Reprendre</button>
     </div>
   </div>
 
   <div id="game-over-modal" class="modal">
     <div class="modal-content">
       <h2>Essai encore !</h2>
-      <p>Vagues terminées : <span id="final-wave">0</span> vagues</p>
+      <p>Oh le gros nul!</p>
+      <p>Victoire ! <span id="final-wave">0</span> vagues</p>
       <button class="game-button" id="restart-game">Recommencer</button>
     </div>
   </div>
