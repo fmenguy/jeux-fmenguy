@@ -1,5 +1,5 @@
 // Constantes
-const GRID_WIDTH = 15;
+const GRID_WIDTH = 17; // Ajout de 2 colonnes rouges (15 + 2 = 17)
 const GRID_HEIGHT = 10;
 const CELL_SIZE = 40;
 const BASE_HP = 100;
@@ -38,7 +38,7 @@ let xp = 0;
 let wave = 0;
 let gameState = 'playing';
 let selectedModule = null;
-let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
+let base = { x: GRID_WIDTH - 1, hp: BASE_HP }; // Base alliée à x = 16
 let projectiles = [];
 let enemyProjectiles = [];
 let isDeleteModeActive = false;
@@ -76,7 +76,7 @@ function initializeGrid() {
     }
   }
   for (let y = 0; y < GRID_HEIGHT; y++) {
-    grid[GRID_WIDTH - 1][y] = 'base';
+    grid[GRID_WIDTH - 1][y] = 'base'; // Base alliée à x = 16
   }
 }
 
@@ -140,7 +140,7 @@ function spawnWave() {
         if (!foundPath) continue;
       }
       enemies.push({
-        x: 0,
+        x: 0, // Les ennemis apparaissent dans la colonne x = 0 (qui correspond à la colonne rouge x = -2 sur la grille affichée)
         y: startY * CELL_SIZE + CELL_SIZE / 2,
         hp: baseHp * (1 + wave * 0.1),
         maxHp: baseHp * (1 + wave * 0.1),
@@ -289,7 +289,7 @@ function hasPathToBase() {
 }
 
 function isMapFull() {
-  for (let x = 1; x < GRID_WIDTH - 1; x++) {
+  for (let x = 2; x < GRID_WIDTH - 1; x++) { // Commencer à x = 2 pour exclure les colonnes rouges
     for (let y = 0; y < GRID_HEIGHT; y++) {
       if (grid[x][y] === null) {
         return false;
@@ -302,7 +302,7 @@ function isMapFull() {
 function isAreaFree(startX, startY, width, height) {
   for (let x = startX; x < startX + width; x++) {
     for (let y = startY; y < startY + height; y++) {
-      if (x >= GRID_WIDTH - 1 || y >= GRID_HEIGHT || x < 1 || grid[x][y] !== null) {
+      if (x >= GRID_WIDTH - 1 || y >= GRID_HEIGHT || x < 2 || grid[x][y] !== null) { // Exclure x < 2
         return false;
       }
     }
@@ -336,7 +336,7 @@ function drawGrid() {
   strokeWeight(1);
   for (let x = 0; x < GRID_WIDTH; x++) {
     for (let y = 0; y < GRID_HEIGHT; y++) {
-      if (x === 0) {
+      if (x < 2) { // Les colonnes x = 0 et x = 1 correspondent à x = -2 et x = -1 visuellement
         fill(ENEMY_ZONE_COLOR);
         stroke(ENEMY_ZONE_COLOR);
       } else {
@@ -527,9 +527,9 @@ function drawEnemies() {
         let shortestDist = Infinity;
         let targetY = startY;
 
-        // Trouver l'ouverture la plus proche dans la colonne 2
+        // Trouver l'ouverture la plus proche dans la colonne 2 (x = 2)
         for (let y = 0; y < GRID_HEIGHT; y++) {
-          if (grid[1][y] !== 'wall') {
+          if (grid[2][y] !== 'wall') {
             let distToOpening = Math.abs(startY - y);
             if (distToOpening < shortestDist) {
               shortestDist = distToOpening;
@@ -551,14 +551,14 @@ function drawEnemies() {
           } else {
             enemy.y = targetYPos;
             // Une fois à l'ouverture, recalculer le chemin vers la base
-            path = findPath(1, targetY, GRID_WIDTH - 1, targetY, false);
+            path = findPath(2, targetY, GRID_WIDTH - 1, targetY, false);
             if (path.length === 0) {
-              path = findPath(1, targetY, GRID_WIDTH - 1, targetY, true);
+              path = findPath(2, targetY, GRID_WIDTH - 1, targetY, true);
             }
             if (path.length > 0) {
               enemy.path = path;
               enemy.pathIndex = 0;
-              enemy.x = 1 * CELL_SIZE + CELL_SIZE / 2; // Avancer à la colonne 2
+              enemy.x = 2 * CELL_SIZE + CELL_SIZE / 2; // Avancer à la colonne 2
             }
           }
         } else {
@@ -799,7 +799,7 @@ function mousePressed() {
   let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT) {
-    if (gridX === 0) {
+    if (gridX < 2) { // Empêcher le placement dans les colonnes rouges
       return;
     }
 
