@@ -794,7 +794,7 @@ function mousePressed() {
   if (gameState === 'paused') return;
 
   let gridX = floor(mouseX / CELL_SIZE);
-  let gridY = floor(mouseX / CELL_SIZE);
+  let gridY = floor(mouseY / CELL_SIZE); // Correction : utiliser mouseY pour gridY
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT) {
     if (gridX === 0) {
