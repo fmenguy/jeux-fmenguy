@@ -127,6 +127,12 @@ body {
   margin-top: auto;
 }
 
+.exchange-control {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .game-button {
   background: var(--secondary-color);
   color: var(--text-color);
@@ -376,17 +382,4 @@ body {
   .upgrade-option {
     width: 100%;
   }
-}
-
-#game-canvas {
-  width: 100%;
-  height: auto;
-  max-width: 600px;
-  max-height: 400px;
-}
-
-.wave-control {
-  display: flex;
-  gap: 10px;
-  align-items: center;
 }
