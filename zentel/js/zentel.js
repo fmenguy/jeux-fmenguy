@@ -11,8 +11,8 @@ const BOSS_COLOR = '#000000';
 const TRIANGLE_COLOR = '#00ff00';
 const TURRET_COLOR = '#55ff55';
 const ENEMY_ZONE_COLOR = '#ff0000';
-const UPGRADE_COLOR_LVL2 = '#ffcc00'; // Jaune pour niveau 2
-const UPGRADE_COLOR_LVL3 = '#ff00ff'; // Magenta pour niveau 3
+const UPGRADE_COLOR_LVL2 = '#ffcc00';
+const UPGRADE_COLOR_LVL3 = '#ff00ff';
 
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
@@ -21,14 +21,14 @@ const TURRET_TYPES = {
 };
 
 const ENEMY_TYPES = [
-  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 0 }, // Ennemis normaux (vagues 1-4)
+  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 0 },
   { hp: 20, speed: 0.7 * 1.5, xp: 10, energy: 0 },
   { hp: 30, speed: 0.3 * 1.5, xp: 15, energy: 0 },
 ];
 
-const BOSS_TYPE = { hp: 60, speed: 0.3 * 1.5, xp: 30, energy: 0 }; // Boss noir (vagues 5-9)
-const SUPER_BOSS_TYPE = { hp: 150, speed: 0.4 * 1.5, xp: 50, energy: 0 }; // Super boss (vague 10+)
-const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 40, energy: 0, attackRate: 120 }; // Triangle (vague 20+)
+const BOSS_TYPE = { hp: 60, speed: 0.3 * 1.5, xp: 30, energy: 0 };
+const SUPER_BOSS_TYPE = { hp: 150, speed: 0.4 * 1.5, xp: 50, energy: 0 };
+const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 40, energy: 0, attackRate: 120 };
 
 let grid = [];
 let modules = [];
@@ -81,27 +81,22 @@ function initializeGrid() {
 
 function spawnWave() {
   wave++;
-  let enemyCount = wave * 5; // Augmentation significative du nombre d'ennemis (5 par vague)
+  let enemyCount = wave * 5;
 
-  // À partir de la vague 5, inclure tous les types d'ennemis précédents
   let enemyTypesToSpawn = [];
   if (wave < 5) {
-    // Vagues 1-4 : ennemis normaux uniquement
     let enemyTypeIndex = min(wave - 1, ENEMY_TYPES.length - 1);
     enemyTypesToSpawn.push({ type: ENEMY_TYPES[enemyTypeIndex], isBoss: false, isTriangle: false });
   } else if (wave < 10) {
-    // Vagues 5-9 : boss noirs + ennemis normaux
     let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
     enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
     enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
   } else if (wave < 20) {
-    // Vagues 10-19 : super boss + boss noirs + ennemis normaux
     let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
     enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
     enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
     enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
   } else {
-    // Vague 20+ : triangles + super boss + boss noirs + ennemis normaux
     let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
     enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
     enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
@@ -109,7 +104,6 @@ function spawnWave() {
     enemyTypesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
   }
 
-  // Répartir les ennemis entre les différents types
   let enemiesPerType = Math.floor(enemyCount / enemyTypesToSpawn.length);
   for (let enemyTypeData of enemyTypesToSpawn) {
     let enemyType = enemyTypeData.type;
@@ -120,11 +114,11 @@ function spawnWave() {
 
     for (let i = 0; i < enemiesPerType; i++) {
       let startY = floor(random(GRID_HEIGHT));
-      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      let path = isBoss ? findPathAerial(0, startY, GRID_WIDTH - 1, startY) : findPath(0, startY, GRID_WIDTH - 1, startY);
       if (path.length === 0) {
         let foundPath = false;
         for (let y = 0; y < GRID_HEIGHT; y++) {
-          path = findPath(0, y, GRID_WIDTH - 1, y);
+          path = isBoss ? findPathAerial(0, y, GRID_WIDTH - 1, y) : findPath(0, y, GRID_WIDTH - 1, y);
           if (path.length > 0) {
             startY = y;
             foundPath = true;
@@ -243,14 +237,25 @@ function findPath(startX, startY, goalX, goalY) {
   return path;
 }
 
+function findPathAerial(startX, startY, goalX, goalY) {
+  let path = [];
+  let x = startX;
+  while (x <= goalX) {
+    path.push({ x: x, y: startY });
+    x++;
+  }
+  return path;
+}
+
+// Vérifie si un chemin terrestre existe pour chaque ligne de départ
 function hasPathToBase() {
   for (let startY = 0; startY < GRID_HEIGHT; startY++) {
     let path = findPath(0, startY, GRID_WIDTH - 1, startY);
-    if (path.length > 0) {
-      return true;
+    if (path.length === 0) {
+      return false; // Si une ligne est bloquée, on considère qu'il n'y a pas de chemin
     }
   }
-  return false;
+  return true; // Un chemin existe pour chaque ligne
 }
 
 function isMapFull() {
@@ -264,7 +269,6 @@ function isMapFull() {
   return true;
 }
 
-// Vérifier si une zone est libre pour une tourelle améliorée
 function isAreaFree(startX, startY, width, height) {
   for (let x = startX; x < startX + width; x++) {
     for (let y = startY; y < startY + height; y++) {
@@ -276,7 +280,6 @@ function isAreaFree(startX, startY, width, height) {
   return true;
 }
 
-// Occuper une zone pour une tourelle améliorée
 function occupyArea(startX, startY, width, height, moduleType) {
   for (let x = startX; x < startX + width; x++) {
     for (let y = startY; y < startY + height; y++) {
@@ -322,13 +325,13 @@ function drawModules() {
 
     if (module.level >= 2) {
       color = UPGRADE_COLOR_LVL2;
-      width = CELL_SIZE * 2; // 2 cases en largeur
-      height = CELL_SIZE; // 1 case en hauteur
+      width = CELL_SIZE * 2;
+      height = CELL_SIZE;
     }
     if (module.level >= 3) {
       color = UPGRADE_COLOR_LVL3;
-      width = CELL_SIZE * 2; // 2 cases en largeur
-      height = CELL_SIZE * 2; // 2 cases en hauteur
+      width = CELL_SIZE * 2;
+      height = CELL_SIZE * 2;
     }
 
     if (module.type === 'wall') {
@@ -353,6 +356,8 @@ function drawModules() {
 
       if (frameCount % (TURRET_TYPES[module.type].attackRate / upgrades.attackSpeed) === 0) {
         for (let enemy of enemies) {
+          if (enemy.isBoss && module.type !== 'projectile') continue;
+
           let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
           let effectiveDamage = TURRET_TYPES[module.type].damage * upgrades.damage * (1 + wave * 0.05);
           let effectiveRange = TURRET_TYPES[module.type].range * upgrades.range * (1 + wave * 0.02);
@@ -439,7 +444,7 @@ function drawEnemies() {
         } else {
           let nextGridX = floor(targetX / CELL_SIZE);
           let nextGridY = floor(targetY / CELL_SIZE);
-          if (grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
+          if (!enemy.isBoss && grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
             let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
@@ -454,7 +459,7 @@ function drawEnemies() {
     } else {
       let startX = floor(enemy.x / CELL_SIZE);
       let startY = floor(enemy.y / CELL_SIZE);
-      let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+      let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY);
       if (path.length > 0) {
         enemy.path = path;
         enemy.pathIndex = 0;
@@ -476,7 +481,7 @@ function drawEnemies() {
           ) {
             enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
             enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
-            path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY);
+            path = enemy.isBoss ? findPathAerial(newGridX, newGridY, GRID_WIDTH - 1, newGridY) : findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY);
             if (path.length > 0) {
               enemy.path = path;
               enemy.pathIndex = 0;
@@ -489,7 +494,7 @@ function drawEnemies() {
           enemy.x += enemy.speed;
           let startX = floor(enemy.x / CELL_SIZE);
           let startY = floor(enemy.y / CELL_SIZE);
-          path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+          path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY);
           enemy.path = path;
           enemy.pathIndex = 0;
         }
@@ -556,7 +561,7 @@ function drawEnemyProjectiles() {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY);
             enemy.path = path;
             enemy.pathIndex = 0;
           }
@@ -664,30 +669,25 @@ function mousePressed() {
     if (isMapFull() && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
       let module = modules.find(m => m.x === gridX && m.y === gridY);
       if (module) {
-        // Amélioration au niveau 2 (vague 7+, coût 2000 XP)
         if (wave >= 7 && module.level === 1 && xp >= 2000) {
           xp -= 2000;
           module.level = 2;
-          // Étendre la tourelle sur 2 cases (1x2)
           if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
             occupyArea(gridX, gridY, 2, 1, module.type);
           } else if (gridY + 1 < GRID_HEIGHT && grid[gridX][gridY + 1] === null) {
             occupyArea(gridX, gridY, 1, 2, module.type);
           } else {
-            module.level = 1; // Revenir en arrière si pas assez de place
+            module.level = 1;
             xp += 2000;
           }
           updateStats();
           return;
         }
-        // Amélioration au niveau 3 (vague 17+, coût 10 000 XP)
         if (wave >= 17 && module.level === 2 && xp >= 10000) {
           xp -= 10000;
           module.level = 3;
-          // Étendre la tourelle sur 4 cases (2x2)
           let width = module.level >= 3 ? 2 : 2;
           let height = module.level >= 3 ? 2 : 1;
-          // Libérer l'ancienne zone
           for (let x = module.x; x < module.x + width; x++) {
             for (let y = module.y; y < module.y + height; y++) {
               if (x < GRID_WIDTH && y < GRID_HEIGHT) {
@@ -695,11 +695,9 @@ function mousePressed() {
               }
             }
           }
-          // Étendre à 2x2
           if (isAreaFree(module.x, module.y, 2, 2)) {
             occupyArea(module.x, module.y, 2, 2, module.type);
           } else {
-            // Si pas assez de place, revenir au niveau 2
             module.level = 2;
             xp += 10000;
             occupyArea(module.x, module.y, 2, 1, module.type);
@@ -717,7 +715,6 @@ function mousePressed() {
         let moduleType = grid[gridX][gridY];
         let refundEnergy = Math.floor(TURRET_TYPES[moduleType].cost / 2);
         energy += refundEnergy;
-        // Libérer la zone occupée par la tourelle
         let width = module.level >= 3 ? 2 : module.level === 2 ? 2 : 1;
         let height = module.level >= 3 ? 2 : module.level === 2 ? 1 : 1;
         for (let x = module.x; x < module.x + width; x++) {
@@ -732,7 +729,7 @@ function mousePressed() {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY);
             enemy.path = path;
             enemy.pathIndex = 0;
           }
@@ -744,11 +741,13 @@ function mousePressed() {
 
     if (selectedModule && !isDeleteModeActive && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       if (selectedModule === 'wall') {
-        grid[gridX][gridY] = selectedModule;
+        // Vérifier si le placement du mur bloque tous les chemins
+        grid[gridX][gridY] = selectedModule; // Placement temporaire
         if (!hasPathToBase()) {
-          grid[gridX][gridY] = null;
+          grid[gridX][gridY] = null; // Annuler si ça bloque tous les chemins
           return;
         }
+        grid[gridX][gridY] = null; // Annuler le placement temporaire
       }
       if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
         return;
@@ -776,7 +775,7 @@ function mousePressed() {
           ) {
             enemyOnCell.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
             enemyOnCell.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
-            let path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY);
+            let path = enemyOnCell.isBoss ? findPathAerial(newGridX, newGridY, GRID_WIDTH - 1, newGridY) : findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY);
             enemyOnCell.path = path;
             enemyOnCell.pathIndex = 0;
             moved = true;
@@ -795,7 +794,7 @@ function mousePressed() {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY);
             enemy.path = path;
             enemy.pathIndex = 0;
           }
@@ -862,7 +861,7 @@ document.getElementById('upgrade-range').addEventListener('click', () => {
       if (enemy.path.length > 0) {
         let startX = floor(enemy.x / CELL_SIZE);
         let startY = floor(enemy.y / CELL_SIZE);
-        let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+        let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY);
         enemy.path = path;
         enemy.pathIndex = 0;
       }
