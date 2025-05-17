@@ -10,7 +10,7 @@
   --turret-color: #55ff55;
   --warning-color: #ffcc00;
   --success-color: #00cc99;
-  --enemy-zone-color: #ff0000; /* Rouge pour la première colonne */
+  --enemy-zone-color: #6500005e; /* Rouge pour la première colonne */
 }
 
 * {
