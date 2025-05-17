@@ -7,7 +7,7 @@ const BASE_HP = 100;
 const TEXT_COLOR = '#e0e0ff';
 const BUTTON_COLOR = '#6a5acd';
 const ENEMY_COLOR = '#ff5555';
-const BOSS_COLOR = '#000000'; // Couleur noire pour le boss
+const BOSS_COLOR = '#000000';
 const TURRET_COLOR = '#55ff55';
 
 const TURRET_TYPES = {
@@ -42,7 +42,7 @@ function calculateCellCost(x, y) {
     let distance = dist(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
     if (distance <= turretRange) {
       let proximityFactor = 1 - (distance / turretRange);
-      cost += 5 * proximityFactor; // Réduction du coût (de 10 à 5) pour éviter de bloquer les chemins
+      cost += 5 * proximityFactor;
     }
   }
   return cost;
@@ -90,7 +90,6 @@ function spawnWave() {
       isBoss: false
     });
   }
-  // Ajout d'un boss toutes les 5 vagues (5, 10, 15, etc.)
   if (wave >= 5 && wave % 5 === 0) {
     let startY = floor(random(GRID_HEIGHT));
     let path = findPath(0, startY, GRID_WIDTH - 1, startY);
@@ -98,13 +97,13 @@ function spawnWave() {
     enemies.push({
       x: 0,
       y: startY * CELL_SIZE + CELL_SIZE / 2,
-      hp: (enemyType.hp + wave * 5) * 2, // Double de vie
+      hp: (enemyType.hp + wave * 5) * 2,
       maxHp: (enemyType.hp + wave * 5) * 2,
-      speed: enemyType.speed * 0.8, // Boss un peu plus lent
+      speed: enemyType.speed * 0.8,
       path: path,
       pathIndex: 0,
-      xp: enemyType.xp * 2, // Double d'XP
-      energy: enemyType.energy * 2, // Double d'énergie
+      xp: enemyType.xp * 2,
+      energy: enemyType.energy * 2,
       isBoss: true
     });
   }
@@ -159,7 +158,6 @@ function findPath(startX, startY, goalX, goalY) {
       }
     }
   }
-  // Si aucun chemin optimal n'est trouvé, on ignore les coûts des tourelles pour garantir un chemin
   queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
   visited.clear();
   visited.add(`${startX},${startY}`);
@@ -380,12 +378,14 @@ function updateStats() {
   });
 
   const exchangeBtn = document.getElementById('exchange-xp-energy');
-  if (xp < 5) {
+  const amount = document.querySelector('input[name="exchange-amount"]:checked').value;
+  const requiredXp = amount === '1xp' ? 1 : amount === '50xp' ? 50 : 100;
+  if (xp < requiredXp) {
     exchangeBtn.classList.add('locked');
-    exchangeBtn.textContent = `Échanger XP > Énergie (manque ${5 - xp} XP)`;
+    exchangeBtn.textContent = `Échange (manque ${requiredXp - xp} XP)`;
   } else {
     exchangeBtn.classList.remove('locked');
-    exchangeBtn.textContent = `Échanger XP > Énergie`;
+    exchangeBtn.textContent = `Échange`;
   }
 
   const healBtn = document.getElementById('heal-base');
@@ -512,19 +512,14 @@ document.getElementById('upgrade-damage').addEventListener('click', () => {
 
 // Échange XP contre énergie
 document.getElementById('exchange-xp-energy').addEventListener('click', () => {
-  const amount = document.getElementById('exchange-amount').value;
-  if (amount === '5xp' && xp >= 5) {
-    xp -= 5;
-    energy += 10;
-  } else if (amount === '50percent' && xp >= 5) {
-    const xpToConvert = Math.floor(xp / 2);
+  const amount = document.querySelector('input[name="exchange-amount"]:checked').value;
+  const requiredXp = amount === '1xp' ? 1 : amount === '50xp' ? 50 : 100;
+  if (xp >= requiredXp) {
+    const xpToConvert = amount === '1xp' ? 1 : amount === '50xp' ? 50 : 100;
     xp -= xpToConvert;
-    energy += xpToConvert * 2;
-  } else if (amount === 'all' && xp >= 5) {
-    energy += xp * 2;
-    xp = 0;
+    energy += xpToConvert * 2; // 1 XP = 2 énergie
+    updateStats();
   }
-  updateStats();
 });
 
 // Soigner la base

@@ -51,12 +51,12 @@
         <button class="game-button" id="pause">Pause</button>
         <button class="game-button" id="restart">Relancer</button>
         <div class="exchange-control">
-          <button class="game-button" id="exchange-xp-energy">Échanger XP > Énergie</button>
-          <select id="exchange-amount" class="game-button">
-            <option value="5xp">5 XP → 10 E</option>
-            <option value="50percent">50% XP</option>
-            <option value="all">Tout l'XP</option>
-          </select>
+          <button class="game-button" id="exchange-xp-energy">Échange</button>
+          <div class="exchange-options">
+            <label><input type="radio" name="exchange-amount" value="1xp" checked> 1 XP</label>
+            <label><input type="radio" name="exchange-amount" value="50xp"> 50 XP</label>
+            <label><input type="radio" name="exchange-amount" value="100xp"> 100 XP</label>
+          </div>
         </div>
         <button class="game-button" id="heal-base">Soigner Base (500 XP → 10 HP)</button>
       </div>
