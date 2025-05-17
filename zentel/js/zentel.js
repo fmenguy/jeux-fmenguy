@@ -13,7 +13,7 @@ const TURRET_COLOR = '#55ff55';
 const ENEMY_ZONE_COLOR = '#ff0000';
 const UPGRADE_COLOR_LVL2 = '#ffcc00';
 const UPGRADE_COLOR_LVL3 = '#ff00ff';
-const WARNING_COLOR = '#ffcc00'; // Couleur jaune pour les conditions et coûts
+const WARNING_COLOR = '#ffcc00';
 
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
@@ -358,7 +358,6 @@ function drawModules() {
         textSize(14);
       }
 
-      // Afficher le coût et le niveau d'évolution sous la tourelle en mode "Évoluer"
       if (isEvolveModeActive && module.type !== 'wall') {
         fill(WARNING_COLOR);
         textSize(10);
@@ -466,24 +465,47 @@ function drawEnemies() {
       let dx = targetX - enemy.x;
       let dy = targetY - enemy.y;
       let distToTarget = dist(enemy.x, enemy.y, targetX, targetY);
+
+      // Vérifier si la prochaine position est accessible pour les ennemis terrestres
+      let nextGridX = floor(targetX / CELL_SIZE);
+      let nextGridY = floor(targetY / CELL_SIZE);
+      let canMove = true;
+      if (!enemy.isBoss && grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
+        canMove = false;
+      }
+
       if (distToTarget < 5) {
         enemy.pathIndex++;
         if (enemy.pathIndex >= enemy.path.length) {
           enemy.path = [];
         } else {
-          let nextGridX = floor(targetX / CELL_SIZE);
-          let nextGridY = floor(targetY / CELL_SIZE);
+          // Recalculer immédiatement le chemin si un obstacle est rencontré
           if (!enemy.isBoss && grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
             let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
-            enemy.path = path;
-            enemy.pathIndex = 0;
+            if (path.length > 0) {
+              enemy.path = path;
+              enemy.pathIndex = 0;
+            } else {
+              enemy.path = [];
+            }
           }
         }
-      } else {
+      } else if (canMove) {
         enemy.x += (dx / distToTarget) * enemy.speed;
         enemy.y += (dy / distToTarget) * enemy.speed;
+      } else {
+        // Si un obstacle est rencontré, recalculer le chemin immédiatement
+        let startX = floor(enemy.x / CELL_SIZE);
+        let startY = floor(enemy.y / CELL_SIZE);
+        let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+        if (path.length > 0) {
+          enemy.path = path;
+          enemy.pathIndex = 0;
+        } else {
+          enemy.path = [];
+        }
       }
     } else {
       let startX = floor(enemy.x / CELL_SIZE);
@@ -695,9 +717,11 @@ function updateStats() {
   if (wave < 7) {
     evolveBtn.classList.add('locked');
     evolveBtn.textContent = `Évoluer (vague 7+)`;
+    evolveBtn.setAttribute('data-condition', 'Vague 7+ pour évoluer');
   } else {
     evolveBtn.classList.remove('locked');
     evolveBtn.textContent = `Évoluer`;
+    evolveBtn.setAttribute('data-condition', '');
   }
   if (isEvolveModeActive) {
     evolveBtn.classList.add('active');
@@ -908,7 +932,7 @@ document.getElementById('delete-turret-btn').addEventListener('click', () => {
 
 // Bouton pour évoluer une tourelle
 document.getElementById('evolve-turret-btn').addEventListener('click', () => {
-  if (wave < 7) return; // Ne rien faire si la vague est < 7
+  if (wave < 7) return;
   isEvolveModeActive = !isEvolveModeActive;
   isDeleteModeActive = false;
   selectedModule = null;
