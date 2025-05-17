@@ -86,6 +86,19 @@ function spawnWave() {
     for (let i = 0; i < enemyCount; i++) {
       let startY = floor(random(GRID_HEIGHT));
       let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      if (path.length === 0) {
+        // Si aucun chemin n'est trouvé, essayer un autre point de départ
+        let foundPath = false;
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          path = findPath(0, y, GRID_WIDTH - 1, y);
+          if (path.length > 0) {
+            startY = y;
+            foundPath = true;
+            break;
+          }
+        }
+        if (!foundPath) continue; // Ignorer l'ennemi si aucun chemin n'est trouvé
+      }
       enemies.push({
         x: 0,
         y: startY * CELL_SIZE + CELL_SIZE / 2,
@@ -103,6 +116,18 @@ function spawnWave() {
     for (let i = 0; i < enemyCount; i++) {
       let startY = floor(random(GRID_HEIGHT));
       let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      if (path.length === 0) {
+        let foundPath = false;
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          path = findPath(0, y, GRID_WIDTH - 1, y);
+          if (path.length > 0) {
+            startY = y;
+            foundPath = true;
+            break;
+          }
+        }
+        if (!foundPath) continue;
+      }
       enemies.push({
         x: 0,
         y: startY * CELL_SIZE + CELL_SIZE / 2,
@@ -119,6 +144,18 @@ function spawnWave() {
     if (wave >= 5 && wave % 5 === 0 && wave !== 6) {
       let startY = floor(random(GRID_HEIGHT));
       let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      if (path.length === 0) {
+        let foundPath = false;
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          path = findPath(0, y, GRID_WIDTH - 1, y);
+          if (path.length > 0) {
+            startY = y;
+            foundPath = true;
+            break;
+          }
+        }
+        if (!foundPath) return; // Ne pas ajouter de boss si aucun chemin n'est trouvé
+      }
       enemies.push({
         x: 0,
         y: startY * CELL_SIZE + CELL_SIZE / 2,
@@ -137,7 +174,6 @@ function spawnWave() {
 }
 
 function findPath(startX, startY, goalX, goalY) {
-  // Première tentative : trouver un chemin optimal en prenant en compte les coûts des tourelles
   let queue = [{ x: startX, y: startY, cost: 0, path: [{ x: startX, y: startY }] }];
   let visited = new Set();
   let costs = Array(GRID_WIDTH).fill().map(() => Array(GRID_HEIGHT).fill(Infinity));
@@ -167,7 +203,7 @@ function findPath(startX, startY, goalX, goalY) {
         newX >= 0 && newX < GRID_WIDTH &&
         newY >= 0 && newY < GRID_HEIGHT &&
         !visited.has(key) &&
-        (grid[newX][newY] === null || grid[newX][newY] === 'base')
+        (grid[newX][newY] === null || grid[newX][newY] === 'base') // Vérification stricte pour éviter les murs
       ) {
         let cellCost = calculateCellCost(newX, newY);
         let newCost = cost + cellCost;
@@ -186,7 +222,7 @@ function findPath(startX, startY, goalX, goalY) {
     }
   }
 
-  // Deuxième tentative : ignorer les coûts des tourelles pour garantir un chemin
+  // Si aucun chemin optimal n'est trouvé, ignorer les coûts des tourelles
   queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
   visited.clear();
   visited.add(`${startX},${startY}`);
@@ -341,39 +377,82 @@ function drawEnemies() {
     let angle = map(hpRatio, 0, 1, 0, TWO_PI);
     arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2);
 
-    if (gameState !== 'paused' && enemy.path.length > 0) {
-      let nextPoint = enemy.path[enemy.pathIndex];
-      let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
-      let targetY = nextPoint.y * CELL_SIZE + CELL_SIZE / 2;
-      let dx = targetX - enemy.x;
-      let dy = targetY - enemy.y;
-      let distToTarget = dist(enemy.x, enemy.y, targetX, targetY);
-      if (distToTarget < 5) {
-        enemy.pathIndex++;
-        if (enemy.pathIndex >= enemy.path.length) {
-          enemy.path = [];
+    if (gameState !== 'paused') {
+      if (enemy.path.length > 0) {
+        let nextPoint = enemy.path[enemy.pathIndex];
+        let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
+        let targetY = nextPoint.y * CELL_SIZE + CELL_SIZE / 2;
+        let dx = targetX - enemy.x;
+        let dy = targetY - enemy.y;
+        let distToTarget = dist(enemy.x, enemy.y, targetX, targetY);
+        if (distToTarget < 5) {
+          enemy.pathIndex++;
+          if (enemy.pathIndex >= enemy.path.length) {
+            enemy.path = [];
+          } else {
+            // Vérifier si la prochaine cellule est bloquée
+            let nextGridX = floor(targetX / CELL_SIZE);
+            let nextGridY = floor(targetY / CELL_SIZE);
+            if (grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
+              // Recalculer un nouveau chemin
+              let startX = floor(enemy.x / CELL_SIZE);
+              let startY = floor(enemy.y / CELL_SIZE);
+              let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+              enemy.path = path;
+              enemy.pathIndex = 0;
+            }
+          }
         } else {
-          // Vérifier si la prochaine cellule est bloquée
-          let nextGridX = floor(targetX / CELL_SIZE);
-          let nextGridY = floor(targetY / CELL_SIZE);
-          if (grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
-            // Recalculer un nouveau chemin si la cellule est bloquée
+          enemy.x += (dx / distToTarget) * enemy.speed;
+          enemy.y += (dy / distToTarget) * enemy.speed;
+        }
+      } else {
+        // Si le chemin est vide, recalculer immédiatement
+        let startX = floor(enemy.x / CELL_SIZE);
+        let startY = floor(enemy.y / CELL_SIZE);
+        let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+        if (path.length > 0) {
+          enemy.path = path;
+          enemy.pathIndex = 0;
+        } else {
+          // Si aucun chemin n'est trouvé, essayer un autre point de départ proche
+          let directions = [
+            { dx: 1, dy: 0 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: 0, dy: -1 }
+          ];
+          let moved = false;
+          for (let dir of directions) {
+            let newGridX = startX + dir.dx;
+            let newGridY = startY + dir.dy;
+            if (
+              newGridX >= 0 && newGridX < GRID_WIDTH - 1 &&
+              newGridY >= 0 && newGridY < GRID_HEIGHT &&
+              (grid[newGridX][newGridY] === null || grid[newGridX][newGridY] === 'base')
+            ) {
+              enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
+              enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
+              path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY);
+              if (path.length > 0) {
+                enemy.path = path;
+                enemy.pathIndex = 0;
+                moved = true;
+                break;
+              }
+            }
+          }
+          if (!moved) {
+            // Si aucun chemin n'est trouvé, avancer vers la droite comme dernier recours
+            enemy.x += enemy.speed;
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            enemy.path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            enemy.path = path;
             enemy.pathIndex = 0;
           }
         }
-      } else {
-        enemy.x += (dx / distToTarget) * enemy.speed;
-        enemy.y += (dy / distToTarget) * enemy.speed;
       }
-    } else if (gameState !== 'paused') {
-      // Si le chemin est vide, forcer un recalcul
-      let startX = floor(enemy.x / CELL_SIZE);
-      let startY = floor(enemy.y / CELL_SIZE);
-      enemy.path = findPath(startX, startY, GRID_WIDTH - 1, startY);
-      enemy.pathIndex = 0;
     }
   }
   enemies = enemies.filter(enemy => enemy.hp > 0 && enemy.x < width);
@@ -542,7 +621,7 @@ function mousePressed() {
           if (
             newGridX >= 0 && newGridX < GRID_WIDTH - 1 &&
             newGridY >= 0 && newGridY < GRID_HEIGHT &&
-            !grid[newGridX][newGridY]
+            (grid[newGridX][newGridY] === null || grid[newGridX][newGridY] === 'base')
           ) {
             enemyOnCell.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
             enemyOnCell.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
