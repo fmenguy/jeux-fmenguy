@@ -7,6 +7,7 @@ const BASE_HP = 100;
 const TEXT_COLOR = '#e0e0ff';
 const BUTTON_COLOR = '#6a5acd';
 const ENEMY_COLOR = '#ff5555';
+const BOSS_COLOR = '#000000'; // Couleur noire pour le boss
 const TURRET_COLOR = '#55ff55';
 
 const TURRET_TYPES = {
@@ -41,7 +42,7 @@ function calculateCellCost(x, y) {
     let distance = dist(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
     if (distance <= turretRange) {
       let proximityFactor = 1 - (distance / turretRange);
-      cost += 10 * proximityFactor;
+      cost += 5 * proximityFactor; // Réduction du coût (de 10 à 5) pour éviter de bloquer les chemins
     }
   }
   return cost;
@@ -85,7 +86,26 @@ function spawnWave() {
       path: path,
       pathIndex: 0,
       xp: enemyType.xp,
-      energy: enemyType.energy
+      energy: enemyType.energy,
+      isBoss: false
+    });
+  }
+  // Ajout d'un boss toutes les 5 vagues (5, 10, 15, etc.)
+  if (wave >= 5 && wave % 5 === 0) {
+    let startY = floor(random(GRID_HEIGHT));
+    let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+    let enemyType = ENEMY_TYPES[enemyTypeIndex];
+    enemies.push({
+      x: 0,
+      y: startY * CELL_SIZE + CELL_SIZE / 2,
+      hp: (enemyType.hp + wave * 5) * 2, // Double de vie
+      maxHp: (enemyType.hp + wave * 5) * 2,
+      speed: enemyType.speed * 0.8, // Boss un peu plus lent
+      path: path,
+      pathIndex: 0,
+      xp: enemyType.xp * 2, // Double d'XP
+      energy: enemyType.energy * 2, // Double d'énergie
+      isBoss: true
     });
   }
   updateStats();
@@ -136,6 +156,40 @@ function findPath(startX, startY, goalX, goalY) {
             path: [...path, { x: newX, y: newY }]
           });
         }
+      }
+    }
+  }
+  // Si aucun chemin optimal n'est trouvé, on ignore les coûts des tourelles pour garantir un chemin
+  queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
+  visited.clear();
+  visited.add(`${startX},${startY}`);
+  while (queue.length > 0) {
+    let { x, y, path } = queue.shift();
+    if (x === goalX) {
+      return path;
+    }
+    let directions = [
+      { dx: 1, dy: 0 },
+      { dx: 0, dy: 1 },
+      { dx: 0, dy: -1 },
+      { dx: -1, dy: 0 }
+    ];
+    for (let dir of directions) {
+      let newX = x + dir.dx;
+      let newY = y + dir.dy;
+      let key = `${newX},${newY}`;
+      if (
+        newX >= 0 && newX < GRID_WIDTH &&
+        newY >= 0 && newY < GRID_HEIGHT &&
+        !visited.has(key) &&
+        (grid[newX][newY] === null || grid[newX][newY] === 'base')
+      ) {
+        visited.add(key);
+        queue.push({
+          x: newX,
+          y: newY,
+          path: [...path, { x: newX, y: newY }]
+        });
       }
     }
   }
@@ -218,7 +272,7 @@ function drawModules() {
 
 function drawEnemies() {
   for (let enemy of enemies) {
-    fill(ENEMY_COLOR);
+    fill(enemy.isBoss ? BOSS_COLOR : ENEMY_COLOR);
     noStroke();
     ellipse(enemy.x, enemy.y, 20);
 
@@ -465,9 +519,9 @@ document.getElementById('exchange-xp-energy').addEventListener('click', () => {
   } else if (amount === '50percent' && xp >= 5) {
     const xpToConvert = Math.floor(xp / 2);
     xp -= xpToConvert;
-    energy += xpToConvert * 2; // 1 XP = 2 énergie
+    energy += xpToConvert * 2;
   } else if (amount === 'all' && xp >= 5) {
-    energy += xp * 2; // 1 XP = 2 énergie
+    energy += xp * 2;
     xp = 0;
   }
   updateStats();
