@@ -11,8 +11,8 @@ const BOSS_COLOR = '#000000';
 const TURRET_COLOR = '#55ff55';
 
 const TURRET_TYPES = {
-  melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10 },
-  projectile: { name: "Archer Plasma", symbol: "🏹", damage: 5, range: 150, attackRate: 90, cost: 20 },
+  melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
+  projectile: { name: "Archer Plasma", symbol: "🏹", damage: 5, range: 150, attackRate: 90, cost: 20, level: 1 },
   wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', cost: 5 }
 };
 
@@ -33,6 +33,7 @@ let selectedModule = null;
 let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
 let projectiles = [];
 let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
+let selectedTurret = null; // Pour gérer la suppression ou l'amélioration
 
 function calculateCellCost(x, y) {
   let cost = 1;
@@ -73,39 +74,68 @@ function spawnWave() {
   wave++;
   let enemyCount = wave * 2;
   let enemyTypeIndex = min(wave - 1, ENEMY_TYPES.length - 1);
-  for (let i = 0; i < enemyCount; i++) {
-    let startY = floor(random(GRID_HEIGHT));
-    let path = findPath(0, startY, GRID_WIDTH - 1, startY);
-    let enemyType = ENEMY_TYPES[enemyTypeIndex];
-    enemies.push({
-      x: 0,
-      y: startY * CELL_SIZE + CELL_SIZE / 2,
-      hp: enemyType.hp + wave * 5,
-      maxHp: enemyType.hp + wave * 5,
-      speed: enemyType.speed,
-      path: path,
-      pathIndex: 0,
-      xp: enemyType.xp,
-      energy: enemyType.energy,
-      isBoss: false
-    });
+  let enemyType = ENEMY_TYPES[enemyTypeIndex];
+  let baseHp = enemyType.hp + wave * 5;
+  let bossHpMultiplier = 2; // Boss normal (vague 5+)
+
+  // À la vague 10, un boss avec 10x plus de vie que le boss de la vague 5
+  if (wave === 10) {
+    bossHpMultiplier = 10;
   }
-  if (wave >= 5 && wave % 5 === 0) {
-    let startY = floor(random(GRID_HEIGHT));
-    let path = findPath(0, startY, GRID_WIDTH - 1, startY);
-    let enemyType = ENEMY_TYPES[enemyTypeIndex];
-    enemies.push({
-      x: 0,
-      y: startY * CELL_SIZE + CELL_SIZE / 2,
-      hp: (enemyType.hp + wave * 5) * 2,
-      maxHp: (enemyType.hp + wave * 5) * 2,
-      speed: enemyType.speed * 0.8,
-      path: path,
-      pathIndex: 0,
-      xp: enemyType.xp * 2,
-      energy: enemyType.energy * 2,
-      isBoss: true
-    });
+
+  // Vague 6 : uniquement des boss identiques à ceux de la vague 5
+  if (wave === 6) {
+    for (let i = 0; i < enemyCount; i++) {
+      let startY = floor(random(GRID_HEIGHT));
+      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      enemies.push({
+        x: 0,
+        y: startY * CELL_SIZE + CELL_SIZE / 2,
+        hp: baseHp * 2, // Identique au boss de la vague 5
+        maxHp: baseHp * 2,
+        speed: enemyType.speed * 0.8,
+        path: path,
+        pathIndex: 0,
+        xp: enemyType.xp * 2,
+        energy: enemyType.energy * 2,
+        isBoss: true
+      });
+    }
+  } else {
+    // Vagues normales
+    for (let i = 0; i < enemyCount; i++) {
+      let startY = floor(random(GRID_HEIGHT));
+      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      enemies.push({
+        x: 0,
+        y: startY * CELL_SIZE + CELL_SIZE / 2,
+        hp: baseHp * (1 + wave * 0.1), // Augmentation des HP (10% par vague)
+        maxHp: baseHp * (1 + wave * 0.1),
+        speed: enemyType.speed,
+        path: path,
+        pathIndex: 0,
+        xp: enemyType.xp,
+        energy: enemyType.energy,
+        isBoss: false
+      });
+    }
+    // Ajout d'un boss toutes les 5 vagues (sauf vague 6)
+    if (wave >= 5 && wave % 5 === 0 && wave !== 6) {
+      let startY = floor(random(GRID_HEIGHT));
+      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      enemies.push({
+        x: 0,
+        y: startY * CELL_SIZE + CELL_SIZE / 2,
+        hp: baseHp * bossHpMultiplier,
+        maxHp: baseHp * bossHpMultiplier,
+        speed: enemyType.speed * 0.8,
+        path: path,
+        pathIndex: 0,
+        xp: enemyType.xp * bossHpMultiplier,
+        energy: enemyType.energy * bossHpMultiplier,
+        isBoss: true
+      });
+    }
   }
   updateStats();
 }
@@ -204,6 +234,18 @@ function hasPathToBase() {
   return false;
 }
 
+// Vérifier si la carte est pleine (plus de place pour placer des tourelles ou murs)
+function isMapFull() {
+  for (let x = 0; x < GRID_WIDTH - 1; x++) { // -1 pour exclure la colonne de la base
+    for (let y = 0; y < GRID_HEIGHT; y++) {
+      if (grid[x][y] === null) {
+        return false; // Il reste de la place
+      }
+    }
+  }
+  return true; // Carte pleine
+}
+
 function draw() {
   background('#0a0a1e');
   drawGrid();
@@ -244,16 +286,29 @@ function drawModules() {
       fill(255);
       text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
 
+      // Afficher le niveau de la tourelle si supérieur à 1
+      if (module.level > 1) {
+        fill('#ffcc00');
+        textSize(10);
+        text(module.level, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2 + 15);
+        textSize(14);
+      }
+
       if (frameCount % (TURRET_TYPES[module.type].attackRate / upgrades.attackSpeed) === 0 && gameState !== 'paused') {
         for (let enemy of enemies) {
           let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
-          let effectiveDamage = TURRET_TYPES[module.type].damage * upgrades.damage;
+          let effectiveDamage = TURRET_TYPES[module.type].damage * upgrades.damage * (1 + wave * 0.05); // Augmentation des dégâts (5% par vague)
+          let effectiveRange = TURRET_TYPES[module.type].range * upgrades.range * (1 + wave * 0.02); // Augmentation de la portée (2% par vague)
+          if (module.level > 1) {
+            effectiveDamage *= (1 + module.level * 0.3); // 30% de dégâts en plus par niveau
+            effectiveRange *= (1 + module.level * 0.1); // 10% de portée en plus par niveau
+          }
           if (wave >= 5) {
             effectiveDamage *= 1.5;
           }
-          if (module.type === 'melee' && d < TURRET_TYPES.melee.range * upgrades.range) {
+          if (module.type === 'melee' && d < effectiveRange) {
             enemy.hp -= effectiveDamage;
-          } else if (module.type === 'projectile' && d < TURRET_TYPES.projectile.range * upgrades.range) {
+          } else if (module.type === 'projectile' && d < effectiveRange) {
             projectiles.push({
               x: module.x * CELL_SIZE + CELL_SIZE / 2,
               y: module.y * CELL_SIZE + CELL_SIZE / 2,
@@ -403,7 +458,42 @@ function mousePressed() {
   let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT && (gameState === 'playing' || gameState === 'paused')) {
-    if (selectedModule && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
+    // Si la carte est pleine et qu'on clique sur une tourelle, on peut l'améliorer
+    if (isMapFull() && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
+      let module = modules.find(m => m.x === gridX && m.y === gridY);
+      if (module && xp >= 10) { // Coût pour améliorer au niveau suivant : 10 XP
+        xp -= 10;
+        module.level += 1;
+        updateStats();
+        return;
+      }
+    }
+
+    // Si on a sélectionné "supprimer", on supprime la tourelle et récupère 50% de l'énergie
+    if (selectedModule === 'delete' && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
+      let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
+      if (moduleIndex !== -1) {
+        let moduleType = grid[gridX][gridY];
+        let refundEnergy = Math.floor(TURRET_TYPES[moduleType].cost / 2); // Récupère 50% de l'énergie
+        energy += refundEnergy;
+        modules.splice(moduleIndex, 1);
+        grid[gridX][gridY] = null;
+        enemies.forEach(enemy => {
+          if (enemy.path.length > 0) {
+            let startX = floor(enemy.x / CELL_SIZE);
+            let startY = floor(enemy.y / CELL_SIZE);
+            enemy.path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            enemy.pathIndex = 0;
+          }
+        });
+        selectedModule = null; // Réinitialiser la sélection après suppression
+        updateStats();
+        return;
+      }
+    }
+
+    // Placement normal d'une tourelle ou mur
+    if (selectedModule && selectedModule !== 'delete' && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       if (selectedModule === 'wall') {
         grid[gridX][gridY] = selectedModule;
         if (!hasPathToBase()) {
@@ -415,7 +505,7 @@ function mousePressed() {
         return;
       }
       grid[gridX][gridY] = selectedModule;
-      modules.push({ x: gridX, y: gridY, type: selectedModule });
+      modules.push({ x: gridX, y: gridY, type: selectedModule, level: 1 });
       energy -= TURRET_TYPES[selectedModule].cost;
       if (selectedModule === 'wall' || selectedModule === 'melee' || selectedModule === 'projectile') {
         enemies.forEach(enemy => {
@@ -443,6 +533,12 @@ document.getElementById('projectile-btn').addEventListener('click', () => {
 });
 document.getElementById('wall-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'wall' ? null : 'wall';
+  updateStats();
+});
+
+// Bouton pour supprimer une tourelle
+document.getElementById('delete-turret-btn').addEventListener('click', () => {
+  selectedModule = selectedModule === 'delete' ? null : 'delete';
   updateStats();
 });
 
@@ -517,7 +613,7 @@ document.getElementById('exchange-xp-energy').addEventListener('click', () => {
   if (xp >= requiredXp) {
     const xpToConvert = amount === '1xp' ? 1 : amount === '50xp' ? 50 : 100;
     xp -= xpToConvert;
-    energy += xpToConvert * 2; // 1 XP = 2 énergie
+    energy += xpToConvert * 2;
     updateStats();
   }
 });
