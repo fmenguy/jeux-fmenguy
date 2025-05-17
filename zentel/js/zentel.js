@@ -137,6 +137,7 @@ function spawnWave() {
 }
 
 function findPath(startX, startY, goalX, goalY) {
+  // Première tentative : trouver un chemin optimal en prenant en compte les coûts des tourelles
   let queue = [{ x: startX, y: startY, cost: 0, path: [{ x: startX, y: startY }] }];
   let visited = new Set();
   let costs = Array(GRID_WIDTH).fill().map(() => Array(GRID_HEIGHT).fill(Infinity));
@@ -184,7 +185,8 @@ function findPath(startX, startY, goalX, goalY) {
       }
     }
   }
-  // Si aucun chemin optimal n'est trouvé, ignorer les coûts des tourelles
+
+  // Deuxième tentative : ignorer les coûts des tourelles pour garantir un chemin
   queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
   visited.clear();
   visited.add(`${startX},${startY}`);
@@ -218,7 +220,14 @@ function findPath(startX, startY, goalX, goalY) {
       }
     }
   }
-  return [];
+  // Si aucun chemin n'est trouvé, retourner un chemin par défaut vers la droite
+  let path = [];
+  let x = startX;
+  while (x < goalX) {
+    x++;
+    path.push({ x: x, y: startY });
+  }
+  return path;
 }
 
 function hasPathToBase() {
@@ -343,11 +352,28 @@ function drawEnemies() {
         enemy.pathIndex++;
         if (enemy.pathIndex >= enemy.path.length) {
           enemy.path = [];
+        } else {
+          // Vérifier si la prochaine cellule est bloquée
+          let nextGridX = floor(targetX / CELL_SIZE);
+          let nextGridY = floor(targetY / CELL_SIZE);
+          if (grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
+            // Recalculer un nouveau chemin si la cellule est bloquée
+            let startX = floor(enemy.x / CELL_SIZE);
+            let startY = floor(enemy.y / CELL_SIZE);
+            enemy.path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            enemy.pathIndex = 0;
+          }
         }
       } else {
         enemy.x += (dx / distToTarget) * enemy.speed;
         enemy.y += (dy / distToTarget) * enemy.speed;
       }
+    } else if (gameState !== 'paused') {
+      // Si le chemin est vide, forcer un recalcul
+      let startX = floor(enemy.x / CELL_SIZE);
+      let startY = floor(enemy.y / CELL_SIZE);
+      enemy.path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+      enemy.pathIndex = 0;
     }
   }
   enemies = enemies.filter(enemy => enemy.hp > 0 && enemy.x < width);
@@ -453,7 +479,6 @@ function mousePressed() {
   let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT && (gameState === 'playing' || gameState === 'paused')) {
-    // Si la carte est pleine et qu'on clique sur une tourelle, on peut l'améliorer
     if (isMapFull() && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
       let module = modules.find(m => m.x === gridX && m.y === gridY);
       if (module && xp >= 10) {
@@ -464,7 +489,6 @@ function mousePressed() {
       }
     }
 
-    // Si on a sélectionné "supprimer", on supprime la tourelle et récupère 50% de l'énergie
     if (selectedModule === 'delete' && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
       let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
       if (moduleIndex !== -1) {
@@ -477,7 +501,8 @@ function mousePressed() {
           if (enemy.path.length > 0) {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            enemy.path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            enemy.path = path;
             enemy.pathIndex = 0;
           }
         });
@@ -487,7 +512,6 @@ function mousePressed() {
       }
     }
 
-    // Placement normal d'une tourelle ou mur
     if (selectedModule && selectedModule !== 'delete' && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       if (selectedModule === 'wall') {
         grid[gridX][gridY] = selectedModule;
@@ -499,14 +523,12 @@ function mousePressed() {
       if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
         return;
       }
-      // Vérifier si un ennemi est sur la cellule exacte où on veut placer la tourelle
       let enemyOnCell = enemies.find(enemy => {
         let enemyGridX = floor(enemy.x / CELL_SIZE);
         let enemyGridY = floor(enemy.y / CELL_SIZE);
         return enemyGridX === gridX && enemyGridY === gridY;
       });
       if (enemyOnCell) {
-        // Déplacer l'ennemi légèrement pour libérer la cellule
         let directions = [
           { dx: 1, dy: 0 },
           { dx: -1, dy: 0 },
@@ -532,7 +554,6 @@ function mousePressed() {
           }
         }
         if (!moved) {
-          // Si aucune cellule libre n'est trouvée, on ne peut pas placer la tourelle
           return;
         }
       }
