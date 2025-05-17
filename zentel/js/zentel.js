@@ -9,6 +9,7 @@ const BUTTON_COLOR = '#6a5acd';
 const ENEMY_COLOR = '#ff5555';
 const BOSS_COLOR = '#000000';
 const TURRET_COLOR = '#55ff55';
+const ENEMY_ZONE_COLOR = '#ff0000'; // Rouge pour la première colonne
 
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
@@ -17,9 +18,9 @@ const TURRET_TYPES = {
 };
 
 const ENEMY_TYPES = [
-  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 2 },
-  { hp: 20, speed: 0.7 * 1.5, xp: 10, energy: 3 },
-  { hp: 30, speed: 0.3 * 1.5, xp: 15, energy: 5 },
+  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 0 }, // Plus d'énergie gagnée
+  { hp: 20, speed: 0.7 * 1.5, xp: 10, energy: 0 },
+  { hp: 30, speed: 0.3 * 1.5, xp: 15, energy: 0 },
 ];
 
 let grid = [];
@@ -33,7 +34,7 @@ let selectedModule = null;
 let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
 let projectiles = [];
 let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
-let selectedTurret = null;
+let isDeleteModeActive = false; // État du mode suppression
 
 function calculateCellCost(x, y) {
   let cost = 1;
@@ -87,7 +88,6 @@ function spawnWave() {
       let startY = floor(random(GRID_HEIGHT));
       let path = findPath(0, startY, GRID_WIDTH - 1, startY);
       if (path.length === 0) {
-        // Si aucun chemin n'est trouvé, essayer un autre point de départ
         let foundPath = false;
         for (let y = 0; y < GRID_HEIGHT; y++) {
           path = findPath(0, y, GRID_WIDTH - 1, y);
@@ -97,7 +97,7 @@ function spawnWave() {
             break;
           }
         }
-        if (!foundPath) continue; // Ignorer l'ennemi si aucun chemin n'est trouvé
+        if (!foundPath) continue;
       }
       enemies.push({
         x: 0,
@@ -108,7 +108,7 @@ function spawnWave() {
         path: path,
         pathIndex: 0,
         xp: enemyType.xp * 2,
-        energy: enemyType.energy * 2,
+        energy: enemyType.energy,
         isBoss: true
       });
     }
@@ -154,7 +154,7 @@ function spawnWave() {
             break;
           }
         }
-        if (!foundPath) return; // Ne pas ajouter de boss si aucun chemin n'est trouvé
+        if (!foundPath) return;
       }
       enemies.push({
         x: 0,
@@ -165,7 +165,7 @@ function spawnWave() {
         path: path,
         pathIndex: 0,
         xp: enemyType.xp * bossHpMultiplier,
-        energy: enemyType.energy * bossHpMultiplier,
+        energy: enemyType.energy,
         isBoss: true
       });
     }
@@ -203,7 +203,7 @@ function findPath(startX, startY, goalX, goalY) {
         newX >= 0 && newX < GRID_WIDTH &&
         newY >= 0 && newY < GRID_HEIGHT &&
         !visited.has(key) &&
-        (grid[newX][newY] === null || grid[newX][newY] === 'base') // Vérification stricte pour éviter les murs
+        (grid[newX][newY] === null || grid[newX][newY] === 'base')
       ) {
         let cellCost = calculateCellCost(newX, newY);
         let newCost = cost + cellCost;
@@ -222,7 +222,6 @@ function findPath(startX, startY, goalX, goalY) {
     }
   }
 
-  // Si aucun chemin optimal n'est trouvé, ignorer les coûts des tourelles
   queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
   visited.clear();
   visited.add(`${startX},${startY}`);
@@ -256,7 +255,6 @@ function findPath(startX, startY, goalX, goalY) {
       }
     }
   }
-  // Si aucun chemin n'est trouvé, retourner un chemin par défaut vers la droite
   let path = [];
   let x = startX;
   while (x < goalX) {
@@ -277,7 +275,7 @@ function hasPathToBase() {
 }
 
 function isMapFull() {
-  for (let x = 0; x < GRID_WIDTH - 1; x++) {
+  for (let x = 1; x < GRID_WIDTH - 1; x++) { // Exclure la première colonne (x=0)
     for (let y = 0; y < GRID_HEIGHT; y++) {
       if (grid[x][y] === null) {
         return false;
@@ -294,10 +292,7 @@ function draw() {
   drawEnemies();
   drawProjectiles();
   drawBase();
-
-  if (gameState !== 'paused') {
-    updateGame();
-  }
+  updateGame();
 }
 
 function drawGrid() {
@@ -305,7 +300,14 @@ function drawGrid() {
   strokeWeight(1);
   for (let x = 0; x < GRID_WIDTH; x++) {
     for (let y = 0; y < GRID_HEIGHT; y++) {
-      fill(grid[x][y] === 'base' ? '#4682b4' : '#1a1a2e');
+      if (x === 0) {
+        // Première colonne en rouge pour la zone ennemie
+        fill(ENEMY_ZONE_COLOR);
+        stroke(ENEMY_ZONE_COLOR);
+      } else {
+        fill(grid[x][y] === 'base' ? '#4682b4' : '#1a1a2e');
+        stroke('#2a2a4a');
+      }
       rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
   }
@@ -334,7 +336,7 @@ function drawModules() {
         textSize(14);
       }
 
-      if (frameCount % (TURRET_TYPES[module.type].attackRate / upgrades.attackSpeed) === 0 && gameState !== 'paused') {
+      if (frameCount % (TURRET_TYPES[module.type].attackRate / upgrades.attackSpeed) === 0) {
         for (let enemy of enemies) {
           let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
           let effectiveDamage = TURRET_TYPES[module.type].damage * upgrades.damage * (1 + wave * 0.05);
@@ -377,80 +379,73 @@ function drawEnemies() {
     let angle = map(hpRatio, 0, 1, 0, TWO_PI);
     arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2);
 
-    if (gameState !== 'paused') {
-      if (enemy.path.length > 0) {
-        let nextPoint = enemy.path[enemy.pathIndex];
-        let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
-        let targetY = nextPoint.y * CELL_SIZE + CELL_SIZE / 2;
-        let dx = targetX - enemy.x;
-        let dy = targetY - enemy.y;
-        let distToTarget = dist(enemy.x, enemy.y, targetX, targetY);
-        if (distToTarget < 5) {
-          enemy.pathIndex++;
-          if (enemy.pathIndex >= enemy.path.length) {
-            enemy.path = [];
-          } else {
-            // Vérifier si la prochaine cellule est bloquée
-            let nextGridX = floor(targetX / CELL_SIZE);
-            let nextGridY = floor(targetY / CELL_SIZE);
-            if (grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
-              // Recalculer un nouveau chemin
-              let startX = floor(enemy.x / CELL_SIZE);
-              let startY = floor(enemy.y / CELL_SIZE);
-              let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
-              enemy.path = path;
-              enemy.pathIndex = 0;
-            }
-          }
+    if (enemy.path.length > 0) {
+      let nextPoint = enemy.path[enemy.pathIndex];
+      let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
+      let targetY = nextPoint.y * CELL_SIZE + CELL_SIZE / 2;
+      let dx = targetX - enemy.x;
+      let dy = targetY - enemy.y;
+      let distToTarget = dist(enemy.x, enemy.y, targetX, targetY);
+      if (distToTarget < 5) {
+        enemy.pathIndex++;
+        if (enemy.pathIndex >= enemy.path.length) {
+          enemy.path = [];
         } else {
-          enemy.x += (dx / distToTarget) * enemy.speed;
-          enemy.y += (dy / distToTarget) * enemy.speed;
-        }
-      } else {
-        // Si le chemin est vide, recalculer immédiatement
-        let startX = floor(enemy.x / CELL_SIZE);
-        let startY = floor(enemy.y / CELL_SIZE);
-        let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
-        if (path.length > 0) {
-          enemy.path = path;
-          enemy.pathIndex = 0;
-        } else {
-          // Si aucun chemin n'est trouvé, essayer un autre point de départ proche
-          let directions = [
-            { dx: 1, dy: 0 },
-            { dx: -1, dy: 0 },
-            { dx: 0, dy: 1 },
-            { dx: 0, dy: -1 }
-          ];
-          let moved = false;
-          for (let dir of directions) {
-            let newGridX = startX + dir.dx;
-            let newGridY = startY + dir.dy;
-            if (
-              newGridX >= 0 && newGridX < GRID_WIDTH - 1 &&
-              newGridY >= 0 && newGridY < GRID_HEIGHT &&
-              (grid[newGridX][newGridY] === null || grid[newGridX][newGridY] === 'base')
-            ) {
-              enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
-              enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
-              path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY);
-              if (path.length > 0) {
-                enemy.path = path;
-                enemy.pathIndex = 0;
-                moved = true;
-                break;
-              }
-            }
-          }
-          if (!moved) {
-            // Si aucun chemin n'est trouvé, avancer vers la droite comme dernier recours
-            enemy.x += enemy.speed;
+          let nextGridX = floor(targetX / CELL_SIZE);
+          let nextGridY = floor(targetY / CELL_SIZE);
+          if (grid[nextGridX][nextGridY] && grid[nextGridX][nextGridY] !== 'base') {
             let startX = floor(enemy.x / CELL_SIZE);
             let startY = floor(enemy.y / CELL_SIZE);
-            path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
             enemy.path = path;
             enemy.pathIndex = 0;
           }
+        }
+      } else {
+        enemy.x += (dx / distToTarget) * enemy.speed;
+        enemy.y += (dy / distToTarget) * enemy.speed;
+      }
+    } else {
+      let startX = floor(enemy.x / CELL_SIZE);
+      let startY = floor(enemy.y / CELL_SIZE);
+      let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+      if (path.length > 0) {
+        enemy.path = path;
+        enemy.pathIndex = 0;
+      } else {
+        let directions = [
+          { dx: 1, dy: 0 },
+          { dx: -1, dy: 0 },
+          { dx: 0, dy: 1 },
+          { dx: 0, dy: -1 }
+        ];
+        let moved = false;
+        for (let dir of directions) {
+          let newGridX = startX + dir.dx;
+          let newGridY = startY + dir.dy;
+          if (
+            newGridX >= 0 && newGridX < GRID_WIDTH - 1 &&
+            newGridY >= 0 && newGridY < GRID_HEIGHT &&
+            (grid[newGridX][newGridY] === null || grid[newGridX][newGridY] === 'base')
+          ) {
+            enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
+            enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
+            path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY);
+            if (path.length > 0) {
+              enemy.path = path;
+              enemy.pathIndex = 0;
+              moved = true;
+              break;
+            }
+          }
+        }
+        if (!moved) {
+          enemy.x += enemy.speed;
+          let startX = floor(enemy.x / CELL_SIZE);
+          let startY = floor(enemy.y / CELL_SIZE);
+          path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+          enemy.path = path;
+          enemy.pathIndex = 0;
         }
       }
     }
@@ -489,7 +484,7 @@ function updateGame() {
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
       xp += enemy.xp;
-      energy += enemy.energy;
+      // Plus d'énergie gagnée ici
       updateStats();
       if (enemies.length === 0) {
         xp += wave * 10 + 10;
@@ -551,13 +546,25 @@ function updateStats() {
     healBtn.classList.remove('locked');
     healBtn.textContent = `Soigner Base (500 XP → 10 HP)`;
   }
+
+  const deleteBtn = document.getElementById('delete-turret-btn');
+  if (isDeleteModeActive) {
+    deleteBtn.classList.add('active');
+  } else {
+    deleteBtn.classList.remove('active');
+  }
 }
 
 function mousePressed() {
   let gridX = floor(mouseX / CELL_SIZE);
   let gridY = floor(mouseY / CELL_SIZE);
 
-  if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT && (gameState === 'playing' || gameState === 'paused')) {
+  if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT) {
+    // Interdiction de placer des tourelles ou murs sur la première colonne (zone ennemie)
+    if (gridX === 0) {
+      return;
+    }
+
     if (isMapFull() && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
       let module = modules.find(m => m.x === gridX && m.y === gridY);
       if (module && xp >= 10) {
@@ -568,7 +575,7 @@ function mousePressed() {
       }
     }
 
-    if (selectedModule === 'delete' && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
+    if (isDeleteModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
       let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
       if (moduleIndex !== -1) {
         let moduleType = grid[gridX][gridY];
@@ -585,13 +592,12 @@ function mousePressed() {
             enemy.pathIndex = 0;
           }
         });
-        selectedModule = null;
         updateStats();
         return;
       }
     }
 
-    if (selectedModule && selectedModule !== 'delete' && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
+    if (selectedModule && !isDeleteModeActive && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       if (selectedModule === 'wall') {
         grid[gridX][gridY] = selectedModule;
         if (!hasPathToBase()) {
@@ -658,20 +664,24 @@ function mousePressed() {
 // Gestion des boutons de tourelles
 document.getElementById('melee-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'melee' ? null : 'melee';
+  isDeleteModeActive = false; // Désactiver le mode suppression
   updateStats();
 });
 document.getElementById('projectile-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'projectile' ? null : 'projectile';
+  isDeleteModeActive = false; // Désactiver le mode suppression
   updateStats();
 });
 document.getElementById('wall-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'wall' ? null : 'wall';
+  isDeleteModeActive = false; // Désactiver le mode suppression
   updateStats();
 });
 
 // Bouton pour supprimer une tourelle
 document.getElementById('delete-turret-btn').addEventListener('click', () => {
-  selectedModule = selectedModule === 'delete' ? null : 'delete';
+  isDeleteModeActive = !isDeleteModeActive; // Activer/Désactiver le mode suppression
+  selectedModule = null; // Désactiver tout autre mode de placement
   updateStats();
 });
 
@@ -680,11 +690,6 @@ document.getElementById('start-wave').addEventListener('click', () => {
   if (enemies.length === 0 && gameState === 'playing') {
     spawnWave();
   }
-});
-
-document.getElementById('pause').addEventListener('click', () => {
-  gameState = gameState === 'playing' ? 'paused' : 'playing';
-  document.getElementById('pause').textContent = gameState === 'paused' ? 'Reprendre' : 'Pause';
 });
 
 document.getElementById('restart').addEventListener('click', () => {
@@ -772,6 +777,7 @@ function resetGame() {
   base.hp = BASE_HP;
   gameState = 'playing';
   selectedModule = null;
+  isDeleteModeActive = false;
   upgrades = { range: 1, attackSpeed: 1, damage: 1 };
   initializeGrid();
   updateStats();
