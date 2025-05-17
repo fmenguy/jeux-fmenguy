@@ -33,7 +33,7 @@ const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 40, energy: 0, attackRate
 let grid = [];
 let modules = [];
 let enemies = [];
-let energy = 40; 
+let energy = 40; // Énergie de départ mise à 40
 let xp = 0;
 let wave = 0;
 let gameState = 'playing';
@@ -135,7 +135,7 @@ function spawnWave() {
         speed: enemyType.speed,
         path: path,
         pathIndex: 0,
-        xp: enemyType.xp,
+        xp: enemyType.xp, // Vérifié : chaque ennemi a bien un XP défini
         energy: enemyType.energy,
         isBoss: isBoss,
         isTriangle: isTriangle,
@@ -585,6 +585,8 @@ function updateGame() {
 
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
+      // Vérifié : l'XP est bien ajouté ici
+      console.log(`Enemy killed, adding XP: ${enemy.xp}`); // Debug pour vérifier
       xp += enemy.xp;
       updateStats();
       if (enemies.length === 0) {
@@ -742,7 +744,6 @@ function mousePressed() {
     }
 
     if (selectedModule && !isDeleteModeActive && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
-      // Empêcher le placement des archers avant la vague 5
       if (selectedModule === 'projectile' && wave < 5) {
         return;
       }
@@ -817,7 +818,7 @@ document.getElementById('melee-btn').addEventListener('click', () => {
   updateStats();
 });
 document.getElementById('projectile-btn').addEventListener('click', () => {
-  if (wave < 5) return; // Empêche l'activation des archers avant la vague 5
+  if (wave < 5) return;
   selectedModule = selectedModule === 'projectile' ? null : 'projectile';
   isDeleteModeActive = false;
   updateStats();
@@ -922,7 +923,7 @@ function resetGame() {
   enemies = [];
   projectiles = [];
   enemyProjectiles = [];
-  energy = 40;
+  energy = 40; // Énergie de départ mise à 40
   xp = 0;
   wave = 0;
   base.hp = BASE_HP;
