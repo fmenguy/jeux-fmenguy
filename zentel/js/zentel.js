@@ -8,8 +8,9 @@ const TEXT_COLOR = '#e0e0ff';
 const BUTTON_COLOR = '#6a5acd';
 const ENEMY_COLOR = '#ff5555';
 const BOSS_COLOR = '#000000';
+const TRIANGLE_COLOR = '#00ff00'; // Vert pour les triangles
 const TURRET_COLOR = '#55ff55';
-const ENEMY_ZONE_COLOR = '#ff0000'; // Rouge pour la première colonne
+const ENEMY_ZONE_COLOR = '#ff0000';
 
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
@@ -18,10 +19,14 @@ const TURRET_TYPES = {
 };
 
 const ENEMY_TYPES = [
-  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 0 }, // Plus d'énergie gagnée
+  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 0 }, // Ennemis normaux (vagues 1-4)
   { hp: 20, speed: 0.7 * 1.5, xp: 10, energy: 0 },
   { hp: 30, speed: 0.3 * 1.5, xp: 15, energy: 0 },
 ];
+
+const BOSS_TYPE = { hp: 60, speed: 0.3 * 1.5, xp: 30, energy: 0 }; // Boss noir (vagues 5-9)
+const SUPER_BOSS_TYPE = { hp: 150, speed: 0.4 * 1.5, xp: 50, energy: 0 }; // Super boss (vague 10+)
+const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 40, energy: 0, attackRate: 120 }; // Triangle (vague 20+)
 
 let grid = [];
 let modules = [];
@@ -33,8 +38,9 @@ let gameState = 'playing';
 let selectedModule = null;
 let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
 let projectiles = [];
+let enemyProjectiles = []; // Projectiles lancés par les triangles
 let upgrades = { range: 1, attackSpeed: 1, damage: 1 };
-let isDeleteModeActive = false; // État du mode suppression
+let isDeleteModeActive = false;
 
 function calculateCellCost(x, y) {
   let cost = 1;
@@ -74,45 +80,12 @@ function initializeGrid() {
 function spawnWave() {
   wave++;
   let enemyCount = wave * 2;
-  let enemyTypeIndex = min(wave - 1, ENEMY_TYPES.length - 1);
-  let enemyType = ENEMY_TYPES[enemyTypeIndex];
-  let baseHp = enemyType.hp + wave * 5;
-  let bossHpMultiplier = 2;
 
-  if (wave === 10) {
-    bossHpMultiplier = 10;
-  }
-
-  if (wave === 6) {
-    for (let i = 0; i < enemyCount; i++) {
-      let startY = floor(random(GRID_HEIGHT));
-      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
-      if (path.length === 0) {
-        let foundPath = false;
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-          path = findPath(0, y, GRID_WIDTH - 1, y);
-          if (path.length > 0) {
-            startY = y;
-            foundPath = true;
-            break;
-          }
-        }
-        if (!foundPath) continue;
-      }
-      enemies.push({
-        x: 0,
-        y: startY * CELL_SIZE + CELL_SIZE / 2,
-        hp: baseHp * 2,
-        maxHp: baseHp * 2,
-        speed: enemyType.speed * 0.8,
-        path: path,
-        pathIndex: 0,
-        xp: enemyType.xp * 2,
-        energy: enemyType.energy,
-        isBoss: true
-      });
-    }
-  } else {
+  if (wave < 5) {
+    // Vagues 1-4 : ennemis normaux
+    let enemyTypeIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+    let enemyType = ENEMY_TYPES[enemyTypeIndex];
+    let baseHp = enemyType.hp + wave * 5;
     for (let i = 0; i < enemyCount; i++) {
       let startY = floor(random(GRID_HEIGHT));
       let path = findPath(0, startY, GRID_WIDTH - 1, startY);
@@ -138,10 +111,15 @@ function spawnWave() {
         pathIndex: 0,
         xp: enemyType.xp,
         energy: enemyType.energy,
-        isBoss: false
+        isBoss: false,
+        isTriangle: false
       });
     }
-    if (wave >= 5 && wave % 5 === 0 && wave !== 6) {
+  } else if (wave < 10) {
+    // Vagues 5-9 : boss noirs
+    let enemyType = BOSS_TYPE;
+    let baseHp = enemyType.hp + wave * 5;
+    for (let i = 0; i < enemyCount; i++) {
       let startY = floor(random(GRID_HEIGHT));
       let path = findPath(0, startY, GRID_WIDTH - 1, startY);
       if (path.length === 0) {
@@ -154,20 +132,106 @@ function spawnWave() {
             break;
           }
         }
-        if (!foundPath) return;
+        if (!foundPath) continue;
       }
       enemies.push({
         x: 0,
         y: startY * CELL_SIZE + CELL_SIZE / 2,
-        hp: baseHp * bossHpMultiplier,
-        maxHp: baseHp * bossHpMultiplier,
-        speed: enemyType.speed * 0.8,
+        hp: baseHp * (1 + wave * 0.1),
+        maxHp: baseHp * (1 + wave * 0.1),
+        speed: enemyType.speed,
         path: path,
         pathIndex: 0,
-        xp: enemyType.xp * bossHpMultiplier,
+        xp: enemyType.xp,
         energy: enemyType.energy,
-        isBoss: true
+        isBoss: true,
+        isTriangle: false
       });
+    }
+  } else if (wave < 20) {
+    // Vagues 10-19 : super boss
+    let enemyType = SUPER_BOSS_TYPE;
+    let baseHp = enemyType.hp + wave * 5;
+    for (let i = 0; i < enemyCount; i++) {
+      let startY = floor(random(GRID_HEIGHT));
+      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      if (path.length === 0) {
+        let foundPath = false;
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          path = findPath(0, y, GRID_WIDTH - 1, y);
+          if (path.length > 0) {
+            startY = y;
+            foundPath = true;
+            break;
+          }
+        }
+        if (!foundPath) continue;
+      }
+      enemies.push({
+        x: 0,
+        y: startY * CELL_SIZE + CELL_SIZE / 2,
+        hp: baseHp * (1 + wave * 0.1),
+        maxHp: baseHp * (1 + wave * 0.1),
+        speed: enemyType.speed,
+        path: path,
+        pathIndex: 0,
+        xp: enemyType.xp,
+        energy: enemyType.energy,
+        isBoss: true,
+        isTriangle: false
+      });
+    }
+  } else {
+    // Vague 20+ : triangles + super boss
+    let enemyType = SUPER_BOSS_TYPE;
+    let triangleType = TRIANGLE_TYPE;
+    let baseHp = enemyType.hp + wave * 5;
+    let triangleHp = triangleType.hp + wave * 5;
+    for (let i = 0; i < enemyCount; i++) {
+      let startY = floor(random(GRID_HEIGHT));
+      let path = findPath(0, startY, GRID_WIDTH - 1, startY);
+      if (path.length === 0) {
+        let foundPath = false;
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          path = findPath(0, y, GRID_WIDTH - 1, y);
+          if (path.length > 0) {
+            startY = y;
+            foundPath = true;
+            break;
+          }
+        }
+        if (!foundPath) continue;
+      }
+      if (i % 2 === 0) { // Moitié de triangles
+        enemies.push({
+          x: 0,
+          y: startY * CELL_SIZE + CELL_SIZE / 2,
+          hp: triangleHp * (1 + wave * 0.1),
+          maxHp: triangleHp * (1 + wave * 0.1),
+          speed: triangleType.speed,
+          path: path,
+          pathIndex: 0,
+          xp: triangleType.xp,
+          energy: triangleType.energy,
+          isBoss: false,
+          isTriangle: true,
+          attackRate: triangleType.attackRate
+        });
+      } else { // Moitié de super boss
+        enemies.push({
+          x: 0,
+          y: startY * CELL_SIZE + CELL_SIZE / 2,
+          hp: baseHp * (1 + wave * 0.1),
+          maxHp: baseHp * (1 + wave * 0.1),
+          speed: enemyType.speed,
+          path: path,
+          pathIndex: 0,
+          xp: enemyType.xp,
+          energy: enemyType.energy,
+          isBoss: true,
+          isTriangle: false
+        });
+      }
     }
   }
   updateStats();
@@ -275,7 +339,7 @@ function hasPathToBase() {
 }
 
 function isMapFull() {
-  for (let x = 1; x < GRID_WIDTH - 1; x++) { // Exclure la première colonne (x=0)
+  for (let x = 1; x < GRID_WIDTH - 1; x++) {
     for (let y = 0; y < GRID_HEIGHT; y++) {
       if (grid[x][y] === null) {
         return false;
@@ -291,6 +355,7 @@ function draw() {
   drawModules();
   drawEnemies();
   drawProjectiles();
+  drawEnemyProjectiles();
   drawBase();
   updateGame();
 }
@@ -301,7 +366,6 @@ function drawGrid() {
   for (let x = 0; x < GRID_WIDTH; x++) {
     for (let y = 0; y < GRID_HEIGHT; y++) {
       if (x === 0) {
-        // Première colonne en rouge pour la zone ennemie
         fill(ENEMY_ZONE_COLOR);
         stroke(ENEMY_ZONE_COLOR);
       } else {
@@ -367,9 +431,18 @@ function drawModules() {
 
 function drawEnemies() {
   for (let enemy of enemies) {
-    fill(enemy.isBoss ? BOSS_COLOR : ENEMY_COLOR);
-    noStroke();
-    ellipse(enemy.x, enemy.y, 20);
+    if (enemy.isTriangle) {
+      fill(TRIANGLE_COLOR);
+      noStroke();
+      push();
+      translate(enemy.x, enemy.y);
+      triangle(-10, 10, 0, -10, 10, 10); // Dessin d'un triangle
+      pop();
+    } else {
+      fill(enemy.isBoss ? BOSS_COLOR : ENEMY_COLOR);
+      noStroke();
+      ellipse(enemy.x, enemy.y, 20);
+    }
 
     let hpRatio = enemy.hp / enemy.maxHp;
     let healthColor = hpRatio > 0.6 ? '#55ff55' : hpRatio > 0.3 ? '#ffff55' : '#ff5555';
@@ -378,6 +451,29 @@ function drawEnemies() {
     noFill();
     let angle = map(hpRatio, 0, 1, 0, TWO_PI);
     arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2);
+
+    if (enemy.isTriangle && frameCount % enemy.attackRate === 0) {
+      // Les triangles lancent des projectiles vers la tourelle ou le mur le plus proche
+      let closestModule = null;
+      let closestDist = Infinity;
+      for (let module of modules) {
+        let d = dist(enemy.x, enemy.y, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+        if (d < closestDist) {
+          closestDist = d;
+          closestModule = module;
+        }
+      }
+      if (closestModule) {
+        enemyProjectiles.push({
+          x: enemy.x,
+          y: enemy.y,
+          targetX: closestModule.x * CELL_SIZE + CELL_SIZE / 2,
+          targetY: closestModule.y * CELL_SIZE + CELL_SIZE / 2,
+          speed: 2,
+          damage: 10 // Dégâts infligés aux murs/tourelles
+        });
+      }
+    }
 
     if (enemy.path.length > 0) {
       let nextPoint = enemy.path[enemy.pathIndex];
@@ -469,6 +565,52 @@ function drawProjectiles() {
   }
 }
 
+function drawEnemyProjectiles() {
+  for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
+    let p = enemyProjectiles[i];
+    fill(TRIANGLE_COLOR);
+    ellipse(p.x, p.y, 8);
+    let angle = atan2(p.targetY - p.y, p.targetX - p.x);
+    p.x += p.speed * cos(angle);
+    p.y += p.speed * sin(angle);
+    let d = dist(p.x, p.y, p.targetX, p.targetY);
+    if (d < 5) {
+      // Trouver le module ciblé
+      let targetGridX = floor(p.targetX / CELL_SIZE);
+      let targetGridY = floor(p.targetY / CELL_SIZE);
+      let moduleIndex = modules.findIndex(m => m.x === targetGridX && m.y === targetGridY);
+      if (moduleIndex !== -1) {
+        let module = modules[moduleIndex];
+        // Infliger des dégâts au module (mur ou tourelle)
+        if (module.type === 'wall') {
+          // Les murs sont détruits en un coup
+          modules.splice(moduleIndex, 1);
+          grid[targetGridX][targetGridY] = null;
+        } else {
+          // Les tourelles subissent des dégâts
+          module.hp = (module.hp || TURRET_TYPES[module.type].damage * 5); // HP initial = 5x les dégâts
+          module.hp -= p.damage;
+          if (module.hp <= 0) {
+            modules.splice(moduleIndex, 1);
+            grid[targetGridX][targetGridY] = null;
+          }
+        }
+        // Recalculer les chemins des ennemis après destruction
+        enemies.forEach(enemy => {
+          if (enemy.path.length > 0) {
+            let startX = floor(enemy.x / CELL_SIZE);
+            let startY = floor(enemy.y / CELL_SIZE);
+            let path = findPath(startX, startY, GRID_WIDTH - 1, startY);
+            enemy.path = path;
+            enemy.pathIndex = 0;
+          }
+        });
+      }
+      enemyProjectiles.splice(i, 1);
+    }
+  }
+}
+
 function drawBase() {
   document.getElementById('base-hp').textContent = base.hp;
 }
@@ -484,7 +626,6 @@ function updateGame() {
   enemies = enemies.filter(enemy => {
     if (enemy.hp <= 0) {
       xp += enemy.xp;
-      // Plus d'énergie gagnée ici
       updateStats();
       if (enemies.length === 0) {
         xp += wave * 10 + 10;
@@ -560,7 +701,6 @@ function mousePressed() {
   let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT) {
-    // Interdiction de placer des tourelles ou murs sur la première colonne (zone ennemie)
     if (gridX === 0) {
       return;
     }
@@ -664,24 +804,24 @@ function mousePressed() {
 // Gestion des boutons de tourelles
 document.getElementById('melee-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'melee' ? null : 'melee';
-  isDeleteModeActive = false; // Désactiver le mode suppression
+  isDeleteModeActive = false;
   updateStats();
 });
 document.getElementById('projectile-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'projectile' ? null : 'projectile';
-  isDeleteModeActive = false; // Désactiver le mode suppression
+  isDeleteModeActive = false;
   updateStats();
 });
 document.getElementById('wall-btn').addEventListener('click', () => {
   selectedModule = selectedModule === 'wall' ? null : 'wall';
-  isDeleteModeActive = false; // Désactiver le mode suppression
+  isDeleteModeActive = false;
   updateStats();
 });
 
 // Bouton pour supprimer une tourelle
 document.getElementById('delete-turret-btn').addEventListener('click', () => {
-  isDeleteModeActive = !isDeleteModeActive; // Activer/Désactiver le mode suppression
-  selectedModule = null; // Désactiver tout autre mode de placement
+  isDeleteModeActive = !isDeleteModeActive;
+  selectedModule = null;
   updateStats();
 });
 
@@ -771,6 +911,7 @@ function resetGame() {
   modules = [];
   enemies = [];
   projectiles = [];
+  enemyProjectiles = [];
   energy = 20;
   xp = 0;
   wave = 0;
