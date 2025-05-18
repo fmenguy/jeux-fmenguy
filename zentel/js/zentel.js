@@ -155,7 +155,20 @@ function spawnWave() {
   updateStats();
 }
 
-function findPath(startX, startY, goalX, goalY, allowThroughTurrets = false) {
+// Fonction pour copier la grille
+function copyGrid() {
+  let newGrid = [];
+  for (let x = 0; x < GRID_WIDTH; x++) {
+    newGrid[x] = [];
+    for (let y = 0; y < GRID_HEIGHT; y++) {
+      newGrid[x][y] = grid[x][y];
+    }
+  }
+  return newGrid;
+}
+
+function findPath(startX, startY, goalX, goalY, allowThroughTurrets = false, tempGrid = null) {
+  let currentGrid = tempGrid || grid;
   let queue = [{ x: startX, y: startY, cost: 0, path: [{ x: startX, y: startY }] }];
   let visited = new Set();
   let costs = Array(GRID_WIDTH).fill().map(() => Array(GRID_HEIGHT).fill(Infinity));
@@ -187,9 +200,9 @@ function findPath(startX, startY, goalX, goalY, allowThroughTurrets = false) {
         !visited.has(key)
       ) {
         let isValid = false;
-        if (grid[newX][newY] === null || grid[newX][newY] === 'base') {
+        if (currentGrid[newX][newY] === null || currentGrid[newX][newY] === 'base') {
           isValid = true;
-        } else if (allowThroughTurrets && (grid[newX][newY] === 'melee' || grid[newX][newY] === 'projectile')) {
+        } else if (allowThroughTurrets && (currentGrid[newX][newY] === 'melee' || currentGrid[newX][newY] === 'projectile')) {
           isValid = true;
         }
 
@@ -236,9 +249,9 @@ function findPath(startX, startY, goalX, goalY, allowThroughTurrets = false) {
         !visited.has(key)
       ) {
         let isValid = false;
-        if (grid[newX][newY] === null || grid[newX][newY] === 'base') {
+        if (currentGrid[newX][newY] === null || currentGrid[newX][newY] === 'base') {
           isValid = true;
-        } else if (allowThroughTurrets && (grid[newX][newY] === 'melee' || grid[newX][newY] === 'projectile')) {
+        } else if (allowThroughTurrets && (currentGrid[newX][newY] === 'melee' || currentGrid[newX][newY] === 'projectile')) {
           isValid = true;
         }
 
@@ -272,17 +285,16 @@ function findPathAerial(startX, startY, goalX, goalY) {
   return path;
 }
 
-function hasPathToBase() {
+function hasPathToBase(tempGrid = null) {
+  let foundPath = false;
   for (let startY = 0; startY < GRID_HEIGHT; startY++) {
-    let path = findPath(0, startY, GRID_WIDTH - 1, startY, false);
-    if (path.length === 0) {
-      path = findPath(0, startY, GRID_WIDTH - 1, startY, true);
-      if (path.length === 0) {
-        return false;
-      }
+    let path = findPath(0, startY, GRID_WIDTH - 1, startY, false, tempGrid);
+    if (path.length > 0) {
+      foundPath = true;
+      break; // On a trouvé un chemin, pas besoin de continuer
     }
   }
-  return true;
+  return foundPath;
 }
 
 function isMapFull() {
@@ -520,7 +532,6 @@ function drawEnemies() {
       let startX = floor(enemy.x / CELL_SIZE);
       let startY = floor(enemy.y / CELL_SIZE);
       let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
-
       if (path.length === 0 && !enemy.isBoss) {
         let foundPath = false;
         let shortestDist = Infinity;
@@ -886,20 +897,29 @@ function mousePressed() {
       }
 
       if (selectedModule === 'wall') {
-        grid[gridX][gridY] = selectedModule;
-        if (!hasPathToBase()) {
-          grid[gridX][gridY] = null;
-          return;
+        // Créer une grille temporaire pour tester le placement
+        let tempGrid = copyGrid();
+        tempGrid[gridX][gridY] = selectedModule;
+
+        // Vérifier si un chemin existe avec la grille temporaire
+        if (!hasPathToBase(tempGrid)) {
+          return; // Annuler le placement si aucun chemin n'est possible
         }
+
+        // Si un chemin existe, appliquer le placement
+        grid[gridX][gridY] = selectedModule;
       }
+
       if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
         return;
       }
+
       let enemyOnCell = enemies.find(enemy => {
         let enemyGridX = floor(enemy.x / CELL_SIZE);
         let enemyGridY = floor(enemy.y / CELL_SIZE);
         return enemyGridX === gridX && enemyGridY === gridY;
       });
+
       if (enemyOnCell) {
         let directions = [
           { dx: 1, dy: 0 },
@@ -932,9 +952,11 @@ function mousePressed() {
           return;
         }
       }
+
       grid[gridX][gridY] = selectedModule;
       modules.push({ x: gridX, y: gridY, type: selectedModule, level: 1 });
       energy -= TURRET_TYPES[selectedModule].cost;
+
       if (selectedModule === 'wall' || selectedModule === 'melee' || selectedModule === 'projectile') {
         enemies.forEach(enemy => {
           if (enemy.path.length > 0) {
