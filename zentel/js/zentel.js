@@ -21,14 +21,14 @@ const TURRET_TYPES = {
 };
 
 const ENEMY_TYPES = [
-  { hp: 10, speed: 0.5 * 1.5, xp: 5, energy: 0 },
-  { hp: 20, speed: 0.7 * 1.5, xp: 10, energy: 0 },
-  { hp: 30, speed: 0.3 * 1.5, xp: 15, energy: 0 },
+  { hp: 10, speed: 0.5 * 1.5, xp: 3, energy: 0 },
+  { hp: 20, speed: 0.7 * 1.5, xp: 5, energy: 0 },
+  { hp: 30, speed: 0.3 * 1.5, xp: 8, energy: 0 },
 ];
 
-const BOSS_TYPE = { hp: 60, speed: 0.3 * 1.5, xp: 30, energy: 0 };
-const SUPER_BOSS_TYPE = { hp: 150, speed: 0.4 * 1.5, xp: 50, energy: 0 };
-const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 40, energy: 0, attackRate: 120 };
+const BOSS_TYPE = { hp: 60, speed: 0.3 * 1.5, xp: 15, energy: 0 };
+const SUPER_BOSS_TYPE = { hp: 150, speed: 0.4 * 1.5, xp: 25, energy: 0 };
+const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 20, energy: 0, attackRate: 120 };
 
 let grid = [];
 let modules = [];
@@ -46,6 +46,7 @@ let isEvolveModeActive = false;
 let waveCompleted = false;
 let showTip = false;
 let tipOpacity = 1;
+let speedMultiplier = 1;
 
 // Variables pour le canvas
 let canvasWidth, canvasHeight;
@@ -136,12 +137,13 @@ function spawnWave() {
         }
         if (!foundPath) continue;
       }
+      let adjustedSpeed = enemyType.speed * speedMultiplier;
       enemies.push({
         x: 0,
         y: startY * CELL_SIZE + CELL_SIZE / 2,
         hp: baseHp * (1 + wave * 0.1),
         maxHp: baseHp * (1 + wave * 0.1),
-        speed: enemyType.speed,
+        speed: adjustedSpeed,
         path: path,
         pathIndex: 0,
         xp: enemyType.xp,
@@ -760,6 +762,25 @@ function drawEnemyProjectiles() {
 }
 
 function updateGame() {
+  if (modules.length > 10) {
+    speedMultiplier = 1.5;
+  } else {
+    speedMultiplier = 1;
+  }
+
+  enemies.forEach(enemy => {
+    let baseSpeed;
+    if (enemy.isBoss) {
+      baseSpeed = enemy.isTriangle ? TRIANGLE_TYPE.speed : BOSS_TYPE.speed;
+    } else if (enemy.isTriangle) {
+      baseSpeed = TRIANGLE_TYPE.speed;
+    } else {
+      let enemyTypeIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+      baseSpeed = ENEMY_TYPES[enemyTypeIndex].speed;
+    }
+    enemy.speed = baseSpeed * speedMultiplier;
+  });
+
   for (let enemy of enemies) {
     if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
       base.hp -= 10;
@@ -771,7 +792,7 @@ function updateGame() {
 
   if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
     waveCompleted = true;
-    xp += wave * 10 + 10;
+    xp += wave * 5 + 5;
     if (wave === 1) {
       showTip = true;
       tipOpacity = 1;
@@ -1134,6 +1155,7 @@ function resetGame() {
   waveCompleted = false;
   showTip = false;
   tipOpacity = 1;
+  speedMultiplier = 1;
   initializeGrid();
   updateStats();
   loop();
