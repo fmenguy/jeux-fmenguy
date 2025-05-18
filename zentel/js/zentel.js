@@ -17,7 +17,7 @@ const UPGRADE_COLOR_LVL3 = '#ff00ff';
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
   projectile: { name: "Archer Plasma", symbol: "🏹", damage: 5, range: 150, attackRate: 90, cost: 20, level: 1 },
-  wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', cost: 5 }
+  wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', cost: 5, hp: 50 } // Ajout des HP
 };
 
 const ENEMY_TYPES = [
@@ -49,11 +49,9 @@ let waveCompleted = false;
 let canvasWidth, canvasHeight;
 
 function setup() {
-  // Calculer les dimensions totales (juste la grille)
-  canvasWidth = GRID_WIDTH * CELL_SIZE; // 680 pixels
-  canvasHeight = GRID_HEIGHT * CELL_SIZE; // 400 pixels
+  canvasWidth = GRID_WIDTH * CELL_SIZE;
+  canvasHeight = GRID_HEIGHT * CELL_SIZE;
 
-  // Créer le canvas centré
   let canvas = createCanvas(canvasWidth, canvasHeight);
   canvas.parent('game-area');
   canvas.style('display', 'block');
@@ -372,6 +370,10 @@ function drawModules() {
       rect(module.x * CELL_SIZE, module.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
       fill(255);
       text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+      fill('#ffffff');
+      textSize(10);
+      text(module.hp, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2 + 15);
+      textSize(14);
     } else {
       fill(color);
       noStroke();
@@ -504,6 +506,29 @@ function drawEnemies() {
         enemy.x += (dx / distToTarget) * enemy.speed;
         enemy.y += (dy / distToTarget) * enemy.speed;
       } else {
+        if (!enemy.isBoss) {
+          let moduleIndex = modules.findIndex(m => m.x === nextGridX && m.y === nextGridY && m.type === 'wall');
+          if (moduleIndex !== -1) {
+            let wall = modules[moduleIndex];
+            wall.hp -= 5;
+            if (wall.hp <= 0) {
+              modules.splice(moduleIndex, 1);
+              grid[nextGridX][nextGridY] = null;
+              enemies.forEach(e => {
+                if (e.path.length > 0) {
+                  let startX = floor(e.x / CELL_SIZE);
+                  let startY = floor(e.y / CELL_SIZE);
+                  let path = e.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
+                  if (path.length === 0 && !e.isBoss) {
+                    path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
+                  }
+                  e.path = path;
+                  e.pathIndex = 0;
+                }
+              });
+            }
+          }
+        }
         let startX = floor(enemy.x / CELL_SIZE);
         let startY = floor(enemy.y / CELL_SIZE);
         let path = findPath(startX, startY, GRID_WIDTH - 1, startY, false);
@@ -590,6 +615,39 @@ function drawEnemies() {
                   enemy.pathIndex = 0;
                   moved = true;
                   break;
+                }
+              } else if (
+                newGridX >= 0 && newGridX < GRID_WIDTH - 1 &&
+                newGridY >= 0 && newGridY < GRID_HEIGHT &&
+                grid[newGridX][newGridY] === 'wall'
+              ) {
+                let moduleIndex = modules.findIndex(m => m.x === newGridX && m.y === newGridY && m.type === 'wall');
+                if (moduleIndex !== -1) {
+                  let wall = modules[moduleIndex];
+                  wall.hp -= 5;
+                  if (wall.hp <= 0) {
+                    modules.splice(moduleIndex, 1);
+                    grid[newGridX][newGridY] = null;
+                    enemies.forEach(e => {
+                      if (e.path.length > 0) {
+                        let startX = floor(e.x / CELL_SIZE);
+                        let startY = floor(e.y / CELL_SIZE);
+                        let path = e.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
+                        if (path.length === 0 && !e.isBoss) {
+                          path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
+                        }
+                        e.path = path;
+                        e.pathIndex = 0;
+                      }
+                    });
+                    path = findPath(startX, startY, GRID_WIDTH - 1, startY, false);
+                    if (path.length > 0) {
+                      enemy.path = path;
+                      enemy.pathIndex = 0;
+                      moved = true;
+                      break;
+                    }
+                  }
                 }
               }
             }
@@ -882,9 +940,24 @@ function mousePressed() {
       if (selectedModule === 'wall') {
         grid[gridX][gridY] = selectedModule;
         if (!hasPathToBase()) {
-          grid[gridX][gridY] = null;
-          return;
+          // Les ennemis pourront attaquer les murs si le chemin est bloqué
         }
+        modules.push({ x: gridX, y: gridY, type: selectedModule, hp: TURRET_TYPES.wall.hp });
+        energy -= TURRET_TYPES[selectedModule].cost;
+        enemies.forEach(enemy => {
+          if (enemy.path.length > 0) {
+            let startX = floor(enemy.x / CELL_SIZE);
+            let startY = floor(enemy.y / CELL_SIZE);
+            let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
+            if (path.length === 0 && !enemy.isBoss) {
+              path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
+            }
+            enemy.path = path;
+            enemy.pathIndex = 0;
+          }
+        });
+        updateStats();
+        return;
       }
       if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
         return;
