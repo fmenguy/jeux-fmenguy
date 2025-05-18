@@ -53,9 +53,14 @@
     canvasHeight = GRID_HEIGHT * CELL_SIZE; // 400 pixels
 
     let canvas = createCanvas(canvasWidth, canvasHeight);
-    canvas.parent('game-canvas'); // Changement pour #game-canvas
+    canvas.parent('game-canvas');
     canvas.style('display', 'block');
     canvas.style('margin', 'auto');
+
+    if (!document.getElementById('game-canvas').querySelector('canvas')) {
+      console.error("Canvas non attaché à #game-canvas");
+    }
+    console.log("setup() exécuté");
 
     textAlign(CENTER, CENTER);
     textSize(14);
@@ -326,8 +331,11 @@
   }
 
   function draw() {
-    if (gameState === 'paused') return;
-
+    if (gameState === 'paused') {
+      console.log("Jeu en pause, draw() non exécuté");
+      return;
+    }
+    console.log("draw() exécuté, dessin de la grille...");
     background('#0a0a1e');
     drawGrid();
     drawModules();
@@ -338,7 +346,7 @@
   }
 
   function drawGrid() {
-    stroke('#4a4a6a'); // Couleur plus claire et strokeWeight plus épais pour meilleure visibilité
+    stroke('#4a4a6a');
     strokeWeight(2);
     for (let x = 0; x < GRID_WIDTH; x++) {
       for (let y = 0; y < GRID_HEIGHT; y++) {
