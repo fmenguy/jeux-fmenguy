@@ -1120,13 +1120,18 @@ document.getElementById('resume-game').addEventListener('click', () => {
 });
 
 // Bouton pour fermer la modale d’astuce et reprendre le jeu
-document.getElementById('close-tip').addEventListener('click', () => {
-  document.getElementById('tip-modal').style.display = 'none';
-  gameState = 'playing';
-  showTip = true;
-  tipOpacity = 1;
-  updateStats();
-});
+const closeTipButton = document.getElementById('close-tip');
+if (closeTipButton) {
+  closeTipButton.addEventListener('click', () => {
+    document.getElementById('tip-modal').style.display = 'none';
+    gameState = 'playing';
+    showTip = true;
+    tipOpacity = 1;
+    updateStats();
+  });
+} else {
+  console.error("L'élément avec l'ID 'close-tip' n'existe pas dans le DOM.");
+}
 
 // Boutons de contrôle
 document.getElementById('start-wave').addEventListener('click', () => {
