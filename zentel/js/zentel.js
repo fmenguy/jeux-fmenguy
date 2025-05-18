@@ -375,23 +375,17 @@ function draw() {
     ellipse(canvasWidth - BORDER_THICKNESS / 2, y, 6, 6);
   }
 
-  // Dessiner la grille
+  // Dessiner la grille et les modules avec offset
   push();
   translate(gridOffsetX, gridOffsetY);
   drawGrid();
   drawModules();
-  pop();
-
-  // Dessiner les ennemis
-  push();
-  drawEnemies();
-  pop();
-
-  push();
-  translate(gridOffsetX, gridOffsetY);
   drawProjectiles();
   drawEnemyProjectiles();
   pop();
+
+  // Dessiner les ennemis
+  drawEnemies();
 
   updateGame();
 }
@@ -678,7 +672,7 @@ function drawEnemies() {
       }
     }
   }
-  enemies = enemies.filter(enemy => enemy.hp > 0 && enemy.x < width);
+  enemies = enemies.filter(enemy => enemy.hp > 0 && enemy.x < canvasWidth);
 }
 
 function drawProjectiles() {
@@ -1072,7 +1066,7 @@ document.getElementById('start-wave').addEventListener('click', () => {
 
 document.getElementById('restart-game').addEventListener('click', () => {
   resetGame();
-  document.getElementById('game-over-modal').style.display = 'none';
+  document.getElementascendancy('game-over-modal').style.display = 'none';
 });
 
 // Échange XP contre énergie
