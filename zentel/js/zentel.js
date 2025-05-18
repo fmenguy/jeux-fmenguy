@@ -3,7 +3,6 @@ const GRID_WIDTH = 17;
 const GRID_HEIGHT = 10;
 const CELL_SIZE = 40;
 const BASE_HP = 100;
-const BORDER_THICKNESS = 20; // Épaisseur des bordures en pixels
 
 const TEXT_COLOR = '#e0e0ff';
 const BUTTON_COLOR = '#6a5acd';
@@ -46,24 +45,19 @@ let isDeleteModeActive = false;
 let isEvolveModeActive = false;
 let waveCompleted = false;
 
-// Variables pour le centrage et les bordures
+// Variables pour le canvas
 let canvasWidth, canvasHeight;
-let gridOffsetX, gridOffsetY;
 
 function setup() {
-  // Calculer les dimensions totales (grille + bordures)
-  canvasWidth = GRID_WIDTH * CELL_SIZE + BORDER_THICKNESS * 2; // 720 pixels
-  canvasHeight = GRID_HEIGHT * CELL_SIZE + BORDER_THICKNESS * 2; // 440 pixels
+  // Calculer les dimensions du canvas (sans bordures)
+  canvasWidth = GRID_WIDTH * CELL_SIZE; // 680 pixels
+  canvasHeight = GRID_HEIGHT * CELL_SIZE; // 400 pixels
 
-  // Créer le canvas centré
+  // Créer le canvas
   let canvas = createCanvas(canvasWidth, canvasHeight);
   canvas.parent('game-area');
   canvas.style('display', 'block');
   canvas.style('margin', 'auto');
-
-  // Calculer les offsets pour centrer la grille dans le canvas
-  gridOffsetX = BORDER_THICKNESS;
-  gridOffsetY = BORDER_THICKNESS;
 
   textAlign(CENTER, CENTER);
   textSize(14);
@@ -143,8 +137,8 @@ function spawnWave() {
         if (!foundPath) continue;
       }
       enemies.push({
-        x: gridOffsetX,
-        y: startY * CELL_SIZE + CELL_SIZE / 2 + gridOffsetY,
+        x: 0,
+        y: startY * CELL_SIZE + CELL_SIZE / 2,
         hp: baseHp * (1 + wave * 0.1),
         maxHp: baseHp * (1 + wave * 0.1),
         speed: enemyType.speed,
@@ -326,66 +320,12 @@ function draw() {
 
   background('#0a0a1e');
 
-  // Dessiner les bordures
-  fill('#444444'); // Gris métallique
-  noStroke();
-  // Haut
-  rect(0, 0, canvasWidth, BORDER_THICKNESS);
-  fill('#ff0000'); // Ligne néon rouge
-  rect(0, 2, canvasWidth, 2);
-  fill('#00f0ff'); // Ligne néon bleue
-  rect(0, BORDER_THICKNESS - 4, canvasWidth, 2);
-  // Motifs de circuits (rectangles 10x4)
-  fill('#666666');
-  for (let x = 10; x < canvasWidth - 10; x += 20) {
-    rect(x, 8, 10, 4);
-  }
-  // Bas
-  fill('#444444');
-  rect(0, canvasHeight - BORDER_THICKNESS, canvasWidth, BORDER_THICKNESS);
-  fill('#ff0000');
-  rect(0, canvasHeight - BORDER_THICKNESS + 2, canvasWidth, 2);
-  fill('#00f0ff');
-  rect(0, canvasHeight - 4, canvasWidth, 2);
-  fill('#666666');
-  for (let x = 10; x < canvasWidth - 10; x += 20) {
-    rect(x, canvasHeight - BORDER_THICKNESS + 8, 10, 4);
-  }
-  // Gauche
-  fill('#444444');
-  rect(0, 0, BORDER_THICKNESS, canvasHeight);
-  fill('#ff0000');
-  rect(2, 0, 2, canvasHeight);
-  fill('#00f0ff');
-  rect(BORDER_THICKNESS - 4, 0, 2, canvasHeight);
-  // Rivets (cercles de rayon 3px)
-  fill('#666666');
-  for (let y = 20; y < canvasHeight - 20; y += 40) {
-    ellipse(BORDER_THICKNESS / 2, y, 6, 6);
-  }
-  // Droite
-  fill('#444444');
-  rect(canvasWidth - BORDER_THICKNESS, 0, BORDER_THICKNESS, canvasHeight);
-  fill('#ff0000');
-  rect(canvasWidth - BORDER_THICKNESS + 2, 0, 2, canvasHeight);
-  fill('#00f0ff');
-  rect(canvasWidth - 4, 0, 2, canvasHeight);
-  fill('#666666');
-  for (let y = 20; y < canvasHeight - 20; y += 40) {
-    ellipse(canvasWidth - BORDER_THICKNESS / 2, y, 6, 6);
-  }
-
-  // Dessiner la grille et les modules avec offset
-  push();
-  translate(gridOffsetX, gridOffsetY);
+  // Dessiner la grille et les modules
   drawGrid();
   drawModules();
+  drawEnemies();
   drawProjectiles();
   drawEnemyProjectiles();
-  pop();
-
-  // Dessiner les ennemis
-  drawEnemies();
 
   updateGame();
 }
@@ -450,7 +390,7 @@ function drawModules() {
           let enemy = enemies[i];
           if (enemy.isBoss && module.type !== 'projectile') continue;
 
-          let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2 + gridOffsetX, module.y * CELL_SIZE + CELL_SIZE / 2 + gridOffsetY, enemy.x, enemy.y);
+          let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
           let effectiveDamage = TURRET_TYPES[module.type].damage * (1 + wave * 0.05);
           let effectiveRange = TURRET_TYPES[module.type].range * (1 + wave * 0.02);
           if (module.level > 1) {
@@ -508,7 +448,7 @@ function drawEnemies() {
       let closestModule = null;
       let closestDist = Infinity;
       for (let module of modules) {
-        let d = dist(enemy.x, enemy.y, module.x * CELL_SIZE + CELL_SIZE / 2 + gridOffsetX, module.y * CELL_SIZE + CELL_SIZE / 2 + gridOffsetY);
+        let d = dist(enemy.x, enemy.y, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
         if (d < closestDist) {
           closestDist = d;
           closestModule = module;
@@ -516,8 +456,8 @@ function drawEnemies() {
       }
       if (closestModule) {
         enemyProjectiles.push({
-          x: enemy.x - gridOffsetX,
-          y: enemy.y - gridOffsetY,
+          x: enemy.x,
+          y: enemy.y,
           targetX: closestModule.x * CELL_SIZE + CELL_SIZE / 2,
           targetY: closestModule.y * CELL_SIZE + CELL_SIZE / 2,
           speed: 2,
@@ -528,14 +468,14 @@ function drawEnemies() {
 
     if (enemy.path.length > 0) {
       let nextPoint = enemy.path[enemy.pathIndex];
-      let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2 + gridOffsetX;
-      let targetY = nextPoint.y * CELL_SIZE + CELL_SIZE / 2 + gridOffsetY;
+      let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
+      let targetY = nextPoint.y * CELL_SIZE + CELL_SIZE / 2;
       let dx = targetX - enemy.x;
       let dy = targetY - enemy.y;
       let distToTarget = dist(enemy.x, enemy.y, targetX, targetY);
 
-      let nextGridX = floor((targetX - gridOffsetX) / CELL_SIZE);
-      let nextGridY = floor((targetY - gridOffsetY) / CELL_SIZE);
+      let nextGridX = floor(targetX / CELL_SIZE);
+      let nextGridY = floor(targetY / CELL_SIZE);
       let canMove = true;
       if (!enemy.isBoss && grid[nextGridX][nextGridY] === 'wall') {
         canMove = false;
@@ -546,8 +486,8 @@ function drawEnemies() {
         if (enemy.pathIndex >= enemy.path.length) {
           enemy.path = [];
         } else if (!canMove) {
-          let startX = floor((enemy.x - gridOffsetX) / CELL_SIZE);
-          let startY = floor((enemy.y - gridOffsetY) / CELL_SIZE);
+          let startX = floor(enemy.x / CELL_SIZE);
+          let startY = floor(enemy.y / CELL_SIZE);
           let path = findPath(startX, startY, GRID_WIDTH - 1, startY, false);
           if (path.length === 0) {
             path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
@@ -563,8 +503,8 @@ function drawEnemies() {
         enemy.x += (dx / distToTarget) * enemy.speed;
         enemy.y += (dy / distToTarget) * enemy.speed;
       } else {
-        let startX = floor((enemy.x - gridOffsetX) / CELL_SIZE);
-        let startY = floor((enemy.y - gridOffsetY) / CELL_SIZE);
+        let startX = floor(enemy.x / CELL_SIZE);
+        let startY = floor(enemy.y / CELL_SIZE);
         let path = findPath(startX, startY, GRID_WIDTH - 1, startY, false);
         if (path.length === 0) {
           path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
@@ -577,8 +517,8 @@ function drawEnemies() {
         }
       }
     } else {
-      let startX = floor((enemy.x - gridOffsetX) / CELL_SIZE);
-      let startY = floor((enemy.y - gridOffsetY) / CELL_SIZE);
+      let startX = floor(enemy.x / CELL_SIZE);
+      let startY = floor(enemy.y / CELL_SIZE);
       let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
 
       if (path.length === 0 && !enemy.isBoss) {
@@ -600,7 +540,7 @@ function drawEnemies() {
 
         if (foundPath) {
           // Déplacer l'ennemi vers l'ouverture en y
-          let targetYPos = targetY * CELL_SIZE + CELL_SIZE / 2 + gridOffsetY;
+          let targetYPos = targetY * CELL_SIZE + CELL_SIZE / 2;
           let dy = targetYPos - enemy.y;
           let distToTargetY = Math.abs(dy);
 
@@ -617,7 +557,7 @@ function drawEnemies() {
             if (path.length > 0) {
               enemy.path = path;
               enemy.pathIndex = 0;
-              enemy.x = 2 * CELL_SIZE + CELL_SIZE / 2 + gridOffsetX;
+              enemy.x = 2 * CELL_SIZE + CELL_SIZE / 2;
             }
           }
         } else {
@@ -642,8 +582,8 @@ function drawEnemies() {
                 newGridY >= 0 && newGridY < GRID_HEIGHT &&
                 (grid[newGridX][newGridY] === null || grid[newGridX][newGridY] === 'base' || grid[newGridX][newGridY] === 'melee' || grid[newGridX][newGridY] === 'projectile')
               ) {
-                enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2 + gridOffsetX;
-                enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2 + gridOffsetY;
+                enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
+                enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
                 path = enemy.isBoss ? findPathAerial(newGridX, newGridY, GRID_WIDTH - 1, newGridY) : findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, false);
                 if (path.length === 0 && !enemy.isBoss) {
                   path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, true);
@@ -658,8 +598,8 @@ function drawEnemies() {
             }
             if (!moved) {
               enemy.x += enemy.speed;
-              let startX = floor((enemy.x - gridOffsetX) / CELL_SIZE);
-              let startY = floor((enemy.y - gridOffsetY) / CELL_SIZE);
+              let startX = floor(enemy.x / CELL_SIZE);
+              let startY = floor(enemy.y / CELL_SIZE);
               path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, true);
               enemy.path = path;
               enemy.pathIndex = 0;
@@ -679,11 +619,11 @@ function drawProjectiles() {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     let p = projectiles[i];
     fill(TURRET_COLOR);
-    ellipse(p.x + gridOffsetX, p.y + gridOffsetY, 10);
+    ellipse(p.x, p.y, 10);
     let angle = atan2(p.target.y - p.y, p.target.x - p.x);
     p.x += p.speed * cos(angle);
     p.y += p.speed * sin(angle);
-    let d = dist(p.x, p.y, p.target.x - gridOffsetX, p.target.y - gridOffsetY);
+    let d = dist(p.x, p.y, p.target.x, p.target.y);
     if (d < 10) {
       p.target.hp -= p.damage;
       if (p.target.hp <= 0) {
@@ -699,7 +639,7 @@ function drawEnemyProjectiles() {
   for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
     let p = enemyProjectiles[i];
     fill(TRIANGLE_COLOR);
-    ellipse(p.x + gridOffsetX, p.y + gridOffsetY, 8);
+    ellipse(p.x, p.y, 8);
     let angle = atan2(p.targetY - p.y, p.targetX - p.x);
     p.x += p.speed * cos(angle);
     p.y += p.speed * sin(angle);
@@ -734,8 +674,8 @@ function drawEnemyProjectiles() {
         }
         enemies.forEach(enemy => {
           if (enemy.path.length > 0) {
-            let startX = floor((enemy.x - gridOffsetX) / CELL_SIZE);
-            let startY = floor((enemy.y - gridOffsetY) / CELL_SIZE);
+            let startX = floor(enemy.x / CELL_SIZE);
+            let startY = floor(enemy.y / CELL_SIZE);
             let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
             if (path.length === 0 && !enemy.isBoss) {
               path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
@@ -752,9 +692,10 @@ function drawEnemyProjectiles() {
 
 function updateGame() {
   for (let enemy of enemies) {
-    if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE + gridOffsetX - 5 && enemy.path.length === 0) {
+    if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
       base.hp -= 10;
       enemy.hp = 0;
+      updateStats(); // Update UI when base takes damage
     }
   }
 
@@ -850,8 +791,8 @@ function updateStats() {
 function mousePressed() {
   if (gameState === 'paused') return;
 
-  let gridX = floor((mouseX - gridOffsetX) / CELL_SIZE);
-  let gridY = floor((mouseY - gridOffsetY) / CELL_SIZE);
+  let gridX = floor(mouseX / CELL_SIZE);
+  let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT) {
     if (gridX < 2) {
@@ -924,8 +865,8 @@ function mousePressed() {
         modules.splice(moduleIndex, 1);
         enemies.forEach(enemy => {
           if (enemy.path.length > 0) {
-            let startX = floor((enemy.x - gridOffsetX) / CELL_SIZE);
-            let startY = floor((enemy.y - gridOffsetY) / CELL_SIZE);
+            let startX = floor(enemy.x / CELL_SIZE);
+            let startY = floor(enemy.y / CELL_SIZE);
             let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
             if (path.length === 0 && !enemy.isBoss) {
               path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
@@ -955,8 +896,8 @@ function mousePressed() {
         return;
       }
       let enemyOnCell = enemies.find(enemy => {
-        let enemyGridX = floor((enemy.x - gridOffsetX) / CELL_SIZE);
-        let enemyGridY = floor((enemy.y - gridOffsetY) / CELL_SIZE);
+        let enemyGridX = floor(enemy.x / CELL_SIZE);
+        let enemyGridY = floor(enemy.y / CELL_SIZE);
         return enemyGridX === gridX && enemyGridY === gridY;
       });
       if (enemyOnCell) {
@@ -975,8 +916,8 @@ function mousePressed() {
             newGridY >= 0 && newGridY < GRID_HEIGHT &&
             (grid[newGridX][newGridY] === null || grid[newGridX][newGridY] === 'base')
           ) {
-            enemyOnCell.x = newGridX * CELL_SIZE + CELL_SIZE / 2 + gridOffsetX;
-            enemyOnCell.y = newGridY * CELL_SIZE + CELL_SIZE / 2 + gridOffsetY;
+            enemyOnCell.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
+            enemyOnCell.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
             let path = enemyOnCell.isBoss ? findPathAerial(newGridX, newGridY, GRID_WIDTH - 1, newGridY) : findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, false);
             if (path.length === 0 && !enemyOnCell.isBoss) {
               path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, true);
@@ -997,8 +938,8 @@ function mousePressed() {
       if (selectedModule === 'wall' || selectedModule === 'melee' || selectedModule === 'projectile') {
         enemies.forEach(enemy => {
           if (enemy.path.length > 0) {
-            let startX = floor((enemy.x - gridOffsetX) / CELL_SIZE);
-            let startY = floor((enemy.y - gridOffsetY) / CELL_SIZE);
+            let startX = floor(enemy.x / CELL_SIZE);
+            let startY = floor(enemy.y / CELL_SIZE);
             let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
             if (path.length === 0 && !enemy.isBoss) {
               path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
@@ -1066,7 +1007,7 @@ document.getElementById('start-wave').addEventListener('click', () => {
 
 document.getElementById('restart-game').addEventListener('click', () => {
   resetGame();
-  document.getElementascendancy('game-over-modal').style.display = 'none';
+  document.getElementById('game-over-modal').style.display = 'none';
 });
 
 // Échange XP contre énergie
@@ -1107,6 +1048,7 @@ function resetGame() {
   waveCompleted = false;
   initializeGrid();
   updateStats();
+  document.getElementById('game-over-modal').style.display = 'none'; // Hide modal on reset
   loop();
 }
 
