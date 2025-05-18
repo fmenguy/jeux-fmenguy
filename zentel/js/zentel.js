@@ -29,6 +29,7 @@ const ENEMY_TYPES = [
 const BOSS_TYPE = { hp: 60, speed: 0.3 * 1.5, xp: 15, energy: 0 };
 const SUPER_BOSS_TYPE = { hp: 150, speed: 0.4 * 1.5, xp: 25, energy: 0 };
 const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 20, energy: 0, attackRate: 120 };
+const MEGA_BOSS_TYPE = { hp: 500, speed: 0.1 * 1.5, xp: 100, energy: 0, size: 2 }; // Prend 2x2 cases
 
 let grid = [];
 let modules = [];
@@ -92,17 +93,24 @@ function spawnWave() {
     let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
     enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
     enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
-  } else if (wave < 20) {
+  } else if (wave < 12) {
     let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
     enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
     enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
     enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+  } else if (wave < 15) {
+    let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+    enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
+    enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
   } else {
     let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
     enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
     enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
     enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
     enemyTypesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+    enemyTypesToSpawn.push({ type: MEGA_BOSS_TYPE, isBoss: true, isTriangle: false });
   }
 
   let enemiesPerType = Math.floor(enemyCount / enemyTypesToSpawn.length);
@@ -139,6 +147,9 @@ function spawnWave() {
         if (!foundPath) continue;
       }
       let adjustedSpeed = enemyType.speed * speedMultiplier;
+      if (!isBoss && !isTriangle) { // Appliquer le facteur de vitesse uniquement aux ennemis normaux
+        adjustedSpeed *= (1 + wave * 0.02); // Augmente la vitesse de 2% par vague
+      }
       enemies.push({
         x: 0,
         y: startY * CELL_SIZE + CELL_SIZE / 2,
@@ -151,7 +162,8 @@ function spawnWave() {
         energy: enemyType.energy,
         isBoss: isBoss,
         isTriangle: isTriangle,
-        attackRate: attackRate
+        attackRate: attackRate,
+        type: enemyType // Ajouter une référence au type pour identifier les méga boss
       });
     }
   }
@@ -447,6 +459,10 @@ function drawEnemies() {
       translate(enemy.x, enemy.y);
       triangle(-10, 10, 0, -10, 10, 10);
       pop();
+    } else if (enemy.type === MEGA_BOSS_TYPE) {
+      fill(BOSS_COLOR); // Noir
+      noStroke();
+      rect(enemy.x - CELL_SIZE, enemy.y - CELL_SIZE, CELL_SIZE * 2, CELL_SIZE * 2); // 2x2 cases
     } else {
       fill(enemy.isBoss ? BOSS_COLOR : ENEMY_COLOR);
       noStroke();
@@ -458,8 +474,16 @@ function drawEnemies() {
     stroke(healthColor);
     strokeWeight(2);
     noFill();
-    let angle = map(hpRatio, 0, 1, 0, TWO_PI);
-    arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2);
+    if (enemy.type === MEGA_BOSS_TYPE) {
+      // Dessiner une barre de vie plus grande pour les méga boss
+      let barWidth = CELL_SIZE * 2; // Largeur de 2 cases
+      let barHeight = 8;
+      let filledWidth = barWidth * hpRatio;
+      rect(enemy.x - CELL_SIZE, enemy.y - CELL_SIZE - 10, filledWidth, barHeight);
+    } else {
+      let angle = map(hpRatio, 0, 1, 0, TWO_PI);
+      arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2);
+    }
 
     if (enemy.isTriangle && frameCount % enemy.attackRate === 0) {
       let closestModule = null;
@@ -772,12 +796,19 @@ function updateGame() {
   enemies.forEach(enemy => {
     let baseSpeed;
     if (enemy.isBoss) {
-      baseSpeed = enemy.isTriangle ? TRIANGLE_TYPE.speed : BOSS_TYPE.speed;
+      if (enemy.isTriangle) {
+        baseSpeed = TRIANGLE_TYPE.speed;
+      } else if (enemy.type === MEGA_BOSS_TYPE) {
+        baseSpeed = MEGA_BOSS_TYPE.speed;
+      } else {
+        baseSpeed = BOSS_TYPE.speed;
+      }
     } else if (enemy.isTriangle) {
       baseSpeed = TRIANGLE_TYPE.speed;
     } else {
       let enemyTypeIndex = min(wave - 1, ENEMY_TYPES.length - 1);
       baseSpeed = ENEMY_TYPES[enemyTypeIndex].speed;
+      baseSpeed *= (1 + wave * 0.02); // Appliquer le facteur de vitesse basé sur la vague
     }
     enemy.speed = baseSpeed * speedMultiplier;
   });
