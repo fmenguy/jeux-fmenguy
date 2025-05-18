@@ -795,9 +795,17 @@ function updateGame() {
     waveCompleted = true;
     xp += wave * 5 + 5;
     if (wave === 1 && !tipModalShown) {
-      document.getElementById('tip-modal').style.display = 'flex';
-      gameState = 'paused';
-      tipModalShown = true;
+      const tipModal = document.getElementById('tip-modal');
+      if (tipModal) {
+        tipModal.style.display = 'flex';
+        gameState = 'paused';
+        tipModalShown = true;
+      } else {
+        console.error("L'élément avec l'ID 'tip-modal' n'existe pas dans le DOM. L'astuce ne peut pas être affichée.");
+        showTip = true;
+        tipOpacity = 1;
+        tipModalShown = true;
+      }
     } else if (wave >= 2 && tipModalShown) {
       showTip = true;
       tipOpacity = 0.3;
@@ -1130,7 +1138,7 @@ if (closeTipButton) {
     updateStats();
   });
 } else {
-  console.error("L'élément avec l'ID 'close-tip' n'existe pas dans le DOM.");
+  console.warn("L'élément avec l'ID 'close-tip' n'existe pas dans le DOM. Assurez-vous que la modale d'astuce est correctement ajoutée dans le HTML.");
 }
 
 // Boutons de contrôle
