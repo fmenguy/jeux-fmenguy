@@ -17,7 +17,7 @@ const UPGRADE_COLOR_LVL3 = '#ff00ff';
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
   projectile: { name: "Archer Plasma", symbol: "🏹", damage: 5, range: 150, attackRate: 90, cost: 20, level: 1 },
-  wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', cost: 5, hp: 50 } // Ajout des HP
+  wall: { name: "Barrière Énergétique", symbol: "█", color: '#808080', cost: 5, hp: 50 }
 };
 
 const ENEMY_TYPES = [
@@ -44,6 +44,8 @@ let enemyProjectiles = [];
 let isDeleteModeActive = false;
 let isEvolveModeActive = false;
 let waveCompleted = false;
+let showTip = false;
+let tipOpacity = 1;
 
 // Variables pour le canvas
 let canvasWidth, canvasHeight;
@@ -320,6 +322,15 @@ function draw() {
   if (gameState === 'paused') return;
 
   background('#0a0a1e');
+
+  if (showTip) {
+    fill(255, 255, 255, 255 * tipOpacity);
+    rect(0, 0, canvasWidth, 30);
+    fill(0, 0, 0, 255 * tipOpacity);
+    textSize(14);
+    textAlign(CENTER, CENTER);
+    text("Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique", canvasWidth / 2, 15);
+  }
 
   drawGrid();
   drawModules();
@@ -761,6 +772,13 @@ function updateGame() {
   if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
     waveCompleted = true;
     xp += wave * 10 + 10;
+    if (wave === 1) {
+      showTip = true;
+      tipOpacity = 1;
+    }
+    if (wave >= 2) {
+      tipOpacity = 0.3;
+    }
     updateStats();
   }
 
@@ -1114,6 +1132,8 @@ function resetGame() {
   isDeleteModeActive = false;
   isEvolveModeActive = false;
   waveCompleted = false;
+  showTip = false;
+  tipOpacity = 1;
   initializeGrid();
   updateStats();
   loop();
