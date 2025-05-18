@@ -56,9 +56,13 @@
 
     // Créer le canvas et l'attacher à #game-canvas
     let canvas = createCanvas(canvasWidth, canvasHeight);
-    canvas.parent('game-canvas'); // Attacher directement à #game-canvas
+    canvas.parent('game-canvas');
     canvas.style('display', 'block');
     canvas.style('margin', 'auto');
+    // Vérification
+    if (!document.getElementById('game-canvas').querySelector('canvas')) {
+      console.error("Canvas non attaché à #game-canvas");
+    }
 
     textAlign(CENTER, CENTER);
     textSize(14);
@@ -358,8 +362,8 @@
   }
 
   function drawGrid() {
-    stroke('#2a2a4a');
-    strokeWeight(1);
+    stroke('#4a4a6a');
+    strokeWeight(2);
     for (let x = 0; x < GRID_WIDTH; x++) {
       for (let y = 0; y < GRID_HEIGHT; y++) {
         if (x < 2) {
@@ -367,7 +371,7 @@
           stroke(ENEMY_ZONE_COLOR);
         } else {
           fill(grid[x][y] === 'base' ? '#4682b4' : '#1a1a2e');
-          stroke('#2a2a4a');
+          stroke('#4a4a6a');
         }
         rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
       }
@@ -755,62 +759,66 @@
     ['melee', 'projectile', 'wall'].forEach(type => {
       const btn = document.getElementById(`${type}-btn`);
       const cost = TURRET_TYPES[type].cost;
+      btn.classList.remove('locked', 'selected');
+      btn.disabled = false;
       if (type === 'projectile' && wave < 5) {
         btn.classList.add('locked');
+        btn.disabled = true;
         btn.querySelector('.turret-cost').textContent = `Vague 5+`;
       } else if (energy < cost) {
         btn.classList.add('locked');
+        btn.disabled = true;
         btn.querySelector('.turret-cost').textContent = `${cost} E (manque ${cost - energy})`;
       } else {
-        btn.classList.remove('locked');
         btn.querySelector('.turret-cost').textContent = `${cost} E`;
       }
       if (selectedModule === type) {
         btn.classList.add('selected');
-      } else {
-        btn.classList.remove('selected');
       }
     });
 
     const exchangeBtn = document.getElementById('exchange-xp-energy');
-    const amount = document.querySelector('input[name="exchange-amount"]:checked').value;
+    exchangeBtn.classList.remove('locked');
+    exchangeBtn.disabled = false;
+    const amount = document.querySelector('input[name="exchange-amount"]:checked')?.value || '1xp';
     const requiredXp = amount === '1xp' ? 1 : amount === '50xp' ? 50 : 100;
     if (xp < requiredXp) {
       exchangeBtn.classList.add('locked');
+      exchangeBtn.disabled = true;
       exchangeBtn.textContent = `Échange (manque ${requiredXp - xp} XP)`;
     } else {
-      exchangeBtn.classList.remove('locked');
       exchangeBtn.textContent = `Échange`;
     }
 
     const healBtn = document.getElementById('heal-base');
+    healBtn.classList.remove('locked');
+    healBtn.disabled = false;
     if (wave < 5 || xp < 500 || base.hp >= BASE_HP) {
       healBtn.classList.add('locked');
+      healBtn.disabled = true;
       healBtn.textContent = wave < 5 ? `Soigner Base (vague 5+)` : xp < 500 ? `Soigner Base (manque ${500 - xp} XP)` : `Soigner Base (HP max)`;
     } else {
-      healBtn.classList.remove('locked');
       healBtn.textContent = `Soigner Base (500 XP → 10 HP)`;
     }
 
     const deleteBtn = document.getElementById('delete-turret-btn');
+    deleteBtn.classList.remove('active');
     if (isDeleteModeActive) {
       deleteBtn.classList.add('active');
-    } else {
-      deleteBtn.classList.remove('active');
     }
 
     const evolveBtn = document.getElementById('evolve-turret-btn');
+    evolveBtn.classList.remove('locked', 'active');
+    evolveBtn.disabled = false;
     if (wave < 7) {
       evolveBtn.classList.add('locked');
+      evolveBtn.disabled = true;
       evolveBtn.textContent = `Évoluer (vague 7+)`;
     } else {
-      evolveBtn.classList.remove('locked');
       evolveBtn.textContent = `Évoluer`;
     }
     if (isEvolveModeActive) {
       evolveBtn.classList.add('active');
-    } else {
-      evolveBtn.classList.remove('active');
     }
   }
 
