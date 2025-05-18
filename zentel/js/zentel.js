@@ -1,4 +1,10 @@
 (function() {
+  // Vérification que p5.js est chargé
+  if (typeof p5 === 'undefined') {
+    console.error("p5.js n'est pas chargé. Assurez-vous d'inclure la bibliothèque p5.js dans votre HTML.");
+    return;
+  }
+
   // Constantes
   const GRID_WIDTH = 17;
   const GRID_HEIGHT = 10;
@@ -46,23 +52,24 @@
   let isEvolveModeActive = false;
   let waveCompleted = false;
 
-  // Variables pour le canvas
   let canvasWidth, canvasHeight;
 
   function setup() {
-    // Calculer les dimensions du canvas (sans bordures)
     canvasWidth = GRID_WIDTH * CELL_SIZE; // 680 pixels
     canvasHeight = GRID_HEIGHT * CELL_SIZE; // 400 pixels
-
-    // Créer le canvas et l'attacher à #game-canvas
     let canvas = createCanvas(canvasWidth, canvasHeight);
     canvas.parent('game-canvas');
     canvas.style('display', 'block');
     canvas.style('margin', 'auto');
-    // Vérification
     if (!document.getElementById('game-canvas').querySelector('canvas')) {
       console.error("Canvas non attaché à #game-canvas");
     }
+
+    // Test de dessin simple
+    background('#0a0a1e');
+    fill('#ff0000');
+    noStroke();
+    rect(10, 10, 50, 50); // Dessiner un rectangle rouge en haut à gauche
 
     textAlign(CENTER, CENTER);
     textSize(14);
@@ -71,7 +78,7 @@
   }
 
   function initializeGrid() {
-    grid = []; // Réinitialiser la grille
+    grid = [];
     for (let x = 0; x < GRID_WIDTH; x++) {
       grid[x] = [];
       for (let y = 0; y < GRID_HEIGHT; y++) {
@@ -161,7 +168,6 @@
     updateStats();
   }
 
-  // Fonction pour copier la grille
   function copyGrid() {
     let newGrid = [];
     for (let x = 0; x < GRID_WIDTH; x++) {
@@ -175,7 +181,6 @@
 
   function findPath(startX, startY, goalX, goalY, allowThroughTurrets = false, tempGrid = null) {
     let currentGrid = tempGrid || grid;
-    // Vérifier que currentGrid est bien défini
     if (!currentGrid || !currentGrid[0]) {
       console.error("Grid is not properly initialized:", currentGrid);
       return [];
@@ -241,7 +246,6 @@
       }
     }
 
-    // Si aucun chemin n'est trouvé dans la première boucle, essayer avec allowThroughTurrets si demandé
     if (allowThroughTurrets) {
       queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
       visited.clear();
@@ -290,7 +294,6 @@
       }
     }
 
-    // Si aucun chemin n'est trouvé, renvoyer un chemin vide
     return [];
   }
 
@@ -310,7 +313,7 @@
       let path = findPath(0, startY, GRID_WIDTH - 1, startY, false, tempGrid);
       if (path.length > 0) {
         foundPath = true;
-        break; // On a trouvé un chemin, pas besoin de continuer
+        break;
       }
     }
     return foundPath;
@@ -347,17 +350,17 @@
   }
 
   function draw() {
-    if (gameState === 'paused') return;
-
+    if (gameState === 'paused') {
+      console.log("Jeu en pause, draw() non exécuté");
+      return;
+    }
+    console.log("draw() exécuté, dessin de la grille...");
     background('#0a0a1e');
-
-    // Dessiner la grille et les modules
     drawGrid();
     drawModules();
     drawEnemies();
     drawProjectiles();
     drawEnemyProjectiles();
-
     updateGame();
   }
 
@@ -556,7 +559,6 @@
           let shortestDist = Infinity;
           let targetY = startY;
 
-          // Trouver l'ouverture la plus proche dans la colonne 2 (x = 2)
           for (let y = 0; y < GRID_HEIGHT; y++) {
             if (grid[2][y] !== 'wall') {
               let distToOpening = Math.abs(startY - y);
@@ -569,7 +571,6 @@
           }
 
           if (foundPath) {
-            // Déplacer l'ennemi vers l'ouverture en y
             let targetYPos = targetY * CELL_SIZE + CELL_SIZE / 2;
             let dy = targetYPos - enemy.y;
             let distToTargetY = Math.abs(dy);
@@ -579,7 +580,6 @@
               enemy.y += speedY;
             } else {
               enemy.y = targetYPos;
-              // Une fois à l'ouverture, recalculer le chemin vers la base
               path = findPath(2, targetY, GRID_WIDTH - 1, targetY, false);
               if (path.length === 0) {
                 path = findPath(2, targetY, GRID_WIDTH - 1, targetY, true);
@@ -591,7 +591,6 @@
               }
             }
           } else {
-            // Si aucune ouverture n'est trouvée, essayer un chemin en passant par les tourelles
             path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
             if (path.length > 0) {
               enemy.path = path;
@@ -725,7 +724,7 @@
       if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
         base.hp -= 10;
         enemy.hp = 0;
-        updateStats(); // Update UI when base takes damage
+        updateStats();
       }
     }
 
@@ -920,16 +919,11 @@
         }
 
         if (selectedModule === 'wall') {
-          // Créer une grille temporaire pour tester le placement
           let tempGrid = copyGrid();
           tempGrid[gridX][gridY] = selectedModule;
-
-          // Vérifier si un chemin existe avec la grille temporaire
           if (!hasPathToBase(tempGrid)) {
-            return; // Annuler le placement si aucun chemin n'est possible
+            return;
           }
-
-          // Si un chemin existe, appliquer le placement
           grid[gridX][gridY] = selectedModule;
         }
 
@@ -999,7 +993,6 @@
     }
   }
 
-  // Gestion des boutons de tourelles
   document.getElementById('melee-btn').addEventListener('click', () => {
     selectedModule = selectedModule === 'melee' ? null : 'melee';
     isDeleteModeActive = false;
@@ -1022,7 +1015,6 @@
     updateStats();
   });
 
-  // Bouton pour supprimer une tourelle
   document.getElementById('delete-turret-btn').addEventListener('click', () => {
     isDeleteModeActive = !isDeleteModeActive;
     isEvolveModeActive = false;
@@ -1030,7 +1022,6 @@
     updateStats();
   });
 
-  // Bouton pour évoluer une tourelle
   document.getElementById('evolve-turret-btn').addEventListener('click', () => {
     if (wave < 7) return;
     isEvolveModeActive = !isEvolveModeActive;
@@ -1039,13 +1030,11 @@
     updateStats();
   });
 
-  // Bouton pour reprendre le jeu après un avertissement d'espace
   document.getElementById('resume-game').addEventListener('click', () => {
     document.getElementById('space-warning-modal').style.display = 'none';
     gameState = 'playing';
   });
 
-  // Boutons de contrôle
   document.getElementById('start-wave').addEventListener('click', () => {
     if (enemies.length === 0 && gameState === 'playing') {
       spawnWave();
@@ -1057,7 +1046,6 @@
     document.getElementById('game-over-modal').style.display = 'none';
   });
 
-  // Échange XP contre énergie
   document.getElementById('exchange-xp-energy').addEventListener('click', () => {
     const amount = document.querySelector('input[name="exchange-amount"]:checked').value;
     const requiredXp = amount === '1xp' ? 1 : amount === '50xp' ? 50 : 100;
@@ -1069,7 +1057,6 @@
     }
   });
 
-  // Soigner la base
   document.getElementById('heal-base').addEventListener('click', () => {
     if (wave >= 5 && xp >= 500 && base.hp < BASE_HP) {
       xp -= 500;
@@ -1095,11 +1082,10 @@
     waveCompleted = false;
     initializeGrid();
     updateStats();
-    document.getElementById('game-over-modal').style.display = 'none'; // Hide modal on reset
+    document.getElementById('game-over-modal').style.display = 'none';
     loop();
   }
 
-  // Rendre le jeu responsive
   function windowResized() {
     let scaleFactor = min(windowWidth / canvasWidth, windowHeight / canvasHeight);
     resizeCanvas(canvasWidth * scaleFactor, canvasHeight * scaleFactor);
