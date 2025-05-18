@@ -1,4 +1,3 @@
-// Constantes pour mobile
 const GRID_WIDTH = 6;
 const GRID_HEIGHT = 9;
 let CELL_SIZE;
@@ -64,17 +63,15 @@ function setup() {
   let gameArea = document.getElementById('mobile-game-area');
   let areaWidth = gameArea.clientWidth;
   let areaHeight = gameArea.clientHeight;
-  let targetRatio = 9 / 16;
-  let gridRatio = GRID_HEIGHT / GRID_WIDTH;
 
-  let maxWidth = areaWidth / GRID_WIDTH;
-  let maxHeight = areaHeight / GRID_HEIGHT;
-  CELL_SIZE = Math.min(maxWidth, maxHeight);
+  CELL_SIZE = Math.min(areaWidth / GRID_WIDTH, areaHeight / GRID_HEIGHT);
 
   let canvasWidth = CELL_SIZE * GRID_WIDTH;
   let canvasHeight = CELL_SIZE * GRID_HEIGHT;
   let canvas = createCanvas(canvasWidth, canvasHeight);
   canvas.parent('mobile-game-area');
+  canvas.style('display', 'block');
+  canvas.style('touch-action', 'none'); // Prevent default touch behaviors
 
   textAlign(CENTER, CENTER);
   textSize(14);
@@ -142,7 +139,6 @@ function spawnWave() {
           }
         }
         if (!foundPath) {
-          // Si aucun chemin n'est trouvé, essayer en autorisant le passage à travers les tourelles
           for (let x = 0; x < GRID_WIDTH; x++) {
             path = findPath(x, 0, x, GRID_HEIGHT - 1, true);
             if (path.length > 0) {
@@ -342,7 +338,6 @@ function draw() {
   drawEnemies();
   drawProjectiles();
   drawEnemyProjectiles();
-  drawBase();
   updateGame();
 }
 
@@ -354,8 +349,11 @@ function drawGrid() {
       if (y === 0) {
         fill(ENEMY_ZONE_COLOR);
         stroke(ENEMY_ZONE_COLOR);
+      } else if (grid[x][y] === 'base') {
+        fill('#4682b4');
+        stroke('#2a2a4a');
       } else {
-        fill(grid[x][y] === 'base' ? '#4682b4' : '#1a1a2e');
+        fill('#1a1a2e');
         stroke('#2a2a4a');
       }
       rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
@@ -444,7 +442,7 @@ function drawModules() {
           } else if (module.type === 'projectile' && d < effectiveRange) {
             projectiles.push({
               x: module.x * CELL_SIZE + CELL_SIZE / 2,
-              y: module.y * CELL_SIZE + CELL_SIZE / 2,
+              y: module.y * CELL_SIZE + CELL+ CELL_SIZE / 2,
               target: enemy,
               speed: 3,
               damage: effectiveDamage
@@ -679,10 +677,6 @@ function drawEnemyProjectiles() {
   }
 }
 
-function drawBase() {
-  document.getElementById('mobile-base-hp').textContent = base.hp;
-}
-
 function updateGame() {
   for (let enemy of enemies) {
     if (enemy.y > (GRID_HEIGHT - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
@@ -713,14 +707,14 @@ function updateGame() {
 }
 
 function touchStarted() {
-  if (gameState === 'paused') return;
+  if (gameState === 'paused') return false;
 
   let gridX = floor(mouseX / CELL_SIZE);
   let gridY = floor(mouseY / CELL_SIZE);
 
   if (gridX >= 0 && gridX < GRID_WIDTH && gridY >= 0 && gridY < GRID_HEIGHT - 1) {
     if (gridY === 0) {
-      return;
+      return false;
     }
 
     if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
@@ -753,8 +747,7 @@ function touchStarted() {
             document.getElementById('mobile-space-warning-modal').style.display = 'flex';
           }
           updateStats();
-          // Ne pas désactiver isEvolveModeActive pour permettre plusieurs évolutions consécutives
-          return;
+          return false;
         }
         if (wave >= 17 && module.level === 2 && xp >= 10000) {
           xp -= 10000;
@@ -778,8 +771,7 @@ function touchStarted() {
             occupyArea(module.x, module.y, width, height, module.type);
           }
           updateStats();
-          // Ne pas désactiver isEvolveModeActive pour permettre plusieurs évolutions consécutives
-          return;
+          return false;
         }
       }
     }
@@ -814,24 +806,24 @@ function touchStarted() {
           }
         });
         updateStats();
-        return;
+        return false;
       }
     }
 
     if (selectedModule && !isDeleteModeActive && !isEvolveModeActive && !grid[gridX][gridY] && energy >= TURRET_TYPES[selectedModule].cost) {
       if (selectedModule === 'projectile' && wave < 5) {
-        return;
+        return false;
       }
 
       if (selectedModule === 'wall') {
         grid[gridX][gridY] = selectedModule;
         if (!hasPathToBase()) {
           grid[gridX][gridY] = null;
-          return;
+          return false;
         }
       }
       if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
-        return;
+        return false;
       }
       let enemyOnCell = enemies.find(enemy => {
         let enemyGridX = floor(enemy.x / CELL_SIZE);
@@ -867,7 +859,7 @@ function touchStarted() {
           }
         }
         if (!moved) {
-          return;
+          return false;
         }
       }
       grid[gridX][gridY] = selectedModule;
@@ -890,23 +882,94 @@ function touchStarted() {
       updateStats();
     }
   }
+  return false;
+}
+
+function updateStats() {
+  document.getElementById('mobile-wave').textContent = wave;
+  document.getElementById('mobile-energy').textContent = energy;
+  document.getElementById('mobile-xp').textContent = xp;
+  document.getElementById('mobile-base-hp').textContent = base.hp;
+
+  ['melee', 'projectile', 'wall'].forEach(type => {
+    const btn = document.getElementById(`mobile-${type}-btn`);
+    const cost = TURRET_TYPES[type].cost;
+    if (type === 'projectile' && wave < 5) {
+      btn.classList.add('locked');
+      btn.setAttribute('data-condition', `Vague 5+`);
+    } else if (energy < cost) {
+      btn.classList.add('locked');
+      btn.setAttribute('data-condition', `${cost} E (manque ${cost - energy})`);
+    } else {
+      btn.classList.remove('locked');
+      btn.setAttribute('data-condition', `${cost} E`);
+    }
+    if (selectedModule === type) {
+      btn.classList.add('selected');
+    } else {
+      btn.classList.remove('selected');
+    }
+  });
+
+  const exchangeBtn = document.getElementById('mobile-exchange-btn');
+  const requiredXp = 50;
+  if (xp < requiredXp) {
+    exchangeBtn.classList.add('locked');
+    exchangeBtn.setAttribute('data-condition', `manque ${requiredXp - xp} XP`);
+  } else {
+    exchangeBtn.classList.remove('locked');
+    exchangeBtn.setAttribute('data-condition', `50 XP → 100 E`);
+  }
+
+  const healBtn = document.getElementById('mobile-heal-btn');
+  if (wave < 5 || xp < 500 || base.hp >= BASE_HP) {
+    healBtn.classList.add('locked');
+    healBtn.setAttribute('data-condition', wave < 5 ? `Vague 5+` : xp < 500 ? `manque ${500 - xp} XP` : `HP max`);
+  } else {
+    healBtn.classList.remove('locked');
+    healBtn.setAttribute('data-condition', `500 XP → 10 HP`);
+  }
+
+  const deleteBtn = document.getElementById('mobile-delete-btn');
+  if (isDeleteModeActive) {
+    deleteBtn.classList.add('active');
+  } else {
+    deleteBtn.classList.remove('active');
+  }
+
+  const evolveBtn = document.getElementById('mobile-evolve-btn');
+  if (wave < 7) {
+    evolveBtn.classList.add('locked');
+    evolveBtn.setAttribute('data-condition', `Vague 7+`);
+  } else {
+    evolveBtn.classList.remove('locked');
+    evolveBtn.setAttribute('data-condition', `Évoluer`);
+  }
+  if (isEvolveModeActive) {
+    evolveBtn.classList.add('active');
+  } else {
+    evolveBtn.classList.remove('active');
+  }
 }
 
 // Gestion des boutons de tourelles
-document.getElementById('mobile-melee-btn').addEventListener('click', () => {
+document.getElementById('mobile-melee-btn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   selectedModule = selectedModule === 'melee' ? null : 'melee';
   isDeleteModeActive = false;
   isEvolveModeActive = false;
   updateStats();
 });
-document.getElementById('mobile-projectile-btn').addEventListener('click', () => {
+document.getElementById('mobile-projectile-btn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   if (wave < 5) return;
   selectedModule = selectedModule === 'projectile' ? null : 'projectile';
   isDeleteModeActive = false;
   isEvolveModeActive = false;
   updateStats();
 });
-document.getElementById('mobile-wall-btn').addEventListener('click', () => {
+document.getElementById('mobile-wall-btn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   selectedModule = selectedModule === 'wall' ? null : 'wall';
   isDeleteModeActive = false;
   isEvolveModeActive = false;
@@ -914,7 +977,8 @@ document.getElementById('mobile-wall-btn').addEventListener('click', () => {
 });
 
 // Bouton pour supprimer une tourelle
-document.getElementById('mobile-delete-btn').addEventListener('click', () => {
+document.getElementById('mobile-delete-btn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   isDeleteModeActive = !isDeleteModeActive;
   isEvolveModeActive = false;
   selectedModule = null;
@@ -922,7 +986,8 @@ document.getElementById('mobile-delete-btn').addEventListener('click', () => {
 });
 
 // Bouton pour évoluer une tourelle
-document.getElementById('mobile-evolve-btn').addEventListener('click', () => {
+document.getElementById('mobile-evolve-btn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   if (wave < 7) return;
   isEvolveModeActive = !isEvolveModeActive;
   isDeleteModeActive = false;
@@ -931,25 +996,29 @@ document.getElementById('mobile-evolve-btn').addEventListener('click', () => {
 });
 
 // Bouton pour reprendre le jeu après un avertissement d'espace
-document.getElementById('mobile-resume-game').addEventListener('click', () => {
+document.getElementById('mobile-resume-game').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   document.getElementById('mobile-space-warning-modal').style.display = 'none';
   gameState = 'playing';
 });
 
 // Boutons de contrôle
-document.getElementById('mobile-start-wave').addEventListener('click', () => {
+document.getElementById('mobile-start-wave').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   if (enemies.length === 0 && gameState === 'playing') {
     spawnWave();
   }
 });
 
-document.getElementById('mobile-restart-game').addEventListener('click', () => {
+document.getElementById('mobile-restart-game').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   resetGame();
   document.getElementById('mobile-game-over-modal').style.display = 'none';
 });
 
-// Échange XP contre énergie (simplifié pour mobile)
-document.getElementById('mobile-exchange-btn').addEventListener('click', () => {
+// Échange XP contre énergie
+document.getElementById('mobile-exchange-btn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   const amount = 50;
   if (xp >= amount) {
     xp -= amount;
@@ -959,7 +1028,8 @@ document.getElementById('mobile-exchange-btn').addEventListener('click', () => {
 });
 
 // Soigner la base
-document.getElementById('mobile-heal-btn').addEventListener('click', () => {
+document.getElementById('mobile-heal-btn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
   if (wave >= 5 && xp >= 500 && base.hp < BASE_HP) {
     xp -= 500;
     base.hp = min(BASE_HP, base.hp + 10);

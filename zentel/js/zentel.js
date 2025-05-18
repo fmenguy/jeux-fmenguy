@@ -375,47 +375,6 @@ function draw() {
     ellipse(canvasWidth - BORDER_THICKNESS / 2, y, 6, 6);
   }
 
-  // Dessiner la base ennemie (2 colonnes rouges)
-  fill('#ff5555'); // Rouge
-  rect(gridOffsetX, gridOffsetY, 2 * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
-  fill('#cc3333'); // Forme angulaire
-  beginShape();
-  vertex(gridOffsetX, gridOffsetY);
-  vertex(gridOffsetX + 2 * CELL_SIZE, gridOffsetY + 50);
-  vertex(gridOffsetX + 2 * CELL_SIZE, gridOffsetY + GRID_HEIGHT * CELL_SIZE - 50);
-  vertex(gridOffsetX, gridOffsetY + GRID_HEIGHT * CELL_SIZE);
-  endShape(CLOSE);
-  fill('#ff0000'); // Lignes néon
-  rect(gridOffsetX + 10, gridOffsetY + 10, 60, 2);
-  rect(gridOffsetX + 10, gridOffsetY + GRID_HEIGHT * CELL_SIZE - 12, 60, 2);
-  fill('#333333'); // Hublots
-  ellipse(gridOffsetX + CELL_SIZE, gridOffsetY + 100, 20, 20);
-  ellipse(gridOffsetX + CELL_SIZE, gridOffsetY + 200, 20, 20);
-  ellipse(gridOffsetX + CELL_SIZE, gridOffsetY + 300, 20, 20);
-  fill('#ff0000'); // Réacteurs
-  rect(gridOffsetX + 20, gridOffsetY + 360, 10, 30);
-  rect(gridOffsetX + 50, gridOffsetY + 360, 10, 30);
-
-  // Dessiner la base alliée (dernière colonne)
-  fill('#4682b4'); // Bleu
-  rect(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE, gridOffsetY, CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
-  fill('#2a547a'); // Forme angulaire
-  beginShape();
-  vertex(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE, gridOffsetY + 50);
-  vertex(gridOffsetX + GRID_WIDTH * CELL_SIZE, gridOffsetY);
-  vertex(gridOffsetX + GRID_WIDTH * CELL_SIZE, gridOffsetY + GRID_HEIGHT * CELL_SIZE);
-  vertex(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE, gridOffsetY + GRID_HEIGHT * CELL_SIZE - 50);
-  endShape(CLOSE);
-  fill('#00f0ff'); // Lignes néon
-  rect(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE + 10, gridOffsetY + 10, 20, 2);
-  rect(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE + 10, gridOffsetY + GRID_HEIGHT * CELL_SIZE - 12, 20, 2);
-  fill('#333333'); // Hublots
-  ellipse(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE + CELL_SIZE / 2, gridOffsetY + 100, 16, 16);
-  ellipse(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE + CELL_SIZE / 2, gridOffsetY + 200, 16, 16);
-  ellipse(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE + CELL_SIZE / 2, gridOffsetY + 300, 16, 16);
-  fill('#00f0ff'); // Réacteur
-  rect(gridOffsetX + (GRID_WIDTH - 1) * CELL_SIZE + 15, gridOffsetY + 360, 10, 30);
-
   // Dessiner la grille
   push();
   translate(gridOffsetX, gridOffsetY);
