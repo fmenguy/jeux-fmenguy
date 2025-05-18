@@ -47,6 +47,7 @@ let waveCompleted = false;
 let showTip = false;
 let tipOpacity = 1;
 let speedMultiplier = 1;
+let tipModalShown = false;
 
 // Variables pour le canvas
 let canvasWidth, canvasHeight;
@@ -793,10 +794,12 @@ function updateGame() {
   if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
     waveCompleted = true;
     xp += wave * 5 + 5;
-    if (wave === 1) {
+    if (wave === 1 && !tipModalShown) {
+      document.getElementById('tip-modal').style.display = 'flex';
+      gameState = 'paused';
+      tipModalShown = true;
+    } else if (wave >= 2 && tipModalShown) {
       showTip = true;
-      tipOpacity = 1;
-    } else if (wave >= 2 && showTip) {
       tipOpacity = 0.3;
     }
     updateStats();
@@ -1116,6 +1119,15 @@ document.getElementById('resume-game').addEventListener('click', () => {
   gameState = 'playing';
 });
 
+// Bouton pour fermer la modale d’astuce et reprendre le jeu
+document.getElementById('close-tip').addEventListener('click', () => {
+  document.getElementById('tip-modal').style.display = 'none';
+  gameState = 'playing';
+  showTip = true;
+  tipOpacity = 1;
+  updateStats();
+});
+
 // Boutons de contrôle
 document.getElementById('start-wave').addEventListener('click', () => {
   if (enemies.length === 0 && gameState === 'playing') {
@@ -1167,6 +1179,7 @@ function resetGame() {
   showTip = false;
   tipOpacity = 1;
   speedMultiplier = 1;
+  tipModalShown = false;
   initializeGrid();
   updateStats();
   loop();
