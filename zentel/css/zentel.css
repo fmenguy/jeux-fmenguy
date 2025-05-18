@@ -1,5 +1,5 @@
 :root {
-  --primary-color: #4682b4;
+  --primary-color: #4682b Def;
   --secondary-color: #6a5acd;
   --background-dark: #0a0a1e;
   --background-light: #1a1a2e;
@@ -190,6 +190,12 @@ body {
   box-shadow: none;
 }
 
+.game-button.locked:hover {
+  background: #444;
+  transform: none;
+  box-shadow: none;
+}
+
 /* Style pour le texte des conditions sous le bouton */
 .game-button::after {
   content: attr(data-condition);
@@ -210,7 +216,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(10, 10, 30, 0.3);
+  background: rgba(10, 10, 30, 0.1);
   border-radius: 8px;
   border: 2px solid var(--border-color);
   overflow: hidden;
@@ -261,6 +267,11 @@ body {
 .turret-button.locked {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.turret-button.locked:hover {
+  background: var(--background-light);
+  transform: none;
 }
 
 .turret-icon {
