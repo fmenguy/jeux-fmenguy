@@ -796,8 +796,7 @@ function updateGame() {
     if (wave === 1) {
       showTip = true;
       tipOpacity = 1;
-    }
-    if (wave >= 2) {
+    } else if (wave >= 2 && showTip) {
       tipOpacity = 0.3;
     }
     updateStats();
@@ -874,8 +873,10 @@ function updateStats() {
   }
   if (isEvolveModeActive) {
     evolveBtn.classList.add('active');
+    console.log("Bouton Évoluer actif");
   } else {
     evolveBtn.classList.remove('active');
+    console.log("Bouton Évoluer inactif");
   }
 }
 
@@ -891,10 +892,12 @@ function mousePressed() {
     }
 
     if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
+      console.log(`Tentative d'évolution à la vague ${wave}, position (${gridX}, ${gridY})`);
       let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
       if (moduleIndex !== -1) {
         let module = modules[moduleIndex];
         if (wave >= 7 && module.level === 1 && xp >= 2000) {
+          console.log("Évolution au niveau 2");
           xp -= 2000;
           module.level = 2;
           if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
@@ -911,6 +914,7 @@ function mousePressed() {
           return;
         }
         if (wave >= 17 && module.level === 2 && xp >= 10000) {
+          console.log("Évolution au niveau 3");
           xp -= 10000;
           module.level = 3;
           let width = module.level >= 3 ? 2 : 2;
@@ -934,6 +938,8 @@ function mousePressed() {
           updateStats();
           return;
         }
+      } else {
+        console.log("Aucun module trouvé à cette position pour évoluer");
       }
     }
 
@@ -1092,10 +1098,15 @@ document.getElementById('delete-turret-btn').addEventListener('click', () => {
 
 // Bouton pour évoluer une tourelle
 document.getElementById('evolve-turret-btn').addEventListener('click', () => {
-  if (wave < 7) return;
+  console.log(`Bouton Évoluer cliqué à la vague ${wave}`);
+  if (wave < 7) {
+    console.log("Évolution bloquée : vague < 7");
+    return;
+  }
   isEvolveModeActive = !isEvolveModeActive;
   isDeleteModeActive = false;
   selectedModule = null;
+  console.log(`Mode Évoluer : ${isEvolveModeActive}`);
   updateStats();
 });
 
