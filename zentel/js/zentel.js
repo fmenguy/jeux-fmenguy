@@ -933,57 +933,99 @@ function mousePressed() {
       return;
     }
 
-    if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
-      console.log(`Tentative d'évolution à la vague ${wave}, position (${gridX}, ${gridY})`);
-      let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
-      if (moduleIndex !== -1) {
-        let module = modules[moduleIndex];
-        if (wave >= 7 && module.level === 1 && xp >= 2000) {
-          console.log("Évolution au niveau 2");
-          xp -= 2000;
-          module.level = 2;
-          if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
-            occupyArea(gridX, gridY, 2, 1, module.type);
-          } else if (gridY + 1 < GRID_HEIGHT && grid[gridX][gridY + 1] === null) {
-            occupyArea(gridX, gridY, 1, 2, module.type);
-          } else {
-            module.level = 1;
-            xp += 2000;
-            gameState = 'paused';
-            document.getElementById('space-warning-modal').style.display = 'flex';
-          }
-          updateStats();
-          return;
-        }
-        if (wave >= 17 && module.level === 2 && xp >= 10000) {
-          console.log("Évolution au niveau 3");
-          xp -= 10000;
-          module.level = 3;
-          let width = module.level >= 3 ? 2 : 2;
-          let height = module.level >= 3 ? 2 : 1;
-          for (let x = module.x; x < module.x + width; x++) {
-            for (let y = module.y; y < module.y + height; y++) {
-              if (x < GRID_WIDTH && y < GRID_HEIGHT) {
-                grid[x][y] = null;
-              }
-            }
-          }
-          if (isAreaFree(module.x, module.y, 2, 2)) {
-            occupyArea(module.x, module.y, 2, 2, module.type);
-          } else {
-            module.level = 2;
-            xp += 10000;
-            gameState = 'paused';
-            document.getElementById('space-warning-modal').style.display = 'flex';
-            occupyArea(module.x, module.y, 2, 1, module.type);
-          }
-          updateStats();
-          return;
-        }
-      } else {
-        console.log("Aucun module trouvé à cette position pour évoluer");
-      }
+if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
+  console.log(`Tentative d'évolution à la vague ${wave}, position (${gridX}, ${gridY})`);
+  // Chercher un module qui pourrait inclure cette case (en tenant compte des tourelles évoluées)
+  let moduleIndex = -1;
+  let foundModule = null;
+  for (let m of modules) {
+    if (m.type === 'wall') continue; // Les murs ne peuvent pas évoluer
+    let width = m.level >= 3 ? 2 : m.level === 2 ? 2 : 1;
+    let height = m.level >= 3 ? 2 : m.level === 2 ? 1 : 1;
+    if (gridX >= m.x && gridX < m.x + width && gridY >= m.y && gridY < m.y + height) {
+      moduleIndex = modules.indexOf(m);
+      foundModule = m;
+      break;
     }
+  }
+  if (moduleIndex !== -1) {
+    let module = modules[moduleIndex];
+    console.log(`Module trouvé : type=${module.type}, niveau=${module.level}, XP disponible=${xp}`);
+    if (wave >= 7 && module.level === 1 && xp >= 2000) {
+      console.log("Évolution au niveau 2");
+      xp -= 2000;
+      module.level = 2;
+      if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
+        console.log("Espace libre à droite, évolution en 2x1");
+        occupyArea(module.x, module.y, 2, 1, module.type);
+      } else if (gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null) {
+        console.log("Espace libre en bas, évolution en 1x2");
+        occupyArea(module.x, module.y, 1, 2, module.type);
+      } else {
+        console.log("Pas assez d'espace pour évoluer au niveau 2");
+        module.level = 1;
+        xp += 2000;
+        gameState = 'paused';
+        document.getElementById('space-warning-modal').style.display = 'flex';
+      }
+      updateStats();
+      return;
+    } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
+      console.log("Évolution au niveau 3");
+      xp -= 10000;
+      module.level = 3;
+      let width = module.level >= 3 ? 2 : 2;
+      let height = module.level >= 3 ? 2 : 1;
+      for (let x = module.x; x < module.x + width; x++) {
+        for (let y = module.y; y < module.y + height; y++) {
+          if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+            grid[x][y] = null;
+          }
+        }
+      }
+      if (isAreaFree(module.x, module.y, 2, 2)) {
+        console.log("Espace libre, évolution en 2x2");
+        occupyArea(module.x, module.y, 2, 2, module.type);
+      } else {
+        console.log("Pas assez d'espace pour évoluer au niveau 3");
+        module.level = 2;
+        xp += 10000;
+        gameState = 'paused';
+        document.getElementById('space-warning-modal').style.display = 'flex';
+        occupyArea(module.x, module.y, 2, 1, module.type);
+      }
+      updateStats();
+      return;
+    } else {
+      console.log("Conditions d'évolution non remplies :");
+      if (wave < 7) {
+        console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+        errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+      }
+      if (module.level !== 1 && module.level !== 2) {
+        console.log(` - Niveau invalide : ${module.level} (doit être 1 ou 2)`);
+        errorMessage = `Niveau invalide : ${module.level} (doit être 1 ou 2)`;
+      }
+      if (xp < 2000 && module.level === 1) {
+        console.log(` - XP insuffisant pour niveau 2 : ${xp} (nécessite 2000)`);
+        errorMessage = `XP insuffisant : ${xp}/2000`;
+      }
+      if (xp < 10000 && module.level === 2) {
+        console.log(` - XP insuffisant pour niveau 3 : ${xp} (nécessite 10000)`);
+        errorMessage = `XP insuffisant : ${xp}/10000`;
+      }
+      if (wave < 17 && module.level === 2) {
+        console.log(` - Vague insuffisante pour niveau 3 : ${wave} (nécessite 17)`);
+        errorMessage = `Vague insuffisante : ${wave} (nécessite 17)`;
+      }
+      errorMessageTimer = 120; // Afficher le message pendant 2 secondes (à 60 FPS)
+    }
+  } else {
+    console.log("Aucune tourelle trouvée à cette position pour évoluer");
+    errorMessage = "Aucune tourelle à cette position";
+    errorMessageTimer = 120;
+  }
+}
 
     if (isDeleteModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
       let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
