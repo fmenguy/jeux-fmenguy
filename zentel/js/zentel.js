@@ -54,9 +54,9 @@
     canvasWidth = GRID_WIDTH * CELL_SIZE; // 680 pixels
     canvasHeight = GRID_HEIGHT * CELL_SIZE; // 400 pixels
 
-    // Créer le canvas
+    // Créer le canvas et l'attacher à #game-canvas
     let canvas = createCanvas(canvasWidth, canvasHeight);
-    canvas.parent('game-area');
+    canvas.parent('game-canvas'); // Attacher directement à #game-canvas
     canvas.style('display', 'block');
     canvas.style('margin', 'auto');
 
@@ -67,6 +67,7 @@
   }
 
   function initializeGrid() {
+    grid = []; // Réinitialiser la grille
     for (let x = 0; x < GRID_WIDTH; x++) {
       grid[x] = [];
       for (let y = 0; y < GRID_HEIGHT; y++) {
@@ -162,7 +163,7 @@
     for (let x = 0; x < GRID_WIDTH; x++) {
       newGrid[x] = [];
       for (let y = 0; y < GRID_HEIGHT; y++) {
-        newGrid[x][y] = grid[x][y];
+        newGrid[x][y] = grid[x] ? grid[x][y] : null;
       }
     }
     return newGrid;
@@ -170,6 +171,12 @@
 
   function findPath(startX, startY, goalX, goalY, allowThroughTurrets = false, tempGrid = null) {
     let currentGrid = tempGrid || grid;
+    // Vérifier que currentGrid est bien défini
+    if (!currentGrid || !currentGrid[0]) {
+      console.error("Grid is not properly initialized:", currentGrid);
+      return [];
+    }
+
     let queue = [{ x: startX, y: startY, cost: 0, path: [{ x: startX, y: startY }] }];
     let visited = new Set();
     let costs = Array(GRID_WIDTH).fill().map(() => Array(GRID_HEIGHT).fill(Infinity));
@@ -201,6 +208,10 @@
           !visited.has(key)
         ) {
           let isValid = false;
+          if (!currentGrid[newX] || typeof currentGrid[newX][newY] === 'undefined') {
+            console.warn(`Invalid grid access at [${newX}][${newY}]`);
+            continue;
+          }
           if (currentGrid[newX][newY] === null || currentGrid[newX][newY] === 'base') {
             isValid = true;
           } else if (allowThroughTurrets && (currentGrid[newX][newY] === 'melee' || currentGrid[newX][newY] === 'projectile')) {
@@ -252,6 +263,10 @@
             !visited.has(key)
           ) {
             let isValid = false;
+            if (!currentGrid[newX] || typeof currentGrid[newX][newY] === 'undefined') {
+              console.warn(`Invalid grid access at [${newX}][${newY}]`);
+              continue;
+            }
             if (currentGrid[newX][newY] === null || currentGrid[newX][newY] === 'base') {
               isValid = true;
             } else if (allowThroughTurrets && (currentGrid[newX][newY] === 'melee' || currentGrid[newX][newY] === 'projectile')) {
@@ -983,6 +998,7 @@
     isEvolveModeActive = false;
     updateStats();
   });
+
   document.getElementById('projectile-btn').addEventListener('click', () => {
     if (wave < 5) return;
     selectedModule = selectedModule === 'projectile' ? null : 'projectile';
@@ -990,6 +1006,7 @@
     isEvolveModeActive = false;
     updateStats();
   });
+
   document.getElementById('wall-btn').addEventListener('click', () => {
     selectedModule = selectedModule === 'wall' ? null : 'wall';
     isDeleteModeActive = false;
