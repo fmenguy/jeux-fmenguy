@@ -269,6 +269,9 @@ function findPathAerial(startX, startY, goalX, goalY) {
     path.push({ x: x, y: startY });
     x++;
   }
+  if (startY !== goalY) {
+    path.push({ x: goalX, y: goalY });
+  }
   return path;
 }
 
@@ -320,15 +323,11 @@ function draw() {
 
   background('#0a0a1e');
 
-  // Dessiner la grille et les modules directement (sans bordures ni offset)
   drawGrid();
   drawModules();
   drawProjectiles();
   drawEnemyProjectiles();
-
-  // Dessiner les ennemis
   drawEnemies();
-
   updateGame();
 }
 
@@ -528,7 +527,6 @@ function drawEnemies() {
         let shortestDist = Infinity;
         let targetY = startY;
 
-        // Trouver l'ouverture la plus proche dans la colonne 2 (x = 2)
         for (let y = 0; y < GRID_HEIGHT; y++) {
           if (grid[2][y] !== 'wall') {
             let distToOpening = Math.abs(startY - y);
@@ -541,7 +539,6 @@ function drawEnemies() {
         }
 
         if (foundPath) {
-          // Déplacer l'ennemi vers l'ouverture en y
           let targetYPos = targetY * CELL_SIZE + CELL_SIZE / 2;
           let dy = targetYPos - enemy.y;
           let distToTargetY = Math.abs(dy);
@@ -551,7 +548,6 @@ function drawEnemies() {
             enemy.y += speedY;
           } else {
             enemy.y = targetYPos;
-            // Une fois à l'ouverture, recalculer le chemin vers la base
             path = findPath(2, targetY, GRID_WIDTH - 1, targetY, false);
             if (path.length === 0) {
               path = findPath(2, targetY, GRID_WIDTH - 1, targetY, true);
@@ -563,7 +559,6 @@ function drawEnemies() {
             }
           }
         } else {
-          // Si aucune ouverture n'est trouvée, essayer un chemin en passant par les tourelles
           path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
           if (path.length > 0) {
             enemy.path = path;
@@ -586,8 +581,8 @@ function drawEnemies() {
               ) {
                 enemy.x = newGridX * CELL_SIZE + CELL_SIZE / 2;
                 enemy.y = newGridY * CELL_SIZE + CELL_SIZE / 2;
-                path = enemy.isBoss ? findPathAerial(newGridX, newGridY, GRID_WIDTH - 1, newGridY) : findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, false);
-                if (path.length === 0 && !enemy.isBoss) {
+                path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, false);
+                if (path.length === 0) {
                   path = findPath(newGridX, newGridY, GRID_WIDTH - 1, newGridY, true);
                 }
                 if (path.length > 0) {
@@ -600,9 +595,12 @@ function drawEnemies() {
             }
             if (!moved) {
               enemy.x += enemy.speed;
-              let startX = floor(enemy.x / CELL_SIZE);
-              let startY = floor(enemy.y / CELL_SIZE);
-              path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, true);
+              if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE) {
+                enemy.x = (GRID_WIDTH - 1) * CELL_SIZE;
+              }
+              startX = floor(enemy.x / CELL_SIZE);
+              startY = floor(enemy.y / CELL_SIZE);
+              path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
               enemy.path = path;
               enemy.pathIndex = 0;
             }
@@ -700,12 +698,7 @@ function updateGame() {
     }
   }
 
-  enemies = enemies.filter(enemy => {
-    if (enemy.hp <= 0) {
-      return false;
-    }
-    return true;
-  });
+  enemies = enemies.filter(enemy => enemy.hp > 0);
 
   if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
     waveCompleted = true;
@@ -896,12 +889,13 @@ function mousePressed() {
       if (grid[gridX][gridY] === 'wall' && selectedModule !== 'wall') {
         return;
       }
-      let enemyOnCell = enemies.find(enemy => {
+      let enemyOnCellIndex = enemies.findIndex(enemy => {
         let enemyGridX = floor(enemy.x / CELL_SIZE);
         let enemyGridY = floor(enemy.y / CELL_SIZE);
         return enemyGridX === gridX && enemyGridY === gridY;
       });
-      if (enemyOnCell) {
+      if (enemyOnCellIndex !== -1) {
+        let enemyOnCell = enemies[enemyOnCellIndex];
         let directions = [
           { dx: 1, dy: 0 },
           { dx: -1, dy: 0 },
@@ -930,7 +924,7 @@ function mousePressed() {
           }
         }
         if (!moved) {
-          return;
+          enemies.splice(enemyOnCellIndex, 1);
         }
       }
       grid[gridX][gridY] = selectedModule;
@@ -1052,7 +1046,6 @@ function resetGame() {
   loop();
 }
 
-// Rendre le jeu responsive
 function windowResized() {
   let scaleFactor = min(windowWidth / canvasWidth, windowHeight / canvasHeight);
   resizeCanvas(canvasWidth * scaleFactor, canvasHeight * scaleFactor);
