@@ -290,6 +290,13 @@ body {
   color: var(--warning-color);
 }
 
+.turret-upgrade-cost {
+  font-size: 0.65rem;
+  color: var(--accent-color);
+  margin-top: 2px;
+  text-align: center;
+}
+
 .modal {
   display: none;
   position: fixed;
