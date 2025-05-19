@@ -13,6 +13,30 @@ const TURRET_COLOR = '#55ff55';
 const ENEMY_ZONE_COLOR = '#ff0000';
 const UPGRADE_COLOR_LVL2 = '#ffcc00';
 const UPGRADE_COLOR_LVL3 = '#ff00ff';
+const MEGA_BOSS_TYPE = { hp: 500, speed: 0.1 * 1.5, xp: 100, energy: 0, size: 2 }; // Prend 2x2 cases
+
+const BLACK_TRIANGLE_BOSS = {
+  hp: 1000,
+  speed: 0.15 * 1.5,
+  xp: 200,
+  energy: 0,
+  attackRate: 180, // Tire toutes les 3 secondes (180 frames à 60 FPS)
+  size: 2, // Prend 2x2 cases
+  projectileSpeed: 1, // Boules lentes
+  projectileDamage: 20, // Dégâts par boule
+  projectileExplosionRadius: 2 // Explosion sur 2 cases (4 cases en diamètre)
+};
+
+let blackTriangleBossSpeech = "";
+let blackTriangleBossSpeechTimer = 0;
+const BLACK_TRIANGLE_BOSS_SPEECH_INTERVAL = 300; // 5 secondes (300 frames à 60 FPS)
+const BLACK_TRIANGLE_BOSS_PHRASES = [
+  " 1010\nDETRUIRE\n 1010",
+  " 0011\nARCHERS\n 0011",
+  " 1100\nEXTERMINATE\n 1100",
+  " 0101\nCALCUL\n 0101",
+  " 1111\nANNIHILATION\n 1111"
+];
 
 const TURRET_TYPES = {
   melee: { name: "Sabreur Quantique", symbol: "⚔️", damage: 10, range: 60, attackRate: 60, cost: 10, level: 1 },
@@ -29,7 +53,6 @@ const ENEMY_TYPES = [
 const BOSS_TYPE = { hp: 60, speed: 0.3 * 1.5, xp: 15, energy: 0 };
 const SUPER_BOSS_TYPE = { hp: 150, speed: 0.4 * 1.5, xp: 25, energy: 0 };
 const TRIANGLE_TYPE = { hp: 100, speed: 0.2 * 1.5, xp: 20, energy: 0, attackRate: 120 };
-const MEGA_BOSS_TYPE = { hp: 500, speed: 0.1 * 1.5, xp: 100, energy: 0, size: 2 }; // Prend 2x2 cases
 
 let grid = [];
 let modules = [];
@@ -109,6 +132,53 @@ function spawnWave() {
     enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
     enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
     enemyTypesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+  } else if (wave < 20) {
+    let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+    enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
+    enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+    enemyTypesToSpawn.push({ type: MEGA_BOSS_TYPE, isBoss: true, isTriangle: false });
+  } else if (wave === 20) {
+    let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
+    enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
+    enemyTypesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+    enemyTypesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+    enemyTypesToSpawn.push({ type: MEGA_BOSS_TYPE, isBoss: true, isTriangle: false });
+    // Ajouter un seul boss triangulaire noir
+    let startY = floor(random(GRID_HEIGHT));
+    let path = findPathAerial(0, startY, GRID_WIDTH - 1, startY);
+    if (path.length === 0) {
+      let foundPath = false;
+      for (let y = 0; y < GRID_HEIGHT; y++) {
+        path = findPathAerial(0, y, GRID_WIDTH - 1, y);
+        if (path.length > 0) {
+          startY = y;
+          foundPath = true;
+          break;
+        }
+      }
+      if (!foundPath) return; // Si aucun chemin n'est trouvé, on ne l'ajoute pas
+    }
+    let adjustedSpeed = BLACK_TRIANGLE_BOSS.speed * speedMultiplier;
+    enemies.push({
+      x: 0,
+      y: startY * CELL_SIZE + CELL_SIZE / 2,
+      hp: BLACK_TRIANGLE_BOSS.hp + wave * 5,
+      maxHp: BLACK_TRIANGLE_BOSS.hp + wave * 5,
+      speed: adjustedSpeed,
+      path: path,
+      pathIndex: 0,
+      xp: BLACK_TRIANGLE_BOSS.xp,
+      energy: BLACK_TRIANGLE_BOSS.energy,
+      isBoss: true,
+      isTriangle: true,
+      isBlackTriangleBoss: true, // Marquer ce boss comme unique
+      attackRate: BLACK_TRIANGLE_BOSS.attackRate,
+      type: BLACK_TRIANGLE_BOSS,
+      spawnWave: wave
+    });
   } else {
     let normalEnemyIndex = min(wave - 1, ENEMY_TYPES.length - 1);
     enemyTypesToSpawn.push({ type: ENEMY_TYPES[normalEnemyIndex], isBoss: false, isTriangle: false });
@@ -156,21 +226,21 @@ function spawnWave() {
         adjustedSpeed *= (1 + wave * 0.02); // Augmente la vitesse de 2% par vague
       }
       enemies.push({
-  x: 0,
-  y: startY * CELL_SIZE + CELL_SIZE / 2,
-  hp: baseHp * (1 + wave * 0.1),
-  maxHp: baseHp * (1 + wave * 0.1),
-  speed: adjustedSpeed,
-  path: path,
-  pathIndex: 0,
-  xp: enemyType.xp,
-  energy: enemyType.energy,
-  isBoss: isBoss,
-  isTriangle: isTriangle,
-  attackRate: attackRate,
-  type: enemyType,
-  spawnWave: wave // Stocker la vague de création
-});
+        x: 0,
+        y: startY * CELL_SIZE + CELL_SIZE / 2,
+        hp: baseHp * (1 + wave * 0.1),
+        maxHp: baseHp * (1 + wave * 0.1),
+        speed: adjustedSpeed,
+        path: path,
+        pathIndex: 0,
+        xp: enemyType.xp,
+        energy: enemyType.energy,
+        isBoss: isBoss,
+        isTriangle: isTriangle,
+        attackRate: attackRate,
+        type: enemyType,
+        spawnWave: wave // Stocker la vague de création
+      });
     }
   }
   updateStats();
@@ -345,24 +415,43 @@ function draw() {
   background('#0a0a1e');
 
   let tipHeight = 0;
-if (showTip) {
-  fill(255, 255, 255, 255 * tipOpacity);
-  rect(0, tipHeight, canvasWidth, 30);
-  fill(0, 0, 0, 255 * tipOpacity);
-  textSize(14);
-  textAlign(CENTER, CENTER);
-  text("Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique", canvasWidth / 2, tipHeight + 15);
-  tipHeight += 30;
-}
-if (showTipWave6) {
-  fill(255, 255, 255, 255 * tipWave6Opacity);
-  rect(0, tipHeight, canvasWidth, 30);
-  fill(0, 0, 0, 255 * tipWave6Opacity);
-  textSize(14);
-  textAlign(CENTER, CENTER);
-  text("Garde ton XP pour évoluer les tourelles", canvasWidth / 2, tipHeight + 15);
-  tipHeight += 30;
-}
+  if (showTip) {
+    fill(255, 255, 255, 255 * tipOpacity);
+    rect(0, tipHeight, canvasWidth, 30);
+    fill(0, 0, 0, 255 * tipOpacity);
+    textSize(14);
+    textAlign(CENTER, CENTER);
+    text("Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique", canvasWidth / 2, tipHeight + 15);
+    tipHeight += 30;
+  }
+  if (showTipWave6) {
+    fill(255, 255, 255, 255 * tipWave6Opacity);
+    rect(0, tipHeight, canvasWidth, 30);
+    fill(0, 0, 0, 255 * tipWave6Opacity);
+    textSize(14);
+    textAlign(CENTER, CENTER);
+    text("Garde ton XP pour évoluer les tourelles", canvasWidth / 2, tipHeight + 15);
+    tipHeight += 30;
+  }
+  // Afficher les bulles de dialogue du boss triangulaire noir
+  if (blackTriangleBossSpeechTimer > 0) {
+    let blackTriangleBoss = enemies.find(enemy => enemy.isBlackTriangleBoss);
+    if (blackTriangleBoss) {
+      fill(0, 0, 0, 200); // Fond semi-transparent noir
+      rect(blackTriangleBoss.x - 50, blackTriangleBoss.y - 70, 100, 40);
+      fill(255);
+      textSize(10);
+      textAlign(CENTER, CENTER);
+      text(blackTriangleBossSpeech, blackTriangleBoss.x, blackTriangleBoss.y - 50);
+      blackTriangleBossSpeechTimer--;
+      if (blackTriangleBossSpeechTimer <= 0) {
+        blackTriangleBossSpeech = "";
+      }
+    } else {
+      blackTriangleBossSpeechTimer = 0;
+      blackTriangleBossSpeech = "";
+    }
+  }
 
   drawGrid();
   drawModules();
@@ -408,17 +497,17 @@ function drawModules() {
     }
 
     if (module.type === 'wall') {
-  // Changer la couleur si le mur est amélioré (niveau 2)
-  fill(module.level && module.level === 2 ? '#606060' : TURRET_TYPES.wall.color); // Gris plus foncé pour les murs améliorés
-  noStroke();
-  rect(module.x * CELL_SIZE, module.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-  fill(255);
-  text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
-  fill('#ffffff');
-  textSize(10);
-  text(module.hp, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2 + 15);
-  textSize(14);
-} else {
+      // Changer la couleur si le mur est amélioré (niveau 2)
+      fill(module.level && module.level === 2 ? '#606060' : TURRET_TYPES.wall.color); // Gris plus foncé pour les murs améliorés
+      noStroke();
+      rect(module.x * CELL_SIZE, module.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      fill(255);
+      text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+      fill('#ffffff');
+      textSize(10);
+      text(module.hp, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2 + 15);
+      textSize(14);
+    } else {
       fill(color);
       noStroke();
       rect(module.x * CELL_SIZE, module.y * CELL_SIZE, width, height);
@@ -429,6 +518,10 @@ function drawModules() {
         fill('#ffffff');
         textSize(10);
         text(module.level, module.x * CELL_SIZE + width / 2, module.y * CELL_SIZE + height / 2 + 15);
+        // Afficher les HP pour les Sabreurs Quantiques de niveau 3
+        if (module.type === 'melee' && module.level === 3 && module.hp) {
+          text(module.hp, module.x * CELL_SIZE + width / 2, module.y * CELL_SIZE + height / 2 + 25);
+        }
         textSize(14);
       }
 
@@ -471,11 +564,19 @@ function drawModules() {
 function drawEnemies() {
   for (let enemy of enemies) {
     if (enemy.isTriangle) {
-      fill(TRIANGLE_COLOR);
+      if (enemy.isBlackTriangleBoss) {
+        fill(BOSS_COLOR); // Noir pour le boss triangulaire
+      } else {
+        fill(TRIANGLE_COLOR); // Rouge pour les triangles normaux
+      }
       noStroke();
       push();
       translate(enemy.x, enemy.y);
-      triangle(-10, 10, 0, -10, 10, 10);
+      if (enemy.isBlackTriangleBoss) {
+        triangle(-20, 20, 0, -20, 20, 20); // Triangle plus grand pour le boss
+      } else {
+        triangle(-10, 10, 0, -10, 10, 10);
+      }
       pop();
     } else if (enemy.type === MEGA_BOSS_TYPE) {
       fill(BOSS_COLOR); // Noir
@@ -500,30 +601,76 @@ function drawEnemies() {
       rect(enemy.x - CELL_SIZE, enemy.y - CELL_SIZE - 10, filledWidth, barHeight);
     } else {
       let angle = map(hpRatio, 0, 1, 0, TWO_PI);
-      arc(enemy.x, enemy.y, 16, 16, -PI/2, angle - PI/2);
+      arc(enemy.x, enemy.y, 16, 16, -PI / 2, angle - PI / 2);
     }
 
     if (enemy.isTriangle && frameCount % enemy.attackRate === 0) {
-      let closestModule = null;
-      let closestDist = Infinity;
-      for (let module of modules) {
-        let d = dist(enemy.x, enemy.y, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
-        if (d < closestDist) {
-          closestDist = d;
-          closestModule = module;
+      let targetModule = null;
+      if (enemy.isBlackTriangleBoss) {
+        // Priorité 1 : cibler un Archer Plasma (projectile)
+        let closestArcher = null;
+        let closestArcherDist = Infinity;
+        for (let module of modules) {
+          if (module.type === 'projectile') {
+            let d = dist(enemy.x, enemy.y, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+            if (d < closestArcherDist) {
+              closestArcherDist = d;
+              closestArcher = module;
+            }
+          }
+        }
+        if (closestArcher) {
+          targetModule = closestArcher;
+        } else {
+          // Priorité 2 : cibler la tourelle la plus proche
+          let closestDist = Infinity;
+          for (let module of modules) {
+            let d = dist(enemy.x, enemy.y, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+            if (d < closestDist) {
+              closestDist = d;
+              targetModule = module;
+            }
+          }
+        }
+        if (targetModule) {
+          enemyProjectiles.push({
+            x: enemy.x,
+            y: enemy.y,
+            targetX: targetModule.x * CELL_SIZE + CELL_SIZE / 2,
+            targetY: targetModule.y * CELL_SIZE + CELL_SIZE / 2,
+            speed: BLACK_TRIANGLE_BOSS.projectileSpeed,
+            damage: BLACK_TRIANGLE_BOSS.projectileDamage,
+            fromBlackTriangleBoss: true // Marquer le projectile comme venant du boss triangulaire noir
+          });
+        }
+      } else {
+        // Comportement des triangles normaux
+        let closestModule = null;
+        let closestDist = Infinity;
+        for (let module of modules) {
+          let d = dist(enemy.x, enemy.y, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+          if (d < closestDist) {
+            closestDist = d;
+            closestModule = module;
+          }
+        }
+        if (closestModule) {
+          enemyProjectiles.push({
+            x: enemy.x,
+            y: enemy.y,
+            targetX: closestModule.x * CELL_SIZE + CELL_SIZE / 2,
+            targetY: closestModule.y * CELL_SIZE + CELL_SIZE / 2,
+            speed: 2,
+            damage: 10
+          });
         }
       }
-      if (closestModule) {
-        enemyProjectiles.push({
-          x: enemy.x,
-          y: enemy.y,
-          targetX: closestModule.x * CELL_SIZE + CELL_SIZE / 2,
-          targetY: closestModule.y * CELL_SIZE + CELL_SIZE / 2,
-          speed: 2,
-          damage: 10
-        });
-      }
     }
+    // Gestion des dialogues du boss triangulaire noir
+if (enemy.isBlackTriangleBoss && frameCount % BLACK_TRIANGLE_BOSS_SPEECH_INTERVAL === 0) {
+  blackTriangleBossSpeech = BLACK_TRIANGLE_BOSS_PHRASES[floor(random(BLACK_TRIANGLE_BOSS_PHRASES.length))];
+  blackTriangleBossSpeechTimer = 120; // Afficher pendant 2 secondes (120 frames à 60 FPS)
+}
 
     if (enemy.path.length > 0) {
       let nextPoint = enemy.path[enemy.pathIndex];
@@ -752,60 +899,129 @@ function drawProjectiles() {
 function drawEnemyProjectiles() {
   for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
     let p = enemyProjectiles[i];
-    fill(TRIANGLE_COLOR);
+    // Déterminer la couleur et la vitesse du projectile
+    let projectileColor = p.fromBlackTriangleBoss ? BOSS_COLOR : TRIANGLE_COLOR;
+    let projectileSpeed = p.fromBlackTriangleBoss ? BLACK_TRIANGLE_BOSS.projectileSpeed : 2;
+    let projectileDamage = p.fromBlackTriangleBoss ? BLACK_TRIANGLE_BOSS.projectileDamage : p.damage;
+
+    fill(projectileColor);
     ellipse(p.x, p.y, 8);
     let angle = atan2(p.targetY - p.y, p.targetX - p.x);
-    p.x += p.speed * cos(angle);
-    p.y += p.speed * sin(angle);
+    p.x += projectileSpeed * cos(angle);
+    p.y += projectileSpeed * sin(angle);
     let d = dist(p.x, p.y, p.targetX, p.targetY);
     if (d < 5) {
       let targetGridX = floor(p.targetX / CELL_SIZE);
       let targetGridY = floor(p.targetY / CELL_SIZE);
-      let moduleIndex = modules.findIndex(m => m.x === targetGridX && m.y === targetGridY);
-      if (moduleIndex !== -1) {
-        let module = modules[moduleIndex];
-        if (module.type === 'wall') {
-          modules.splice(moduleIndex, 1);
-          grid[targetGridX][targetGridY] = null;
-        } else {
-          module.hp = (module.hp || TURRET_TYPES[module.type].damage * 5);
-          module.hp -= p.damage;
-          if (module.hp <= 0) {
-            if (module.level >= 2) {
-              let width = module.level >= 3 ? 2 : 2;
-              let height = module.level >= 3 ? 2 : 1;
-              for (let x = module.x; x < module.x + width; x++) {
-                for (let y = module.y; y < module.y + height; y++) {
-                  if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+
+      // Si le projectile vient du boss triangulaire noir, appliquer une explosion en zone
+      if (p.fromBlackTriangleBoss) {
+        let explosionRadius = BLACK_TRIANGLE_BOSS.projectileExplosionRadius;
+        for (let dx = -explosionRadius + 1; dx < explosionRadius; dx++) {
+          for (let dy = -explosionRadius + 1; dy < explosionRadius; dy++) {
+            let x = targetGridX + dx;
+            let y = targetGridY + dy;
+            if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+              let moduleIndex = modules.findIndex(m => m.x === x && m.y === y);
+              if (moduleIndex !== -1) {
+                let module = modules[moduleIndex];
+                if (module.type === 'wall') {
+                  modules.splice(moduleIndex, 1);
+                  grid[x][y] = null;
+                } else {
+                  if (module.hp) {
+                    module.hp -= projectileDamage;
+                    if (module.hp <= 0) {
+                      if (module.level >= 2) {
+                        let width = module.level >= 3 ? 2 : 2;
+                        let height = module.level >= 3 ? 2 : 1;
+                        for (let mx = module.x; mx < module.x + width; mx++) {
+                          for (let my = module.y; my < module.y + height; my++) {
+                            if (mx < GRID_WIDTH && my < GRID_HEIGHT) {
+                              grid[mx][my] = null;
+                            }
+                          }
+                        }
+                      }
+                      modules.splice(moduleIndex, 1);
+                      grid[x][y] = null;
+                    }
+                  } else {
+                    if (module.level >= 2) {
+                      let width = module.level >= 3 ? 2 : 2;
+                      let height = module.level >= 3 ? 2 : 1;
+                      for (let mx = module.x; mx < module.x + width; mx++) {
+                        for (let my = module.y; my < module.y + height; my++) {
+                          if (mx < GRID_WIDTH && my < GRID_HEIGHT) {
+                            grid[mx][my] = null;
+                          }
+                        }
+                      }
+                    }
+                    modules.splice(moduleIndex, 1);
                     grid[x][y] = null;
                   }
                 }
               }
             }
-            modules.splice(moduleIndex, 1);
-            grid[targetGridX][targetGridY] = null;
           }
         }
-        enemies.forEach(enemy => {
-  let baseSpeed;
-  if (enemy.isBoss) {
-    if (enemy.isTriangle) {
-      baseSpeed = TRIANGLE_TYPE.speed;
-    } else if (enemy.type === MEGA_BOSS_TYPE) {
-      baseSpeed = MEGA_BOSS_TYPE.speed;
-    } else {
-      baseSpeed = BOSS_TYPE.speed;
-    }
-  } else if (enemy.isTriangle) {
-    baseSpeed = TRIANGLE_TYPE.speed;
-  } else {
-    let enemyTypeIndex = min(enemy.spawnWave - 1, ENEMY_TYPES.length - 1);
-    baseSpeed = ENEMY_TYPES[enemyTypeIndex].speed;
-    baseSpeed *= (1 + enemy.spawnWave * 0.02); // Utiliser la vague de création
-  }
-  enemy.speed = baseSpeed * speedMultiplier;
-});
+      } else {
+        // Comportement standard pour les triangles normaux
+        let moduleIndex = modules.findIndex(m => m.x === targetGridX && m.y === targetGridY);
+        if (moduleIndex !== -1) {
+          let module = modules[moduleIndex];
+          if (module.type === 'wall') {
+            modules.splice(moduleIndex, 1);
+            grid[targetGridX][targetGridY] = null;
+          } else {
+            if (module.hp) {
+              module.hp -= p.damage;
+              if (module.hp <= 0) {
+                if (module.level >= 2) {
+                  let width = module.level >= 3 ? 2 : 2;
+                  let height = module.level >= 3 ? 2 : 1;
+                  for (let x = module.x; x < module.x + width; x++) {
+                    for (let y = module.y; y < module.y + height; y++) {
+                      if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+                        grid[x][y] = null;
+                      }
+                    }
+                  }
+                }
+                modules.splice(moduleIndex, 1);
+                grid[targetGridX][targetGridY] = null;
+              }
+            } else {
+              if (module.level >= 2) {
+                let width = module.level >= 3 ? 2 : 2;
+                let height = module.level >= 3 ? 2 : 1;
+                for (let x = module.x; x < module.x + width; x++) {
+                  for (let y = module.y; y < module.y + height; y++) {
+                    if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+                      grid[x][y] = null;
+                    }
+                  }
+                }
+              }
+              modules.splice(moduleIndex, 1);
+              grid[targetGridX][targetGridY] = null;
+            }
+          }
+        }
       }
+      enemies.forEach(enemy => {
+        if (enemy.path.length > 0) {
+          let startX = floor(enemy.x / CELL_SIZE);
+          let startY = floor(enemy.y / CELL_SIZE);
+          let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
+          if (path.length === 0 && !enemy.isBoss) {
+            path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
+          }
+          enemy.path = path;
+          enemy.pathIndex = 0;
+        }
+      });
       enemyProjectiles.splice(i, 1);
     }
   }
@@ -848,45 +1064,45 @@ function updateGame() {
 
   enemies = enemies.filter(enemy => enemy.hp > 0);
 
-if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
-  waveCompleted = true;
-  xp += wave * 5 + 5;
-  if (wave === 1 && !tipModalShown) {
-    const tipModal = document.getElementById('tip-modal');
-    if (tipModal) {
-      tipModal.style.display = 'flex';
-      gameState = 'paused';
-      tipModalShown = true;
+  if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
+    waveCompleted = true;
+    xp += wave * 5 + 5;
+    if (wave === 1 && !tipModalShown) {
+      const tipModal = document.getElementById('tip-modal');
+      if (tipModal) {
+        tipModal.style.display = 'flex';
+        gameState = 'paused';
+        tipModalShown = true;
+      } else {
+        console.error("L'élément avec l'ID 'tip-modal' n'existe pas dans le DOM. L'astuce ne peut pas être affichée.");
+        showTip = true;
+        tipOpacity = 1;
+        tipModalShown = true;
+      }
+    } else if (wave === 6 && !tipWave6ModalShown) {
+      const tipModalWave6 = document.getElementById('tip-modal-wave6');
+      if (tipModalWave6) {
+        tipModalWave6.style.display = 'flex';
+        gameState = 'paused';
+        tipWave6ModalShown = true;
+      } else {
+        console.error("L'élément avec l'ID 'tip-modal-wave6' n'existe pas dans le DOM. L'astuce ne peut pas être affichée.");
+        showTipWave6 = true;
+        tipWave6Opacity = 1;
+        tipWave6ModalShown = true;
+      }
     } else {
-      console.error("L'élément avec l'ID 'tip-modal' n'existe pas dans le DOM. L'astuce ne peut pas être affichée.");
-      showTip = true;
-      tipOpacity = 1;
-      tipModalShown = true;
+      if (wave >= 2 && tipModalShown) {
+        showTip = true;
+        tipOpacity = 0.3;
+      }
+      if (wave >= 7 && tipWave6ModalShown) {
+        showTipWave6 = true;
+        tipWave6Opacity = 0.3;
+      }
     }
-  } else if (wave === 6 && !tipWave6ModalShown) {
-    const tipModalWave6 = document.getElementById('tip-modal-wave6');
-    if (tipModalWave6) {
-      tipModalWave6.style.display = 'flex';
-      gameState = 'paused';
-      tipWave6ModalShown = true;
-    } else {
-      console.error("L'élément avec l'ID 'tip-modal-wave6' n'existe pas dans le DOM. L'astuce ne peut pas être affichée.");
-      showTipWave6 = true;
-      tipWave6Opacity = 1;
-      tipWave6ModalShown = true;
-    }
-  } else {
-    if (wave >= 2 && tipModalShown) {
-      showTip = true;
-      tipOpacity = 0.3;
-    }
-    if (wave >= 7 && tipWave6ModalShown) {
-      showTipWave6 = true;
-      tipWave6Opacity = 0.3;
-    }
+    updateStats();
   }
-  updateStats();
-}
 
   if (base.hp <= 0) {
     gameState = 'gameover';
@@ -975,106 +1191,137 @@ function mousePressed() {
       return;
     }
 
-if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
-  // Chercher un module qui pourrait inclure cette case (en tenant compte des tourelles évoluées)
-  let moduleIndex = -1;
-  let foundModule = null;
-  for (let m of modules) {
-    let width = m.level >= 3 ? 2 : m.level === 2 ? 2 : 1;
-    let height = m.level >= 3 ? 2 : m.level === 2 ? 1 : 1;
-    if (gridX >= m.x && gridX < m.x + width && gridY >= m.y && gridY < m.y + height) {
-      moduleIndex = modules.indexOf(m);
-      foundModule = m;
-      break;
-    }
-  }
-  if (moduleIndex !== -1) {
-    let module = modules[moduleIndex];
-    if (module.type === 'wall') {
-      // Évolution des murs : tripler les HP pour 500 XP
-      if (wave >= 7 && (!module.level || module.level === 1) && xp >= 500) {
-        xp -= 500;
-        module.level = 2; // Indiquer que le mur a été amélioré
-        module.hp = TURRET_TYPES.wall.hp * 3; // Tripler les HP (de 50 à 150)
-        updateStats();
-        return;
-      } else {
-        if (wave < 7) {
-          errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+    if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
+      console.log(`Tentative d'évolution à la vague ${wave}, position (${gridX}, ${gridY})`);
+      // Chercher un module qui pourrait inclure cette case (en tenant compte des tourelles évoluées)
+      let moduleIndex = -1;
+      let foundModule = null;
+      for (let m of modules) {
+        let width = m.level >= 3 ? 2 : m.level === 2 ? 2 : 1;
+        let height = m.level >= 3 ? 2 : m.level === 2 ? 1 : 1;
+        if (gridX >= m.x && gridX < m.x + width && gridY >= m.y && gridY < m.y + height) {
+          moduleIndex = modules.indexOf(m);
+          foundModule = m;
+          break;
         }
-        if (module.level && module.level !== 1) {
-          errorMessage = `Mur déjà amélioré`;
-        }
-        if (xp < 500) {
-          errorMessage = `XP insuffisant : ${xp}/500`;
-        }
-        errorMessageTimer = 120;
       }
-    } else {
-      // Évolution des autres tourelles (Sabreur Quantique et Archer Plasma)
-      if (wave >= 7 && module.level === 1 && xp >= 2000) {
-        xp -= 2000;
-        module.level = 2;
-        if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
-          occupyArea(module.x, module.y, 2, 1, module.type);
-        } else if (gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null) {
-          occupyArea(module.x, module.y, 1, 2, module.type);
+      if (moduleIndex !== -1) {
+        let module = modules[moduleIndex];
+        console.log(`Module trouvé : type=${module.type}, niveau=${module.level || 1}, XP disponible=${xp}`);
+        if (module.type === 'wall') {
+          // Évolution des murs : tripler les HP pour 500 XP
+          if (wave >= 7 && (!module.level || module.level === 1) && xp >= 500) {
+            console.log("Évolution du mur : tripler les HP");
+            xp -= 500;
+            module.level = 2; // Indiquer que le mur a été amélioré
+            module.hp = TURRET_TYPES.wall.hp * 3; // Tripler les HP (de 50 à 150)
+            updateStats();
+            return;
+          } else {
+            console.log("Conditions d'évolution du mur non remplies :");
+            if (wave < 7) {
+              console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+              errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+              errorMessageTimer = 120;
+            }
+            if (module.level && module.level !== 1) {
+              console.log(` - Mur déjà amélioré : niveau ${module.level}`);
+              errorMessage = `Mur déjà amélioré`;
+              errorMessageTimer = 120;
+            }
+            if (xp < 500) {
+              console.log(` - XP insuffisant pour améliorer le mur : ${xp} (nécessite 500)`);
+              gameState = 'paused';
+              document.getElementById('xp-warning-modal').style.display = 'flex';
+            }
+          }
         } else {
-          module.level = 1;
-          xp += 2000;
-          gameState = 'paused';
-          document.getElementById('space-warning-modal').style.display = 'flex';
-        }
-        updateStats();
-        return;
-      } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
-        xp -= 10000;
-        module.level = 3;
-        let width = module.level >= 3 ? 2 : 2;
-        let height = module.level >= 3 ? 2 : 1;
-        for (let x = module.x; x < module.x + width; x++) {
-          for (let y = module.y; y < module.y + height; y++) {
-            if (x < GRID_WIDTH && y < GRID_HEIGHT) {
-              grid[x][y] = null;
+          // Évolution des autres tourelles (Sabreur Quantique et Archer Plasma)
+          if (wave >= 7 && module.level === 1 && xp >= 2000) {
+            console.log("Évolution au niveau 2");
+            xp -= 2000;
+            module.level = 2;
+            if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
+              console.log("Espace libre à droite, évolution en 2x1");
+              occupyArea(module.x, module.y, 2, 1, module.type);
+            } else if (gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null) {
+              console.log("Espace libre en bas, évolution en 1x2");
+              occupyArea(module.x, module.y, 1, 2, module.type);
+            } else {
+              console.log("Pas assez d'espace pour évoluer au niveau 2");
+              module.level = 1;
+              xp += 2000;
+              gameState = 'paused';
+              document.getElementById('space-warning-modal').style.display = 'flex';
+            }
+            updateStats();
+            return;
+          } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
+            console.log("Évolution au niveau 3");
+            // Nettoyer la grille actuelle (2x1 ou 1x2) avant de vérifier l'espace
+            let currentWidth = grid[module.x + 1][module.y] === module.type ? 2 : 1;
+            let currentHeight = grid[module.x][module.y + 1] === module.type ? 2 : 1;
+            for (let x = module.x; x < module.x + currentWidth; x++) {
+              for (let y = module.y; y < module.y + currentHeight; y++) {
+                if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+                  grid[x][y] = null;
+                }
+              }
+            }
+            // Vérifier si l'espace pour le niveau 3 (2x2) est libre
+            if (isAreaFree(module.x, module.y, 2, 2)) {
+              console.log("Espace libre, évolution en 2x2");
+              xp -= 10000;
+              module.level = 3;
+              if (module.type === 'melee') {
+                module.hp = 40; // Les Sabreurs Quantiques de niveau 3 ont 40 HP (4 coups de 10 dégâts)
+              }
+              occupyArea(module.x, module.y, 2, 2, module.type);
+            } else {
+              console.log("Pas assez d'espace pour évoluer au niveau 3");
+              // Restaurer l'état précédent de la grille
+              occupyArea(module.x, module.y, currentWidth, currentHeight, module.type);
+              gameState = 'paused';
+              document.getElementById('space-warning-modal').style.display = 'flex';
+              return; // Ne pas continuer si l'évolution échoue
+            }
+            updateStats();
+            return;
+          } else {
+            console.log("Conditions d'évolution non remplies :");
+            if (wave < 7) {
+              console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+              errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+              errorMessageTimer = 120;
+            }
+            if (module.level !== 1 && module.level !== 2) {
+              console.log(` - Niveau invalide : ${module.level} (doit être 1 ou 2)`);
+              errorMessage = `Niveau invalide : ${module.level} (doit être 1 ou 2)`;
+              errorMessageTimer = 120;
+            }
+            if (xp < 2000 && module.level === 1) {
+              console.log(` - XP insuffisant pour niveau 2 : ${xp} (nécessite 2000)`);
+              gameState = 'paused';
+              document.getElementById('xp-warning-modal').style.display = 'flex';
+            }
+            if (xp < 10000 && module.level === 2) {
+              console.log(` - XP insuffisant pour niveau 3 : ${xp} (nécessite 10000)`);
+              gameState = 'paused';
+              document.getElementById('xp-warning-modal').style.display = 'flex';
+            }
+            if (wave < 17 && module.level === 2) {
+              console.log(` - Vague insuffisante pour niveau 3 : ${wave} (nécessite 17)`);
+              errorMessage = `Vague insuffisante : ${wave} (nécessite 17)`;
+              errorMessageTimer = 120;
             }
           }
         }
-        if (isAreaFree(module.x, module.y, 2, 2)) {
-          occupyArea(module.x, module.y, 2, 2, module.type);
-        } else {
-          module.level = 2;
-          xp += 10000;
-          gameState = 'paused';
-          document.getElementById('space-warning-modal').style.display = 'flex';
-          occupyArea(module.x, module.y, 2, 1, module.type);
-        }
-        updateStats();
-        return;
       } else {
-        if (wave < 7) {
-          errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
-        }
-        if (module.level !== 1 && module.level !== 2) {
-          errorMessage = `Niveau invalide : ${module.level} (doit être 1 ou 2)`;
-        }
-        if (xp < 2000 && module.level === 1) {
-          errorMessage = `XP insuffisant : ${xp}/2000`;
-        }
-        if (xp < 10000 && module.level === 2) {
-          errorMessage = `XP insuffisant : ${xp}/10000`;
-        }
-        if (wave < 17 && module.level === 2) {
-          errorMessage = `Vague insuffisante : ${wave} (nécessite 17)`;
-        }
-        errorMessageTimer = 120; // Afficher le message pendant 2 secondes (à 60 FPS)
+        console.log("Aucune tourelle trouvée à cette position pour évoluer");
+        errorMessage = "Aucune tourelle à cette position";
+        errorMessageTimer = 120;
       }
     }
-  } else {
-    console.log("Aucune tourelle trouvée à cette position pour évoluer");
-    errorMessage = "Aucune tourelle à cette position";
-    errorMessageTimer = 120;
-  }
-}
 
     if (isDeleteModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
       let moduleIndex = modules.findIndex(m => m.x === gridX && m.y === gridY);
@@ -1274,6 +1521,17 @@ if (closeTipWave6Button) {
   console.warn("L'élément avec l'ID 'close-tip-wave6' n'existe pas dans le DOM. Assurez-vous que la modale d'astuce est correctement ajoutée dans le HTML.");
 }
 
+const closeXpWarningButton = document.getElementById('close-xp-warning');
+if (closeXpWarningButton) {
+  closeXpWarningButton.addEventListener('click', () => {
+    document.getElementById('xp-warning-modal').style.display = 'none';
+    gameState = 'playing';
+    updateStats();
+  });
+} else {
+  console.warn("L'élément avec l'ID 'close-xp-warning' n'existe pas dans le DOM. Assurez-vous que la modale est correctement ajoutée dans le HTML.");
+}
+
 // Boutons de contrôle
 document.getElementById('start-wave').addEventListener('click', () => {
   if (enemies.length === 0 && gameState === 'playing') {
@@ -1329,6 +1587,11 @@ function resetGame() {
   speedMultiplier = 1;
   tipModalShown = false;
   tipWave6ModalShown = false;
+  // Cacher la modale d'avertissement d'XP
+  const xpWarningModal = document.getElementById('xp-warning-modal');
+  if (xpWarningModal) {
+    xpWarningModal.style.display = 'none';
+  }
   initializeGrid();
   updateStats();
   loop();
