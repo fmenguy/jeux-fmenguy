@@ -290,11 +290,28 @@ body {
   color: var(--warning-color);
 }
 
-.turret-upgrade-cost {
-  font-size: 0.65rem;
-  color: var(--accent-color);
-  margin-top: 2px;
-  text-align: center;
+#turret-selection {
+  display: flex;
+  justify-content: flex-start; /* Aligner à gauche */
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+}
+
+.evolution-conditions {
+  background-color: rgba(255, 255, 255, 0.1); /* Fond blanc semi-transparent */
+  border: 2px solid #9370db; /* Bordure violette (accent-color) */
+  border-radius: 5px; /* Coins arrondis */
+  padding: 5px 10px; /* Espacement interne */
+  width: 200px; /* Largeur fixée à 200px pour éviter que le texte dépasse */
+  height: 80px; /* Hauteur fixe pour un bloc carré */
+  margin-right: 10px; /* Marge à droite pour espacer des boutons */
+  font-size: 0.8rem;
+  color: #ffffff; /* Texte blanc */
+  line-height: 1.2; /* Espacement des lignes */
+  text-align: left; /* Alignement à gauche */
+  flex: 0 0 auto; /* Ne pas étirer le bloc */
 }
 
 .modal {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="css/zentel-mobile.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
 </head>
+
 <body>
   <div id="game-container">
     <div id="info-panel">
@@ -66,23 +68,26 @@
       <div id="game-canvas"></div>
     </div>
     <div id="turret-selection">
+      <div class="evolution-conditions">
+        Évolution :<br>
+        Mur : Vague 7+, 500 XP<br>
+        Niv. 2 : Vague 7+, 2000 XP<br>
+        Niv. 3 : Vague 17+, 10000 XP
+      </div>
       <div class="turret-button" id="melee-btn">
         <span class="turret-icon">⚔️</span>
         <span class="turret-name">Sabreur</span>
         <span class="turret-cost">10 E</span>
-        <span class="turret-upgrade-cost">Niv2 2000 XP / Niv3 10000 XP</span>
       </div>
       <div class="turret-button" id="projectile-btn">
         <span class="turret-icon">🏹</span>
         <span class="turret-name">Archer</span>
         <span class="turret-cost">20 E</span>
-        <span class="turret-upgrade-cost">Niv2 2000 XP / Niv3 10000 XP</span>
       </div>
       <div class="turret-button" id="wall-btn">
         <span class="turret-icon">█</span>
         <span class="turret-name">Barrière</span>
         <span class="turret-cost">5 E</span>
-        <span class="turret-upgrade-cost">Évolution : 500 XP (Tripler HP)</span>
       </div>
     </div>
   </div>
@@ -150,41 +155,42 @@
     </div>
   </div>
 
-<div id="tip-modal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h1>Astuce</h1>
-    <p>Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique !</p>
-    <button id="close-tip" class="game-button">Continuer</button>
+  <div id="tip-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h1>Astuce</h1>
+      <p>Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique !</p>
+      <button id="close-tip" class="game-button">Continuer</button>
+    </div>
   </div>
-</div>
 
-<div id="tip-modal-wave6" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h2>Astuce</h2>
-    <p>Garde ton XP pour évoluer les tourelles</p>
-    <button id="close-tip-wave6" class="game-button">Continuer</button>
+  <div id="tip-modal-wave6" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Astuce</h2>
+      <p>Garde ton XP pour évoluer les tourelles</p>
+      <button id="close-tip-wave6" class="game-button">Continuer</button>
+    </div>
   </div>
-</div>
 
-<div id="xp-warning-modal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h2>Erreur</h2>
-    <p>Manque d'XP</p>
-    <button id="close-xp-warning" class="game-button">Continuer</button>
+  <div id="xp-warning-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Erreur</h2>
+      <p>Manque d'XP</p>
+      <button id="close-xp-warning" class="game-button">Continuer</button>
+    </div>
   </div>
-</div>
 
-<script src="js/zentel.js"></script>
-<script src="js/zentel-mobile.js"></script>
-<script>
-  function toggleDisplay() {
-    document.getElementById('game-container').style.display = 'grid';
-    document.getElementById('mobile-game-container').style.display = 'none';
-  }
+  <script src="js/zentel.js"></script>
+  <script src="js/zentel-mobile.js"></script>
+  <script>
+    function toggleDisplay() {
+      document.getElementById('game-container').style.display = 'grid';
+      document.getElementById('mobile-game-container').style.display = 'none';
+    }
 
-  toggleDisplay();
-  window.addEventListener('resize', toggleDisplay);
-</script>
+    toggleDisplay();
+    window.addEventListener('resize', toggleDisplay);
+  </script>
 
 </body>
+
 </html>
