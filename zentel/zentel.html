@@ -25,7 +25,7 @@
           </div>
           <div class="legend-item">
             <span class="legend-icon">█</span>
-            Barrière Énergétique : Bloque les ennemis
+            Barrière Énergétique : Retiens les ennemis
           </div>
         </div>
       </div>
@@ -70,13 +70,13 @@
         <span class="turret-icon">⚔️</span>
         <span class="turret-name">Sabreur</span>
         <span class="turret-cost">10 E</span>
-        <span class="turret-upgrade-cost">Évolution : 2000 XP (Niv. 2), 10000 XP (Niv. 3)</span>
+        <span class="turret-upgrade-cost">Niv2 2000 XP / Niv3 10000 XP</span>
       </div>
       <div class="turret-button" id="projectile-btn">
         <span class="turret-icon">🏹</span>
         <span class="turret-name">Archer</span>
         <span class="turret-cost">20 E</span>
-        <span class="turret-upgrade-cost">Évolution : 2000 XP (Niv. 2), 10000 XP (Niv. 3)</span>
+        <span class="turret-upgrade-cost">Niv2 2000 XP / Niv3 10000 XP</span>
       </div>
       <div class="turret-button" id="wall-btn">
         <span class="turret-icon">█</span>
@@ -146,8 +146,6 @@
   <div id="mobile-game-over-modal" class="modal">
     <div class="modal-content">
       <h2>Essai encore !</h2>
-      <p>Oh le gros nul!</p>
-      <p>Victoire ! <span id="mobile-final-wave">0</span> vagues</p>
       <button class="mobile-button" id="mobile-restart-game">Recommencer</button>
     </div>
   </div>
@@ -157,6 +155,14 @@
     <h1>Astuce</h1>
     <p>Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique !</p>
     <button id="close-tip" class="game-button">Continuer</button>
+  </div>
+</div>
+
+<div id="tip-modal-wave6" class="modal" style="display: none;">
+  <div class="modal-content">
+    <h2>Astuce</h2>
+    <p>Garde ton XP pour évoluer les tourelles</p>
+    <button id="close-tip-wave6" class="game-button">Continuer</button>
   </div>
 </div>
 
