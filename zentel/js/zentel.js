@@ -150,21 +150,23 @@ function spawnWave() {
       if (!isBoss && !isTriangle) { // Appliquer le facteur de vitesse uniquement aux ennemis normaux
         adjustedSpeed *= (1 + wave * 0.02); // Augmente la vitesse de 2% par vague
       }
+      console.log(`Création ennemi : type=${enemyType === TRIANGLE_TYPE ? 'Triangle' : enemyType === MEGA_BOSS_TYPE ? 'Méga Boss' : enemyType === BOSS_TYPE ? 'Boss' : 'Normal'}, vague=${wave}, vitesse=${adjustedSpeed}`);
       enemies.push({
-        x: 0,
-        y: startY * CELL_SIZE + CELL_SIZE / 2,
-        hp: baseHp * (1 + wave * 0.1),
-        maxHp: baseHp * (1 + wave * 0.1),
-        speed: adjustedSpeed,
-        path: path,
-        pathIndex: 0,
-        xp: enemyType.xp,
-        energy: enemyType.energy,
-        isBoss: isBoss,
-        isTriangle: isTriangle,
-        attackRate: attackRate,
-        type: enemyType // Ajouter une référence au type pour identifier les méga boss
-      });
+  x: 0,
+  y: startY * CELL_SIZE + CELL_SIZE / 2,
+  hp: baseHp * (1 + wave * 0.1),
+  maxHp: baseHp * (1 + wave * 0.1),
+  speed: adjustedSpeed,
+  path: path,
+  pathIndex: 0,
+  xp: enemyType.xp,
+  energy: enemyType.energy,
+  isBoss: isBoss,
+  isTriangle: isTriangle,
+  attackRate: attackRate,
+  type: enemyType,
+  spawnWave: wave // Stocker la vague de création
+});
     }
   }
   updateStats();
@@ -770,17 +772,24 @@ function drawEnemyProjectiles() {
           }
         }
         enemies.forEach(enemy => {
-          if (enemy.path.length > 0) {
-            let startX = floor(enemy.x / CELL_SIZE);
-            let startY = floor(enemy.y / CELL_SIZE);
-            let path = enemy.isBoss ? findPathAerial(startX, startY, GRID_WIDTH - 1, startY) : findPath(startX, startY, GRID_WIDTH - 1, startY, false);
-            if (path.length === 0 && !enemy.isBoss) {
-              path = findPath(startX, startY, GRID_WIDTH - 1, startY, true);
-            }
-            enemy.path = path;
-            enemy.pathIndex = 0;
-          }
-        });
+  let baseSpeed;
+  if (enemy.isBoss) {
+    if (enemy.isTriangle) {
+      baseSpeed = TRIANGLE_TYPE.speed;
+    } else if (enemy.type === MEGA_BOSS_TYPE) {
+      baseSpeed = MEGA_BOSS_TYPE.speed;
+    } else {
+      baseSpeed = BOSS_TYPE.speed;
+    }
+  } else if (enemy.isTriangle) {
+    baseSpeed = TRIANGLE_TYPE.speed;
+  } else {
+    let enemyTypeIndex = min(enemy.spawnWave - 1, ENEMY_TYPES.length - 1);
+    baseSpeed = ENEMY_TYPES[enemyTypeIndex].speed;
+    baseSpeed *= (1 + enemy.spawnWave * 0.02); // Utiliser la vague de création
+  }
+  enemy.speed = baseSpeed * speedMultiplier;
+});
       }
       enemyProjectiles.splice(i, 1);
     }
@@ -793,6 +802,7 @@ function updateGame() {
   } else {
     speedMultiplier = 1;
   }
+  console.log(`Vague ${wave}, speedMultiplier=${speedMultiplier}, nombre de tourelles=${modules.length}`);
 
   enemies.forEach(enemy => {
     let baseSpeed;
@@ -811,6 +821,7 @@ function updateGame() {
       baseSpeed = ENEMY_TYPES[enemyTypeIndex].speed;
       baseSpeed *= (1 + wave * 0.02); // Appliquer le facteur de vitesse basé sur la vague
     }
+    console.log(`Mise à jour ennemi : type=${enemy.type === TRIANGLE_TYPE ? 'Triangle' : enemy.type === MEGA_BOSS_TYPE ? 'Méga Boss' : enemy.type === BOSS_TYPE ? 'Boss' : 'Normal'}, vague de création=${enemy.spawnWave}, vitesse de base=${baseSpeed}, vitesse finale=${baseSpeed * speedMultiplier}`);
     enemy.speed = baseSpeed * speedMultiplier;
   });
 
