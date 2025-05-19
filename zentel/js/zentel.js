@@ -391,16 +391,17 @@ function drawModules() {
     }
 
     if (module.type === 'wall') {
-      fill(TURRET_TYPES.wall.color);
-      noStroke();
-      rect(module.x * CELL_SIZE, module.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-      fill(255);
-      text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
-      fill('#ffffff');
-      textSize(10);
-      text(module.hp, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2 + 15);
-      textSize(14);
-    } else {
+  // Changer la couleur si le mur est amélioré (niveau 2)
+  fill(module.level && module.level === 2 ? '#606060' : TURRET_TYPES.wall.color); // Gris plus foncé pour les murs améliorés
+  noStroke();
+  rect(module.x * CELL_SIZE, module.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+  fill(255);
+  text(symbol, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+  fill('#ffffff');
+  textSize(10);
+  text(module.hp, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2 + 15);
+  textSize(14);
+} else {
       fill(color);
       noStroke();
       rect(module.x * CELL_SIZE, module.y * CELL_SIZE, width, height);
@@ -933,13 +934,12 @@ function mousePressed() {
       return;
     }
 
-if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' && grid[gridX][gridY] !== 'base') {
+if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
   console.log(`Tentative d'évolution à la vague ${wave}, position (${gridX}, ${gridY})`);
   // Chercher un module qui pourrait inclure cette case (en tenant compte des tourelles évoluées)
   let moduleIndex = -1;
   let foundModule = null;
   for (let m of modules) {
-    if (m.type === 'wall') continue; // Les murs ne peuvent pas évoluer
     let width = m.level >= 3 ? 2 : m.level === 2 ? 2 : 1;
     let height = m.level >= 3 ? 2 : m.level === 2 ? 1 : 1;
     if (gridX >= m.x && gridX < m.x + width && gridY >= m.y && gridY < m.y + height) {
@@ -950,75 +950,103 @@ if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'wall' &&
   }
   if (moduleIndex !== -1) {
     let module = modules[moduleIndex];
-    console.log(`Module trouvé : type=${module.type}, niveau=${module.level}, XP disponible=${xp}`);
-    if (wave >= 7 && module.level === 1 && xp >= 2000) {
-      console.log("Évolution au niveau 2");
-      xp -= 2000;
-      module.level = 2;
-      if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
-        console.log("Espace libre à droite, évolution en 2x1");
-        occupyArea(module.x, module.y, 2, 1, module.type);
-      } else if (gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null) {
-        console.log("Espace libre en bas, évolution en 1x2");
-        occupyArea(module.x, module.y, 1, 2, module.type);
+    console.log(`Module trouvé : type=${module.type}, niveau=${module.level || 1}, XP disponible=${xp}`);
+    if (module.type === 'wall') {
+      // Évolution des murs : tripler les HP pour 500 XP
+      if (wave >= 7 && (!module.level || module.level === 1) && xp >= 500) {
+        console.log("Évolution du mur : tripler les HP");
+        xp -= 500;
+        module.level = 2; // Indiquer que le mur a été amélioré
+        module.hp = TURRET_TYPES.wall.hp * 3; // Tripler les HP (de 50 à 150)
+        updateStats();
+        return;
       } else {
-        console.log("Pas assez d'espace pour évoluer au niveau 2");
-        module.level = 1;
-        xp += 2000;
-        gameState = 'paused';
-        document.getElementById('space-warning-modal').style.display = 'flex';
+        console.log("Conditions d'évolution du mur non remplies :");
+        if (wave < 7) {
+          console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+          errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+        }
+        if (module.level && module.level !== 1) {
+          console.log(` - Mur déjà amélioré : niveau ${module.level}`);
+          errorMessage = `Mur déjà amélioré`;
+        }
+        if (xp < 500) {
+          console.log(` - XP insuffisant pour améliorer le mur : ${xp} (nécessite 500)`);
+          errorMessage = `XP insuffisant : ${xp}/500`;
+        }
+        errorMessageTimer = 120;
       }
-      updateStats();
-      return;
-    } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
-      console.log("Évolution au niveau 3");
-      xp -= 10000;
-      module.level = 3;
-      let width = module.level >= 3 ? 2 : 2;
-      let height = module.level >= 3 ? 2 : 1;
-      for (let x = module.x; x < module.x + width; x++) {
-        for (let y = module.y; y < module.y + height; y++) {
-          if (x < GRID_WIDTH && y < GRID_HEIGHT) {
-            grid[x][y] = null;
+    } else {
+      // Évolution des autres tourelles (Sabreur Quantique et Archer Plasma)
+      if (wave >= 7 && module.level === 1 && xp >= 2000) {
+        console.log("Évolution au niveau 2");
+        xp -= 2000;
+        module.level = 2;
+        if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
+          console.log("Espace libre à droite, évolution en 2x1");
+          occupyArea(module.x, module.y, 2, 1, module.type);
+        } else if (gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null) {
+          console.log("Espace libre en bas, évolution en 1x2");
+          occupyArea(module.x, module.y, 1, 2, module.type);
+        } else {
+          console.log("Pas assez d'espace pour évoluer au niveau 2");
+          module.level = 1;
+          xp += 2000;
+          gameState = 'paused';
+          document.getElementById('space-warning-modal').style.display = 'flex';
+        }
+        updateStats();
+        return;
+      } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
+        console.log("Évolution au niveau 3");
+        xp -= 10000;
+        module.level = 3;
+        let width = module.level >= 3 ? 2 : 2;
+        let height = module.level >= 3 ? 2 : 1;
+        for (let x = module.x; x < module.x + width; x++) {
+          for (let y = module.y; y < module.y + height; y++) {
+            if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+              grid[x][y] = null;
+            }
           }
         }
-      }
-      if (isAreaFree(module.x, module.y, 2, 2)) {
-        console.log("Espace libre, évolution en 2x2");
-        occupyArea(module.x, module.y, 2, 2, module.type);
+        if (isAreaFree(module.x, module.y, 2, 2)) {
+          console.log("Espace libre, évolution en 2x2");
+          occupyArea(module.x, module.y, 2, 2, module.type);
+        } else {
+          console.log("Pas assez d'espace pour évoluer au niveau 3");
+          module.level = 2;
+          xp += 10000;
+          gameState = 'paused';
+          document.getElementById('space-warning-modal').style.display = 'flex';
+          occupyArea(module.x, module.y, 2, 1, module.type);
+        }
+        updateStats();
+        return;
       } else {
-        console.log("Pas assez d'espace pour évoluer au niveau 3");
-        module.level = 2;
-        xp += 10000;
-        gameState = 'paused';
-        document.getElementById('space-warning-modal').style.display = 'flex';
-        occupyArea(module.x, module.y, 2, 1, module.type);
+        console.log("Conditions d'évolution non remplies :");
+        if (wave < 7) {
+          console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+          errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+        }
+        if (module.level !== 1 && module.level !== 2) {
+          console.log(` - Niveau invalide : ${module.level} (doit être 1 ou 2)`);
+          errorMessage = `Niveau invalide : ${module.level} (doit être 1 ou 2)`;
+        }
+        if (xp < 2000 && module.level === 1) {
+          console.log(` - XP insuffisant pour niveau 2 : ${xp} (nécessite 2000)`);
+          errorMessage = `XP insuffisant : ${xp}/2000`;
+        }
+        if (xp < 10000 && module.level === 2) {
+          console.log(` - XP insuffisant pour niveau 3 : ${xp} (nécessite 10000)`);
+          errorMessage = `XP insuffisant : ${xp}/10000`;
+        }
+        if (wave < 17 && module.level === 2) {
+          console.log(` - Vague insuffisante pour niveau 3 : ${wave} (nécessite 17)`);
+          errorMessage = `Vague insuffisante : ${wave} (nécessite 17)`;
+        }
+        errorMessageTimer = 120; // Afficher le message pendant 2 secondes (à 60 FPS)
       }
-      updateStats();
-      return;
-    } else {
-      console.log("Conditions d'évolution non remplies :");
-      if (wave < 7) {
-        console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
-        errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
-      }
-      if (module.level !== 1 && module.level !== 2) {
-        console.log(` - Niveau invalide : ${module.level} (doit être 1 ou 2)`);
-        errorMessage = `Niveau invalide : ${module.level} (doit être 1 ou 2)`;
-      }
-      if (xp < 2000 && module.level === 1) {
-        console.log(` - XP insuffisant pour niveau 2 : ${xp} (nécessite 2000)`);
-        errorMessage = `XP insuffisant : ${xp}/2000`;
-      }
-      if (xp < 10000 && module.level === 2) {
-        console.log(` - XP insuffisant pour niveau 3 : ${xp} (nécessite 10000)`);
-        errorMessage = `XP insuffisant : ${xp}/10000`;
-      }
-      if (wave < 17 && module.level === 2) {
-        console.log(` - Vague insuffisante pour niveau 3 : ${wave} (nécessite 17)`);
-        errorMessage = `Vague insuffisante : ${wave} (nécessite 17)`;
-      }
-      errorMessageTimer = 120; // Afficher le message pendant 2 secondes (à 60 FPS)
     }
   } else {
     console.log("Aucune tourelle trouvée à cette position pour évoluer");
