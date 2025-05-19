@@ -8,7 +8,7 @@ const TEXT_COLOR = '#e0e0ff';
 const BUTTON_COLOR = '#6a5acd';
 const ENEMY_COLOR = '#ff5555';
 const BOSS_COLOR = '#000000';
-const TRIANGLE_COLOR = '#00ff00';
+const TRIANGLE_COLOR = '#ff0000';
 const TURRET_COLOR = '#55ff55';
 const ENEMY_ZONE_COLOR = '#ff0000';
 const UPGRADE_COLOR_LVL2 = '#ffcc00';
@@ -49,6 +49,11 @@ let showTip = false;
 let tipOpacity = 1;
 let speedMultiplier = 1;
 let tipModalShown = false;
+
+//Astuce 2 - vague 6
+let showTipWave6 = false;
+let tipWave6Opacity = 1;
+let tipWave6ModalShown = false;
 
 // Variables pour le canvas
 let canvasWidth, canvasHeight;
@@ -150,7 +155,6 @@ function spawnWave() {
       if (!isBoss && !isTriangle) { // Appliquer le facteur de vitesse uniquement aux ennemis normaux
         adjustedSpeed *= (1 + wave * 0.02); // Augmente la vitesse de 2% par vague
       }
-      console.log(`Création ennemi : type=${enemyType === TRIANGLE_TYPE ? 'Triangle' : enemyType === MEGA_BOSS_TYPE ? 'Méga Boss' : enemyType === BOSS_TYPE ? 'Boss' : 'Normal'}, vague=${wave}, vitesse=${adjustedSpeed}`);
       enemies.push({
   x: 0,
   y: startY * CELL_SIZE + CELL_SIZE / 2,
@@ -340,14 +344,25 @@ function draw() {
 
   background('#0a0a1e');
 
-  if (showTip) {
-    fill(255, 255, 255, 255 * tipOpacity);
-    rect(0, 0, canvasWidth, 30);
-    fill(0, 0, 0, 255 * tipOpacity);
-    textSize(14);
-    textAlign(CENTER, CENTER);
-    text("Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique", canvasWidth / 2, 15);
-  }
+  let tipHeight = 0;
+if (showTip) {
+  fill(255, 255, 255, 255 * tipOpacity);
+  rect(0, tipHeight, canvasWidth, 30);
+  fill(0, 0, 0, 255 * tipOpacity);
+  textSize(14);
+  textAlign(CENTER, CENTER);
+  text("Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique", canvasWidth / 2, tipHeight + 15);
+  tipHeight += 30;
+}
+if (showTipWave6) {
+  fill(255, 255, 255, 255 * tipWave6Opacity);
+  rect(0, tipHeight, canvasWidth, 30);
+  fill(0, 0, 0, 255 * tipWave6Opacity);
+  textSize(14);
+  textAlign(CENTER, CENTER);
+  text("Garde ton XP pour évoluer les tourelles", canvasWidth / 2, tipHeight + 15);
+  tipHeight += 30;
+}
 
   drawGrid();
   drawModules();
@@ -802,7 +817,6 @@ function updateGame() {
   } else {
     speedMultiplier = 1;
   }
-  console.log(`Vague ${wave}, speedMultiplier=${speedMultiplier}, nombre de tourelles=${modules.length}`);
 
   enemies.forEach(enemy => {
     let baseSpeed;
@@ -821,7 +835,7 @@ function updateGame() {
       baseSpeed = ENEMY_TYPES[enemyTypeIndex].speed;
       baseSpeed *= (1 + wave * 0.02); // Appliquer le facteur de vitesse basé sur la vague
     }
-    console.log(`Mise à jour ennemi : type=${enemy.type === TRIANGLE_TYPE ? 'Triangle' : enemy.type === MEGA_BOSS_TYPE ? 'Méga Boss' : enemy.type === BOSS_TYPE ? 'Boss' : 'Normal'}, vague de création=${enemy.spawnWave}, vitesse de base=${baseSpeed}, vitesse finale=${baseSpeed * speedMultiplier}`);
+
     enemy.speed = baseSpeed * speedMultiplier;
   });
 
@@ -834,27 +848,45 @@ function updateGame() {
 
   enemies = enemies.filter(enemy => enemy.hp > 0);
 
-  if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
-    waveCompleted = true;
-    xp += wave * 5 + 5;
-    if (wave === 1 && !tipModalShown) {
-      const tipModal = document.getElementById('tip-modal');
-      if (tipModal) {
-        tipModal.style.display = 'flex';
-        gameState = 'paused';
-        tipModalShown = true;
-      } else {
-        console.error("L'élément avec l'ID 'tip-modal' n'existe pas dans le DOM. L'astuce ne peut pas être affichée.");
-        showTip = true;
-        tipOpacity = 1;
-        tipModalShown = true;
-      }
-    } else if (wave >= 2 && tipModalShown) {
+if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
+  waveCompleted = true;
+  xp += wave * 5 + 5;
+  if (wave === 1 && !tipModalShown) {
+    const tipModal = document.getElementById('tip-modal');
+    if (tipModal) {
+      tipModal.style.display = 'flex';
+      gameState = 'paused';
+      tipModalShown = true;
+    } else {
+      console.error("L'élément avec l'ID 'tip-modal' n'existe pas dans le DOM. L'astuce ne peut pas être affichée.");
+      showTip = true;
+      tipOpacity = 1;
+      tipModalShown = true;
+    }
+  } else if (wave === 6 && !tipWave6ModalShown) {
+    const tipModalWave6 = document.getElementById('tip-modal-wave6');
+    if (tipModalWave6) {
+      tipModalWave6.style.display = 'flex';
+      gameState = 'paused';
+      tipWave6ModalShown = true;
+    } else {
+      console.error("L'élément avec l'ID 'tip-modal-wave6' n'existe pas dans le DOM. L'astuce ne peut pas être affichée.");
+      showTipWave6 = true;
+      tipWave6Opacity = 1;
+      tipWave6ModalShown = true;
+    }
+  } else {
+    if (wave >= 2 && tipModalShown) {
       showTip = true;
       tipOpacity = 0.3;
     }
-    updateStats();
+    if (wave >= 7 && tipWave6ModalShown) {
+      showTipWave6 = true;
+      tipWave6Opacity = 0.3;
+    }
   }
+  updateStats();
+}
 
   if (base.hp <= 0) {
     gameState = 'gameover';
@@ -927,10 +959,8 @@ function updateStats() {
   }
   if (isEvolveModeActive) {
     evolveBtn.classList.add('active');
-    console.log("Bouton Évoluer actif");
   } else {
     evolveBtn.classList.remove('active');
-    console.log("Bouton Évoluer inactif");
   }
 }
 
@@ -946,7 +976,6 @@ function mousePressed() {
     }
 
 if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
-  console.log(`Tentative d'évolution à la vague ${wave}, position (${gridX}, ${gridY})`);
   // Chercher un module qui pourrait inclure cette case (en tenant compte des tourelles évoluées)
   let moduleIndex = -1;
   let foundModule = null;
@@ -961,28 +990,22 @@ if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
   }
   if (moduleIndex !== -1) {
     let module = modules[moduleIndex];
-    console.log(`Module trouvé : type=${module.type}, niveau=${module.level || 1}, XP disponible=${xp}`);
     if (module.type === 'wall') {
       // Évolution des murs : tripler les HP pour 500 XP
       if (wave >= 7 && (!module.level || module.level === 1) && xp >= 500) {
-        console.log("Évolution du mur : tripler les HP");
         xp -= 500;
         module.level = 2; // Indiquer que le mur a été amélioré
         module.hp = TURRET_TYPES.wall.hp * 3; // Tripler les HP (de 50 à 150)
         updateStats();
         return;
       } else {
-        console.log("Conditions d'évolution du mur non remplies :");
         if (wave < 7) {
-          console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
           errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
         }
         if (module.level && module.level !== 1) {
-          console.log(` - Mur déjà amélioré : niveau ${module.level}`);
           errorMessage = `Mur déjà amélioré`;
         }
         if (xp < 500) {
-          console.log(` - XP insuffisant pour améliorer le mur : ${xp} (nécessite 500)`);
           errorMessage = `XP insuffisant : ${xp}/500`;
         }
         errorMessageTimer = 120;
@@ -990,17 +1013,13 @@ if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
     } else {
       // Évolution des autres tourelles (Sabreur Quantique et Archer Plasma)
       if (wave >= 7 && module.level === 1 && xp >= 2000) {
-        console.log("Évolution au niveau 2");
         xp -= 2000;
         module.level = 2;
         if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
-          console.log("Espace libre à droite, évolution en 2x1");
           occupyArea(module.x, module.y, 2, 1, module.type);
         } else if (gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null) {
-          console.log("Espace libre en bas, évolution en 1x2");
           occupyArea(module.x, module.y, 1, 2, module.type);
         } else {
-          console.log("Pas assez d'espace pour évoluer au niveau 2");
           module.level = 1;
           xp += 2000;
           gameState = 'paused';
@@ -1009,7 +1028,6 @@ if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
         updateStats();
         return;
       } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
-        console.log("Évolution au niveau 3");
         xp -= 10000;
         module.level = 3;
         let width = module.level >= 3 ? 2 : 2;
@@ -1022,10 +1040,8 @@ if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
           }
         }
         if (isAreaFree(module.x, module.y, 2, 2)) {
-          console.log("Espace libre, évolution en 2x2");
           occupyArea(module.x, module.y, 2, 2, module.type);
         } else {
-          console.log("Pas assez d'espace pour évoluer au niveau 3");
           module.level = 2;
           xp += 10000;
           gameState = 'paused';
@@ -1035,25 +1051,19 @@ if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
         updateStats();
         return;
       } else {
-        console.log("Conditions d'évolution non remplies :");
         if (wave < 7) {
-          console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
           errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
         }
         if (module.level !== 1 && module.level !== 2) {
-          console.log(` - Niveau invalide : ${module.level} (doit être 1 ou 2)`);
           errorMessage = `Niveau invalide : ${module.level} (doit être 1 ou 2)`;
         }
         if (xp < 2000 && module.level === 1) {
-          console.log(` - XP insuffisant pour niveau 2 : ${xp} (nécessite 2000)`);
           errorMessage = `XP insuffisant : ${xp}/2000`;
         }
         if (xp < 10000 && module.level === 2) {
-          console.log(` - XP insuffisant pour niveau 3 : ${xp} (nécessite 10000)`);
           errorMessage = `XP insuffisant : ${xp}/10000`;
         }
         if (wave < 17 && module.level === 2) {
-          console.log(` - Vague insuffisante pour niveau 3 : ${wave} (nécessite 17)`);
           errorMessage = `Vague insuffisante : ${wave} (nécessite 17)`;
         }
         errorMessageTimer = 120; // Afficher le message pendant 2 secondes (à 60 FPS)
@@ -1221,9 +1231,7 @@ document.getElementById('delete-turret-btn').addEventListener('click', () => {
 
 // Bouton pour évoluer une tourelle
 document.getElementById('evolve-turret-btn').addEventListener('click', () => {
-  console.log(`Bouton Évoluer cliqué à la vague ${wave}`);
   if (wave < 7) {
-    console.log("Évolution bloquée : vague < 7");
     return;
   }
   isEvolveModeActive = !isEvolveModeActive;
@@ -1251,6 +1259,19 @@ if (closeTipButton) {
   });
 } else {
   console.warn("L'élément avec l'ID 'close-tip' n'existe pas dans le DOM. Assurez-vous que la modale d'astuce est correctement ajoutée dans le HTML.");
+}
+
+const closeTipWave6Button = document.getElementById('close-tip-wave6');
+if (closeTipWave6Button) {
+  closeTipWave6Button.addEventListener('click', () => {
+    document.getElementById('tip-modal-wave6').style.display = 'none';
+    gameState = 'playing';
+    showTipWave6 = true;
+    tipWave6Opacity = 1;
+    updateStats();
+  });
+} else {
+  console.warn("L'élément avec l'ID 'close-tip-wave6' n'existe pas dans le DOM. Assurez-vous que la modale d'astuce est correctement ajoutée dans le HTML.");
 }
 
 // Boutons de contrôle
@@ -1303,8 +1324,11 @@ function resetGame() {
   waveCompleted = false;
   showTip = false;
   tipOpacity = 1;
+  showTipWave6 = false;
+  tipWave6Opacity = 1;
   speedMultiplier = 1;
   tipModalShown = false;
+  tipWave6ModalShown = false;
   initializeGrid();
   updateStats();
   loop();
