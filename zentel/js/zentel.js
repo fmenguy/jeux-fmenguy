@@ -923,92 +923,247 @@ function drawEnemyProjectiles() {
             let y = targetGridY + dy;
             if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
               let moduleIndex = modules.findIndex(m => m.x === x && m.y === y);
-              if (moduleIndex !== -1) {
-                let module = modules[moduleIndex];
-                if (module.type === 'wall') {
-                  modules.splice(moduleIndex, 1);
-                  grid[x][y] = null;
-                } else {
-                  if (module.hp) {
-                    module.hp -= projectileDamage;
-                    if (module.hp <= 0) {
-                      if (module.level >= 2) {
-                        let width = module.level >= 3 ? 2 : 2;
-                        let height = module.level >= 3 ? 2 : 1;
-                        for (let mx = module.x; mx < module.x + width; mx++) {
-                          for (let my = module.y; my < module.y + height; my++) {
-                            if (mx < GRID_WIDTH && my < GRID_HEIGHT) {
-                              grid[mx][my] = null;
-                            }
-                          }
-                        }
-                      }
-                      modules.splice(moduleIndex, 1);
-                      grid[x][y] = null;
-                    }
-                  } else {
-                    if (module.level >= 2) {
-                      let width = module.level >= 3 ? 2 : 2;
-                      let height = module.level >= 3 ? 2 : 1;
-                      for (let mx = module.x; mx < module.x + width; mx++) {
-                        for (let my = module.y; my < module.y + height; my++) {
-                          if (mx < GRID_WIDTH && my < GRID_HEIGHT) {
-                            grid[mx][my] = null;
-                          }
-                        }
-                      }
-                    }
-                    modules.splice(moduleIndex, 1);
-                    grid[x][y] = null;
-                  }
-                }
-              }
+if (moduleIndex !== -1) {
+  let module = modules[moduleIndex];
+  console.log(`Module trouvé : type=${module.type}, niveau=${module.level || 1}, XP disponible=${xp}, vague=${wave}`);
+  if (module.type === 'wall') {
+    // Évolution des murs : tripler les HP pour 500 XP
+    if (wave >= 7 && (!module.level || module.level === 1) && xp >= 500) {
+      console.log("Évolution du mur : tripler les HP");
+      xp -= 500;
+      module.level = 2; // Indiquer que le mur a été amélioré
+      module.hp = TURRET_TYPES.wall.hp * 3; // Tripler les HP (de 50 à 150)
+      updateStats();
+      return;
+    } else {
+      console.log("Conditions d'évolution du mur non remplies :");
+      if (wave < 7) {
+        console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+        errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+        errorMessageTimer = 120;
+      }
+      if (module.level && module.level !== 1) {
+        console.log(` - Mur déjà amélioré : niveau ${module.level}`);
+        errorMessage = `Mur déjà amélioré`;
+        errorMessageTimer = 120;
+      }
+      if (xp < 500) {
+        console.log(` - XP insuffisant pour améliorer le mur : ${xp} (nécessite 500)`);
+        gameState = 'paused';
+        document.getElementById('xp-warning-modal').style.display = 'flex';
+      }
+    }
+  } else {
+    // Évolution des autres tourelles (Sabreur Quantique et Archer Plasma)
+    if (wave >= 7 && module.level === 1 && xp >= 2000) {
+      console.log("Évolution au niveau 2");
+      xp -= 2000;
+      module.level = 2;
+      if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
+        console.log("Espace libre à droite, évolution en 2x1");
+        occupyArea(module.x, module.y, 2, 1, module.type);
+      } else if (gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null) {
+        console.log("Espace libre en bas, évolution en 1x2");
+        occupyArea(module.x, module.y, 1, 2, module.type);
+      } else {
+        console.log("Pas assez d'espace pour évoluer au niveau 2");
+        module.level = 1;
+        xp += 2000;
+        gameState = 'paused';
+        document.getElementById('space-warning-modal').style.display = 'flex';
+      }
+      updateStats();
+      return;
+    } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
+      console.log("Évolution au niveau 3");
+      // Nettoyer la grille actuelle (2x1 ou 1x2) avant de vérifier l'espace
+      let currentWidth = grid[module.x + 1][module.y] === module.type ? 2 : 1;
+      let currentHeight = grid[module.x][module.y + 1] === module.type ? 2 : 1;
+      console.log(`Taille actuelle de la tourelle : ${currentWidth}x${currentHeight}`);
+      for (let x = module.x; x < module.x + currentWidth; x++) {
+        for (let y = module.y; y < module.y + currentHeight; y++) {
+          if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+            console.log(`Nettoyage de la case (${x}, ${y})`);
+            grid[x][y] = null;
+          }
+        }
+      }
+      // Vérifier si l'espace pour le niveau 3 (2x2) est libre
+      console.log(`Vérification de l'espace pour 2x2 à (${module.x}, ${module.y})`);
+      // Débogage : afficher l'état de la grille autour de la tourelle
+      for (let x = module.x; x < module.x + 2; x++) {
+        for (let y = module.y; y < module.y + 2; y++) {
+          if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+            console.log(`Case (${x}, ${y}) : ${grid[x][y] || 'vide'}`);
+          }
+        }
+      }
+      if (isAreaFree(module.x, module.y, 2, 2)) {
+        console.log("Espace libre, évolution en 2x2");
+        xp -= 10000;
+        module.level = 3;
+        if (module.type === 'melee') {
+          module.hp = 40; // Les Sabreurs Quantiques de niveau 3 ont 40 HP (4 coups de 10 dégâts)
+        }
+        occupyArea(module.x, module.y, 2, 2, module.type);
+      } else {
+        console.log("Pas assez d'espace pour évoluer au niveau 3");
+        // Restaurer l'état précédent de la grille
+        occupyArea(module.x, module.y, currentWidth, currentHeight, module.type);
+        gameState = 'paused';
+        document.getElementById('space-warning-modal').style.display = 'flex';
+        return; // Ne pas continuer si l'évolution échoue
+      }
+      updateStats();
+      return;
+    } else {
+      console.log("Conditions d'évolution non remplies :");
+      if (wave < 7) {
+        console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+        errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+        errorMessageTimer = 120;
+      }
+      if (module.level !== 1 && module.level !== 2) {
+        console.log(` - Niveau invalide : ${module.level} (doit être 1 ou 2)`);
+        errorMessage = `Niveau invalide : ${module.level} (doit être 1 ou 2)`;
+        errorMessageTimer = 120;
+      }
+      if (xp < 2000 && module.level === 1) {
+        console.log(` - XP insuffisant pour niveau 2 : ${xp} (nécessite 2000)`);
+        gameState = 'paused';
+        document.getElementById('xp-warning-modal').style.display = 'flex';
+      }
+      if (xp < 10000 && module.level === 2) {
+        console.log(` - XP insuffisant pour niveau 3 : ${xp} (nécessite 10000)`);
+        gameState = 'paused';
+        document.getElementById('xp-warning-modal').style.display = 'flex';
+      }
+      if (wave < 17 && module.level === 2) {
+        console.log(` - Vague insuffisante pour niveau 3 : ${wave} (nécessite 17)`);
+        errorMessage = `Vague insuffisante : ${wave} (nécessite 17)`;
+        errorMessageTimer = 120;
+      }
+    }
+  }
+}
             }
           }
         }
       } else {
         // Comportement standard pour les triangles normaux
         let moduleIndex = modules.findIndex(m => m.x === targetGridX && m.y === targetGridY);
-        if (moduleIndex !== -1) {
-          let module = modules[moduleIndex];
-          if (module.type === 'wall') {
-            modules.splice(moduleIndex, 1);
-            grid[targetGridX][targetGridY] = null;
-          } else {
-            if (module.hp) {
-              module.hp -= p.damage;
-              if (module.hp <= 0) {
-                if (module.level >= 2) {
-                  let width = module.level >= 3 ? 2 : 2;
-                  let height = module.level >= 3 ? 2 : 1;
-                  for (let x = module.x; x < module.x + width; x++) {
-                    for (let y = module.y; y < module.y + height; y++) {
-                      if (x < GRID_WIDTH && y < GRID_HEIGHT) {
-                        grid[x][y] = null;
-                      }
-                    }
-                  }
-                }
-                modules.splice(moduleIndex, 1);
-                grid[targetGridX][targetGridY] = null;
-              }
-            } else {
-              if (module.level >= 2) {
-                let width = module.level >= 3 ? 2 : 2;
-                let height = module.level >= 3 ? 2 : 1;
-                for (let x = module.x; x < module.x + width; x++) {
-                  for (let y = module.y; y < module.y + height; y++) {
-                    if (x < GRID_WIDTH && y < GRID_HEIGHT) {
-                      grid[x][y] = null;
-                    }
-                  }
-                }
-              }
-              modules.splice(moduleIndex, 1);
-              grid[targetGridX][targetGridY] = null;
-            }
+if (moduleIndex !== -1) {
+  let module = modules[moduleIndex];
+  console.log(`Module trouvé : type=${module.type}, niveau=${module.level || 1}, XP disponible=${xp}, vague=${wave}`);
+  if (module.type === 'wall') {
+    // Évolution des murs : tripler les HP pour 500 XP
+    if (wave >= 7 && (!module.level || module.level === 1) && xp >= 500) {
+      console.log("Évolution du mur : tripler les HP");
+      xp -= 500;
+      module.level = 2; // Indiquer que le mur a été amélioré
+      module.hp = TURRET_TYPES.wall.hp * 3; // Tripler les HP (de 50 à 150)
+      updateStats();
+      return;
+    } else {
+      console.log("Conditions d'évolution du mur non remplies :");
+      if (wave < 7) {
+        console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+        errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+        errorMessageTimer = 120;
+      }
+      if (module.level && module.level !== 1) {
+        console.log(` - Mur déjà amélioré : niveau ${module.level}`);
+        errorMessage = `Mur déjà amélioré`;
+        errorMessageTimer = 120;
+      }
+      if (xp < 500) {
+        console.log(` - XP insuffisant pour améliorer le mur : ${xp} (nécessite 500)`);
+        gameState = 'paused';
+        document.getElementById('xp-warning-modal').style.display = 'flex';
+      }
+    }
+  } else {
+    // Évolution des autres tourelles (Sabreur Quantique et Archer Plasma)
+    if (wave >= 7 && module.level === 1 && xp >= 2000) {
+      console.log("Évolution au niveau 2");
+      xp -= 2000;
+      module.level = 2;
+      if (gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null) {
+        console.log("Espace libre à droite, évolution en 2x1");
+        occupyArea(module.x, module.y, 2, 1, module.type);
+      } else if (gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null) {
+        console.log("Espace libre en bas, évolution en 1x2");
+        occupyArea(module.x, module.y, 1, 2, module.type);
+      } else {
+        console.log("Pas assez d'espace pour évoluer au niveau 2");
+        module.level = 1;
+        xp += 2000;
+        gameState = 'paused';
+        document.getElementById('space-warning-modal').style.display = 'flex';
+      }
+      updateStats();
+      return;
+    } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
+      console.log("Évolution au niveau 3");
+      // Nettoyer une zone 2x2 autour de la tourelle pour être sûr
+      for (let x = module.x; x < module.x + 2; x++) {
+        for (let y = module.y; y < module.y + 2; y++) {
+          if (x < GRID_WIDTH && y < GRID_HEIGHT) {
+            grid[x][y] = null;
           }
         }
+      }
+      // Vérifier si l'espace pour le niveau 3 (2x2) est libre
+      if (isAreaFree(module.x, module.y, 2, 2)) {
+        console.log("Espace libre, évolution en 2x2");
+        xp -= 10000;
+        module.level = 3;
+        if (module.type === 'melee') {
+          module.hp = 40; // Les Sabreurs Quantiques de niveau 3 ont 40 HP (4 coups de 10 dégâts)
+        }
+        occupyArea(module.x, module.y, 2, 2, module.type);
+      } else {
+        console.log("Pas assez d'espace pour évoluer au niveau 3");
+        // Restaurer l'état précédent de la grille (2x1 ou 1x2)
+        let currentWidth = grid[module.x + 1][module.y] === module.type ? 2 : 1;
+        let currentHeight = grid[module.x][module.y + 1] === module.type ? 2 : 1;
+        occupyArea(module.x, module.y, currentWidth, currentHeight, module.type);
+        gameState = 'paused';
+        document.getElementById('space-warning-modal').style.display = 'flex';
+        return; // Ne pas continuer si l'évolution échoue
+      }
+      updateStats();
+      return;
+    } else {
+      console.log("Conditions d'évolution non remplies :");
+      if (wave < 7) {
+        console.log(` - Vague insuffisante : ${wave} (nécessite 7)`);
+        errorMessage = `Vague insuffisante : ${wave} (nécessite 7)`;
+        errorMessageTimer = 120;
+      }
+      if (module.level !== 1 && module.level !== 2) {
+        console.log(` - Niveau invalide : ${module.level} (doit être 1 ou 2)`);
+        errorMessage = `Niveau invalide : ${module.level} (doit être 1 ou 2)`;
+        errorMessageTimer = 120;
+      }
+      if (xp < 2000 && module.level === 1) {
+        console.log(` - XP insuffisant pour niveau 2 : ${xp} (nécessite 2000)`);
+        gameState = 'paused';
+        document.getElementById('xp-warning-modal').style.display = 'flex';
+      }
+      if (xp < 10000 && module.level === 2) {
+        console.log(` - XP insuffisant pour niveau 3 : ${xp} (nécessite 10000)`);
+        gameState = 'paused';
+        document.getElementById('xp-warning-modal').style.display = 'flex';
+      }
+      if (wave < 17 && module.level === 2) {
+        console.log(` - Vague insuffisante pour niveau 3 : ${wave} (nécessite 17)`);
+        errorMessage = `Vague insuffisante : ${wave} (nécessite 17)`;
+        errorMessageTimer = 120;
+      }
+    }
+  }
+}
       }
       enemies.forEach(enemy => {
         if (enemy.path.length > 0) {
