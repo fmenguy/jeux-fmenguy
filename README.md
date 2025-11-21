@@ -4,7 +4,7 @@
 
 Je suis en train de créer un jeu pour mon site web, appelé **Forge des Âges**. C'est un jeu de gestion de ressources et de technologies, avec une inspiration du genre 4X. L'idée est de gérer une civilisation à travers le temps en équilibrant ressources, technologies et exploration, mais sans inclure la partie extermination.
 
-Le jeu est actuellement en développement, lien : [fmenguy.fr/fda](https://fmenguy.fr/fda/).
+Le jeu est actuellement en développement, lien : [fda.fmenguy.fr](https://fda.fmenguy.fr/).
 
 ## URL et Slug
 
