@@ -1,3 +1,28 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Node (si jamais)
+node_modules/
+npm-debug.log*
+
+# Logs & temp
+*.log
+*.tmp
+*.bak
+
+# Env
+.env
+.env.local
+
+# Ancien déploiement PHP/Apache (plus utilisé — Cloudflare Pages)
 deploy.php
 deploy.log
 .htaccess
