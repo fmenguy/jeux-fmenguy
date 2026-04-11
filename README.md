@@ -39,7 +39,6 @@ Exploration en salles thématiques avec particules, textures procédurales et pu
 | **[Zentel](zentel/zentel.html)** | Expérimentation visuelle générative et interactive | p5.js |
 | **[EcoSim](ecosim/ecosystem.html)** | Simulation d'écosystème — proies, prédateurs, équilibre | JS vanilla |
 | **[Jeu de la Vie](conway/)** | Automate cellulaire de Conway — tracez des patterns, regardez la vie émerger | JS vanilla / Canvas |
-| **[Achronia](fps/)** | FPS expérimental 3D dans le navigateur | Three.js |
 
 ---
 

@@ -35,7 +35,6 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
 ### Ajouté
 - **EcoSim** — simulateur d'écosystème complet : proies, prédateurs, nouvelles espèces, accélération, cooldown, compatibilité mobile
-- **Achronia** — FPS expérimental 3D dans le navigateur (Three.js)
 
 ---
 
