@@ -2,361 +2,413 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="assets/fda.ico" type="image/x-icon">
-  <title>Forge des Âges</title>
-  <link rel="stylesheet" href="css/styles.css" />
-  <link id="mobileStyles" rel="stylesheet" href="css/styles-mobile.css" disabled />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arcade FM — Jeux & Expériences</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07090f;
+      --surface:   #0d1120;
+      --surface2:  #131829;
+      --border:    rgba(255,255,255,0.07);
+      --gold:      #d4a017;
+      --gold-dim:  #a07810;
+      --violet:    #7c5cbf;
+      --violet-glow: rgba(124,92,191,0.25);
+      --text:      #e8e0d0;
+      --muted:     #7a8090;
+      --tag-full:  #1a2d1a;
+      --tag-full-c:#4ade80;
+      --tag-mini:  #1a1a2d;
+      --tag-mini-c:#818cf8;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background grid ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(212,160,23,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212,160,23,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 10;
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .site-back {
+      position: absolute; top: 1.5rem; left: 2rem;
+      font-size: 0.78rem; color: var(--muted);
+      text-decoration: none; letter-spacing: 0.05em;
+      transition: color 0.2s;
+    }
+    .site-back:hover { color: var(--gold); }
+    .site-back::before { content: '← '; }
+
+    .header-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      background: linear-gradient(135deg, var(--gold) 0%, #f5d060 50%, var(--gold-dim) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      margin-bottom: 0.6rem;
+    }
+
+    .header-sub {
+      font-size: 0.9rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* ── Main ── */
+    main {
+      position: relative; z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* ── Section titles ── */
+    .section-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Featured grid ── */
+    .featured-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .card-featured {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card-featured:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--gold-dim);
+      border-color: var(--gold-dim);
+    }
+
+    .card-featured--violet:hover {
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--violet);
+      border-color: var(--violet);
+    }
+
+    /* glow top bar */
+    .card-featured::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card-featured--violet::before {
+      background: linear-gradient(90deg, transparent, var(--violet), transparent);
+    }
+    .card-featured:hover::before { opacity: 1; }
+
+    .card-banner {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: 3rem;
+      position: relative;
+      overflow: hidden;
+      background: var(--surface2);
+    }
+
+    .card-banner--fda {
+      background: radial-gradient(ellipse at 60% 40%, #3a2a10 0%, #1a1205 100%);
+    }
+    .card-banner--eryndor {
+      background: radial-gradient(ellipse at 40% 60%, #1a1030 0%, #0d0818 100%);
+    }
+
+    .card-banner img {
+      width: 100px; height: auto;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 20px rgba(212,160,23,0.4));
+    }
+
+    .card-banner-icon {
+      font-size: 4rem;
+      filter: drop-shadow(0 0 12px currentColor);
+    }
+    .card-banner--fda .card-banner-icon { color: var(--gold); }
+    .card-banner--eryndor .card-banner-icon { color: #a78bfa; }
+
+    .card-body {
+      padding: 1.4rem 1.5rem 1.6rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .card-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .card-tag--full {
+      background: var(--tag-full);
+      color: var(--tag-full-c);
+      border: 1px solid rgba(74,222,128,0.2);
+    }
+    .card-tag--mini {
+      background: var(--tag-mini);
+      color: var(--tag-mini-c);
+      border: 1px solid rgba(129,140,248,0.2);
+    }
+    .card-tag::before { content: '●'; font-size: 0.5rem; }
+
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #f0e8d8;
+      line-height: 1.2;
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .card-cta {
+      margin-top: 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: gap 0.2s;
+    }
+    .card-featured--violet .card-cta { color: #a78bfa; }
+    .card-featured:hover .card-cta { gap: 0.7rem; }
+    .card-cta::after { content: '→'; }
+
+    /* ── Mini-games grid ── */
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .card-mini {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem 1.3rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .card-mini:hover {
+      transform: translateY(-2px);
+      background: var(--surface2);
+      border-color: rgba(129,140,248,0.35);
+    }
+
+    .card-mini-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .card-mini-icon {
+      font-size: 1.4rem;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .card-mini-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #d8d0e8;
+    }
+
+    .card-mini-desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--gold); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      header { padding: 3.5rem 1rem 1.5rem; }
+      .site-back { top: 1rem; left: 1rem; }
+      main { padding: 2rem 1rem 4rem; }
+      .card-banner { height: 120px; }
+    }
+  </style>
 </head>
 <body>
-  <!-- Bouton pour ouvrir le bandeau latéral -->
-  <button id="toggleSidebarBtn" class="sidebar-toggle"><i class="fas fa-music"></i></button>
-  <!-- Bandeau latéral pour le contrôle audio -->
-  <div id="audioSidebar">
-    <div id="audioSidebarContent" class="sidebar-content">
-      <div class="audio-controls">
-        <div class="play-pause-buttons">
-          <button id="playMusicBtn" class="audio-control-btn"><i class="fas fa-play"></i></button>
-          <button id="pauseMusicBtn" class="audio-control-btn"><i class="fas fa-pause"></i></button>
-        </div>
-        <div class="volume-control">
-          <input type="range" id="volumeSlider" min="0" max="100" step="1" value="50">
-          <span id="volumePercentage" class="volume-percentage">50%</span>
-        </div>
+
+<header>
+  <a class="site-back" href="https://fmenguy.fr">fmenguy.fr</a>
+  <div class="header-title">Arcade FM</div>
+  <div class="header-sub">Jeux &amp; expériences web</div>
+</header>
+
+<main>
+
+  <!-- FEATURED -->
+  <div class="section-label">Jeux complets</div>
+  <div class="featured-grid">
+
+    <a class="card-featured" href="fda/">
+      <div class="card-banner card-banner--fda">
+        <img src="fda/assets/fda.webp" alt="Forge des Âges" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <span class="card-banner-icon" style="display:none">⚒</span>
       </div>
-    </div>
+      <div class="card-body">
+        <span class="card-tag card-tag--full">Jeu complet</span>
+        <div class="card-title">Forge des Âges</div>
+        <div class="card-desc">Jeu de gestion médiéval au tour par tour. Gérez vos ressources, explorez la carte, forgez votre empire. Avec ambiance sonore et mode mobile.</div>
+        <span class="card-cta">Jouer</span>
+      </div>
+    </a>
+
+    <a class="card-featured card-featured--violet" href="eryndor/">
+      <div class="card-banner card-banner--eryndor">
+        <span class="card-banner-icon">⚔</span>
+      </div>
+      <div class="card-body">
+        <span class="card-tag card-tag--full">Jeu complet</span>
+        <div class="card-title">Eryndor : L'Aube des Royaumes</div>
+        <div class="card-desc">Jeu de stratégie fantasy au tour par tour. Commandez humains ou elfes, conquérez des territoires, affrontez une IA dans un monde en guerre.</div>
+        <span class="card-cta">Jouer</span>
+      </div>
+    </a>
+
   </div>
 
-  <div style="text-align: center; margin-bottom: 20px;">
-    <img src="assets/fda.webp" alt="Forge des Âges Logo" style="width: 180px; height: auto;">
+  <!-- MINI-JEUX -->
+  <div class="section-label">Mini-jeux</div>
+  <div class="mini-grid">
+
+    <a class="card-mini" href="zentel/zentel.html">
+      <div class="card-mini-header">
+        <span class="card-mini-icon">🔮</span>
+        <span class="card-mini-title">Zentel</span>
+      </div>
+      <div class="card-mini-desc">Expérimentation visuelle interactive générée avec p5.js.</div>
+    </a>
+
+    <a class="card-mini" href="ecosim/ecosystem.html">
+      <div class="card-mini-header">
+        <span class="card-mini-icon">🌿</span>
+        <span class="card-mini-title">EcoSim</span>
+      </div>
+      <div class="card-mini-desc">Simulation d'écosystème. Créatures, nourriture, prédateurs — observez l'équilibre se construire.</div>
+    </a>
+
+    <a class="card-mini" href="conway/">
+      <div class="card-mini-header">
+        <span class="card-mini-icon">🧬</span>
+        <span class="card-mini-title">Jeu de la Vie</span>
+      </div>
+      <div class="card-mini-desc">Automate cellulaire de Conway. Tracez des patterns et regardez la vie émerger.</div>
+    </a>
+
+    <a class="card-mini" href="fps/">
+      <div class="card-mini-header">
+        <span class="card-mini-icon">🎯</span>
+        <span class="card-mini-title">Achronia</span>
+      </div>
+      <div class="card-mini-desc">FPS expérimental en 3D dans le navigateur. Propulsé par Three.js.</div>
+    </a>
+
   </div>
 
-  <!-- Bouton pour basculer vers la version mobile -->
-  <div style="text-align: center; margin-bottom: 10px;">
-    <button id="toggleMobileViewBtn">Version Mobile</button>
-  </div>
+</main>
 
-  <!-- Onglets -->
-  <div id="tabs">
-    <button class="tab-button active" data-tab="gameTab">Jeu</button>
-    <button class="tab-button" data-tab="mapTab">Carte</button>
-  </div>
+<footer>
+  <p>Un projet de <a href="https://fmenguy.fr">François Menguy</a></p>
+</footer>
 
-  <!-- Contenu des onglets -->
-  <div id="tabContent">
-    <!-- Onglet Jeu -->
-    <div id="gameTab" class="tab-pane active">
-      <div id="seasonDisplay">
-        <span class="icon">🌱</span> Printemps
-        <div class="progress-bar">
-          <div class="progress" style="width: 0%"></div>
-        </div>
-      </div>
-      <div id="techBanner" style="display: none">
-        <span id="currentAgeDisplay"></span>
-      </div>
-      <div id="agesList"></div>
-      <div id="narrative">
-        Ici, tout est sauvage. Récolte des baies pour survivre et attirer des amis.
-      </div>
-      <div id="explorationDisplay" style="display: none;">
-        <span class="icon">🗺️</span> Exploration
-        <div class="progress-bar">
-          <div class="progress" style="width: 0%"></div>
-        </div>
-      </div>
-      <div id="alert" style="display: none"></div>
-
-      <div id="resources">
-        <div class="resource">
-          <p><span class="icon">🍇</span> Baies: <span id="berries">0</span></p>
-          <button onclick="gatherBerries()">Récolter</button><span class="tooltip">Les baies te donnent à manger et attirent des gens.</span>
-        </div>
-        <div class="resource">
-          <p><span class="icon">🌲</span> Bois: <span id="wood">0</span></p>
-          <button onclick="gatherWood()">Récolter</button>
-        </div>
-        <div class="resource">
-          <p><span class="icon">⛰️</span> Pierre: <span id="stone">0</span></p>
-          <button onclick="gatherStone()">Récolter</button>
-        </div>
-        <div class="resource">
-          <p><span class="icon">💧</span> Eau: <span id="water">0</span></p>
-          <button onclick="gatherWater()">Récolter</button>
-        </div>
-        <div class="resource">
-          <p><span class="icon">🍖</span> Viande: <span id="meat">0</span></p>
-          <button onclick="gatherMeat()">Récolter</button>
-        </div>
-        <div class="resource" id="fibersSection" style="display: none">
-          <p><span class="icon">🌾</span> Fibres: <span id="fibers">0</span></p>
-          <button onclick="gatherFibers()">Récolter</button><span class="tooltip">Les fibres servent à faire des vêtements ou cordes.</span>
-        </div>
-        <div class="resource" id="metalsSection" style="display: none">
-          <p><span class="icon">⚒️</span> Métaux: <span id="metals">0</span> / <span id="maxMetalsLimit">100</span></p>
-          <button id="gatherMetalsBtn" onclick="gatherMetals()" disabled>Récolter</button>
-          <span class="tooltip">Les métaux améliorent les outils (mine requise).</span>
-        </div>
-        <div class="resource" id="herbsSection" style="display: none">
-          <p><span class="icon">🌿</span> Herbes: <span id="herbs">0</span></p>
-          <span class="tooltip">Les herbes soignent ou teignent (cueilleurs).</span>
-        </div>
-        <div class="resource" id="wheatSection" style="display: none">
-          <p><span class="icon">🌾</span> Blé: <span id="wheat">0</span></p>
-          <span class="tooltip">Le blé est cultivé par les fermiers.</span>
-        </div>
-        <div class="resource" id="flourSection" style="display: none">
-          <p><span class="icon">🥐</span> Farine: <span id="flour">0</span></p>
-          <span class="tooltip">La farine est produite par le moulin.</span>
-        </div>
-        <div class="resource" id="breadSection" style="display: none">
-          <p><span class="icon">🍞</span> Pain: <span id="bread">0</span></p>
-          <span class="tooltip">Le pain nourrit mieux que les baies.</span>
-        </div>
-      </div>
-
-      <div id="villagesDisplay" style="display: none;">
-        <h2>Villages</h2>
-        <ul id="villagesList"></ul>
-        <p>Population totale : <span id="totalPopulation">0</span> / 500</p>
-      </div>
-
-      <div class="columns">
-        <div class="section" id="fabricationSection">
-          <h2>Fabrication</h2>
-          <div class="craft" id="metalAxeSection" style="display: none" draggable="true">
-            <p><span class="icon">🪓</span> Hache Métal: <span id="metalAxes">0</span></p>
-            <button id="craftMetalAxeBtn" onclick="craftMetalAxe()">Fabriquer (5 Métaux, 5 Bois)</button><span class="tooltip">Coupe le bois encore plus vite.</span>
-          </div>
-          <div class="craft" id="axeSection" draggable="true">
-            <p><span class="icon">🪓</span> Hache: <span id="axes">0</span></p>
-            <button id="craftAxeBtn" onclick="craftAxe()">Fabriquer (5 Bois, 2 Pierre)</button><span class="tooltip">Une hache coupe le bois plus vite.</span>
-          </div>
-          <div class="craft" id="bucketSection" draggable="true">
-            <p><span class="icon">⚱️</span> Seau: <span id="buckets">0</span></p>
-            <button id="craftBucketBtn" onclick="craftBucket()">Fabriquer (5 Bois, 2 Pierre)</button><span class="tooltip">Un seau récolte plus d'eau</span>
-          </div>
-          <div class="craft" id="pickaxeSection" style="display: none" draggable="true">
-            <p><span class="icon">⛏️</span> Pioche: <span id="pickaxes">0</span></p>
-            <button id="craftPickaxeBtn" onclick="craftPickaxe()">Fabriquer (10 Bois, 5 Pierre)</button><span class="tooltip">Une pioche récolte plus de pierre.</span>
-          </div>
-          <div class="craft" id="bowSection" style="display: none" draggable="true">
-            <p><span class="icon">🏹</span> Arc: <span id="bows">0</span></p>
-            <button id="craftBowBtn" onclick="craftBow()">Fabriquer (10 Bois, 5 Pierre)</button><span class="tooltip">Un arc récolte plus de viande.</span>
-          </div>
-          <div class="craft" id="coatSection" style="display: none" draggable="true">
-            <p><span class="icon">🧥</span> Manteau: <span id="coats">0</span></p>
-            <button id="craftCoatBtn" onclick="craftCoat()">Fabriquer (10 Fibres, 5 Bois)</button><span class="tooltip">Protège du froid en Hiver.</span>
-          </div>
-          <div class="craft" id="remedySection" style="display: none" draggable="true">
-            <p><span class="icon">💊</span> Remède: <span id="remedies">0</span></p>
-            <button id="craftRemedyBtn" onclick="craftRemedy()">Fabriquer (5 Herbes, 5 Eau)</button><span class="tooltip">Prolonge la survie sans ressources.</span>
-          </div>
-        </div>
-
-        <div class="section" id="buildingsSection">
-          <h2>Bâtiments</h2>
-          <div class="craft" id="wellSection" style="display: none" draggable="true">
-            <p><span class="icon">⛏️</span> Puits: <span id="wells">0</span></p>
-            <button id="craftWellBtn" onclick="craftWell()">Construire (10 Bois, 5 Pierre)</button><span class="tooltip">Un puits stocke 1000 eaux et récolte de l'eau en fonction du nombre de seaux</span>
-          </div>
-          <div class="craft" id="mineSection" style="display: none" draggable="true">
-            <p><span class="icon">⛏️</span> Mine: <span id="mines">0</span></p>
-            <button id="craftMineBtn" onclick="craftMine()">Construire (50 Bois, 20 Pierre, 1 Bricoleur)</button><span class="tooltip">Une mine produit des métaux automatiquement.</span>
-          </div>
-          <div class="craft" id="workshopSection" style="display: none" draggable="true">
-            <p><span class="icon">🛠️</span> Atelier: <span id="workshops">0</span></p>
-            <button id="craftWorkshopBtn" onclick="craftWorkshop()">Construire (20 Bois, 10 Pierre, 5 Fibres)</button><span class="tooltip">Un atelier améliore les fibres.</span>
-          </div>
-          <div class="craft" id="herbalistSection" style="display: none" draggable="true">
-            <p><span class="icon">🌿</span> Herboristerie: <span id="herbalists">0</span></p>
-            <button id="craftHerbalistBtn" onclick="craftHerbalist()">Construire (15 Bois, 5 Pierre, 5 Herbes)</button><span class="tooltip">Une herboristerie améliore les remèdes.</span>
-          </div>
-          <div class="craft" id="wheatFieldSection" style="display: none" draggable="true">
-            <p><span class="icon">🌾</span> Champs de Blé: <span id="wheatFields">0</span></p>
-            <button id="craftWheatFieldBtn" onclick="craftWheatField()">Construire (20 Bois, 10 Pierre, 5 Herbes)</button><span class="tooltip">Les champs permettent de cultiver le blé.</span>
-          </div>
-          <div class="craft" id="millSection" style="display: none" draggable="true">
-            <p><span class="icon">🏭</span> Moulin: <span id="mills">0</span></p>
-            <button id="craftMillBtn" onclick="craftMill()">Construire (50 Bois, 20 Pierre, 5 Métaux)</button><span class="tooltip">Un moulin transforme le blé en farine.</span>
-          </div>
-          <div class="craft" id="bakerySection" style="display: none" draggable="true">
-            <p><span class="icon">🥖</span> Boulangerie: <span id="bakeries">0</span></p>
-            <button id="craftBakeryBtn" onclick="craftBakery()">Construire (50 Bois, 20 Pierre, 5 Farine)</button><span class="tooltip">Une boulangerie produit du pain à partir de farine et d'eau.</span>
-          </div>
-          <div class="craft" id="sawmillSection" style="display: none" draggable="true">
-            <p><span class="icon">🛠️</span> Scierie: <span id="sawmills">0</span></p>
-            <button id="craftSawmillBtn" onclick="craftSawmill()">Construire (50 Bois, 20 Pierre, 5 Métaux)</button><span class="tooltip">Une scierie produit du bois automatiquement.</span>
-          </div>
-          <div class="craft" id="stoneQuarrySection" style="display: none" draggable="true">
-            <p><span class="icon">⛏️</span> Carrière de Pierre: <span id="stoneQuarries">0</span></p>
-            <button id="craftStoneQuarryBtn" onclick="craftStoneQuarry()">Construire (50 Bois, 20 Pierre, 5 Métaux)</button><span class="tooltip">Une carrière produit de la pierre automatiquement.</span>
-          </div>
-          <div class="craft" id="warehouseSection" style="display: none" draggable="true">
-            <p><span class="icon">🏬</span> Entrepôt: <span id="warehouses">0</span></p>
-            <button id="craftWarehouseBtn" onclick="craftWarehouse()">Construire (100 Bois, 50 Pierre, 10 Métaux)</button><span class="tooltip">Un entrepôt stocke 50 000 unités de ressources premières (sauf nourriture et fibres).</span>
-          </div>
-        </div>
-
-        <div class="section" id="workerSection">
-          <h2>Main-d'œuvre</h2>
-          <div class="worker">
-            <p><span class="icon">👤</span> Villageois: <span id="villagers">0</span></p>
-            <button id="recruitVillagerBtn" onclick="recruitVillager()">Attirer (5 Baies)</button><span class="tooltip">Donne des baies pour faire venir des villageois.</span>
-          </div>
-          <div class="worker" id="chiefSection" style="display: none">
-            <p><span class="icon">👑</span> Chef: <span id="chief">0</span></p>
-            <button id="appointChiefBtn" onclick="appointChief()">Nommer (25 Haches, 25 Villageois)</button><span class="tooltip">Un chef aide tout le monde à travailler ensemble (1 chef max par 25 villageois).</span>
-          </div>
-          <div class="worker" id="tinkerSection" style="display: none">
-            <p><span class="icon">🔧</span> Bricoleur: <span id="tinkers">0</span></p>
-            <button id="recruitTinkerBtn" onclick="recruitTinker()">Recruter (100 Bois, 100 Pierre)</button><span class="tooltip">Un bricoleur fabrique des choses utiles.</span>
-          </div>
-          <div class="worker" id="pickerSection" style="display: none">
-            <p><span class="icon">🌿</span> Cueilleur: <span id="pickers">0</span></p>
-            <button id="recruitPickerBtn" onclick="recruitPicker()">Recruter (10 Baies, 5 Bois)</button><span class="tooltip">Un cueilleur ramasse des baies pour toi.</span>
-          </div>
-          <div class="worker" id="hunterSection" style="display: none">
-            <p><span class="icon">🏹</span> Chasseur: <span id="hunters">0</span></p>
-            <button id="recruitHunterBtn" onclick="recruitHunter()">Recruter (10 Bois, 5 Viande)</button><span class="tooltip">Un chasseur trouve de la viande pour tous.</span>
-          </div>
-          <div class="worker" id="researcherSection" style="display: none">
-            <p><span class="icon">🔬</span> Chercheur: <span id="researchers">0</span></p>
-            <button id="recruitResearcherBtn" onclick="recruitResearcher()">Recruter (10 Bricoleurs)</button><span class="tooltip">Un chercheur débloque de nouvelles technologies.</span>
-          </div>
-          <div class="worker" id="explorerSection" style="display: none">
-            <p><span class="icon">🗺️</span> Explorateurs: <span id="explorers">0</span></p>
-            <button id="sendExplorersBtn" onclick="sendExplorers()">Envoyer (50 Baies, 20 Bois, 10 Villageois)</button><span class="tooltip">Les explorateurs découvrent de nouvelles ressources.</span>
-          </div>
-          <div class="worker" id="minerSection" style="display: none">
-            <p><span class="icon">⛏️</span> Mineur: <span id="miners">0</span></p>
-            <button id="recruitMinerBtn" onclick="recruitMiner()">Recruter (10 Bois, 5 Métaux)</button><span class="tooltip">Un mineur extrait des métaux.</span>
-          </div>
-          <div class="worker" id="farmerSection" style="display: none">
-            <p><span class="icon">🌾</span> Fermier: <span id="farmers">0</span></p>
-            <button id="recruitFarmerBtn" onclick="recruitFarmer()">Recruter (10 Baies, 5 Bois)</button><span class="tooltip">Un fermier cultive le blé.</span>
-          </div>
-          <div class="worker" id="villageSection" style="display: none">
-            <p><span class="icon">🏡</span> Village: <span id="villages">0</span></p>
-            <button id="foundVillageBtn" onclick="foundVillage()">Fonder (50 Villageois)</button><span class="tooltip">Un village commence avec beaucoup de villageois.</span>
-          </div>
-        </div>
-
-        <div class="section" id="hintSection">
-          <h2>Indices</h2>
-          <p id="noHintMessage">Aucun indice disponible</p>
-          <button id="buyHintBtn" onclick="buyHint()">Acheter un indice</button>
-          <p id="hintCost" class="tooltip"></p>
-          <button id="toggleHintsBtn" onclick="toggleHints()">Afficher/Masquer</button>
-          <ul id="purchasedHintsList" style="display: block"></ul>
-        </div>
-
-        <div class="section" id="relicSection" style="display: none">
-          <h2>Reliques</h2>
-          <div class="relic">
-            <p><span class="icon">✨</span> Éclat d'Éternité: <span id="eternityShards">0</span></p>
-            <button id="seekShardBtn" onclick="seekShard()">Chercher (200 Bois, 100 Pierre, 50 Eau)</button><span class="tooltip">Un éclat spécial cache un secret.</span>
-          </div>
-        </div>
-      </div>
-
-      <div id="saveLoadSection">
-        <h2>Sauvegarde</h2>
-        <button id="saveGameBtn">Sauvegarder</button>
-        <button id="loadGameBtn">Charger</button>
-        <button id="exportSaveBtn">Exporter</button>
-        <button id="importSaveBtn">Importer</button>
-      </div>
-    </div>
-
-    <!-- Onglet Carte -->
-    <div id="mapTab" class="tab-pane">
-      <div id="mapSection">
-        <h2>Carte du Monde</h2>
-        <div class="map-container">
-          <canvas id="gameMap"></canvas>
-          <div id="mapLegend">
-            <h3>Légende</h3>
-            <ul>
-              <li><span class="legend-color" style="background-color: #d2b48c;"></span> Sol</li>
-              <li><span class="legend-color" style="background-color: #2f231a;"></span> Village</li>
-              <li><span class="legend-color" style="background-color: #1e90ff;"></span> Puits</li>
-              <li><span class="legend-color" style="background-color: #696969;"></span> Mine</li>
-              <li><span class="legend-color" style="background-color: #8b4513;"></span> Atelier</li>
-              <li><span class="legend-color" style="background-color: #228b22;"></span> Herboristerie</li>
-              <li><span class="legend-color" style="background-color: #f4a460;"></span> Champ de Blé</li>
-              <li><span class="legend-color" style="background-color: #cd853f;"></span> Moulin</li>
-              <li><span class="legend-color" style="background-color: #deb887;"></span> Boulangerie</li>
-              <li><span class="legend-color" style="background-color: #a0522d;"></span> Scierie</li>
-              <li><span class="legend-color" style="background-color: #808080;"></span> Carrière de Pierre</li>
-              <li><span class="legend-color" style="background-color: #4682b4;"></span> Entrepôt</li>
-              <li><span class="legend-color" style="background-color: #d4a017;"></span> Villageois</li>
-              <li><span class="legend-color" style="background-color: #000000;"></span> Brouillard de Guerre</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Conteneur pour les onglets (bas à droite) -->
-  <div id="hiddenTabs" style="position: fixed; bottom: 10px; right: 10px; opacity: 0.3; transition: opacity 0.3s; display: flex; align-items: center;">
-    <!-- Message à gauche -->
-    <span style="font-size: 12px; color: #ffffff; margin-right: 10px;">Mes autres jeux/tests en cours :</span>
-    <!-- Onglet discret pour Ecosystem -->
-    <a href="ecosim/ecosystem.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #6bb0e9; text-decoration: none;">🐟 Ecosim.</a>
-    <!-- Onglet discret pour TDM -->
-    <a href="zentel/zentel.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #c75858; text-decoration: none; margin-left: 10px;">🛡️ Zentel...</a>
-  </div>
-
-
-
-  <footer>
-    <div class="footer-left">
-      <span>Forge des Âges - Version 2.3</span><br />
-      <a href="docs/changelog-2.3.html" class="changelog-link">Changelog</a>
-    </div>
-  </footer>
-
-  <script src="js/forge-main.js" type="module"></script>
-
-  <audio id="backgroundMusic" loop>
-    <source src="assets/audio/ambiance_fda.mp3" type="audio/mpeg">
-    Votre navigateur ne supporte pas l'élément audio.
-  </audio>
-
-  <script>
-    // Gestion des onglets
-    document.querySelectorAll('.tab-button').forEach(button => {
-      button.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-        button.classList.add('active');
-        document.getElementById(button.dataset.tab).classList.add('active');
-      });
-    });
-
-    // Gestion de la bascule de la vue mobile
-    const mobileStyles = document.getElementById('mobileStyles');
-    const toggleMobileViewBtn = document.getElementById('toggleMobileViewBtn');
-
-    // Vérifie l'état initial dans localStorage
-    const isMobileView = localStorage.getItem('mobileView') === 'true';
-    mobileStyles.disabled = !isMobileView;
-    toggleMobileViewBtn.textContent = isMobileView ? 'Version Standard' : 'Version Mobile';
-
-    toggleMobileViewBtn.addEventListener('click', () => {
-      const isCurrentlyMobile = !mobileStyles.disabled;
-      mobileStyles.disabled = isCurrentlyMobile;
-      toggleMobileViewBtn.textContent = isCurrentlyMobile ? 'Version Mobile' : 'Version Standard';
-      localStorage.setItem('mobileView', !isCurrentlyMobile);
-    });
-
-    // Effet de survol pour l'onglet discret
-    const hiddenTabs = document.getElementById('hiddenTabs');
-    hiddenTabs.addEventListener('mouseover', () => { hiddenTabs.style.opacity = '1'; });
-    hiddenTabs.addEventListener('mouseout', () => { hiddenTabs.style.opacity = '0.3'; });
-  </script>
 </body>
 </html>
