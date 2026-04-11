@@ -188,6 +188,11 @@
     }
     .card-banner--fda .card-banner-icon { color: var(--gold); }
     .card-banner--eryndor .card-banner-icon { color: #a78bfa; }
+    .card-banner--orbique .card-banner-icon { color: #38bdf8; }
+    .card-banner--orbique { background: radial-gradient(ellipse at 50% 50%, #0c1e30 0%, #060d18 100%); }
+    .card-featured--cyan:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px #38bdf8; border-color: #38bdf8; }
+    .card-featured--cyan::before { background: linear-gradient(90deg, transparent, #38bdf8, transparent); }
+    .card-featured--cyan .card-cta { color: #38bdf8; }
 
     .card-body {
       padding: 1.4rem 1.5rem 1.6rem;
@@ -360,6 +365,18 @@
         <span class="card-tag card-tag--full">Jeu complet</span>
         <div class="card-title">Eryndor : L'Aube des Royaumes</div>
         <div class="card-desc">Jeu de stratégie fantasy au tour par tour. Commandez humains ou elfes, conquérez des territoires, affrontez une IA dans un monde en guerre.</div>
+        <span class="card-cta">Jouer</span>
+      </div>
+    </a>
+
+    <a class="card-featured card-featured--cyan" href="orbique/">
+      <div class="card-banner card-banner--orbique">
+        <span class="card-banner-icon">🔵</span>
+      </div>
+      <div class="card-body">
+        <span class="card-tag card-tag--full">Jeu complet</span>
+        <div class="card-title">Orbique</div>
+        <div class="card-desc">Jeu d'exploration en salles thématiques. Particules, textures, puzzles et tutoriel intégré — une expérience visuelle immersive.</div>
         <span class="card-cta">Jouer</span>
       </div>
     </a>
