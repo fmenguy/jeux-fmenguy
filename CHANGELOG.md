@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
 ---
 
+## [2026-04-17]
+
+### Modifié
+- **Eryndor** passe en mode **duel d'agents IA autonomes**. Les deux factions (Humains, Elfes) sont désormais pilotées par de vrais appels à l'API Anthropic (Sonnet 4.6 vs Haiku 4.5 par défaut, configurables). Le joueur devient spectateur.
+- Les déciseurs heuristiques (`AIDirector` et ses 8 sous-systèmes, ainsi que les auto-build/auto-research/auto-war internes à `Faction`) sont supprimés. Seule la « physique » du monde reste (mouvement, combat, ressources, recherche, reproduction).
+- Nouvelle architecture `js/agent/` : client Anthropic (BYOK navigateur), snapshots JSON, 10 tools (build/train/research/attack/declare_war/offer_peace/set_jobs/found_colony/trade/end_turn), validateur d'actions, scheduler parallèle.
+- Nouveau setup au lancement : saisie clé API (localStorage optionnel), choix des modèles, mode mock pour tests sans coût.
+- Ajout d'un journal des agents en bas de page (raisonnement + tool calls + compteur de tokens).
+
+---
+
 ## [2026-04-11]
 
 ### Ajouté

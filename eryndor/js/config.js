@@ -23,5 +23,21 @@ export const CONFIG = {
     victoryPopulation: 100,
     colonyMinDistance: 20,
     colonyMaxCount: 3,
-    diplomacyEnabled: true
+    diplomacyEnabled: true,
+
+    // Duel IA - scheduling & budgets
+    turnInterval: 300,
+    agentMockMode: false,
+    apiKey: null,
+    agentDefaults: {
+        humans: { model: 'claude-sonnet-4-6', maxTokens: 1400, maxToolCalls: 6, timeoutMs: 20000 },
+        elves:  { model: 'claude-haiku-4-5-20251001', maxTokens: 1400, maxToolCalls: 6, timeoutMs: 20000 }
+    },
+
+    // Tarifs Anthropic USD / million de tokens (mise à jour 2026-04).
+    modelPricing: {
+        'claude-opus-4-7':            { in: 15,  out: 75, label: 'Opus 4.7' },
+        'claude-sonnet-4-6':          { in: 3,   out: 15, label: 'Sonnet 4.6' },
+        'claude-haiku-4-5-20251001':  { in: 1,   out: 5,  label: 'Haiku 4.5' }
+    }
 };

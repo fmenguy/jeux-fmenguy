@@ -392,3 +392,361 @@
     min-width: 24px;
     text-align: center;
 }
+
+/* ============================================================
+   Duel IA — setup overlay, agent log, victory banner
+   ============================================================ */
+
+.setup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 10, 20, 0.88);
+    backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.setup-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: 32px 32px 28px;
+    width: 480px;
+    max-width: 92vw;
+    max-height: 92vh;
+    overflow-y: auto;
+    color: var(--text-primary);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.setup-card h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--accent-human), var(--accent-elf));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.setup-intro {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    margin-bottom: 18px;
+}
+
+.setup-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 14px 0 6px;
+}
+
+.setup-card input[type="text"],
+.setup-card input[type="password"],
+.setup-card input[type="number"],
+.setup-card select {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm, 6px);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.setup-card .setup-hint {
+    font-size: 11px;
+    color: var(--text-muted, #6b7280);
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.setup-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.setup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.setup-start {
+    width: 100%;
+    margin-top: 22px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--accent-human), var(--accent-elf));
+    color: #0a0f1a;
+    border: none;
+    border-radius: var(--radius-sm, 6px);
+    cursor: pointer;
+}
+
+.setup-error {
+    margin-top: 12px;
+    padding: 8px 10px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: var(--radius-sm, 6px);
+    color: #fca5a5;
+    font-size: 12px;
+}
+
+.setup-warning {
+    margin-top: 14px;
+    color: #fbbf24;
+}
+
+/* ============================================================
+   Agent log panel
+   ============================================================ */
+
+#app {
+    grid-template-rows: 56px 1fr var(--agent-log-height, 180px);
+}
+
+.agent-log {
+    grid-column: 1 / -1;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    position: relative;
+}
+
+.agent-log-resize {
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    cursor: ns-resize;
+    z-index: 10;
+    background: transparent;
+}
+.agent-log-resize::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 3px;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 2px;
+    background: var(--border-glass);
+    border-radius: 2px;
+    transition: background 120ms ease;
+}
+.agent-log-resize:hover::after {
+    background: var(--text-secondary);
+}
+
+.agent-log-actions {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: auto;
+    padding-left: 12px;
+}
+
+.agent-log-btn {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.agent-log-btn:hover {
+    background: var(--border-glass);
+    color: var(--text-primary);
+}
+
+.agent-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border-glass);
+    font-size: 12px;
+}
+
+.agent-log-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.agent-log-tokens,
+.agent-log-cost {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted, #6b7280);
+    margin-left: 12px;
+}
+
+.agent-log-cost {
+    color: #fbbf24;
+}
+
+.agent-log-model {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin-left: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.agent-log-usage {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted, #6b7280);
+    padding: 2px 0 6px;
+    border-bottom: 1px solid var(--border-glass);
+    margin-bottom: 6px;
+}
+
+.agent-log-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    flex: 1;
+    padding: 6px;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.agent-log-col {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    padding: 8px;
+    overflow-y: auto;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
+.agent-log-colhead {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding-bottom: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.agent-log-human .agent-log-colhead { color: var(--accent-human); }
+.agent-log-elf   .agent-log-colhead { color: var(--accent-elf); }
+
+.agent-log-entry {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(255,255,255,0.04);
+}
+
+.agent-log-entry-header {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+}
+
+.agent-log-reasoning {
+    color: var(--text-secondary);
+    font-family: inherit;
+    white-space: pre-wrap;
+    margin-bottom: 4px;
+    font-style: italic;
+}
+
+.agent-log-call {
+    font-size: 10.5px;
+    padding: 1px 0;
+    word-break: break-word;
+}
+
+.agent-log-call.ok  { color: #86efac; }
+.agent-log-call.err { color: #fca5a5; }
+.agent-log-call.info{ color: var(--text-muted, #6b7280); }
+
+.agent-log-entry-error {
+    color: #fca5a5;
+    margin-bottom: 8px;
+}
+
+.agent-log-sep {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-muted, #6b7280);
+    margin: 6px 0;
+}
+
+/* ============================================================
+   Turn interval input + stop duel btn in header
+   ============================================================ */
+
+.turn-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.turn-control input[type="number"] {
+    width: 64px;
+    padding: 4px 6px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+/* ============================================================
+   Victory banner
+   ============================================================ */
+
+.victory-banner {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: #facc15;
+    background: radial-gradient(circle at center, rgba(250,204,21,0.2), rgba(0,0,0,0.85));
+    backdrop-filter: blur(8px);
+    letter-spacing: 2px;
+    text-shadow: 0 4px 30px rgba(250,204,21,0.6);
+    pointer-events: none;
+}
