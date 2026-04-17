@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eryndor : L'Aube des Royaumes</title>
+    <title>Eryndor : Duel d'IA</title>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+    <!-- Setup overlay : saisie clé API + choix modèles -->
+    <div id="setupOverlay" class="setup-overlay"></div>
+
+    <!-- Bannière victoire -->
+    <div id="victoryBanner" class="victory-banner" style="display:none"></div>
+
     <div id="app">
-        <!-- Header -->
         <div id="header">
             <h1>Eryndor</h1>
             <div class="header-center">
@@ -18,76 +23,43 @@
                     <input type="range" id="speedSlider" min="1" max="50" value="1" step="1">
                     <span class="speed-value" id="speedValue">x1</span>
                 </div>
+                <div class="turn-control">
+                    <label for="turnIntervalInput">Tour tous les</label>
+                    <input type="number" id="turnIntervalInput" min="100" max="1500" step="50" value="300" />
+                    <span>cycles</span>
+                </div>
             </div>
             <div class="header-controls">
-                <button class="btn" id="saveBtn" title="Sauvegarder (Ctrl+S)">💾 Sauver</button>
-                <button class="btn" id="loadBtn" title="Charger (Ctrl+L)">📂 Charger</button>
+                <button class="btn" id="stopDuelBtn">Stopper le duel</button>
                 <button class="btn" id="techBtn">🔬 Tech</button>
                 <button class="btn" id="statsBtn">📊 Stats</button>
             </div>
         </div>
 
-        <!-- Left Panel - Humans -->
         <div id="leftPanel">
             <div class="panel-title human">Humains</div>
             <div id="humanInfo"></div>
         </div>
 
-        <!-- Canvas -->
         <div id="canvasContainer">
             <canvas id="gameCanvas"></canvas>
             <canvas id="minimap"></canvas>
             <div id="tooltip" class="tooltip"></div>
         </div>
 
-        <!-- Right Panel - Elves -->
         <div id="rightPanel">
             <div class="panel-title elf">Elfes</div>
             <div id="elfInfo"></div>
         </div>
 
-        <!-- Toolbar -->
-        <div id="toolbar">
-            <div class="toolbar-section">
-                <span class="toolbar-label">Sélection</span>
-                <button class="btn btn-icon active" data-select="villager" title="Villageois">👤</button>
-                <button class="btn btn-icon" data-select="building" title="Bâtiments">🏠</button>
-            </div>
-            <div class="toolbar-divider"></div>
-            <div class="toolbar-section">
-                <span class="toolbar-label">Terrain</span>
-                <button class="tool-btn" data-tool="grass" title="Herbe">🌿</button>
-                <button class="tool-btn" data-tool="forest" title="Forêt">🌲</button>
-                <button class="tool-btn" data-tool="stone" title="Pierre">🪨</button>
-                <button class="tool-btn" data-tool="iron" title="Fer">⛏</button>
-                <button class="tool-btn" data-tool="gold" title="Or">💎</button>
-                <button class="tool-btn" data-tool="berries" title="Baies">🫐</button>
-                <button class="tool-btn" data-tool="water" title="Eau">💧</button>
-                <button class="tool-btn" data-tool="mountain" title="Montagne">⛰</button>
-            </div>
-            <div class="toolbar-divider"></div>
-            <div class="toolbar-section">
-                <span class="toolbar-label">Taille</span>
-                <input type="range" id="brushSize" min="1" max="5" value="1" style="width:60px">
-            </div>
-            <div style="flex:1"></div>
-            <div class="toolbar-section">
-                <span class="toolbar-label">Dieu</span>
-                <button class="god-btn" id="actionDisaster" title="Catastrophe">🌋</button>
-                <button class="god-btn" id="actionBlessing" title="Bénédiction">✨</button>
-                <button class="god-btn" id="actionPlague" title="Peste">☠</button>
-                <button class="god-btn" id="actionFertility" title="Fertilité">🌸</button>
-            </div>
-        </div>
+        <!-- Journal des agents en bas -->
+        <div id="agentLog" class="agent-log"></div>
     </div>
 
-    <!-- Event Log -->
+    <!-- Event Log legacy -->
     <div id="eventLog" style="display:none"></div>
 
-    <!-- Modal Overlay -->
     <div id="modalOverlay" class="modal-overlay"></div>
-
-    <!-- Villager/Building Modal -->
     <div id="detailModal" class="modal">
         <div class="modal-header">
             <span class="modal-title" id="modalTitle">Détails</span>
@@ -95,8 +67,6 @@
         </div>
         <div class="modal-body" id="modalBody"></div>
     </div>
-
-    <!-- Tech Modal -->
     <div id="techModal" class="modal" style="min-width:700px">
         <div class="modal-header">
             <span class="modal-title">🔬 Technologies</span>
@@ -115,8 +85,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Stats Modal -->
     <div id="statsModal" class="modal" style="min-width:600px">
         <div class="modal-header">
             <span class="modal-title">📊 Statistiques</span>

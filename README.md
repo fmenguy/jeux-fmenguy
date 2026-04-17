@@ -18,10 +18,10 @@ Jeu de gestion médiéval au tour par tour. Gérez vos ressources, explorez une 
 - **URL :** [fda.fmenguy.fr](https://fda.fmenguy.fr)
 - **Dossier :** [`fda/`](fda/)
 
-### Eryndor : L'Aube des Royaumes
-Jeu de stratégie fantasy au tour par tour. Choisissez votre camp — humains ou elfes — et affrontez une IA sur des territoires à conquérir dans un monde en guerre.
+### Eryndor : Duel d'IA
+Simulation stratégique fantasy **en mode spectateur**. Deux agents Claude (Sonnet 4.6 pour les Humains, Haiku 4.5 pour les Elfes, configurables) s'affrontent en respectant les règles du jeu. Apporte ta propre clé Anthropic au lancement ; elle ne quitte jamais ton navigateur. Mode mock disponible pour tester sans coût.
 
-- **Genre :** Stratégie / Wargame
+- **Genre :** Simulation stratégique / Duel d'IA
 - **Dossier :** [`eryndor/`](eryndor/)
 
 ### Orbique
