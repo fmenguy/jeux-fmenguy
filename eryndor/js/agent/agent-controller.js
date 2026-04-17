@@ -31,6 +31,11 @@ export class AgentController {
         this.isThinking = false;
         this.lastError = null;
         this.cooldownUntil = 0;
+
+        // Post-game statistics
+        this.actionCounts = {};
+        this.highlights = []; // ex: { tick, name, detail }
+        this.turnHistory = []; // ex: { turn, tick, reasoning, ok, fail }
     }
 
     addEvent(message) {
@@ -131,10 +136,33 @@ export class AgentController {
             }
         });
 
+        let okCount = 0;
+        let failCount = 0;
         loopResult.toolCalls.forEach(tc => {
             if (tc.result && tc.result.ok) {
                 this.addEvent(`${tc.name}(${JSON.stringify(tc.input)}) -> ok`);
+                this.actionCounts[tc.name] = (this.actionCounts[tc.name] || 0) + 1;
+                okCount++;
+
+                if (tc.name === 'declare_war') {
+                    this.highlights.push({ turn: this.turnNumber, tick: this.game && this.game.map ? undefined : undefined, name: 'declare_war', detail: 'Guerre déclarée' });
+                } else if (tc.name === 'research' && tc.input && tc.input.tech_id) {
+                    this.highlights.push({ turn: this.turnNumber, name: 'research', detail: `Lance ${tc.input.tech_id}` });
+                } else if (tc.name === 'attack') {
+                    this.highlights.push({ turn: this.turnNumber, name: 'attack', detail: `Attaque ${(tc.input && tc.input.target) || 'nearest_enemy'}` });
+                } else if (tc.name === 'found_colony') {
+                    this.highlights.push({ turn: this.turnNumber, name: 'found_colony', detail: 'Colonie fondée' });
+                }
+            } else if (tc.result && tc.result.error) {
+                failCount++;
             }
+        });
+
+        this.turnHistory.push({
+            turn: this.turnNumber,
+            ok: okCount,
+            fail: failCount,
+            reasoning: loopResult.reasoning
         });
 
         return loopResult;
