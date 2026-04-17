@@ -16,6 +16,8 @@ import { AnthropicClient } from './agent/anthropic-client.js';
 import { MockClient } from './agent/mock-client.js';
 import { AgentLog } from './ui/agent-log.js';
 import * as SetupOverlay from './ui/setup-overlay.js';
+import { showVictoryReport } from './ui/victory-report.js';
+import { showHelp } from './ui/help-overlay.js';
 
 async function loadOptional() {
     try {
@@ -91,6 +93,7 @@ async function init() {
                 const winner = checkVictory(game);
                 if (winner) {
                     announceVictory(winner);
+                    showVictoryReport({ winner, game, agents });
                     CONFIG.isPaused = true;
                     scheduler.stop();
                     break;
@@ -124,6 +127,7 @@ function setupControls(scheduler, game) {
     const stopBtn = document.getElementById('stopDuelBtn');
     const techBtn = document.getElementById('techBtn');
     const statsBtn = document.getElementById('statsBtn');
+    const helpBtn = document.getElementById('helpBtn');
 
     if (slider) {
         slider.addEventListener('input', (e) => {
@@ -169,6 +173,9 @@ function setupControls(scheduler, game) {
                 game.uiManager.modals.showStats(game);
             }
         });
+    }
+    if (helpBtn) {
+        helpBtn.addEventListener('click', () => showHelp());
     }
 }
 
