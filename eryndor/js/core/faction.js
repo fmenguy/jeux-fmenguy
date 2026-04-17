@@ -216,176 +216,8 @@ export class Faction {
         this.stats.buildingsConstructed++;
     }
 
-    checkColonyExpansion(gameMap) {
-        this.colonyCheckTimer += CONFIG.gameSpeed;
-        if (this.colonyCheckTimer < 1000) return;
-        this.colonyCheckTimer = 0;
-
-        if (!this.canFoundColony()) return;
-
-        const location = this.findColonyLocation(gameMap);
-        if (location) {
-            this.foundColony(gameMap, location.x, location.y);
-        }
-    }
-
-    // ========================================
-    // INFRASTRUCTURE
-    // ========================================
-
-    buildInfrastructure(gameMap) {
-        this.infrastructureTimer += CONFIG.gameSpeed;
-        if (this.infrastructureTimer < 80) return;
-        this.infrastructureTimer = 0;
-
-        const year = Math.floor(CONFIG.currentTick / CONFIG.ticksPerYear);
-
-        if (this.resources.stone > 30 && Math.random() < 0.5) {
-            this.buildRoadNetwork(gameMap);
-        }
-
-        const wallChance = this.warState.isAtWar ? 0.6 : (year > 20 ? 0.25 : 0.1);
-        if (this.resources.stone > 60 && Math.random() < wallChance) {
-            this.buildDefensiveWalls(gameMap);
-        }
-
-        if (this.resources.stone > 80 && this.resources.iron > 30 && Math.random() < 0.3) {
-            this.buildDefensiveTower(gameMap);
-        }
-    }
-
-    buildRoadNetwork(gameMap) {
-        const castle = this.buildings.find(b => b.type === BUILDING.CASTLE);
-        if (!castle) return;
-
-        const importantBuildings = this.buildings.filter(b =>
-            [BUILDING.FARM, BUILDING.MINE, BUILDING.FORGE, BUILDING.BARRACKS, BUILDING.MARKET, BUILDING.COLONY].includes(b.type)
-        );
-
-        if (importantBuildings.length === 0) return;
-
-        const unconnected = importantBuildings.filter(b => {
-            const neighbors = [[b.x - 1, b.y], [b.x + 1, b.y], [b.x, b.y - 1], [b.x, b.y + 1]];
-            return !neighbors.some(([nx, ny]) => {
-                if (nx < 0 || nx >= gameMap.width || ny < 0 || ny >= gameMap.height) return false;
-                return gameMap.buildings[ny][nx].type === BUILDING.ROAD;
-            });
-        });
-
-        const targetBuilding = unconnected.length > 0
-            ? unconnected[0]
-            : importantBuildings[Math.floor(Math.random() * importantBuildings.length)];
-
-        this._buildRoadPath(gameMap, targetBuilding.x, targetBuilding.y, castle.x, castle.y);
-    }
-
-    _buildRoadPath(gameMap, x1, y1, x2, y2) {
-        let roadsBuilt = 0;
-        const maxRoads = 8;
-        const roadCost = BUILDING_CONFIG[BUILDING.ROAD].cost.stone;
-
-        // Horizontal first
-        const dx = x2 > x1 ? 1 : -1;
-        let x = x1;
-        while (x !== x2 && roadsBuilt < maxRoads) {
-            x += dx;
-            if (this._canBuildRoadAt(gameMap, x, y1) && this.resources.stone >= roadCost) {
-                gameMap.buildings[y1][x] = createBuilding(BUILDING.ROAD, this.id);
-                this.buildings.push({ type: BUILDING.ROAD, x, y: y1 });
-                this.resources.stone -= roadCost;
-                roadsBuilt++;
-            }
-        }
-
-        // Then vertical
-        const dy = y2 > y1 ? 1 : -1;
-        let y = y1;
-        while (y !== y2 && roadsBuilt < maxRoads) {
-            y += dy;
-            if (this._canBuildRoadAt(gameMap, x2, y) && this.resources.stone >= roadCost) {
-                gameMap.buildings[y][x2] = createBuilding(BUILDING.ROAD, this.id);
-                this.buildings.push({ type: BUILDING.ROAD, x: x2, y });
-                this.resources.stone -= roadCost;
-                roadsBuilt++;
-            }
-        }
-    }
-
-    _canBuildRoadAt(gameMap, x, y) {
-        if (x < 0 || x >= gameMap.width || y < 0 || y >= gameMap.height) return false;
-        if (gameMap.terrain[y][x] !== TERRAIN.GRASS) return false;
-        if (gameMap.buildings[y][x].type !== BUILDING.NONE) return false;
-        if (gameMap.territory[y][x] !== this.id) return false;
-        return true;
-    }
-
-    buildDefensiveWalls(gameMap) {
-        const borderCells = [];
-        for (let y = 0; y < gameMap.height; y++) {
-            for (let x = 0; x < gameMap.width; x++) {
-                if (gameMap.territory[y][x] !== this.id) continue;
-                if (gameMap.terrain[y][x] !== TERRAIN.GRASS) continue;
-                if (gameMap.buildings[y][x].type !== BUILDING.NONE) continue;
-
-                const neighbors = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]];
-                const isBorder = neighbors.some(([nx, ny]) => {
-                    if (nx < 0 || nx >= gameMap.width || ny < 0 || ny >= gameMap.height) return true;
-                    const neighborTerritory = gameMap.territory[ny][nx];
-                    return neighborTerritory !== this.id && neighborTerritory >= 0;
-                });
-
-                if (isBorder) {
-                    borderCells.push({ x, y });
-                }
-            }
-        }
-
-        let wallsBuilt = 0;
-        const maxWalls = this.warState.isAtWar ? 8 : 5;
-        for (const cell of borderCells) {
-            if (wallsBuilt >= maxWalls) break;
-            if (this.resources.stone < BUILDING_CONFIG[BUILDING.WALL].cost.stone) break;
-
-            gameMap.buildings[cell.y][cell.x] = createBuilding(BUILDING.WALL, this.id);
-            this.buildings.push({ type: BUILDING.WALL, x: cell.x, y: cell.y });
-            this.resources.stone -= BUILDING_CONFIG[BUILDING.WALL].cost.stone;
-            wallsBuilt++;
-        }
-    }
-
-    buildDefensiveTower(gameMap) {
-        const castle = this.buildings.find(b => b.type === BUILDING.CASTLE);
-        if (!castle) return;
-
-        for (let radius = 3; radius <= 8; radius++) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
-                const x = Math.floor(castle.x + Math.cos(angle) * radius);
-                const y = Math.floor(castle.y + Math.sin(angle) * radius);
-
-                if (x < 0 || x >= gameMap.width || y < 0 || y >= gameMap.height) continue;
-                if (gameMap.territory[y][x] !== this.id) continue;
-                if (gameMap.terrain[y][x] !== TERRAIN.GRASS) continue;
-                if (gameMap.buildings[y][x].type !== BUILDING.NONE) continue;
-
-                const tooClose = this.buildings.some(b => {
-                    if (b.type !== BUILDING.TOWER && b.type !== BUILDING.WATCHTOWER) return false;
-                    const dist = Math.sqrt(Math.pow(x - b.x, 2) + Math.pow(y - b.y, 2));
-                    return dist < 5;
-                });
-                if (tooClose) continue;
-
-                const cost = BUILDING_CONFIG[BUILDING.TOWER].cost;
-                if (this.resources.stone >= cost.stone && this.resources.iron >= cost.iron) {
-                    gameMap.buildings[y][x] = createBuilding(BUILDING.TOWER, this.id);
-                    this.buildings.push({ type: BUILDING.TOWER, x, y });
-                    this.resources.stone -= cost.stone;
-                    this.resources.iron -= cost.iron;
-                    this.stats.buildingsConstructed++;
-                    return;
-                }
-            }
-        }
-    }
+    // Agent-triggered colony expansion is handled via the `found_colony` tool
+    // using canFoundColony / findColonyLocation / foundColony directly.
 
     // ========================================
     // FOOD AVAILABILITY CHECK
@@ -432,20 +264,24 @@ export class Faction {
     // MAIN UPDATE LOOP
     // ========================================
 
+    // ========================================
+    // MAIN UPDATE LOOP (physics only)
+    // ========================================
+    //
+    // Strategic decisions (what to build, what to research, when to train,
+    // when to declare war, trade arbitrage, etc.) are now driven by the
+    // agent controller in js/agent/. This method intentionally keeps only
+    // the "physics" of the world: food, deaths, births, tower fire,
+    // research progression, building bonuses, villager ticks.
+    //
     update(gameMap, allFactions) {
         const seasonMods = Villager.getSeasonModifiers();
+        const aliveVillagers = this.villagers.filter(v => v.isAlive);
 
         // Food consumption
-        const aliveVillagers = this.villagers.filter(v => v.isAlive);
         let foodNeeded = aliveVillagers.length * CONFIG.foodPerVillagerPerTick * CONFIG.gameSpeed;
-
-        // Winter: increased consumption
         const currentSeason = Villager.getCurrentSeason();
-        if (currentSeason === 3) {
-            foodNeeded *= 1.2;
-        }
-
-        // Apply granary preservation bonus
+        if (currentSeason === 3) foodNeeded *= 1.2;
         foodNeeded *= this.buildingBonuses.foodPreservation;
 
         const hasStoredFood = this.resources.food >= foodNeeded;
@@ -460,94 +296,62 @@ export class Faction {
             this.resources.food = 0;
         }
 
-        // Update hunger and natural death
         const famineResistance = this.traits.famineResistance || 1;
         aliveVillagers.forEach(v => {
             v.updateHunger(hasEnoughFood, famineResistance);
             v.checkNaturalDeath();
         });
 
-        // Remove dead villagers and update stats
         const deadVillagers = this.villagers.filter(v => !v.isAlive);
         if (deadVillagers.length > 0) {
             this.stats.totalDeaths += deadVillagers.length;
             this.villagers = this.villagers.filter(v => v.isAlive);
         }
 
-        // Update peak population
         if (aliveVillagers.length > this.stats.peakPopulation) {
             this.stats.peakPopulation = aliveVillagers.length;
         }
 
-        // Marriage and reproduction
+        // Marriage + reproduction (physics)
         this.processMarriages();
         const foodPerVillager = aliveVillagers.length > 0 ? this.resources.food / aliveVillagers.length : 0;
-        const birthChanceMod = seasonMods.birthRate;
-
         if (foodPerVillager > CONFIG.birthFoodThreshold && this.villagers.length < this.maxPopulation) {
-            if (Math.random() < birthChanceMod) {
+            if (Math.random() < seasonMods.birthRate) {
                 this.processReproduction(gameMap);
             }
         }
 
-        // Research
+        // Research progression (only if the agent started something)
         if (this.currentResearch) {
             this.researchProgress += CONFIG.gameSpeed * this.traits.researchSpeed * 0.5;
             if (this.researchProgress >= this.currentResearch.duration) {
                 this.completeTech();
                 this.stats.techsResearched++;
             }
-        } else {
-            this.startNewResearch();
         }
 
-        // Territory expansion
+        // Gradual territory expansion around buildings
         if (aliveVillagers.length > 0 && this.buildings.length > 0 && Math.random() < 0.02 * CONFIG.gameSpeed) {
             this.expandTerritoryFromBuildings(gameMap);
         }
 
-        // Automatic building
-        if (Math.random() < 0.03 * CONFIG.gameSpeed * this.traits.buildSpeed) {
-            this.tryBuildSomething(gameMap);
-        }
-
-        // Port check
-        this.portCheckTimer += CONFIG.gameSpeed;
-        if (this.portCheckTimer > 500) {
-            this.portCheckTimer = 0;
-            this._tryBuildPort(gameMap);
-        }
-
-        // Update boats
+        // Boats
         this.boats.forEach(boat => boat.update(gameMap, this));
 
-        // Trade
-        this.handleTrade();
-
-        // Tower auto-attacks
+        // Tower auto-defense (passive building effect)
         this.updateTowers(gameMap, allFactions);
 
-        // Military training
-        this.processTraining();
+        // Advance training queue (candidates are enqueued by the agent via startTraining)
+        this.processTrainingProgress();
 
-        // War state
-        this.processWarState(gameMap, allFactions);
+        // War end conditions (no auto-declaration anymore)
+        this.processWarEndConditions(gameMap, allFactions);
 
-        // Building bonuses update
         if (CONFIG.currentTick % 100 === 0) {
             this.calculateBuildingBonuses();
         }
 
-        // Colony expansion check
-        this.checkColonyExpansion(gameMap);
-
-        // Infrastructure (roads, walls, towers)
-        this.buildInfrastructure(gameMap);
-
-        // Territory count
         this.updateTerritoryCount(gameMap);
-
-        // Update villagers
         this.villagers.forEach(v => v.update(gameMap, this, allFactions));
     }
 
@@ -686,94 +490,6 @@ export class Faction {
                 });
             });
         });
-    }
-
-    // ========================================
-    // TRADE
-    // ========================================
-
-    handleTrade() {
-        if (Math.random() > 0.005 * CONFIG.gameSpeed) return;
-
-        const goldThreshold = 50;
-        const tradeCost = 20;
-
-        if (this.resources.gold < goldThreshold) return;
-
-        const needs = [
-            { resource: 'food', threshold: 30, amount: 25, priority: this.resources.food < 30 ? 3 : 0 },
-            { resource: 'wood', threshold: 50, amount: 30, priority: this.resources.wood < 50 ? 2 : 0 },
-            { resource: 'stone', threshold: 30, amount: 20, priority: this.resources.stone < 30 ? 1 : 0 },
-            { resource: 'iron', threshold: 20, amount: 15, priority: this.resources.iron < 20 ? 1 : 0 }
-        ];
-
-        needs.sort((a, b) => b.priority - a.priority);
-
-        const mostNeeded = needs[0];
-        if (mostNeeded.priority > 0 && this.resources[mostNeeded.resource] < mostNeeded.threshold) {
-            this.resources.gold -= tradeCost;
-            this.resources[mostNeeded.resource] += mostNeeded.amount;
-        }
-        else if (this.currentResearch && this.resources.gold > 100) {
-            this.resources.gold -= 10;
-            this.researchProgress += 5 * CONFIG.gameSpeed;
-        }
-        else if (this.resources.gold > 150 && Math.random() < 0.3) {
-            this.resources.gold -= 30;
-            this.villagers.forEach(v => {
-                if (v.isAlive) {
-                    v.combatStats.attack += 0.5;
-                    v.combatStats.defense += 0.3;
-                }
-            });
-        }
-    }
-
-    // ========================================
-    // PORT AND BOATS
-    // ========================================
-
-    _tryBuildPort(gameMap) {
-        const hasPort = this.buildings.some(b => b.type === BUILDING.PORT);
-        if (hasPort) {
-            if (this.boats.length < 3 && this.resources.wood >= 80) {
-                const port = this.buildings.find(b => b.type === BUILDING.PORT);
-                if (port) {
-                    const waterSpot = gameMap.findNearbyNavigableWater(port.x, port.y);
-                    if (waterSpot) {
-                        const boat = new Boat(this.id, waterSpot.x, waterSpot.y);
-                        boat.portX = port.x;
-                        boat.portY = port.y;
-                        this.boats.push(boat);
-                        this.resources.wood -= 80;
-                    }
-                }
-            }
-            return;
-        }
-
-        if (this.resources.wood < 150 || this.resources.stone < 100) return;
-
-        for (let y = 0; y < gameMap.height; y++) {
-            for (let x = 0; x < gameMap.width; x++) {
-                if (gameMap.canBuildPort(x, y, this.id)) {
-                    gameMap.buildings[y][x] = createBuilding(BUILDING.PORT, this.id);
-                    this.buildings.push({ type: BUILDING.PORT, x, y });
-                    this.resources.wood -= 150;
-                    this.resources.stone -= 100;
-
-                    const waterSpot = gameMap.findNearbyNavigableWater(x, y);
-                    if (waterSpot) {
-                        const boat = new Boat(this.id, waterSpot.x, waterSpot.y);
-                        boat.portX = x;
-                        boat.portY = y;
-                        this.boats.push(boat);
-                    }
-
-                    return;
-                }
-            }
-        }
     }
 
     // ========================================
@@ -916,7 +632,7 @@ export class Faction {
         return true;
     }
 
-    processTraining() {
+    processTrainingProgress() {
         this.trainingQueue = this.trainingQueue.filter(training => {
             training.progress += CONFIG.gameSpeed;
 
@@ -931,81 +647,27 @@ export class Faction {
             }
             return true;
         });
-
-        // AI: decide to train units automatically
-        const aliveVillagers = this.villagers.filter(v => v.isAlive);
-        const militaryRatio = this.militaryUnits / Math.max(1, aliveVillagers.length);
-
-        const targetRatio = this.warState.isAtWar ? 0.4 : 0.2;
-
-        if (militaryRatio < targetRatio && this.trainingQueue.length < 2) {
-            const candidates = this.villagers.filter(v =>
-                v.isAlive && v.unitType === UNIT_TYPE.VILLAGER &&
-                v.currentAge >= 16 && v.currentAge <= 50 &&
-                v.currentTask !== 'training'
-            ).sort((a, b) => b.skills.combat - a.skills.combat);
-
-            if (candidates.length > 0 && Math.random() < 0.01 * CONFIG.gameSpeed) {
-                const candidate = candidates[0];
-
-                let unitType;
-                if (this.type === 'human') {
-                    unitType = this.canTrain(UNIT_TYPE.CAVALRY) && Math.random() < 0.3
-                        ? UNIT_TYPE.CAVALRY : UNIT_TYPE.SOLDIER;
-                } else {
-                    unitType = this.canTrain(UNIT_TYPE.ARCHER)
-                        ? UNIT_TYPE.ARCHER : UNIT_TYPE.SCOUT;
-                }
-
-                this.startTraining(candidate, unitType);
-            }
-        }
     }
 
     // ========================================
     // WAR
     // ========================================
 
-    processWarState(gameMap, allFactions) {
-        const adjacentEnemies = new Set();
+    processWarEndConditions(gameMap, allFactions) {
+        if (!this.warState.isAtWar) return;
 
-        for (let y = 0; y < gameMap.height; y++) {
-            for (let x = 0; x < gameMap.width; x++) {
-                if (gameMap.territory[y][x] !== this.id) continue;
-
-                const neighbors = [{ x: x - 1, y }, { x: x + 1, y }, { x, y: y - 1 }, { x, y: y + 1 }];
-                neighbors.forEach(n => {
-                    if (n.x >= 0 && n.x < gameMap.width && n.y >= 0 && n.y < gameMap.height) {
-                        const neighborTerritory = gameMap.territory[n.y][n.x];
-                        if (neighborTerritory !== -1 && neighborTerritory !== this.id) {
-                            adjacentEnemies.add(neighborTerritory);
-                        }
-                    }
-                });
-            }
+        const enemy = allFactions.find(f => f.id === this.warState.enemyId);
+        if (!enemy) {
+            this.endWar('victory');
+            return;
         }
 
-        if (!this.warState.isAtWar && adjacentEnemies.size > 0) {
-            if (Math.random() < 0.0001 * CONFIG.gameSpeed) {
-                const enemyId = Array.from(adjacentEnemies)[0];
-                this.declareWar(enemyId, allFactions);
-            }
-        }
+        const enemyVillagers = enemy.villagers.filter(v => v.isAlive);
+        const enemyCastle = enemy.buildings.find(b => b.type === BUILDING.CASTLE);
 
-        if (this.warState.isAtWar) {
-            const enemy = allFactions.find(f => f.id === this.warState.enemyId);
-            if (!enemy) {
-                this.endWar('victory');
-                return;
-            }
-
-            const enemyVillagers = enemy.villagers.filter(v => v.isAlive);
-            const enemyCastle = enemy.buildings.find(b => b.type === BUILDING.CASTLE);
-
-            if (enemyVillagers.length === 0 || !enemyCastle) {
-                this.endWar('victory');
-                this.conquerTerritory(gameMap, enemy);
-            }
+        if (enemyVillagers.length === 0 || !enemyCastle) {
+            this.endWar('victory');
+            this.conquerTerritory(gameMap, enemy);
         }
     }
 
@@ -1060,226 +722,207 @@ export class Faction {
     }
 
     // ========================================
-    // BUILDING AI
+    // AGENT ACTIONS (called by js/agent/action-executor.js)
     // ========================================
+    //
+    // These methods are the public surface the AI agents act through.
+    // They enforce rules: resource cost, tech prerequisites, population
+    // constraints, valid terrain. They return { ok, reason?, ... }.
 
-    tryBuildSomething(gameMap) {
-        const validLocations = [];
-        const frontierLocations = [];
+    placeBuilding(gameMap, buildingType, pos) {
+        const cfg = BUILDING_CONFIG[buildingType];
+        if (!cfg) return { ok: false, reason: 'unknown_building_type' };
 
-        for (let y = 0; y < gameMap.height; y++) {
-            for (let x = 0; x < gameMap.width; x++) {
-                if (gameMap.territory[y][x] === this.id && gameMap.isValidBuildLocation(x, y)) {
-                    validLocations.push({ x, y });
-
-                    const neighbors = [
-                        { x: x - 1, y }, { x: x + 1, y },
-                        { x, y: y - 1 }, { x, y: y + 1 }
-                    ];
-                    const isFrontier = neighbors.some(n => {
-                        if (n.x < 0 || n.x >= gameMap.width || n.y < 0 || n.y >= gameMap.height) return true;
-                        const neighborTerritory = gameMap.territory[n.y][n.x];
-                        return neighborTerritory !== -1 && neighborTerritory !== this.id;
-                    });
-                    if (isFrontier) {
-                        frontierLocations.push({ x, y });
-                    }
-                }
+        for (const [res, amount] of Object.entries(cfg.cost || {})) {
+            if ((this.resources[res] || 0) < amount) {
+                return { ok: false, reason: `insufficient_${res}` };
             }
         }
 
-        if (validLocations.length === 0) return;
-
-        // Count existing buildings
-        const houseCount = this.buildings.filter(b => b.type === BUILDING.HOUSE).length;
-        const farmCount = this.buildings.filter(b => b.type === BUILDING.FARM).length;
-        const watchtowerCount = this.buildings.filter(b => b.type === BUILDING.WATCHTOWER).length;
-        const archeryCount = this.buildings.filter(b => b.type === BUILDING.ARCHERY_RANGE).length;
-        const wallCount = this.buildings.filter(b => b.type === BUILDING.WALL).length;
-        const towerCount = this.buildings.filter(b => b.type === BUILDING.TOWER).length;
-        const roadCount = this.buildings.filter(b => b.type === BUILDING.ROAD).length;
-        const barracksCount = this.buildings.filter(b => b.type === BUILDING.BARRACKS).length;
-        const forgeCount = this.buildings.filter(b => b.type === BUILDING.FORGE).length;
-        const marketCount = this.buildings.filter(b => b.type === BUILDING.MARKET).length;
-        const granaryCount = this.buildings.filter(b => b.type === BUILDING.GRANARY).length;
-        const aliveCount = this.villagers.filter(v => v.isAlive).length;
-
-        // Decide what to build
-        let buildType = BUILDING.HOUSE;
-        let woodCost = 30;
-        let stoneCost = 20;
-        let ironCost = 0;
-        let goldCost = 0;
-        let loc = validLocations[Math.floor(Math.random() * validLocations.length)];
-
-        // Priority 0: FARMS if food is critical
-        if (this.resources.food < aliveCount * 20 && farmCount < houseCount && this.resources.wood >= 40) {
-            buildType = BUILDING.FARM;
-            woodCost = 40;
-            stoneCost = 5;
+        if (buildingType === BUILDING.WALL && !(this.traits.masonryUnlocked || CONFIG.currentTick > 25000)) {
+            return { ok: false, reason: 'requires_masonry' };
         }
-        // Priority 1: Roads to castle
-        else if (roadCount < this.buildings.length * 0.4 && this.resources.stone >= 5 && Math.random() < 0.4) {
-            const roadLoc = this._findRoadLocation(gameMap);
-            if (roadLoc) {
-                buildType = BUILDING.ROAD;
-                woodCost = 2;
-                stoneCost = 5;
-                loc = roadLoc;
-            }
+        if (buildingType === BUILDING.ARCHERY_RANGE && this.type === 'human' && !this.completedTechs.includes('archery')) {
+            return { ok: false, reason: 'requires_archery_tech' };
         }
-        // Priority 2: Walls at borders
-        else if ((this.traits.masonryUnlocked || CONFIG.currentTick > 25000) && frontierLocations.length > 0 && wallCount < frontierLocations.length * 0.5 && this.resources.stone >= 15 && Math.random() < 0.35) {
-            buildType = BUILDING.WALL;
-            woodCost = 5;
-            stoneCost = 15;
-            loc = frontierLocations[Math.floor(Math.random() * frontierLocations.length)];
-        }
-        // Priority 3: Defense towers
-        else if (towerCount < Math.max(3, wallCount / 3) && this.resources.stone >= 40 && this.resources.iron >= 10 && Math.random() < 0.25) {
-            buildType = BUILDING.TOWER;
-            woodCost = 10;
-            stoneCost = 40;
-            ironCost = 10;
-            const nearWallOrFrontier = validLocations.find(l => {
-                return this.buildings.some(b => b.type === BUILDING.WALL && Math.abs(b.x - l.x) <= 2 && Math.abs(b.y - l.y) <= 2);
-            }) || frontierLocations[Math.floor(Math.random() * frontierLocations.length)];
-            if (nearWallOrFrontier) loc = nearWallOrFrontier;
-        }
-        // Other buildings
-        else if (this.resources.wood >= 40 && this.resources.stone >= 20) {
-            const rand = Math.random();
 
-            if (farmCount < Math.max(3, houseCount / 2) && rand < 0.25) {
-                buildType = BUILDING.FARM;
-                woodCost = 40;
-                stoneCost = 5;
-            }
-            else if (granaryCount < farmCount / 2 && this.resources.wood >= 70 && rand < 0.15) {
-                buildType = BUILDING.GRANARY;
-                woodCost = 70;
-                stoneCost = 30;
-            }
-            else if (forgeCount < 3 && this.completedTechs.includes('ironWorking') && rand < 0.2) {
-                buildType = BUILDING.FORGE;
-                woodCost = 50;
-                stoneCost = 30;
-                ironCost = 10;
-            }
-            else if (barracksCount < 4 && rand < 0.2) {
-                buildType = BUILDING.BARRACKS;
-                woodCost = 60;
-                stoneCost = 40;
-                ironCost = 20;
-            }
-            else if (marketCount < 2 && this.resources.gold >= 30 && rand < 0.15) {
-                buildType = BUILDING.MARKET;
-                woodCost = 80;
-                stoneCost = 40;
-                goldCost = 30;
-            }
-            else if (this.type === 'human' && watchtowerCount < 8 && rand < 0.35 && this.resources.stone >= 60) {
-                buildType = BUILDING.WATCHTOWER;
-                stoneCost = 60;
-                woodCost = 40;
-            }
-            else if (this.type === 'elf' && archeryCount < 8 && rand < 0.35 && this.resources.wood >= 60) {
-                buildType = BUILDING.ARCHERY_RANGE;
-                woodCost = 70;
-                stoneCost = 30;
-            }
-            else if (houseCount < aliveCount / 3 && rand < 0.3) {
-                buildType = BUILDING.HOUSE;
-                woodCost = 30;
-                stoneCost = 10;
+        if (!pos || !gameMap.isValidBuildLocation(pos.x, pos.y)) {
+            return { ok: false, reason: 'invalid_location' };
+        }
+        if (gameMap.territory[pos.y][pos.x] !== this.id) {
+            return { ok: false, reason: 'not_own_territory' };
+        }
+
+        gameMap.buildings[pos.y][pos.x] = createBuilding(buildingType, this.id);
+        this.buildings.push({ type: buildingType, x: pos.x, y: pos.y });
+
+        for (const [res, amount] of Object.entries(cfg.cost || {})) {
+            this.resources[res] -= amount;
+        }
+
+        if (buildingType === BUILDING.HOUSE) this.maxPopulation += cfg.popBonus || 5;
+        else if (buildingType === BUILDING.FARM) this.production.food += 0.8;
+        else if (buildingType === BUILDING.FORGE) this.production.iron += 0.5;
+        else if (buildingType === BUILDING.WATCHTOWER) {
+            this.traits.defenseBonus = (this.traits.defenseBonus || 1) + 0.1;
+        } else if (buildingType === BUILDING.ARCHERY_RANGE) {
+            this.traits.rangeBonus = (this.traits.rangeBonus || 1) + 0.1;
+        } else if (buildingType === BUILDING.TOWER) {
+            this.traits.defenseBonus = (this.traits.defenseBonus || 1) + 0.15;
+        } else if (buildingType === BUILDING.MARKET) {
+            this.traits.tradeBonus = (this.traits.tradeBonus || 1) + 0.2;
+        } else if (buildingType === BUILDING.GRANARY) {
+            this.buildingBonuses.foodStorage += 200;
+            this.buildingBonuses.foodPreservation *= 0.95;
+        } else if (buildingType === BUILDING.BARRACKS) {
+            this.traits.combatBonus = (this.traits.combatBonus || 1) + 0.1;
+        } else if (buildingType === BUILDING.PORT) {
+            const waterSpot = gameMap.findNearbyNavigableWater(pos.x, pos.y);
+            if (waterSpot) {
+                const boat = new Boat(this.id, waterSpot.x, waterSpot.y);
+                boat.portX = pos.x;
+                boat.portY = pos.y;
+                this.boats.push(boat);
             }
         }
 
-        // Check resources and build
-        if (this.resources.wood >= woodCost && this.resources.stone >= stoneCost &&
-            this.resources.iron >= ironCost && this.resources.gold >= goldCost) {
-            gameMap.buildings[loc.y][loc.x] = createBuilding(buildType, this.id);
-            this.buildings.push({ type: buildType, x: loc.x, y: loc.y });
-
-            this.resources.wood -= woodCost;
-            this.resources.stone -= stoneCost;
-            this.resources.iron -= ironCost;
-            this.resources.gold -= goldCost;
-
-            // Building effects
-            if (buildType === BUILDING.HOUSE) this.maxPopulation += 5;
-            else if (buildType === BUILDING.FARM) this.production.food += 0.8;
-            else if (buildType === BUILDING.FORGE) this.production.iron += 0.5;
-            else if (buildType === BUILDING.WATCHTOWER) {
-                this.traits.defenseBonus = (this.traits.defenseBonus || 1) + 0.1;
-            } else if (buildType === BUILDING.ARCHERY_RANGE) {
-                this.traits.rangeBonus = (this.traits.rangeBonus || 1) + 0.1;
-            } else if (buildType === BUILDING.TOWER) {
-                this.traits.defenseBonus = (this.traits.defenseBonus || 1) + 0.15;
-            } else if (buildType === BUILDING.MARKET) {
-                this.traits.tradeBonus = (this.traits.tradeBonus || 1) + 0.2;
-            } else if (buildType === BUILDING.GRANARY) {
-                this.buildingBonuses.foodStorage += 200;
-                this.buildingBonuses.foodPreservation *= 0.95;
-            } else if (buildType === BUILDING.BARRACKS) {
-                this.traits.combatBonus = (this.traits.combatBonus || 1) + 0.1;
-            }
-
-            this.stats.buildingsConstructed++;
-        }
+        this.stats.buildingsConstructed++;
+        return { ok: true, x: pos.x, y: pos.y };
     }
 
-    _findRoadLocation(gameMap) {
-        const castle = this.buildings.find(b => b.type === BUILDING.CASTLE);
-        if (!castle) return null;
+    startResearchById(techId) {
+        if (this.currentResearch) return { ok: false, reason: 'already_researching' };
+        if (this.completedTechs.includes(techId)) return { ok: false, reason: 'already_completed' };
 
-        const targetBuilding = this.buildings.find(b => {
-            if (b.type === BUILDING.ROAD || b.type === BUILDING.CASTLE || b.type === BUILDING.WALL) return false;
-            const dist = Math.abs(b.x - castle.x) + Math.abs(b.y - castle.y);
-            return dist > 3;
+        let tech = null;
+        Object.values(TECH_TREE).forEach(cat => {
+            cat.techs.forEach(t => { if (t.id === techId) tech = t; });
         });
+        if (!tech) return { ok: false, reason: 'unknown_tech' };
 
-        if (!targetBuilding) return null;
-
-        const dx = castle.x - targetBuilding.x;
-        const dy = castle.y - targetBuilding.y;
-        const steps = Math.max(Math.abs(dx), Math.abs(dy));
-        if (steps === 0) return null;
-
-        for (let i = 1; i < steps; i++) {
-            const x = Math.floor(targetBuilding.x + (dx / steps) * i);
-            const y = Math.floor(targetBuilding.y + (dy / steps) * i);
-
-            if (gameMap.territory[y] && gameMap.territory[y][x] === this.id &&
-                gameMap.buildings[y][x].type === BUILDING.NONE &&
-                gameMap.terrain[y][x] === TERRAIN.GRASS) {
-                return { x, y };
+        for (const prereq of tech.prerequisites || []) {
+            if (!this.completedTechs.includes(prereq)) {
+                return { ok: false, reason: `missing_prereq_${prereq}` };
             }
         }
 
-        return null;
+        const upfront = Math.floor(tech.cost * 0.3);
+        if ((this.resources.gold || 0) < upfront) {
+            return { ok: false, reason: 'insufficient_gold' };
+        }
+
+        this.resources.gold -= upfront;
+        this.currentResearch = tech;
+        this.researchProgress = 0;
+        return { ok: true, techId: tech.id, duration: tech.duration };
+    }
+
+    reassignJobs(jobType, count) {
+        const candidates = this.villagers.filter(v =>
+            v.isAlive && v.job !== jobType && v.unitType === UNIT_TYPE.VILLAGER &&
+            v.currentAge >= 16 && (this.type === 'human' ? v.currentAge <= 55 : v.currentAge <= 700)
+        );
+
+        const skillKeyByJob = {
+            gatherer: 'gathering',
+            farmer: 'farming',
+            builder: 'building',
+            warrior: 'combat',
+            hunter: 'archery',
+            fisher: 'gathering',
+            breeder: 'farming'
+        };
+        const skillKey = skillKeyByJob[jobType];
+        candidates.sort((a, b) => (b.skills[skillKey] || 0) - (a.skills[skillKey] || 0));
+
+        const picked = candidates.slice(0, count);
+        picked.forEach(v => {
+            v.job = jobType;
+            v.jobPinned = true;
+            v.jobChangeTimer = 0;
+            v.currentTask = null;
+            v.taskTarget = null;
+        });
+
+        return { ok: true, reassigned: picked.length };
+    }
+
+    orderAttack(targetSpec, unitCount, game) {
+        const enemy = game.factions.find(f => f.id !== this.id);
+        if (!enemy) return { ok: false, reason: 'no_enemy' };
+
+        const candidates = this.villagers.filter(v =>
+            v.isAlive && v.unitType !== UNIT_TYPE.VILLAGER
+        ).sort((a, b) => b.combatStats.health - a.combatStats.health);
+
+        if (candidates.length === 0) {
+            return { ok: false, reason: 'no_military_units' };
+        }
+
+        let target = null;
+        if (targetSpec && typeof targetSpec === 'object' && targetSpec.x !== undefined) {
+            target = { x: targetSpec.x, y: targetSpec.y };
+        } else if (targetSpec === 'enemy_castle') {
+            const castle = enemy.buildings.find(b => b.type === BUILDING.CASTLE);
+            if (castle) target = { x: castle.x, y: castle.y };
+        } else if (targetSpec === 'enemy_villagers') {
+            const enemyAlive = enemy.villagers.filter(v => v.isAlive);
+            if (enemyAlive.length > 0) {
+                let sx = 0, sy = 0;
+                enemyAlive.forEach(v => { sx += v.x; sy += v.y; });
+                target = { x: sx / enemyAlive.length, y: sy / enemyAlive.length };
+            }
+        } else if (targetSpec === 'nearest_enemy' || !targetSpec) {
+            const firstUnit = candidates[0];
+            let nearest = null, nearestDist = Infinity;
+            enemy.villagers.forEach(v => {
+                if (!v.isAlive) return;
+                const d = Math.hypot(v.x - firstUnit.x, v.y - firstUnit.y);
+                if (d < nearestDist) { nearestDist = d; nearest = v; }
+            });
+            if (nearest) target = { x: nearest.x, y: nearest.y };
+        }
+
+        if (!target) return { ok: false, reason: 'no_target_found' };
+
+        const picked = candidates.slice(0, Math.min(unitCount || candidates.length, candidates.length));
+        picked.forEach(v => {
+            v.currentTask = 'combat';
+            v.taskTarget = target;
+            v.targetX = target.x;
+            v.targetY = target.y;
+        });
+
+        return { ok: true, ordered: picked.length, target };
+    }
+
+    tradeGoldFor(resource, amountGive, amountGet) {
+        const hasMarket = this.buildings.some(b => b.type === BUILDING.MARKET);
+        if (!hasMarket) return { ok: false, reason: 'requires_market' };
+        if ((this.resources.gold || 0) < amountGive) {
+            return { ok: false, reason: 'insufficient_gold' };
+        }
+        if (!['food', 'wood', 'stone', 'iron'].includes(resource)) {
+            return { ok: false, reason: 'unsupported_resource' };
+        }
+        this.resources.gold -= amountGive;
+        this.resources[resource] = (this.resources[resource] || 0) + amountGet;
+        return { ok: true, paid: amountGive, received: amountGet, resource };
+    }
+
+    foundColonyAt(gameMap) {
+        if (!this.canFoundColony()) {
+            return { ok: false, reason: 'cannot_found_colony' };
+        }
+        const loc = this.findColonyLocation(gameMap);
+        if (!loc) return { ok: false, reason: 'no_valid_location' };
+        this.foundColony(gameMap, loc.x, loc.y);
+        return { ok: true, x: loc.x, y: loc.y };
     }
 
     // ========================================
     // RESEARCH
     // ========================================
-
-    startNewResearch() {
-        const allTechs = [];
-        Object.values(TECH_TREE).forEach(category => {
-            category.techs.forEach(tech => {
-                if (!this.completedTechs.includes(tech.id) && this.resources.gold >= tech.cost * 0.5) {
-                    allTechs.push(tech);
-                }
-            });
-        });
-
-        if (allTechs.length > 0) {
-            this.currentResearch = allTechs[Math.floor(Math.random() * allTechs.length)];
-            this.researchProgress = 0;
-            this.resources.gold -= this.currentResearch.cost * 0.3;
-        }
-    }
 
     completeTech() {
         if (!this.currentResearch) return;

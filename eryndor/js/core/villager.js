@@ -369,9 +369,9 @@ export class Villager {
     update(gameMap, faction, allFactions) {
         if (!this.isAlive) return;
 
-        // Update job periodically
+        // Update job periodically (unless pinned by an agent action)
         this.jobChangeTimer += CONFIG.gameSpeed;
-        if (this.jobChangeTimer > 1000) {
+        if (!this.jobPinned && this.jobChangeTimer > 1000) {
             this.jobChangeTimer = 0;
             this.job = this.determineJob();
         }

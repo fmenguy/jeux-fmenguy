@@ -1,152 +1,81 @@
 /**
- * Eryndor v2 - L'Aube des Royaumes
- * Point d'entrée principal
+ * Eryndor - Duel d'agents IA
+ * Deux agents Claude s'affrontent (Sonnet vs Haiku par défaut) comme chefs
+ * respectifs des Humains et des Elfes. La simulation tourne en continu ;
+ * tous les CONFIG.turnInterval ticks, les deux agents sont consultés en
+ * parallèle pour leurs décisions stratégiques.
  */
 
 import { CONFIG } from './config.js';
 import { eventBus } from './event-bus.js';
 import { Game } from './core/game.js';
 import { Renderer } from './rendering/renderer.js';
+import { AgentController } from './agent/agent-controller.js';
+import { AgentScheduler } from './agent/agent-scheduler.js';
+import { AnthropicClient } from './agent/anthropic-client.js';
+import { MockClient } from './agent/mock-client.js';
+import { AgentLog } from './ui/agent-log.js';
+import * as SetupOverlay from './ui/setup-overlay.js';
 
-// Dynamic imports for systems that might not exist yet
-let UIManager, AIDirector;
-
-async function loadOptionalModules() {
+async function loadOptional() {
     try {
-        const uiMod = await import('./ui/ui-manager.js');
-        UIManager = uiMod.UIManager;
+        const mod = await import('./ui/ui-manager.js');
+        return mod.UIManager;
     } catch (e) {
-        console.warn('UI Manager not available:', e.message);
-    }
-
-    try {
-        const aiMod = await import('./ai/ai-director.js');
-        AIDirector = aiMod.AIDirector;
-    } catch (e) {
-        console.warn('AI Director not available:', e.message);
+        console.warn('UI Manager absent :', e.message);
+        return null;
     }
 }
 
 async function init() {
-    // Load optional modules
-    await loadOptionalModules();
+    const UIManager = await loadOptional();
+    const setup = await SetupOverlay.show();
 
-    // Create game instance
+    CONFIG.apiKey = setup.apiKey;
+    CONFIG.agentMockMode = !!setup.mock;
+    CONFIG.turnInterval = setup.turnInterval;
+    CONFIG.agentDefaults.humans.model = setup.humans;
+    CONFIG.agentDefaults.elves.model = setup.elves;
+
     const game = new Game();
     game.init();
 
-    // Create renderer
     const canvas = document.getElementById('gameCanvas');
     const minimapCanvas = document.getElementById('minimap');
     const renderer = new Renderer(canvas, minimapCanvas);
     game.renderer = renderer;
 
-    // Setup UI Manager
     if (UIManager) {
         const uiManager = new UIManager(game);
         uiManager.init();
         game.uiManager = uiManager;
     }
 
-    // Setup AI Directors
-    if (AIDirector) {
-        game.factions.forEach(faction => {
-            const director = new AIDirector(faction, game);
-            game.aiDirectors.push(director);
-        });
-    }
+    new AgentLog('agentLog');
 
-    // Setup canvas click handler
-    canvas.addEventListener('click', (e) => {
-        const world = renderer.camera.screenToWorld(e.offsetX, e.offsetY);
-        const worldX = world.x / CONFIG.cellSize;
-        const worldY = world.y / CONFIG.cellSize;
+    const sharedHumanClient = CONFIG.agentMockMode
+        ? new MockClient({ faction: 'human' })
+        : new AnthropicClient({ apiKey: CONFIG.apiKey });
+    const sharedElfClient = CONFIG.agentMockMode
+        ? new MockClient({ faction: 'elf' })
+        : new AnthropicClient({ apiKey: CONFIG.apiKey });
 
-        // God action
-        if (game.godAction) {
-            game.applyGodAction(worldX, worldY);
-            return;
-        }
+    const agents = game.factions.map(faction => new AgentController({
+        faction,
+        game,
+        model: faction.type === 'human'
+            ? CONFIG.agentDefaults.humans.model
+            : CONFIG.agentDefaults.elves.model,
+        client: faction.type === 'human' ? sharedHumanClient : sharedElfClient
+    }));
 
-        // Terrain tool
-        if (game.selectedTool) {
-            game.applyTerrain(worldX, worldY, game.selectedTool);
-            return;
-        }
+    const scheduler = new AgentScheduler({ agents, game });
 
-        // Entity selection
-        const entity = game.getEntityAt(worldX, worldY);
-        if (entity) {
-            game.selectedEntity = entity;
-            renderer.selectedVillager = entity.type === 'villager' ? entity.entity : null;
+    setupControls(scheduler, game);
+    eventBus.on('scheduler-turn-completed', refreshSideInfo);
 
-            if (game.uiManager && game.uiManager.modals) {
-                if (entity.type === 'villager') {
-                    game.uiManager.modals.showVillagerDetail(entity.entity, entity.faction);
-                } else if (entity.type === 'building' && entity.buildingData) {
-                    game.uiManager.modals.showBuildingDetail(entity.buildingData, entity.faction);
-                }
-            }
-        } else {
-            game.selectedEntity = null;
-            renderer.selectedVillager = null;
-        }
-    });
+    window.addEventListener('keydown', handleKeyboard);
 
-    // Terrain drag painting
-    let isPainting = false;
-    canvas.addEventListener('mousedown', (e) => {
-        if (e.button === 0 && game.selectedTool && !game.godAction) {
-            isPainting = true;
-            const world = renderer.camera.screenToWorld(e.offsetX, e.offsetY);
-            game.applyTerrain(world.x / CONFIG.cellSize, world.y / CONFIG.cellSize, game.selectedTool);
-        }
-    });
-    canvas.addEventListener('mousemove', (e) => {
-        if (isPainting && game.selectedTool) {
-            const world = renderer.camera.screenToWorld(e.offsetX, e.offsetY);
-            game.applyTerrain(world.x / CONFIG.cellSize, world.y / CONFIG.cellSize, game.selectedTool);
-        }
-    });
-    canvas.addEventListener('mouseup', () => { isPainting = false; });
-    canvas.addEventListener('mouseleave', () => { isPainting = false; });
-
-    // Keyboard shortcuts
-    window.addEventListener('keydown', (e) => {
-        // Prevent shortcuts when typing in inputs
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-        switch (e.key) {
-            case ' ':
-                e.preventDefault();
-                CONFIG.isPaused = !CONFIG.isPaused;
-                updatePauseButton();
-                break;
-            case '1': CONFIG.gameSpeed = 1; updateSpeedDisplay(); break;
-            case '2': CONFIG.gameSpeed = 2; updateSpeedDisplay(); break;
-            case '3': CONFIG.gameSpeed = 5; updateSpeedDisplay(); break;
-            case '4': CONFIG.gameSpeed = 10; updateSpeedDisplay(); break;
-            case '5': CONFIG.gameSpeed = 20; updateSpeedDisplay(); break;
-        }
-
-        // Ctrl+S save, Ctrl+L load
-        if (e.ctrlKey && e.key === 's') {
-            e.preventDefault();
-            saveGame(game);
-        }
-        if (e.ctrlKey && e.key === 'l') {
-            e.preventDefault();
-            loadGame(game);
-        }
-    });
-
-    // Toolbar setup (if UI not available, do it manually)
-    setupToolbar(game, renderer);
-
-    // Speed control
-    setupSpeedControl();
-
-    // Start the render loop
     function renderLoop() {
         if (!CONFIG.isPaused) {
             const ticksThisFrame = Math.min(CONFIG.gameSpeed, 10);
@@ -154,169 +83,107 @@ async function init() {
                 CONFIG.currentTick++;
                 updateDate();
                 game.factions.forEach(f => f.update(game.map, game.factions));
-                game.aiDirectors.forEach(d => d.update(CONFIG.currentTick));
 
-                // Stats recording
                 if (game.uiManager && game.uiManager.stats && CONFIG.currentTick % 60 === 0) {
                     game.uiManager.stats.recordSnapshot(game);
                 }
+
+                const winner = checkVictory(game);
+                if (winner) {
+                    announceVictory(winner);
+                    CONFIG.isPaused = true;
+                    scheduler.stop();
+                    break;
+                }
             }
+            scheduler.tick();
         }
 
-        // Render
         renderer.draw(game.map, game.factions);
-
-        // Update UI
-        if (game.uiManager) {
-            game.uiManager.update();
-        }
+        if (game.uiManager) game.uiManager.update();
 
         requestAnimationFrame(renderLoop);
     }
 
     requestAnimationFrame(renderLoop);
 
-    // Expose game globally for debugging
     window.game = game;
     window.renderer = renderer;
+    window.scheduler = scheduler;
+    window.agents = agents;
 
-    console.log('Eryndor v2 initialized');
+    console.log('Eryndor — duel IA initialisé',
+        CONFIG.agentMockMode ? '(mode MOCK)' : '(API Anthropic live)');
 }
 
-function updateDate() {
-    const monthLength = CONFIG.ticksPerMonth;
-    const newMonth = Math.floor(CONFIG.currentTick / monthLength) % 12;
+function setupControls(scheduler, game) {
+    const slider = document.getElementById('speedSlider');
+    const speedValue = document.getElementById('speedValue');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const turnIntervalInput = document.getElementById('turnIntervalInput');
+    const stopBtn = document.getElementById('stopDuelBtn');
+    const techBtn = document.getElementById('techBtn');
+    const statsBtn = document.getElementById('statsBtn');
 
-    if (newMonth !== CONFIG.currentMonth) {
-        CONFIG.currentMonth = newMonth;
-    }
-
-    const year = Math.floor(CONFIG.currentTick / CONFIG.ticksPerYear) + 1;
-    const dateEl = document.getElementById('dateDisplay');
-    if (dateEl) {
-        dateEl.textContent = `${CONFIG.monthNames[CONFIG.currentMonth]}, An ${year}`;
-    }
-}
-
-function setupToolbar(game, renderer) {
-    // Selection mode buttons
-    document.querySelectorAll('[data-select]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('[data-select]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            game.selectMode = btn.dataset.select;
-            game.selectedTool = null;
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    if (slider) {
+        slider.addEventListener('input', (e) => {
+            CONFIG.gameSpeed = parseInt(e.target.value, 10);
+            if (speedValue) speedValue.textContent = `x${CONFIG.gameSpeed}`;
         });
-    });
-
-    // Terrain tool buttons
-    document.querySelectorAll('.tool-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const terrainMap = {
-                'grass': 0, 'forest': 1, 'stone': 2, 'iron': 3,
-                'water': 4, 'mountain': 5, 'gold': 6, 'berries': 7
-            };
-            const tool = btn.dataset.tool;
-
-            if (game.selectedTool === terrainMap[tool]) {
-                // Deselect
-                game.selectedTool = null;
-                btn.classList.remove('active');
+    }
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', () => {
+            CONFIG.isPaused = !CONFIG.isPaused;
+            pauseBtn.textContent = CONFIG.isPaused ? '▶' : '⏸';
+            pauseBtn.classList.toggle('active', CONFIG.isPaused);
+        });
+    }
+    if (turnIntervalInput) {
+        turnIntervalInput.value = CONFIG.turnInterval;
+        turnIntervalInput.addEventListener('change', (e) => {
+            const v = parseInt(e.target.value, 10);
+            if (v >= 50 && v <= 2000) CONFIG.turnInterval = v;
+        });
+    }
+    if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+            if (scheduler.enabled) {
+                scheduler.stop();
+                stopBtn.textContent = 'Reprendre le duel';
             } else {
-                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                game.selectedTool = terrainMap[tool];
+                scheduler.start();
+                stopBtn.textContent = 'Stopper le duel';
             }
         });
-    });
-
-    // Brush size
-    const brushInput = document.getElementById('brushSize');
-    if (brushInput) {
-        brushInput.addEventListener('input', (e) => {
-            game.brushSize = parseInt(e.target.value);
-        });
     }
-
-    // God actions
-    const godActions = {
-        'actionDisaster': 'disaster',
-        'actionBlessing': 'blessing',
-        'actionPlague': 'plague',
-        'actionFertility': 'fertility'
-    };
-
-    Object.entries(godActions).forEach(([id, action]) => {
-        const btn = document.getElementById(id);
-        if (btn) {
-            btn.addEventListener('click', () => {
-                if (game.godAction === action) {
-                    game.godAction = null;
-                    btn.classList.remove('active');
-                } else {
-                    document.querySelectorAll('.god-btn').forEach(b => b.classList.remove('active'));
-                    game.godAction = action;
-                    btn.classList.add('active');
-                    game.selectedTool = null;
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                }
-            });
-        }
-    });
-
-    // Save/Load buttons
-    const saveBtn = document.getElementById('saveBtn');
-    const loadBtn = document.getElementById('loadBtn');
-    if (saveBtn) saveBtn.addEventListener('click', () => saveGame(game));
-    if (loadBtn) loadBtn.addEventListener('click', () => loadGame(game));
-
-    // Tech button
-    const techBtn = document.getElementById('techBtn');
     if (techBtn) {
         techBtn.addEventListener('click', () => {
-            if (game.uiManager && game.uiManager.modals) {
+            if (game && game.uiManager && game.uiManager.modals) {
                 game.uiManager.modals.showTechTree(game.factions);
             }
         });
     }
-
-    // Stats button
-    const statsBtn = document.getElementById('statsBtn');
     if (statsBtn) {
         statsBtn.addEventListener('click', () => {
-            if (game.uiManager && game.uiManager.modals) {
+            if (game && game.uiManager && game.uiManager.modals) {
                 game.uiManager.modals.showStats(game);
             }
         });
     }
 }
 
-function setupSpeedControl() {
-    const slider = document.getElementById('speedSlider');
-    const speedValue = document.getElementById('speedValue');
-    const pauseBtn = document.getElementById('pauseBtn');
-
-    if (slider) {
-        slider.addEventListener('input', (e) => {
-            CONFIG.gameSpeed = parseInt(e.target.value);
-            if (speedValue) speedValue.textContent = `x${CONFIG.gameSpeed}`;
-        });
-    }
-
-    if (pauseBtn) {
-        pauseBtn.addEventListener('click', () => {
+function handleKeyboard(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    switch (e.key) {
+        case ' ':
+            e.preventDefault();
             CONFIG.isPaused = !CONFIG.isPaused;
-            updatePauseButton();
-        });
-    }
-}
-
-function updatePauseButton() {
-    const pauseBtn = document.getElementById('pauseBtn');
-    if (pauseBtn) {
-        pauseBtn.textContent = CONFIG.isPaused ? '▶' : '⏸';
-        pauseBtn.classList.toggle('active', CONFIG.isPaused);
+            break;
+        case '1': CONFIG.gameSpeed = 1; updateSpeedDisplay(); break;
+        case '2': CONFIG.gameSpeed = 2; updateSpeedDisplay(); break;
+        case '3': CONFIG.gameSpeed = 5; updateSpeedDisplay(); break;
+        case '4': CONFIG.gameSpeed = 10; updateSpeedDisplay(); break;
+        case '5': CONFIG.gameSpeed = 20; updateSpeedDisplay(); break;
     }
 }
 
@@ -327,154 +194,57 @@ function updateSpeedDisplay() {
     if (speedValue) speedValue.textContent = `x${CONFIG.gameSpeed}`;
 }
 
-function saveGame(game) {
-    try {
-        const saveData = {
-            version: 2,
-            tick: CONFIG.currentTick,
-            month: CONFIG.currentMonth,
-            speed: CONFIG.gameSpeed,
-            terrain: [],
-            elevation: [],
-            buildings: [],
-            territory: [],
-            resources: [],
-            factions: [],
-            animals: game.map.animals.filter(a => a.isAlive).map(a => ({
-                type: a.type, x: a.x, y: a.y, health: a.health
-            }))
-        };
-
-        // Save map data
-        for (let y = 0; y < game.map.height; y++) {
-            saveData.terrain[y] = [...game.map.terrain[y]];
-            saveData.elevation[y] = [...game.map.elevation[y]];
-            saveData.buildings[y] = game.map.buildings[y].map(b => ({ type: b.type, faction: b.faction }));
-            saveData.territory[y] = [...game.map.territory[y]];
-            saveData.resources[y] = game.map.resources[y].map(r => ({ amount: r.amount, type: r.type }));
-        }
-
-        // Save factions
-        game.factions.forEach(f => {
-            saveData.factions.push({
-                id: f.id,
-                resources: { ...f.resources },
-                maxPopulation: f.maxPopulation,
-                completedTechs: [...f.completedTechs],
-                currentResearch: f.currentResearch ? f.currentResearch.id : null,
-                researchProgress: f.researchProgress,
-                warState: { ...f.warState },
-                stats: { ...f.stats },
-                militaryUnits: f.militaryUnits,
-                colonies: f.colonies.map(c => ({ ...c })),
-                buildings: f.buildings.map(b => ({ type: b.type, x: b.x, y: b.y })),
-                villagers: f.villagers.map(v => ({
-                    id: v.id, x: v.x, y: v.y,
-                    targetX: v.targetX, targetY: v.targetY,
-                    gender: v.gender, firstName: v.firstName, lastName: v.lastName,
-                    age: v.age, birthTick: v.birthTick,
-                    unitType: v.unitType,
-                    combatStats: { ...v.combatStats },
-                    isAlive: v.isAlive, hunger: v.hunger,
-                    skills: { ...v.skills }, job: v.job
-                })),
-                boats: f.boats.map(b => ({
-                    x: b.x, y: b.y, targetX: b.targetX, targetY: b.targetY,
-                    portX: b.portX, portY: b.portY
-                }))
-            });
-        });
-
-        localStorage.setItem('eryndor_v2_save', JSON.stringify(saveData));
-        console.log('Game saved successfully');
-
-        eventBus.emit('event-triggered', {
-            type: 'system',
-            message: 'Partie sauvegardee'
-        });
-    } catch (e) {
-        console.error('Save failed:', e);
-    }
+function updateDate() {
+    const newMonth = Math.floor(CONFIG.currentTick / CONFIG.ticksPerMonth) % 12;
+    if (newMonth !== CONFIG.currentMonth) CONFIG.currentMonth = newMonth;
+    const year = Math.floor(CONFIG.currentTick / CONFIG.ticksPerYear) + 1;
+    const dateEl = document.getElementById('dateDisplay');
+    if (dateEl) dateEl.textContent = `${CONFIG.monthNames[CONFIG.currentMonth]}, An ${year}`;
 }
 
-function loadGame(game) {
-    try {
-        const json = localStorage.getItem('eryndor_v2_save');
-        if (!json) {
-            console.warn('No save found');
-            return;
+function checkVictory(game) {
+    const map = game.map;
+    const totalTiles = map.width * map.height;
+
+    for (const f of game.factions) {
+        const alive = f.villagers.filter(v => v.isAlive).length;
+        if (alive === 0) continue;
+
+        const otherLiving = game.factions.filter(o =>
+            o.id !== f.id && o.villagers.some(v => v.isAlive)
+        );
+        if (otherLiving.length === 0) return f;
+
+        const terr = countTerritory(f.id, map);
+        const pct = (terr / totalTiles) * 100;
+        if (pct >= CONFIG.victoryTerritoryPercent && alive >= CONFIG.victoryPopulation) {
+            return f;
         }
-        const saveData = JSON.parse(json);
-
-        CONFIG.currentTick = saveData.tick;
-        CONFIG.currentMonth = saveData.month;
-        CONFIG.gameSpeed = saveData.speed || 1;
-        updateSpeedDisplay();
-
-        // Restore map
-        for (let y = 0; y < game.map.height; y++) {
-            game.map.terrain[y] = saveData.terrain[y];
-            game.map.elevation[y] = saveData.elevation[y];
-            game.map.buildings[y] = saveData.buildings[y];
-            game.map.territory[y] = saveData.territory[y];
-            game.map.resources[y] = saveData.resources[y];
-        }
-
-        // Restore animals
-        game.map.animals = (saveData.animals || []).map(a => ({
-            ...a,
-            isAlive: true,
-            typeData: { food: 15, speed: 0.3, passive: true }
-        }));
-
-        // Restore factions (simplified - keeps class instances)
-        saveData.factions.forEach((savedF, idx) => {
-            if (idx >= game.factions.length) return;
-            const f = game.factions[idx];
-            f.resources = savedF.resources;
-            f.maxPopulation = savedF.maxPopulation;
-            f.completedTechs = savedF.completedTechs;
-            f.researchProgress = savedF.researchProgress;
-            f.warState = savedF.warState;
-            f.stats = savedF.stats;
-            f.militaryUnits = savedF.militaryUnits;
-            f.colonies = savedF.colonies;
-            f.buildings = savedF.buildings;
-
-            // Restore villagers with basic properties
-            const { Villager } = game.factions[idx].villagers[0]
-                ? { Villager: game.factions[idx].villagers[0].constructor }
-                : { Villager: null };
-
-            f.villagers = savedF.villagers.map(sv => {
-                const v = Object.create(Villager ? Villager.prototype : Object.prototype);
-                Object.assign(v, sv);
-                v.factionId = f.id;
-                v.factionType = f.type;
-                v.moveTimer = 0;
-                v.moveInterval = 50 + Math.random() * 100;
-                v.gatherTimer = 0;
-                v.currentTask = null;
-                v.taskTarget = null;
-                v.huntTarget = null;
-                v.jobChangeTimer = 0;
-                v.parent1 = null;
-                v.parent2 = null;
-                v.spouse = null;
-                v.children = [];
-                return v;
-            });
-        });
-
-        console.log('Game loaded successfully');
-        eventBus.emit('event-triggered', {
-            type: 'system',
-            message: 'Partie chargee'
-        });
-    } catch (e) {
-        console.error('Load failed:', e);
     }
+    return null;
 }
 
-// Start when DOM is ready
+function countTerritory(factionId, map) {
+    let c = 0;
+    for (let y = 0; y < map.height; y++) {
+        for (let x = 0; x < map.width; x++) {
+            if (map.territory[y][x] === factionId) c++;
+        }
+    }
+    return c;
+}
+
+function announceVictory(winner) {
+    const banner = document.getElementById('victoryBanner');
+    if (banner) {
+        banner.textContent = `Victoire des ${winner.type === 'human' ? 'Humains' : 'Elfes'} !`;
+        banner.style.display = 'flex';
+    }
+    console.log(`VICTORY: ${winner.type}`);
+}
+
+function refreshSideInfo() {
+    // Hook for future live sidebar refresh if UIManager isn't running
+}
+
 document.addEventListener('DOMContentLoaded', init);
