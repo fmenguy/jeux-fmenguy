@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arcade FM — Jeux & Expériences</title>
+  <title>Arcade FM · Jeux & Expériences</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -220,6 +220,11 @@
       color: var(--tag-mini-c);
       border: 1px solid rgba(129,140,248,0.2);
     }
+    .card-tag--soon {
+      background: #2d1f0a;
+      color: #f59e0b;
+      border: 1px solid rgba(245,158,11,0.25);
+    }
     .card-tag::before { content: '●'; font-size: 0.5rem; }
 
     .card-title {
@@ -274,6 +279,57 @@
       transform: translateY(-2px);
       background: var(--surface2);
       border-color: rgba(129,140,248,0.35);
+    }
+
+    .card-wip {
+      background: var(--surface);
+      border: 1px dashed rgba(245,158,11,0.3);
+      border-radius: 12px;
+      padding: 1.4rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+    .card-wip-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .card-wip-icon {
+      font-size: 1.6rem;
+      width: 42px; height: 42px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+    .card-wip-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f0e0c0;
+    }
+    .card-wip-subtitle {
+      font-size: 0.7rem;
+      color: #f59e0b;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .card-wip-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .card-wip-refs {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-style: italic;
+      padding-top: 0.4rem;
+      border-top: 1px solid var(--border);
+      margin-top: 0.3rem;
     }
 
     .card-mini-header {
@@ -368,7 +424,7 @@
       <div class="card-body">
         <span class="card-tag card-tag--full">Jeu complet</span>
         <div class="card-title">Orbique</div>
-        <div class="card-desc">Jeu d'exploration en salles thématiques. Particules, textures, puzzles et tutoriel intégré — une expérience visuelle immersive.</div>
+        <div class="card-desc">Jeu d'exploration en salles thématiques. Particules, textures, puzzles et tutoriel intégré pour une expérience visuelle immersive.</div>
         <span class="card-cta">Jouer</span>
       </div>
     </a>
@@ -391,7 +447,7 @@
         <span class="card-mini-icon">🌿</span>
         <span class="card-mini-title">EcoSim</span>
       </div>
-      <div class="card-mini-desc">Simulation d'écosystème. Créatures, nourriture, prédateurs — observez l'équilibre se construire.</div>
+      <div class="card-mini-desc">Simulation d'écosystème. Créatures, nourriture, prédateurs, observez l'équilibre se construire.</div>
     </a>
 
     <a class="card-mini" href="/conway/">
@@ -401,6 +457,27 @@
       </div>
       <div class="card-mini-desc">Automate cellulaire de Conway. Tracez des patterns et regardez la vie émerger.</div>
     </a>
+
+  </div>
+
+  <div class="section-label">À venir</div>
+  <div class="featured-grid">
+
+    <div class="card-wip">
+      <div class="card-wip-header">
+        <span class="card-wip-icon">🌍</span>
+        <div>
+          <div class="card-wip-title">Strates <span style="font-size:0.65rem;color:#7a8090;font-weight:400;">(titre provisoire)</span></div>
+          <div class="card-wip-subtitle">En conception</div>
+        </div>
+      </div>
+      <div class="card-wip-desc">
+        Sandbox god-game inspiré de Godus, From Dust et Spore. Terrain sculptable en strates (herbe, terre, roche), génération automatique de plots habitables sur les zones plates, agents autonomes qui cherchent ressources, construisent et forment des villages.
+      </div>
+      <div class="card-wip-refs">
+        Inspirations : Godus (terrain layers, plots), From Dust (Ubisoft, manipulation de matière), Spore (évolution).
+      </div>
+    </div>
 
   </div>
 

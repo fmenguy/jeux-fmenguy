@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jeu de la Vie — Arcade FM</title>
+  <title>Jeu de la Vie · Arcade FM</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -442,7 +442,7 @@
         </div>
         <input type="range" id="cellSlider" min="4" max="20" value="10" />
         <div id="perfWarn" style="display:none;margin-top:0.4rem;font-size:0.62rem;color:#f59e0b;line-height:1.4;">
-          ⚠ Grille large — performances réduites sur PC modeste
+          ⚠ Grille large, performances réduites sur PC modeste
         </div>
       </div>
 
@@ -627,7 +627,7 @@
       }
     }
 
-    // 4. Passe floue (halo) puis passe nette — 2 drawImage au lieu de N shadowBlur
+    // 4. Passe floue (halo) puis passe nette : 2 drawImage au lieu de N shadowBlur
     ctx.filter = 'blur(5px)';
     ctx.globalAlpha = 0.55;
     ctx.drawImage(glowCanvas, 0, 0);
