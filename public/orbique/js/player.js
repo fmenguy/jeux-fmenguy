@@ -139,7 +139,15 @@ function onPointerLockChange() {
     isPointerLocked = document.pointerLockElement === renderer.domElement;
     dbg('pointerLockChange:', wasLocked, '->', isPointerLocked, 'element:', document.pointerLockElement);
     if (STATE.started && !isPointerLocked) {
-        notify(t('clickToResume'));
+        // Si le joueur a la clef de sauvegarde, ouvrir le menu save/load
+        if (STATE.canSave && typeof openSaveMenu === 'function') {
+            openSaveMenu();
+        } else {
+            notify(t('clickToResume'));
+        }
+    } else if (STATE.started && isPointerLocked) {
+        // Re-locked : fermer le menu save si ouvert
+        if (typeof closeSaveMenu === 'function') closeSaveMenu();
     }
 }
 
@@ -271,6 +279,14 @@ function interact() {
         case 'sign':
             notify(data.label);
             break;
+
+        case 'saveKey':
+            STATE.canSave = true;
+            STATE.saveKeyClaimed = true;
+            scene.remove(obj);
+            interactables = interactables.filter(i => i !== obj);
+            notify(t('saveKeyTaken') || 'Clef de sauvegarde obtenue ! Appuie sur ECHAP pour sauvegarder.');
+            break;
     }
 
     updateHUD();
@@ -283,25 +299,321 @@ function interact() {
 
 // --- NON-EUCLIDEAN MECHANICS ---
 function checkNonEuclidean() {
-    if (currentRoom !== 'corridor_infinite') return;
+    // Corridor : comportement existant + memorisation de la decouverte
+    if (currentRoom === 'corridor_infinite') {
+        if (moveBackward && !moveForward) {
+            if (STATE.lastDirection !== 'backward') {
+                STATE.lastDirection = 'backward';
+                STATE.worldSeed++;
+                STATE.backwardDiscovered = true; // mecanique decouverte
+                if (Math.random() > 0.5) {
+                    const z = camera.position.z + 5;
+                    const side = Math.random() > 0.5 ? 3 : -3;
+                    addBox(2, 3, 0.3, side, 1.5, z, 0x442244, {
+                        type: 'portal',
+                        target: Math.random() > 0.5 ? 'hub' : `puzzle_${Math.ceil(Math.random()*10)}`,
+                        label: t('secretPassage')
+                    });
+                }
+            }
+        } else if (moveForward) {
+            STATE.lastDirection = 'forward';
+        }
+        return;
+    }
 
-    if (moveBackward && !moveForward) {
-        if (STATE.lastDirection !== 'backward') {
-            STATE.lastDirection = 'backward';
-            STATE.worldSeed++;
-            if (Math.random() > 0.5) {
-                const z = camera.position.z + 5;
-                const side = Math.random() > 0.5 ? 3 : -3;
-                addBox(2, 3, 0.3, side, 1.5, z, 0x442244, {
-                    type: 'portal',
-                    target: Math.random() > 0.5 ? 'hub' : `puzzle_${Math.ceil(Math.random()*10)}`,
-                    label: t('secretPassage')
-                });
+    // Hub : reveler les portails colores vers les puzzles deja visites
+    if (currentRoom === 'hub' && STATE.backwardDiscovered && !STATE.hubColorsRevealed) {
+        if (moveBackward && !moveForward) {
+            if (STATE.lastDirection !== 'backward') {
+                STATE.lastDirection = 'backward';
+                revealHubColors();
+            }
+        } else if (moveForward) {
+            STATE.lastDirection = 'forward';
+        }
+    }
+}
+
+// --- PUITS SANS FOND : detection chute ---
+function checkWells() {
+    const px = camera.position.x;
+    const pz = camera.position.z;
+    for (const obj of interactables) {
+        if (!obj.userData || obj.userData.type !== 'well') continue;
+        const dx = Math.abs(px - obj.position.x);
+        const dz = Math.abs(pz - obj.position.z);
+        if (dx < 0.9 && dz < 0.9) {
+            // Chute ! Respawn a la position initiale de la room
+            const spawn = STATE.spawnPosition || { x: 0, y: 2, z: 0 };
+            camera.position.set(spawn.x, spawn.y, spawn.z);
+            const wasFirst = !STATE.fellInWell;
+            STATE.fellInWell = true;
+            notify(wasFirst
+                ? (t('firstFall') || 'Tu es tombe dans le puit sans fond... et tu reapparais.')
+                : (t('fallAgain') || 'Encore tombe.'));
+            return;
+        }
+    }
+}
+
+// --- SALLE DES BOUTONS : effets temporaires + timer de proximite ---
+function onSillyButton(action, obj) {
+    if (!STATE.buttonRoom) STATE.buttonRoom = {};
+    switch (action) {
+        case 'pressMe': {
+            STATE.buttonRoom.pressMeCount = (STATE.buttonRoom.pressMeCount || 0) + 1;
+            const c = STATE.buttonRoom.pressMeCount;
+            if (c < 7) {
+                notify((t('pressMeProgress') || 'Encore...') + ' (' + c + '/7)');
+            } else if (c === 7) {
+                notify(t('pressMeReward') || 'OK ca suffit. Voila une clef.');
+                STATE.inventory.keys = (STATE.inventory.keys || 0) + 1;
+                if (typeof updateHUD === 'function') updateHUD();
+                // change la couleur du bouton pour signaler accomplissement
+                if (obj && obj.material) obj.material.color.set(0x44ff44);
+            } else {
+                notify(t('pressMeEnough') || 'Tu insistes pour rien.');
+            }
+            break;
+        }
+        case 'dontPress': {
+            // Penalite : eject le joueur loin
+            notify(t('dontPressFail') || 'Je t\'avais dit de ne PAS appuyer.');
+            const angle = Math.random() * Math.PI * 2;
+            camera.position.x += Math.cos(angle) * 4;
+            camera.position.z += Math.sin(angle) * 4;
+            // Reset le timer de proximite
+            STATE.buttonRoom.dontPressTimer = 0;
+            STATE.buttonRoom.dontPressRewarded = false;
+            break;
+        }
+        case 'invertY': {
+            STATE.controlsInverted.vertical = !STATE.controlsInverted.vertical;
+            notify(t('invertVOn') || 'Vertical inverse pendant 8 secondes.');
+            setTimeout(() => {
+                STATE.controlsInverted.vertical = !STATE.controlsInverted.vertical;
+                notify(t('invertVOff') || 'Vertical restaure.');
+            }, 8000);
+            break;
+        }
+        case 'teleport': {
+            const dx = (Math.random() - 0.5) * 10;
+            const dz = (Math.random() - 0.5) * 10;
+            camera.position.x = Math.max(-9, Math.min(9, camera.position.x + dx));
+            camera.position.z = Math.max(-9, Math.min(9, camera.position.z + dz));
+            notify(t('teleported') || 'Pouf.');
+            break;
+        }
+        case 'zoom': {
+            const baseFov = camera.fov;
+            let t0 = 0;
+            const interval = setInterval(() => {
+                t0 += 0.1;
+                camera.fov = baseFov + Math.sin(t0 * 4) * 25;
+                camera.updateProjectionMatrix();
+                if (t0 > 5) {
+                    clearInterval(interval);
+                    camera.fov = baseFov;
+                    camera.updateProjectionMatrix();
+                }
+            }, 100);
+            notify(t('zoomEffect') || 'La perspective vacille...');
+            break;
+        }
+        case 'aboutFace': {
+            // Tourne le joueur de 180 degres (yaw)
+            euler.y += Math.PI;
+            camera.quaternion.setFromEuler(euler);
+            notify(t('aboutFaceMsg') || 'Demi-tour.');
+            break;
+        }
+        case 'hidden': {
+            // Le bouton cache est le seul qui donne une vraie recompense
+            notify(t('hiddenFound') || 'Tu as trouve le seul bouton honnete.');
+            STATE.inventory.keys = (STATE.inventory.keys || 0) + 1;
+            if (typeof updateHUD === 'function') updateHUD();
+            if (obj && obj.material) {
+                obj.material.color.set(0xffffff);
+                obj.material.emissive = new THREE.Color(0xffffff);
+                obj.material.emissiveIntensity = 1.0;
+            }
+            break;
+        }
+    }
+}
+
+// --- SALLE DES CUBES : detection de touche sur la cible ---
+function checkCubeTarget() {
+    if (currentRoom !== 'cube_room') return;
+    let target = null;
+    for (const obj of interactables) {
+        if (obj.userData && obj.userData.type === 'cubeTarget') { target = obj; break; }
+    }
+    if (!target || target.userData.destroyed) return;
+
+    // Trouver tous les cubes pickables non portes a proximite de la cible
+    const targetPos = target.position;
+    for (const cube of pickables) {
+        if (cube === STATE.carriedObject) continue;
+        const d = cube.position.distanceTo(targetPos);
+        if (d < 1.4 && !cube.userData._hitTarget) {
+            cube.userData._hitTarget = true;
+            target.userData.hits = (target.userData.hits || 0) + 1;
+            // Effet visuel
+            if (target.material) {
+                target.material.color.set(0xffaa00);
+                setTimeout(() => {
+                    if (target.material && !target.userData.destroyed) target.material.color.set(0xff2222);
+                }, 200);
+            }
+            const remaining = target.userData.required - target.userData.hits;
+            if (target.userData.hits >= target.userData.required) {
+                target.userData.destroyed = true;
+                if (target.material) {
+                    target.material.color.set(0x44ff44);
+                    target.material.emissive = new THREE.Color(0x44ff44);
+                }
+                notify(t('cubeTargetDone') || 'Cible detruite ! Voila une clef.');
+                STATE.inventory.keys = (STATE.inventory.keys || 0) + 1;
+                if (typeof updateHUD === 'function') updateHUD();
+            } else {
+                notify((t('cubeTargetHit') || 'Touche !') + ' ' + remaining + ' restants');
             }
         }
-    } else if (moveForward) {
-        STATE.lastDirection = 'forward';
     }
+}
+
+// --- SALLE DES PESEES : detection de cubes sur les plaques ---
+function checkWeightRoom() {
+    if (currentRoom !== 'weight_room' || !STATE.weightRoom || STATE.weightRoom.solved) return;
+    const plates = STATE.weightRoom.plates || [];
+    if (plates.length === 0) return;
+
+    let allCorrect = true;
+    for (const plate of plates) {
+        const wantColor = plate.userData.plateColor;
+        // Cherche un cube non porte a +/- 1m sur la plaque (X/Z), Y ras du sol
+        let found = null;
+        for (const cube of pickables) {
+            if (cube === STATE.carriedObject) continue;
+            const dx = Math.abs(cube.position.x - plate.position.x);
+            const dz = Math.abs(cube.position.z - plate.position.z);
+            if (dx < 1.0 && dz < 1.0 && cube.position.y < 1.0) {
+                if (cube.userData.cubeColor === wantColor) { found = cube; break; }
+            }
+        }
+        const wasActive = plate.userData.active;
+        plate.userData.active = !!found;
+        if (plate.material) {
+            plate.material.emissiveIntensity = found ? 0.8 : 0.15;
+        }
+        if (found && !wasActive) {
+            notify(t('platePlaced') || 'Plaque activee.');
+        }
+        if (!found) allCorrect = false;
+    }
+
+    if (allCorrect) {
+        STATE.weightRoom.solved = true;
+        notify(t('weightSolved') || 'Toutes les plaques sont actives ! Une clef apparait.');
+        // Spawn une clef sur le pedestal
+        const ped = STATE.weightRoom.pedestal;
+        if (ped) {
+            const keyGeo = new THREE.BoxGeometry(0.3, 0.5, 0.3);
+            const keyMat = new THREE.MeshStandardMaterial({ color: 0xffcc44, emissive: 0xffcc44, emissiveIntensity: 0.6 });
+            const key = new THREE.Mesh(keyGeo, keyMat);
+            key.position.set(ped.position.x, ped.position.y + 0.7, ped.position.z);
+            key.userData = { type: 'key', label: t('weightRoomKey') || 'Clef des Pesees', unlocksRoom: 0 };
+            scene.add(key);
+            worldObjects.push(key);
+            interactables.push(key);
+            // Lumiere sur la clef
+            const lt = new THREE.PointLight(0xffcc44, 1.2, 6);
+            lt.position.set(ped.position.x, ped.position.y + 1.5, ped.position.z);
+            scene.add(lt);
+            worldObjects.push(lt);
+        }
+    }
+}
+
+// --- TIMER DE PROXIMITE : recompense si on STAGNE pres du "NE PAS APPUYER" ---
+function checkButtonRoomTimers(deltaSeconds) {
+    if (currentRoom !== 'button_room' || !STATE.buttonRoom) return;
+    if (STATE.buttonRoom.dontPressRewarded) return;
+
+    // Trouver le bouton "dontPress" parmi les interactables
+    let dontPressBtn = null;
+    for (const obj of interactables) {
+        if (obj.userData && obj.userData.action === 'dontPress') {
+            dontPressBtn = obj; break;
+        }
+    }
+    if (!dontPressBtn) return;
+    const dist = camera.position.distanceTo(dontPressBtn.position);
+    // Zone de "tentation" : entre 1.5 et 3 metres
+    if (dist > 1.5 && dist < 3) {
+        STATE.buttonRoom.dontPressTimer = (STATE.buttonRoom.dontPressTimer || 0) + deltaSeconds;
+        if (STATE.buttonRoom.dontPressTimer > 5) {
+            STATE.buttonRoom.dontPressRewarded = true;
+            notify(t('dontPressReward') || 'Bravo, tu as resiste. Voila une clef.');
+            STATE.inventory.keys = (STATE.inventory.keys || 0) + 1;
+            if (typeof updateHUD === 'function') updateHUD();
+            // Eteindre/changer le bouton
+            if (dontPressBtn.material) {
+                dontPressBtn.material.color.set(0x44ff44);
+                dontPressBtn.material.emissive = new THREE.Color(0x44ff44);
+            }
+        }
+    } else {
+        // Sortie de zone : reset doucement
+        STATE.buttonRoom.dontPressTimer = Math.max(0, (STATE.buttonRoom.dontPressTimer || 0) - deltaSeconds * 2);
+    }
+}
+
+// --- REVELATION HUB : portails colores vers puzzles visites ---
+function revealHubColors() {
+    // Recupere les puzzles deja visites (1 a 10)
+    const visitedPuzzles = STATE.visitedRooms
+        .filter(r => /^puzzle_\d+$/.test(r))
+        .map(r => parseInt(r.split('_')[1], 10))
+        .sort((a, b) => a - b);
+
+    if (visitedPuzzles.length === 0) {
+        notify(t('nothingRevealed') || 'Rien n\'apparait... explore d\'abord les salles');
+        STATE.hubColorsRevealed = true;
+        return;
+    }
+
+    // Position : alignes au fond du hub (z positif), repartis sur l'axe X
+    const totalWidth = Math.min(visitedPuzzles.length * 3, 18);
+    const startX = -totalWidth / 2 + 1.5;
+
+    visitedPuzzles.forEach((num, i) => {
+        const themeName = ROOM_THEMES[`puzzle_${num}`]?.name || 'training';
+        const color = getGlowColor(themeName);
+        const x = startX + i * (totalWidth / Math.max(visitedPuzzles.length, 1));
+
+        // Cube portail principal
+        const portal = addBox(1.4, 2.4, 0.4, x, 1.5, 13, color, {
+            type: 'portal',
+            target: `puzzle_${num}`,
+            label: (t('colorPortal') || 'Passage colore') + ' #' + num
+        });
+        if (portal && portal.material) {
+            portal.material.emissive = new THREE.Color(color);
+            portal.material.emissiveIntensity = 0.7;
+        }
+
+        // Lumiere ponctuelle au-dessus pour le glow
+        const light = new THREE.PointLight(color, 1.2, 8);
+        light.position.set(x, 3.5, 13);
+        scene.add(light);
+        worldObjects.push(light);
+    });
+
+    STATE.hubColorsRevealed = true;
+    notify(t('colorsRevealed') || 'Des couleurs s\'illuminent au fond...');
 }
 
 // --- PROXIMITY ---
