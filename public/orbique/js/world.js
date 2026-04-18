@@ -225,6 +225,8 @@ function checkCollision(newPos) {
         if (!obj.isMesh || obj === STATE.carriedObject) continue;
         if (obj.userData && obj.userData.pickable) continue; // cubes don't block
         if (obj.userData && obj.userData._tutoArrow) continue; // arrows don't block
+        if (obj.userData && obj.userData.type === 'well') continue; // les puits ne collident pas (on doit pouvoir marcher/sauter dedans)
+        if (obj.userData && obj.userData.type === 'wallNote') continue; // notes au mur : pas de collision
         if (!obj.geometry || !obj.geometry.parameters) continue;
 
         const p = obj.geometry.parameters;
