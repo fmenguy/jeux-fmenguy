@@ -152,29 +152,6 @@
 
       background(COL_BG);
 
-      // Astuces canvas en haut
-      let tipY = 0;
-      if (showTip) {
-        fill(255, 255, 200, 255 * tipOpacity);
-        rect(0, tipY, canvasWidth, 28);
-        fill(0, 0, 0, 255 * tipOpacity);
-        textSize(12);
-        textAlign(CENTER, CENTER);
-        text("Echange ton XP en energie pour poser un nouveau Sabreur !", canvasWidth / 2, tipY + 14);
-        tipY += 28;
-        textSize(14);
-      }
-      if (showTipWave6) {
-        fill(200, 180, 255, 255 * tipWave6Opacity);
-        rect(0, tipY, canvasWidth, 28);
-        fill(0, 0, 0, 255 * tipWave6Opacity);
-        textSize(12);
-        textAlign(CENTER, CENTER);
-        text("Garde ton XP pour faire evoluer les tourelles !", canvasWidth / 2, tipY + 14);
-        tipY += 28;
-        textSize(14);
-      }
-
       // Bulle de dialogue Boss Triangulaire Noir
       if (blackTriangleBossSpeechTimer > 0) {
         let btBoss = enemies.find(e => e.isBlackTriangleBoss);
@@ -244,7 +221,7 @@
       fill('rgba(239,68,68,0.5)');
       textSize(9);
       textAlign(CENTER, CENTER);
-      text("SPAWN", CELL_SIZE, canvasHeight - 10);
+      text("REBELLES", CELL_SIZE, canvasHeight - 10);
 
       fill('rgba(0,245,255,0.5)');
       text("BASE", (GRID_WIDTH - 1) * CELL_SIZE + CELL_SIZE / 2, canvasHeight - 10);

@@ -31,6 +31,10 @@
     <button class="menu-btn" id="btnEasy" onclick="startGame('easy')">FACILE</button>
     <button class="menu-btn" id="btnBeginner" onclick="startGame('beginner')">DÉBUTANT</button>
     <button class="menu-btn" id="btnSimple" onclick="startGame('simple')">SIMPLE</button>
+    <div id="fullscreenTip" style="margin-top:18px;font-size:0.78rem;opacity:0.7;letter-spacing:0.04em;text-align:center;">
+      <span id="fullscreenTipText">💡 Pour une meilleure immersion, passe en plein écran</span>
+      <button id="fullscreenBtn" type="button" style="margin-left:10px;padding:4px 10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:inherit;border-radius:4px;font-size:0.75rem;cursor:pointer;letter-spacing:0.06em;">PLEIN ÉCRAN (F11)</button>
+    </div>
     <div class="version-tag">v0.1 — ALPHA</div>
 </div>
 
@@ -80,6 +84,18 @@
     <canvas id="mapCanvas" width="600" height="600"></canvas>
 </div>
 
+<!-- SAVE / LOAD MENU -->
+<div id="saveMenu" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;justify-content:center;align-items:center;">
+    <div style="background:#0a0a14;border:1px solid #4488cc;border-radius:8px;padding:24px 28px;min-width:380px;max-width:520px;box-shadow:0 0 30px rgba(68,136,204,0.4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 style="color:#88ccff;font-family:monospace;letter-spacing:0.1em;margin:0;font-size:1.1rem;">💾 SAUVEGARDES</h2>
+            <button id="saveMenuClose" type="button" style="background:none;border:none;color:#88ccff;font-size:1.4rem;cursor:pointer;line-height:1;">×</button>
+        </div>
+        <div id="saveSlots" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="margin-top:14px;font-size:0.7rem;color:#556677;text-align:center;letter-spacing:0.05em;">Échap pour fermer · 5 emplacements maximum</div>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
@@ -92,5 +108,6 @@
 <script src="js/inventory.js"></script>
 <script src="js/tutorial.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/save.js"></script>
 </body>
 </html>
