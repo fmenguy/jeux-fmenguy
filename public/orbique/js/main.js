@@ -33,7 +33,9 @@ const STATE = {
     spawnPosition: { x: 0, y: 2, z: 0 }, // position initiale dans la room courante
     // Notes interactives (chaque note de la salle des boutons fait quelque chose)
     canJump: false,               // debloque par la note "avancer" si on recule devant
-    notesActivated: {}            // suivi des notes deja declenchees
+    notesActivated: {},           // suivi des notes deja declenchees
+    // Mode debug (Konami)
+    debugMode: false,             // si actif : tout debloque, sauf sauvegarde
     currentChest: null,
     // Pick & throw
     carriedObject: null,
@@ -58,6 +60,10 @@ let worldObjects = [];
 let interactables = [];
 let pickables = [];
 let currentRoom = null;
+// Saut (debloque par la note "Si tu lis ceci, tu devrais avancer." en reculant)
+let isJumping = false;
+let jumpVelY = 0;
+const GROUND_Y = 2;
 
 // Stickman hand
 let handMesh = null;
@@ -260,6 +266,50 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// === MODE DEBUG (Code Konami) ===
+const KONAMI_SEQ = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let _konamiIdx = 0;
+window.addEventListener('keydown', (e) => {
+    const expected = KONAMI_SEQ[_konamiIdx];
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === expected) {
+        _konamiIdx++;
+        if (_konamiIdx === KONAMI_SEQ.length) {
+            _konamiIdx = 0;
+            activateDebugMode();
+        }
+    } else {
+        _konamiIdx = (k === KONAMI_SEQ[0]) ? 1 : 0;
+    }
+});
+
+function activateDebugMode() {
+    if (STATE.debugMode) return;
+    STATE.debugMode = true;
+    // Tout debloquer
+    STATE.canJump = true;
+    STATE.canSave = true;          // visible mais sauvegarde bloquee (voir save.js)
+    STATE.saveKeyClaimed = true;
+    STATE.fellInWell = true;
+    STATE.backwardDiscovered = true;
+    STATE.tutorialCompleted = true;
+    STATE.doorsUnlocked = [1,2,3,4,5,6,7,8,9,10];
+    STATE.inventory.keys = 99;
+    // Tous les plans
+    STATE.inventory.plans = [1,2,3,4,5,6,7,8,9,10];
+    // Badge visuel
+    const badge = document.getElementById('debugBadge');
+    if (badge) badge.style.display = 'block';
+    // Notification (uniquement si le jeu a demarre)
+    if (STATE.started && typeof notify === 'function') {
+        notify('◆ MODE DEBUG ACTIVÉ ◆ Tout est débloqué. Sauvegarde désactivée.');
+    }
+    // Si on est dans le hub, recharger pour faire apparaitre le portail tuto
+    if (typeof currentRoom !== 'undefined' && currentRoom && typeof loadRoom === 'function') {
+        loadRoom(currentRoom);
+    }
+}
+
 function startGame(difficulty) {
     dbg('startGame()', difficulty);
     STATE.difficulty = difficulty;
@@ -323,7 +373,19 @@ function animate() {
     const newPos = camera.position.clone();
     newPos.add(forward.multiplyScalar(velocity.z));
     newPos.add(right.multiplyScalar(velocity.x));
-    newPos.y = 2;
+
+    // Saut : si actif on simule la gravite verticale, sinon on colle au sol
+    if (STATE.canJump && isJumping) {
+        jumpVelY += -25 * delta;
+        newPos.y = camera.position.y + jumpVelY * delta;
+        if (newPos.y <= GROUND_Y) {
+            newPos.y = GROUND_Y;
+            jumpVelY = 0;
+            isJumping = false;
+        }
+    } else {
+        newPos.y = GROUND_Y;
+    }
 
     camera.position.copy(checkCollision(newPos));
 
@@ -335,6 +397,7 @@ function animate() {
     checkNonEuclidean();
     checkProximity();
     checkWells();
+    checkWallNotes();
     checkButtonRoomTimers(delta);
     checkCubeTarget();
     checkWeightRoom();

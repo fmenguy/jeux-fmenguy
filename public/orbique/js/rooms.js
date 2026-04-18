@@ -28,8 +28,14 @@ function buildTutorial() {
     const hw = room.size.w / 2;
     const hd = room.size.d / 2;
 
-    // 4 puits sans fond aux coins (decouverte mecanique)
+    // 4 puits sans fond aux coins (decouverte mecanique : il faut SAUTER au-dessus pour tomber)
     addCornerWells(room, 1.8);
+
+    // Panneau d'indice pres d'un puit (coin sud-est) : il faut revenir une fois le saut debloque
+    addBox(2.6, 0.05, 1.0, 8, 0.03, 8, 0x442211, {
+        type: 'sign',
+        label: 'Reviens ici quand tu sauras sauter pour découvrir le vide.'
+    });
 
     // Soft ambient light
     const tutoAmbient = new THREE.AmbientLight(0xccccdd, 0.5);
@@ -361,6 +367,18 @@ function buildHub() {
     if (weightPortal && weightPortal.material) {
         weightPortal.material.emissive = new THREE.Color(0xffcc44);
         weightPortal.material.emissiveIntensity = 0.4;
+    }
+
+    // Portail "retour au tutoriel" : visible uniquement apres avoir debloque le saut
+    if (STATE.canJump) {
+        const tutoPortal = addBox(2, 2.5, 0.3, -6, 1.25, 8, 0x4488cc, {
+            type: 'portal', target: 'tutorial',
+            label: 'Retour au tutoriel'
+        });
+        if (tutoPortal && tutoPortal.material) {
+            tutoPortal.material.emissive = new THREE.Color(0x88ccff);
+            tutoPortal.material.emissiveIntensity = 0.5;
+        }
     }
 
     // === SURREALISME : cubes flottants a l'envers au plafond ===
@@ -1057,14 +1075,14 @@ function buildButtonRoom() {
 
     // === NOTES SUR LES MURS ===
     // Mur sud (z=10.8, regarde -z donc rotation PI)
-    addWallNote("Si tu lis ceci, tu devrais avancer.", -7, 2.4, 10.8, Math.PI, { accent: '#ff44dd' });
+    addWallNote("Si tu lis ceci, tu devrais avancer.", -7, 2.4, 10.8, Math.PI, { accent: '#ff44dd', id: 'jumpNote' });
     addWallNote("CECI N'EST PAS UNE NOTE.", 7, 2.4, 10.8, Math.PI, { accent: '#44ddff' });
     // Mur nord (z=-10.8, regarde +z donc rotation 0)
     addWallNote("Le bouton honnête n'est pas devant toi.", -6, 2.4, -10.8, 0, { accent: '#44ff88' });
     addWallNote("Tourne-toi parfois. Vraiment.", 6, 2.4, -10.8, 0, { accent: '#ffcc44' });
     // Mur ouest (x=-10.8, regarde +x donc rotation PI/2)
-    addWallNote("Les murs ne mentent jamais. Sauf celui-là.", -10.8, 2.4, 0, Math.PI / 2, { accent: '#aa44ff' });
-    addWallNote("Si tu vois ce texte à l'envers : c'est normal.", -10.8, 4.0, 5, Math.PI / 2, { accent: '#ff8844', height: 0.7, width: 1.8, upsideDown: true });
+    addWallNote("Les murs ne mentent jamais. Sauf celui-là.", -10.8, 2.4, 0, Math.PI / 2, { accent: '#aa44ff', id: 'wallSecret' });
+    addWallNote("Si tu vois ce texte à l'envers : c'est normal.", -10.8, 4.0, 5, Math.PI / 2, { accent: '#ff8844', height: 0.7, width: 1.8, upsideDown: true, id: 'invertNote' });
     // Mur est (x=10.8, regarde -x donc rotation -PI/2)
     addWallNote("Une clé se cache. Pas ici.", 10.8, 2.4, -3, -Math.PI / 2, { accent: '#44ffcc' });
     addWallNote("Le sol est solide. La vérité, moins.", 10.8, 2.4, 4, -Math.PI / 2, { accent: '#ff44dd' });
@@ -1146,18 +1164,8 @@ function addWallNote(text, x, y, z, rotY, opts) {
     note.rotation.y = rotY;
     scene.add(note);
     worldObjects.push(note);
-    // Si la note a un id, on la rend interactive (clic = onNoteClick)
-    if (opts.id) {
-        note.userData = {
-            type: 'wallNote',
-            noteId: opts.id,
-            label: opts.clickLabel || ' ',
-            onPress: function(obj) { onNoteClick(opts.id, obj); }
-        };
-        // On la met en interactable pour que interact() la trouve
-        // (en utilisant 'button' ne donne pas la bonne hint, on utilise notre type custom)
-        if (typeof interactables !== 'undefined') interactables.push(note);
-    }
+    // Tag pour detection proximite (checkWallNotes dans player.js)
+    note.userData = { type: 'wallNote', noteId: opts.id || null };
     return note;
 }
 

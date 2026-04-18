@@ -25,6 +25,10 @@ function listSaveSlots() {
 }
 
 function saveToSlot(slotIndex) {
+    if (STATE.debugMode) {
+        notify('Mode debug : sauvegarde désactivée. (Le menu reste consultable.)');
+        return;
+    }
     if (!STATE.canSave) {
         notify(t('saveNotUnlocked') || 'Sauvegarde non débloquée.');
         return;
@@ -104,12 +108,63 @@ function formatSlotInfo(slot) {
     };
 }
 
+function resetGameToStart() {
+    // Sortir du mode debug et reset des flags utilisateur
+    STATE.debugMode = false;
+    STATE.canJump = false;
+    STATE.canSave = false;
+    STATE.saveKeyClaimed = false;
+    STATE.fellInWell = false;
+    STATE.backwardDiscovered = false;
+    STATE.tutorialCompleted = false;
+    STATE.doorsUnlocked = [];
+    STATE.roomsCompleted = [];
+    STATE.visitedRooms = [];
+    STATE.hubColorsRevealed = false;
+    STATE.notesActivated = {};
+    STATE.inventory = { keys: 0, plans: [], orbs: { whiteI: false, whiteII: false, blackI: false, blackII: false } };
+    STATE.buttonRoom = null;
+    STATE.weightRoom = null;
+    const badge = document.getElementById('debugBadge');
+    if (badge) badge.style.display = 'none';
+    closeSaveMenu();
+    loadRoom('tutorial');
+    if (typeof startTutorial === 'function') startTutorial();
+    if (typeof updateHUD === 'function') updateHUD();
+    if (typeof updateOrbDisplay === 'function') updateOrbDisplay();
+    notify('Nouvelle partie : retour au début, mode debug désactivé.');
+}
+
 function renderSaveSlots() {
     const container = document.getElementById('saveSlots');
     if (!container) return;
     const slots = listSaveSlots();
+
+    // En mode debug : ajouter un slot virtuel "Démo"
+    if (STATE.debugMode) {
+        slots.push({ index: -1, demo: true });
+    }
+
     container.innerHTML = '';
     slots.forEach(slot => {
+        // Slot "Démo" en mode debug
+        if (slot.demo) {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:#221033;border:1px dashed #ff44dd;border-radius:5px;';
+            const label = document.createElement('div');
+            label.style.cssText = 'flex:1;font-family:monospace;font-size:0.78rem;color:#ff88ff;';
+            label.innerHTML = '<strong style="color:#ff44dd;">⟲ DÉMO</strong> · Nouvelle partie sans debug';
+            row.appendChild(label);
+            const btnReset = document.createElement('button');
+            btnReset.type = 'button';
+            btnReset.textContent = 'Charger';
+            btnReset.style.cssText = 'padding:4px 10px;background:rgba(255,68,221,0.15);border:1px solid #ff44dd;color:#ff88ff;border-radius:3px;cursor:pointer;font-size:0.7rem;letter-spacing:0.05em;';
+            btnReset.onclick = () => resetGameToStart();
+            row.appendChild(btnReset);
+            container.appendChild(row);
+            return;
+        }
+
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:#101822;border:1px solid #1a2a3a;border-radius:5px;';
 
@@ -157,7 +212,8 @@ function renderSaveSlots() {
 }
 
 function openSaveMenu() {
-    if (!STATE.canSave) return;
+    // Accessible si le joueur a la clef OU si mode debug (consultation seulement)
+    if (!STATE.canSave && !STATE.debugMode) return;
     renderSaveSlots();
     const menu = document.getElementById('saveMenu');
     menu.style.display = 'flex';

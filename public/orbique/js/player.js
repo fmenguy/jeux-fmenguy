@@ -37,6 +37,13 @@ function onKeyDown(e) {
     else if (key === 'e') { interact(); }
     else if (key === 'm') { toggleMap(); }
     else if (key === 'tab') { e.preventDefault(); toggleInventoryDetail(); }
+    else if (key === ' ') {
+        e.preventDefault();
+        if (STATE.canJump && !isJumping && Math.abs(camera.position.y - GROUND_Y) < 0.01) {
+            isJumping = true;
+            jumpVelY = 9;
+        }
+    }
 }
 
 function onKeyUp(e) {
@@ -139,8 +146,8 @@ function onPointerLockChange() {
     isPointerLocked = document.pointerLockElement === renderer.domElement;
     dbg('pointerLockChange:', wasLocked, '->', isPointerLocked, 'element:', document.pointerLockElement);
     if (STATE.started && !isPointerLocked) {
-        // Si le joueur a la clef de sauvegarde, ouvrir le menu save/load
-        if (STATE.canSave && typeof openSaveMenu === 'function') {
+        // Si le joueur a la clef de sauvegarde OU est en mode debug : ouvrir menu save
+        if ((STATE.canSave || STATE.debugMode) && typeof openSaveMenu === 'function') {
             openSaveMenu();
         } else {
             notify(t('clickToResume'));
@@ -350,16 +357,19 @@ function checkWells() {
     }
     if (wells.length === 0) return;
 
-    // 1. Chute du joueur (zone elargie : 1.1m de rayon, dans les 2 axes ET en distance euclidienne)
+    // 1. Chute du joueur : il faut SAUTER au-dessus du puit pour y tomber
+    // (le puit a une "surface invisible" en surface, seul un saut au-dessus revele le vide)
+    const inAir = isJumping || camera.position.y > GROUND_Y + 0.05;
     const px = camera.position.x;
     const pz = camera.position.z;
     for (const well of wells) {
         const dx = px - well.position.x;
         const dz = pz - well.position.z;
         const planar = Math.sqrt(dx * dx + dz * dz);
-        if (planar < 1.1) {
+        if (planar < 1.1 && inAir) {
             const spawn = STATE.spawnPosition || { x: 0, y: 2, z: 0 };
             camera.position.set(spawn.x, spawn.y, spawn.z);
+            isJumping = false; jumpVelY = 0;
             const wasFirst = !STATE.fellInWell;
             STATE.fellInWell = true;
             notify(wasFirst
@@ -382,6 +392,64 @@ function checkWells() {
                     cube.rotation.set(0, 0, 0);
                 }
                 break;
+            }
+        }
+    }
+}
+
+// --- NOTES MURALES INTERACTIVES (button_room) ---
+function checkWallNotes() {
+    if (currentRoom !== 'button_room') return;
+    if (!STATE.notesActivated) STATE.notesActivated = {};
+
+    for (const obj of worldObjects) {
+        if (!obj.userData || obj.userData.type !== 'wallNote') continue;
+        const id = obj.userData.noteId;
+        if (!id) continue;
+        const dist = camera.position.distanceTo(obj.position);
+
+        // 1. JUMP NOTE : "Si tu lis ceci, tu devrais avancer." -- recule devant pour debloquer le saut
+        if (id === 'jumpNote' && !STATE.canJump) {
+            if (dist < 4 && moveBackward && !moveForward) {
+                STATE.canJump = true;
+                notify('SAUT débloqué ! Appuie sur ESPACE pour sauter.');
+            }
+        }
+
+        // 2. WALL SECRET : "Les murs ne mentent jamais. Sauf celui-là." -- coller au mur fait apparaitre une clef
+        if (id === 'wallSecret' && !STATE.notesActivated.wallSecret) {
+            // Le mur est en x=-10.8, on detecte la proximite reelle au mur (distance X courte)
+            if (camera.position.x < -9.5 && dist < 3.5) {
+                STATE.notesActivated.wallSecret = true;
+                // Spawn une clef contre le mur, juste devant la note
+                const keyGeo = new THREE.BoxGeometry(0.3, 0.5, 0.3);
+                const keyMat = new THREE.MeshStandardMaterial({
+                    color: 0xaa44ff, emissive: 0xaa44ff, emissiveIntensity: 0.8
+                });
+                const key = new THREE.Mesh(keyGeo, keyMat);
+                key.position.set(-9.8, 0.5, 0);
+                key.userData = { type: 'key', label: 'Clef secrète du mur', unlocksRoom: 0 };
+                scene.add(key);
+                worldObjects.push(key);
+                interactables.push(key);
+                const lt = new THREE.PointLight(0xaa44ff, 1.4, 5);
+                lt.position.set(-9.8, 1.3, 0);
+                scene.add(lt); worldObjects.push(lt);
+                notify("Le mur n'a pas menti. Quelque chose apparaît.");
+            }
+        }
+
+        // 3. INVERT NOTE : "Si tu vois ce texte à l'envers : c'est normal." -- proximite inverse les controles V
+        if (id === 'invertNote' && !STATE.notesActivated.invertNote) {
+            if (dist < 2.5) {
+                STATE.notesActivated.invertNote = true;
+                STATE.controlsInverted.vertical = true;
+                notify("Approche déstabilisante. Vertical inversé 5s.");
+                setTimeout(() => {
+                    STATE.controlsInverted.vertical = false;
+                    STATE.notesActivated.invertNote = false;
+                    notify("Vertical restauré.");
+                }, 5000);
             }
         }
     }
