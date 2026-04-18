@@ -35,6 +35,10 @@ function loadRoom(roomId) {
     currentRoom = roomId;
     STATE.currentZone = roomId;
 
+    // Tracker les rooms visitees + reset du flag hub
+    if (!STATE.visitedRooms.includes(roomId)) STATE.visitedRooms.push(roomId);
+    if (roomId === 'hub') STATE.hubColorsRevealed = false;
+
     const roomDef = ROOMS[roomId];
     if (!roomDef) return;
 
@@ -122,6 +126,8 @@ function loadRoom(roomId) {
 
     // Position camera at room entrance
     camera.position.set(0, 2, d/2 - 3);
+    // Memorise la position de spawn pour les puits sans fond
+    STATE.spawnPosition = { x: 0, y: 2, z: d/2 - 3 };
     euler.set(0, 0, 0);
     camera.quaternion.setFromEuler(euler);
 
@@ -134,6 +140,9 @@ function loadRoom(roomId) {
         case 'corridor_infinite': buildInfiniteCorridor(); break;
         case 'labyrinth': buildLabyrinth(); break;
         case 'orb_chamber': buildOrbChamber(); break;
+        case 'button_room': buildButtonRoom(); break;
+        case 'cube_room': buildCubeRoom(); break;
+        case 'weight_room': buildWeightRoom(); break;
         default:
             if (roomId.startsWith('puzzle_')) buildPuzzleRoom(roomId);
             break;
