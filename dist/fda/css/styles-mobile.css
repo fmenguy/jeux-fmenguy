@@ -1,0 +1,325 @@
+/* Styles complémentaires pour adaptation mobile */
+
+/* Reset pour mobile */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+body {
+  font-size: 16px;
+  touch-action: manipulation;
+  padding: 5px;
+}
+
+/* Adapte le logo pour mobile */
+#gameLogo {
+  width: 150px;
+  height: auto;
+  margin: 10px auto;
+}
+
+/* Amélioration des contrôles audio pour mobile */
+.sidebar-toggle {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  font-size: 18px;
+  z-index: 1020;
+}
+
+#audioSidebarContent.open {
+  width: 280px;
+  height: 70px;
+  padding: 12px;
+}
+
+.audio-controls {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.volume-control {
+  flex: 1;
+  margin-left: 15px;
+}
+
+#volumeSlider {
+  width: 100px;
+  height: 30px;
+  -webkit-appearance: none;
+  background: #2b1d0e;
+  border-radius: 10px;
+  outline: none;
+}
+
+#volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  background: #d4a017;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.audio-control-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Amélioration des onglets pour touch */
+#tabs {
+  display: flex;
+  justify-content: space-around;
+  padding: 5px;
+  margin: 10px auto;
+  max-width: 100%;
+}
+
+.tab-button {
+  min-height: 44px;
+  min-width: 80px;
+  padding: 12px 16px;
+  font-size: 16px;
+  flex: 1;
+  max-width: 45%;
+  margin: 0 5px;
+}
+
+/* Adaptation des sections de jeu */
+.game-frame {
+  width: 100%;
+  margin: 0 auto 15px auto;
+}
+
+#seasonDisplay, #narrative, #explorationDisplay, #techBanner {
+  font-size: 16px;
+  padding: 12px;
+  margin: 10px auto;
+  max-width: 100%;
+}
+
+/* Ressources */
+#resources {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-width: 100%;
+  padding: 8px;
+}
+
+.resource {
+  width: auto;
+  flex: none;
+  max-width: none;
+  margin: 5px 0;
+  padding: 10px;
+}
+
+.resource p {
+  font-size: 15px;
+  margin: 0 0 8px 0;
+}
+
+.resource button {
+  width: 100%;
+  min-height: 44px;
+  font-size: 15px;
+  margin: 5px 0;
+}
+
+.tooltip {
+  font-size: 13px;
+  margin-top: 5px;
+  display: block;
+  line-height: 1.3;
+}
+
+/* Adapter les colonnes en vue verticale */
+.columns {
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  max-width: 100%;
+}
+
+.section {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 15px 0;
+  padding: 12px;
+}
+
+.craft, .worker {
+  margin: 12px 0;
+  padding: 10px;
+}
+
+.craft p, .worker p {
+  font-size: 15px;
+  margin: 0 0 8px 0;
+}
+
+.craft button, .worker button {
+  width: 100%;
+  min-height: 44px;
+  font-size: 15px;
+  margin: 5px 0;
+}
+
+/* Améliorer l'affichage des villages */
+#villagesDisplay {
+  padding: 12px;
+  margin: 15px auto;
+  max-width: 100%;
+}
+
+#villagesList li {
+  padding: 10px;
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+/* Section save/load */
+#saveLoadSection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  max-width: 100%;
+  padding: 15px;
+}
+
+#saveLoadSection button {
+  min-width: 100px;
+  flex: 1 1 40%;
+  margin: 5px;
+  padding: 12px;
+  font-size: 15px;
+}
+
+/* Optimisation de la carte */
+#mapSection {
+  margin: 10px auto;
+  max-width: 100%;
+  padding: 10px;
+}
+
+.map-container {
+  flex-direction: column;
+  align-items: center;
+}
+
+#gameMap {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  margin-bottom: 15px;
+}
+
+#mapLegend {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 15px;
+  padding: 12px;
+}
+
+#mapLegend li {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Indications de drag and drop */
+[draggable="true"] {
+  position: relative;
+}
+
+[draggable="true"]::before {
+  content: "≡";
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  font-size: 16px;
+  color: var(--primary-color);
+}
+
+.dragging {
+  opacity: 0.6;
+  border: 2px dashed var(--primary-color);
+}
+
+/* Footer adapté */
+footer {
+  padding: 15px;
+  font-size: 14px;
+}
+
+/* Correction de bug de scrolling sur iOS */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Meilleure visibilité de l'alerte */
+#alert {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+  font-size: 16px;
+  z-index: 1100;
+  max-width: 90%;
+  border-radius: 8px;
+}
+
+/* Amélioration du footer */
+#hiddenTabs {
+  flex-wrap: wrap;
+  justify-content: center;
+  bottom: 5px;
+  width: 100%;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Position fixe pour le bouton audio */
+.sidebar-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+}
+
+/* Animation subtile pour les boutons */
+button {
+  transition: transform 0.1s, background-color 0.3s;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Ajustements pour les écrans très petits */
+@media (max-width: 320px) {
+  #resources {
+    grid-template-columns: 1fr;
+  }
+  
+  button {
+    font-size: 14px;
+  }
+  
+  .section {
+    padding: 8px;
+  }
+}

@@ -1,0 +1,251 @@
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to bottom, #0D1B2A, #1B263B); /* Dégradé sombre pour un thème sous-marin */
+  color: #E0E0E0; /* Texte clair pour la lisibilité */
+  margin: 0;
+  padding: 10px;
+  min-height: 100vh; /* S'assurer que le dégradé couvre toute la hauteur */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  color: #BBDEFB; /* Bleu clair pour le titre */
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+#controls {
+  margin-bottom: 10px;
+  padding: 10px;
+  background: rgba(30, 58, 138, 0.7); /* Fond semi-transparent bleu foncé */
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(187, 222, 251, 0.5); /* Ombre lumineuse */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  max-width: 600px;
+}
+
+button {
+  padding: 5px 10px;
+  background-color: #1E3A8A; /* Bleu foncé pour les boutons */
+  color: #E0E0E0; /* Texte clair */
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 0.9rem;
+}
+
+button:disabled {
+  background-color: #1C2526; /* Gris foncé pour les boutons désactivés */
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background-color: #3B82F6; /* Bleu plus clair au survol */
+}
+
+#gameCanvas {
+  border: 1px solid #4B5EAA; /* Bordure bleu foncé */
+  animation: glowingBorder 2s infinite; /* Animation lumineuse */
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+}
+
+.tab-button {
+  color: #BBDEFB; /* Bleu clair pour le bouton "Retour" */
+}
+
+/* Style pour les chemins des créatures */
+.path {
+  stroke: #FFFFFF;
+  stroke-width: 2;
+  stroke-dasharray: 5, 5; /* Ligne pointillée */
+  opacity: 0.5;
+}
+
+/* Animation de l'effet lumineux sur la bordure du canvas */
+@keyframes glowingBorder {
+  0% {
+    box-shadow: 0 0 5px #4B5EAA, 0 0 10px #4B5EAA, 0 0 15px #BBDEFB;
+  }
+  50% {
+    box-shadow: 0 0 10px #4B5EAA, 0 0 20px #BBDEFB, 0 0 30px #BBDEFB;
+  }
+  100% {
+    box-shadow: 0 0 5px #4B5EAA, 0 0 10px #4B5EAA, 0 0 15px #BBDEFB;
+  }
+}
+
+/* Style pour les labels des boutons radio */
+#controls label {
+  margin-left: 3px;
+  margin-right: 10px;
+  font-size: 0.9rem;
+}
+
+/* Style pour le canvas des statistiques */
+#statsCanvas {
+  border: 1px solid #4B5EAA;
+  animation: glowingBorder 2s infinite;
+  width: 100%;
+  max-width: 600px;
+  height: 150px;
+}
+
+/* Style pour les bulles */
+#foodRequests {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Ne pas interférer avec les interactions */
+}
+
+.food-request-bubble {
+  position: absolute;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(187, 222, 251, 0.5);
+  font-size: 0.8rem;
+  max-width: 150px;
+  text-align: center;
+  animation: fadeOut 5s forwards;
+}
+
+.creature-bubble {
+  background: rgba(255, 255, 255, 0.9);
+  color: #2E7D32;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Style pour la légende des espèces */
+#speciesLegend {
+  position: fixed;
+  top: 20px;
+  left: 10px;
+  background: rgba(30, 58, 138, 0.7);
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(187, 222, 251, 0.5);
+  color: #E0E0E0;
+}
+
+#speciesLegend h2 {
+  font-size: 1rem;
+  margin: 0 0 5px 0;
+  color: #BBDEFB;
+}
+
+.species-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.species-color {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  border-radius: 3px;
+}
+
+#scoreDisplay {
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+/* Style pour le menu de création d'espèce */
+#createSpeciesMenu {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(30, 58, 138, 0.9);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(187, 222, 251, 0.5);
+  color: #E0E0E0;
+  z-index: 1000;
+}
+
+#createSpeciesMenu h2 {
+  font-size: 1.2rem;
+  margin: 0 0 10px 0;
+  color: #BBDEFB;
+}
+
+#createSpeciesMenu label {
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+  display: block;
+}
+
+#createSpeciesMenu input, #createSpeciesMenu select {
+  margin-left: 5px;
+  padding: 3px;
+  border-radius: 3px;
+  border: none;
+}
+
+#createSpeciesMenu button {
+  margin-top: 10px;
+}
+
+/* Responsive design pour mobile */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.2rem;
+  }
+
+  #controls {
+    flex-direction: column;
+    gap: 10px;
+    padding: 5px;
+  }
+
+  button, #controls label {
+    font-size: 0.8rem;
+  }
+
+  #gameCanvas, #statsCanvas {
+    max-width: 100%;
+  }
+
+  #speciesLegend {
+    top: 10px;
+    left: 5px;
+    padding: 3px;
+  }
+
+  #speciesLegend h2 {
+    font-size: 0.9rem;
+  }
+
+  .species-item {
+    font-size: 0.8rem;
+  }
+
+  .food-request-bubble {
+    max-width: 120px;
+    font-size: 0.7rem;
+  }
+
+  #createSpeciesMenu {
+    width: 90%;
+    max-width: 300px;
+  }
+}
