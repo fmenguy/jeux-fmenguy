@@ -13,6 +13,10 @@ desktop.ini
 node_modules/
 npm-debug.log*
 
+# Astro (build output + cache)
+dist/
+.astro/
+
 # Logs & temp
 *.log
 *.tmp
