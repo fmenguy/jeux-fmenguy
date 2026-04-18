@@ -1,0 +1,1474 @@
+<!DOCTYPE html><html lang="fr" data-astro-cid-3vffl3rc> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Zentel -- Arcade FM</title><link rel="icon" type="image/x-icon" href="/zentel/assets/zentel.ico"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"><script type="module" src="/_astro/index.astro_astro_type_script_index_0_lang.BsLt732P.js"></script><link rel="stylesheet" href="/_astro/index.Dpo_hzPj.css"></head> <body data-astro-cid-3vffl3rc> <!-- ===== HEADER ===== --> <header class="header" data-astro-cid-3vffl3rc> <a href="/" class="back-btn" data-astro-cid-3vffl3rc>&#8592; Arcade FM</a> <span class="header-title" data-astro-cid-3vffl3rc>ZENTEL</span> <div class="header-stats" data-astro-cid-3vffl3rc> <div class="stat-chip wave" data-astro-cid-3vffl3rc> <span class="label" data-astro-cid-3vffl3rc>Vague</span> <span class="val" id="stat-wave" data-astro-cid-3vffl3rc>0</span> </div> <div class="stat-chip energy" data-astro-cid-3vffl3rc> <span class="label" data-astro-cid-3vffl3rc>E</span> <span class="val" id="stat-energy" data-astro-cid-3vffl3rc>40</span> </div> <div class="stat-chip xp" data-astro-cid-3vffl3rc> <span class="label" data-astro-cid-3vffl3rc>XP</span> <span class="val" id="stat-xp" data-astro-cid-3vffl3rc>0</span> </div> <div class="stat-chip hp" data-astro-cid-3vffl3rc> <span class="label" data-astro-cid-3vffl3rc>Base</span> <span class="val" id="stat-hp" data-astro-cid-3vffl3rc>100</span> </div> <button class="help-btn" id="help-open-btn" title="Aide" data-astro-cid-3vffl3rc>?</button> </div> </header> <!-- ===== GAME AREA ===== --> <div class="app" data-astro-cid-3vffl3rc> <div class="game-area" data-astro-cid-3vffl3rc> <div id="game-canvas-container" data-astro-cid-3vffl3rc></div> </div> <!-- ===== CONTROLS BAR ===== --> <div class="controls-bar" data-astro-cid-3vffl3rc> <!-- Lancer vague --> <div class="ctrl-group" data-astro-cid-3vffl3rc> <button class="start-wave-btn" id="start-wave" data-astro-cid-3vffl3rc>&#9654; Lancer Vague</button> </div> <div class="ctrl-sep" data-astro-cid-3vffl3rc></div> <!-- Tourelles --> <div class="ctrl-group" data-astro-cid-3vffl3rc> <div class="turret-btn" id="melee-btn" data-astro-cid-3vffl3rc> <span class="t-icon" data-astro-cid-3vffl3rc>&#9876;</span> <span class="t-name" data-astro-cid-3vffl3rc>Sabreur</span> <span class="t-cost" id="melee-cost" data-astro-cid-3vffl3rc>10 E</span> </div> <div class="turret-btn locked" id="projectile-btn" data-astro-cid-3vffl3rc> <span class="t-icon" data-astro-cid-3vffl3rc>&#8594;</span> <span class="t-name" data-astro-cid-3vffl3rc>Archer</span> <span class="t-cost" id="projectile-cost" data-astro-cid-3vffl3rc>V.5+</span> </div> <div class="turret-btn" id="wall-btn" data-astro-cid-3vffl3rc> <span class="t-icon" data-astro-cid-3vffl3rc>&#9608;</span> <span class="t-name" data-astro-cid-3vffl3rc>Barriere</span> <span class="t-cost" id="wall-cost" data-astro-cid-3vffl3rc>5 E</span> </div> </div> <div class="ctrl-sep" data-astro-cid-3vffl3rc></div> <!-- Actions --> <div class="ctrl-group" data-astro-cid-3vffl3rc> <button class="action-btn danger" id="delete-turret-btn" data-astro-cid-3vffl3rc>Supprimer</button> <button class="action-btn locked" id="evolve-turret-btn" data-astro-cid-3vffl3rc>Evoluer</button> <button class="action-btn locked" id="heal-base-btn" data-astro-cid-3vffl3rc>Soigner (500 XP)</button> </div> <div class="ctrl-sep" data-astro-cid-3vffl3rc></div> <!-- Echange XP --> <div class="ctrl-group" data-astro-cid-3vffl3rc> <div class="exchange-wrap" data-astro-cid-3vffl3rc> <button class="action-btn" id="exchange-xp-energy" data-astro-cid-3vffl3rc>Echange XP</button> <div class="exchange-options" data-astro-cid-3vffl3rc> <label data-astro-cid-3vffl3rc><input type="radio" name="exchange-amount" value="1xp" checked data-astro-cid-3vffl3rc> 1 XP</label> <label data-astro-cid-3vffl3rc><input type="radio" name="exchange-amount" value="50xp" data-astro-cid-3vffl3rc> 50 XP</label> <label data-astro-cid-3vffl3rc><input type="radio" name="exchange-amount" value="100xp" data-astro-cid-3vffl3rc> 100 XP</label> </div> </div> </div> </div> </div> <!-- ===== FEEDBACK ===== --> <div id="feedback-msg" data-astro-cid-3vffl3rc></div> <!-- ===== MODAL : Espace insuffisant ===== --> <div class="modal-overlay" id="space-warning-modal" data-astro-cid-3vffl3rc> <div class="modal-box" data-astro-cid-3vffl3rc> <h2 data-astro-cid-3vffl3rc>Pas assez de place !</h2> <p data-astro-cid-3vffl3rc>Il faut de l'espace libre autour de la tourelle pour l'evolution.</p> <button class="modal-close-btn" id="resume-game" data-astro-cid-3vffl3rc>Reprendre</button> </div> </div> <!-- ===== MODAL : Game Over ===== --> <div class="modal-overlay" id="game-over-modal" data-astro-cid-3vffl3rc> <div class="modal-box" data-astro-cid-3vffl3rc> <h2 data-astro-cid-3vffl3rc>Partie terminee !</h2> <p data-astro-cid-3vffl3rc>Vagues reussies : <span id="final-wave" data-astro-cid-3vffl3rc>0</span></p> <button class="modal-close-btn" id="restart-game" data-astro-cid-3vffl3rc>Recommencer</button> </div> </div> <!-- ===== MODAL : XP insuffisant ===== --> <div class="modal-overlay" id="xp-warning-modal" data-astro-cid-3vffl3rc> <div class="modal-box" data-astro-cid-3vffl3rc> <h2 data-astro-cid-3vffl3rc>XP insuffisant</h2> <p data-astro-cid-3vffl3rc>Tu n'as pas assez d'XP pour cette action.</p> <button class="modal-close-btn" id="close-xp-warning" data-astro-cid-3vffl3rc>Continuer</button> </div> </div> <!-- ===== MODAL : Astuce vague 1 ===== --> <div class="modal-overlay" id="tip-modal" data-astro-cid-3vffl3rc> <div class="modal-box" data-astro-cid-3vffl3rc> <h2 data-astro-cid-3vffl3rc>Astuce</h2> <p data-astro-cid-3vffl3rc>Pense a echanger ton XP en energie pour poser un nouveau Sabreur Quantique !</p> <button class="modal-close-btn" id="close-tip" data-astro-cid-3vffl3rc>Continuer</button> </div> </div> <!-- ===== MODAL : Astuce vague 6 ===== --> <div class="modal-overlay" id="tip-modal-wave6" data-astro-cid-3vffl3rc> <div class="modal-box" data-astro-cid-3vffl3rc> <h2 data-astro-cid-3vffl3rc>Astuce</h2> <p data-astro-cid-3vffl3rc>Garde ton XP pour faire evoluer tes tourelles !</p> <button class="modal-close-btn" id="close-tip-wave6" data-astro-cid-3vffl3rc>Continuer</button> </div> </div> <!-- ===== MODAL : Aide ===== --> <div class="modal-overlay" id="help-modal" data-astro-cid-3vffl3rc> <div class="modal-box help" data-astro-cid-3vffl3rc> <h2 data-astro-cid-3vffl3rc>Aide -- Zentel</h2> <h3 data-astro-cid-3vffl3rc>Tourelles</h3> <table class="help-table" data-astro-cid-3vffl3rc> <thead data-astro-cid-3vffl3rc> <tr data-astro-cid-3vffl3rc><th data-astro-cid-3vffl3rc>Tourelle</th><th data-astro-cid-3vffl3rc>Cout</th><th data-astro-cid-3vffl3rc>Degats</th><th data-astro-cid-3vffl3rc>Portee</th><th data-astro-cid-3vffl3rc>Deblocage</th></tr> </thead> <tbody data-astro-cid-3vffl3rc> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#00f5ff;box-shadow:0 0 4px #00f5ff" data-astro-cid-3vffl3rc></span>Sabreur Quantique</td> <td data-astro-cid-3vffl3rc>10 E</td> <td data-astro-cid-3vffl3rc>10 (corps a corps)</td> <td data-astro-cid-3vffl3rc>60 px</td> <td data-astro-cid-3vffl3rc>Debut</td> </tr> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#9d4edd;box-shadow:0 0 4px #9d4edd" data-astro-cid-3vffl3rc></span>Archer Plasma</td> <td data-astro-cid-3vffl3rc>20 E</td> <td data-astro-cid-3vffl3rc>5 (projectile)</td> <td data-astro-cid-3vffl3rc>150 px</td> <td data-astro-cid-3vffl3rc>Vague 5</td> </tr> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:rgba(100,100,160,0.8)" data-astro-cid-3vffl3rc></span>Barriere Energetique</td> <td data-astro-cid-3vffl3rc>5 E</td> <td data-astro-cid-3vffl3rc>Mur (50 HP)</td> <td data-astro-cid-3vffl3rc>--</td> <td data-astro-cid-3vffl3rc>Debut</td> </tr> </tbody> </table> <h3 data-astro-cid-3vffl3rc>Evolution</h3> <table class="help-table" data-astro-cid-3vffl3rc> <thead data-astro-cid-3vffl3rc> <tr data-astro-cid-3vffl3rc><th data-astro-cid-3vffl3rc>Niveau</th><th data-astro-cid-3vffl3rc>Condition</th><th data-astro-cid-3vffl3rc>Cout XP</th><th data-astro-cid-3vffl3rc>Effet</th></tr> </thead> <tbody data-astro-cid-3vffl3rc> <tr data-astro-cid-3vffl3rc><td data-astro-cid-3vffl3rc>Mur Lv2</td><td data-astro-cid-3vffl3rc>Vague 7+</td><td data-astro-cid-3vffl3rc>500 XP</td><td data-astro-cid-3vffl3rc>HP x3 (150 HP), occupe 2x1 ou 1x2</td></tr> <tr data-astro-cid-3vffl3rc><td data-astro-cid-3vffl3rc>Tourelle Lv2</td><td data-astro-cid-3vffl3rc>Vague 7+</td><td data-astro-cid-3vffl3rc>2 000 XP</td><td data-astro-cid-3vffl3rc>Degats +30%, portee +10%, taille 2x1</td></tr> <tr data-astro-cid-3vffl3rc><td data-astro-cid-3vffl3rc>Tourelle Lv3</td><td data-astro-cid-3vffl3rc>Vague 17+</td><td data-astro-cid-3vffl3rc>10 000 XP</td><td data-astro-cid-3vffl3rc>Degats +60%, portee +20%, taille 2x2</td></tr> </tbody> </table> <h3 data-astro-cid-3vffl3rc>Ennemis</h3> <table class="help-table" data-astro-cid-3vffl3rc> <thead data-astro-cid-3vffl3rc> <tr data-astro-cid-3vffl3rc><th data-astro-cid-3vffl3rc>Type</th><th data-astro-cid-3vffl3rc>Couleur</th><th data-astro-cid-3vffl3rc>Comportement</th></tr> </thead> <tbody data-astro-cid-3vffl3rc> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc>Ennemi basique</td> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#22c55e" data-astro-cid-3vffl3rc></span>Vert</td> <td data-astro-cid-3vffl3rc>Suit un chemin, contourne les murs</td> </tr> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc>Ennemi rapide</td> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#f59e0b" data-astro-cid-3vffl3rc></span>Orange</td> <td data-astro-cid-3vffl3rc>Plus rapide, peu de HP</td> </tr> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc>Ennemi tanky</td> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#ef4444" data-astro-cid-3vffl3rc></span>Rouge</td> <td data-astro-cid-3vffl3rc>Lent mais tres resistant</td> </tr> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc>Boss (vague 5+)</td> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#e11d48" data-astro-cid-3vffl3rc></span>Rouge fonce</td> <td data-astro-cid-3vffl3rc>Vole par-dessus les murs, ignore les tourelles corps a corps</td> </tr> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc>Triangle (vague 12+)</td> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#ff0000" data-astro-cid-3vffl3rc></span>Rouge triangulaire</td> <td data-astro-cid-3vffl3rc>Tire sur les tourelles, ralentit les alliees</td> </tr> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc>Mega Boss (vague 15+)</td> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#1a1a1a;border:1px solid #9d4edd" data-astro-cid-3vffl3rc></span>Noir geant</td> <td data-astro-cid-3vffl3rc>Taille 2x2, tres resistant</td> </tr> <tr data-astro-cid-3vffl3rc> <td data-astro-cid-3vffl3rc>Triangle Noir (vague 20)</td> <td data-astro-cid-3vffl3rc><span class="color-dot" style="background:#1a1a2e;border:1px solid #9d4edd" data-astro-cid-3vffl3rc></span>Noir violet</td> <td data-astro-cid-3vffl3rc>Boss final : tirs explosifs, cible les Archers Plasma</td> </tr> </tbody> </table> <h3 data-astro-cid-3vffl3rc>Mecaniques</h3> <p data-astro-cid-3vffl3rc> <strong style="color:var(--orange)" data-astro-cid-3vffl3rc>Energie :</strong> ressource pour construire les tourelles (depart 40 E).<br data-astro-cid-3vffl3rc> <strong style="color:var(--purple)" data-astro-cid-3vffl3rc>XP :</strong> gagne en tuant les ennemis. Echangeable contre de l'energie (1 XP = 2 E).<br data-astro-cid-3vffl3rc> <strong style="color:var(--red)" data-astro-cid-3vffl3rc>Base HP :</strong> la base a 100 HP. Un ennemi qui arrive coute 10 HP.<br data-astro-cid-3vffl3rc> <strong style="color:var(--neon)" data-astro-cid-3vffl3rc>Soigner la base :</strong> disponible a partir de la vague 5 pour 500 XP (+10 HP).<br data-astro-cid-3vffl3rc> <strong data-astro-cid-3vffl3rc>Ennemis et vitesse :</strong> les ennemis accelerent de 2% par vague. Plus de 10 tourelles = ennemis 1.5x plus rapides.<br data-astro-cid-3vffl3rc> <strong data-astro-cid-3vffl3rc>Contournement :</strong> les ennemis normaux chercheront un chemin libre autour des barrierss. Les boss ignorent les murs.
+</p> <div style="text-align:center; margin-top:1rem;" data-astro-cid-3vffl3rc> <button class="modal-close-btn" id="help-close-btn" data-astro-cid-3vffl3rc>Fermer</button> </div> </div> </div> <!-- ===== SCRIPT PRINCIPAL ===== --> <script>
+    // =========================================================
+    // CONSTANTES
+    // =========================================================
+    const GRID_WIDTH  = 17;
+    const GRID_HEIGHT = 10;
+    const CELL_SIZE   = 40;
+    const BASE_HP     = 100;
+
+    // Couleurs cyberpunk SF
+    const COL_BG         = '#030508';
+    const COL_GRID       = 'rgba(0,245,255,0.08)';
+    const COL_SPAWN      = 'rgba(239,68,68,0.08)';
+    const COL_BASE_ZONE  = 'rgba(0,245,255,0.10)';
+    const COL_NEON       = '#00f5ff';
+    const COL_PURPLE     = '#9d4edd';
+    const COL_ORANGE     = '#f59e0b';
+    const COL_RED        = '#ef4444';
+    const COL_MELEE      = '#00f5ff';
+    const COL_PROJECTILE = '#9d4edd';
+    const COL_WALL       = 'rgba(100,100,160,0.8)';
+    const COL_WALL_LV2   = 'rgba(130,80,200,0.85)';
+    const COL_ENEMY_0    = '#22c55e';
+    const COL_ENEMY_1    = '#f59e0b';
+    const COL_ENEMY_2    = '#ef4444';
+    const COL_BOSS       = '#e11d48';
+    const COL_MEGA       = '#1a1a1a';
+    const COL_TRIANGLE   = '#ff2222';
+    const COL_BT_BOSS    = '#1a1a2e';
+    const COL_PROJ_P     = '#00f5ff';
+    const COL_PROJ_E     = '#ef4444';
+    const COL_UPGRADE2   = '#f59e0b';
+    const COL_UPGRADE3   = '#9d4edd';
+
+    const MEGA_BOSS_TYPE = { hp: 500, speed: 0.1 * 1.5, xp: 100, energy: 0, size: 2 };
+
+    const BLACK_TRIANGLE_BOSS = {
+      hp: 1000,
+      speed: 0.15 * 1.5,
+      xp: 200,
+      energy: 0,
+      attackRate: 180,
+      size: 2,
+      projectileSpeed: 1,
+      projectileDamage: 20,
+      projectileExplosionRadius: 2
+    };
+
+    let blackTriangleBossSpeech = "";
+    let blackTriangleBossSpeechTimer = 0;
+    const BT_SPEECH_INTERVAL = 300;
+    const BT_PHRASES = [
+      " 1010\nDETRUIRE\n 1010",
+      " 0011\nARCHERS\n 0011",
+      " 1100\nEXTERMINATE\n 1100",
+      " 0101\nCALCUL\n 0101",
+      " 1111\nANNIHILATION\n 1111"
+    ];
+
+    // Bug corrige : hp: 50 ajoute
+    const TURRET_TYPES = {
+      melee:      { name: "Sabreur Quantique",     symbol: "S", damage: 10, range: 60,  attackRate: 60,  cost: 10, level: 1 },
+      projectile: { name: "Archer Plasma",          symbol: "A", damage: 5,  range: 150, attackRate: 90,  cost: 20, level: 1 },
+      wall:       { name: "Barriere Energetique",   symbol: "M", cost: 5, hp: 50, color: '#808080', type: 'wall' }
+    };
+
+    const ENEMY_TYPES = [
+      { hp: 10, speed: 0.5 * 1.5, xp: 3,  energy: 0 },
+      { hp: 20, speed: 0.7 * 1.5, xp: 5,  energy: 0 },
+      { hp: 30, speed: 0.3 * 1.5, xp: 8,  energy: 0 },
+    ];
+
+    const BOSS_TYPE       = { hp: 60,  speed: 0.3 * 1.5, xp: 15, energy: 0 };
+    const SUPER_BOSS_TYPE = { hp: 150, speed: 0.4 * 1.5, xp: 25, energy: 0 };
+    const TRIANGLE_TYPE   = { hp: 100, speed: 0.2 * 1.5, xp: 20, energy: 0, attackRate: 120 };
+
+    // =========================================================
+    // ETAT DU JEU
+    // =========================================================
+    let grid = [];
+    let modules = [];
+    let enemies = [];
+    let energy = 40;
+    let xp = 0;
+    let wave = 0;
+    let gameState = 'playing';
+    let selectedModule = null;
+    let base = { x: GRID_WIDTH - 1, hp: BASE_HP };
+    let projectiles = [];
+    let enemyProjectiles = [];
+    let isDeleteModeActive = false;
+    let isEvolveModeActive = false;
+    let waveCompleted = false;
+    let speedMultiplier = 1;
+    let tipModalShown = false;
+    let tipWave6ModalShown = false;
+    let showTip = false;
+    let tipOpacity = 1;
+    let showTipWave6 = false;
+    let tipWave6Opacity = 1;
+
+    // Variables de canvas p5
+    let canvasWidth, canvasHeight;
+
+    // =========================================================
+    // FEEDBACK TEMPORAIRE
+    // =========================================================
+    let feedbackTimer = 0;
+    function showFeedback(msg, ms = 2000) {
+      const el = document.getElementById('feedback-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      clearTimeout(feedbackTimer);
+      feedbackTimer = setTimeout(() => { el.style.display = 'none'; }, ms);
+    }
+
+    // =========================================================
+    // P5.JS SKETCH
+    // =========================================================
+    function setup() {
+      canvasWidth  = GRID_WIDTH  * CELL_SIZE;
+      canvasHeight = GRID_HEIGHT * CELL_SIZE;
+
+      let canvas = createCanvas(canvasWidth, canvasHeight);
+      canvas.parent('game-canvas-container');
+      canvas.style('display', 'block');
+
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      initializeGrid();
+      updateStats();
+    }
+
+    function initializeGrid() {
+      for (let x = 0; x < GRID_WIDTH; x++) {
+        grid[x] = [];
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          grid[x][y] = null;
+        }
+      }
+      for (let y = 0; y < GRID_HEIGHT; y++) {
+        grid[GRID_WIDTH - 1][y] = 'base';
+      }
+    }
+
+    // =========================================================
+    // BOUCLE DE DESSIN
+    // =========================================================
+    function draw() {
+      if (gameState === 'paused') return;
+
+      background(COL_BG);
+
+      // Astuces canvas en haut
+      let tipY = 0;
+      if (showTip) {
+        fill(255, 255, 200, 255 * tipOpacity);
+        rect(0, tipY, canvasWidth, 28);
+        fill(0, 0, 0, 255 * tipOpacity);
+        textSize(12);
+        textAlign(CENTER, CENTER);
+        text("Echange ton XP en energie pour poser un nouveau Sabreur !", canvasWidth / 2, tipY + 14);
+        tipY += 28;
+        textSize(14);
+      }
+      if (showTipWave6) {
+        fill(200, 180, 255, 255 * tipWave6Opacity);
+        rect(0, tipY, canvasWidth, 28);
+        fill(0, 0, 0, 255 * tipWave6Opacity);
+        textSize(12);
+        textAlign(CENTER, CENTER);
+        text("Garde ton XP pour faire evoluer les tourelles !", canvasWidth / 2, tipY + 14);
+        tipY += 28;
+        textSize(14);
+      }
+
+      // Bulle de dialogue Boss Triangulaire Noir
+      if (blackTriangleBossSpeechTimer > 0) {
+        let btBoss = enemies.find(e => e.isBlackTriangleBoss);
+        if (btBoss) {
+          fill(0, 0, 0, 200);
+          rect(btBoss.x - 55, btBoss.y - 75, 110, 45, 5);
+          fill(200, 180, 255);
+          textSize(9);
+          textAlign(CENTER, CENTER);
+          text(blackTriangleBossSpeech, btBoss.x, btBoss.y - 53);
+          blackTriangleBossSpeechTimer--;
+          if (blackTriangleBossSpeechTimer <= 0) blackTriangleBossSpeech = "";
+        } else {
+          blackTriangleBossSpeechTimer = 0;
+          blackTriangleBossSpeech = "";
+        }
+        textSize(14);
+        textAlign(CENTER, CENTER);
+      }
+
+      drawGrid();
+      drawModules();
+      drawProjectiles();
+      drawEnemyProjectiles();
+      drawEnemies();
+      updateGame();
+    }
+
+    // =========================================================
+    // DESSIN DE LA GRILLE
+    // =========================================================
+    function drawGrid() {
+      noStroke();
+
+      for (let x = 0; x < GRID_WIDTH; x++) {
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          let px = x * CELL_SIZE;
+          let py = y * CELL_SIZE;
+
+          if (x < 2) {
+            // Zone spawn
+            fill(COL_SPAWN);
+            rect(px, py, CELL_SIZE, CELL_SIZE);
+          } else if (x === GRID_WIDTH - 1) {
+            // Zone base
+            fill(COL_BASE_ZONE);
+            rect(px, py, CELL_SIZE, CELL_SIZE);
+          } else {
+            fill(COL_BG);
+            rect(px, py, CELL_SIZE, CELL_SIZE);
+          }
+        }
+      }
+
+      // Lignes de grille
+      stroke(COL_GRID);
+      strokeWeight(1);
+      for (let x = 0; x <= GRID_WIDTH; x++) {
+        line(x * CELL_SIZE, 0, x * CELL_SIZE, canvasHeight);
+      }
+      for (let y = 0; y <= GRID_HEIGHT; y++) {
+        line(0, y * CELL_SIZE, canvasWidth, y * CELL_SIZE);
+      }
+
+      // Labels zones
+      noStroke();
+      fill('rgba(239,68,68,0.5)');
+      textSize(9);
+      textAlign(CENTER, CENTER);
+      text("SPAWN", CELL_SIZE, canvasHeight - 10);
+
+      fill('rgba(0,245,255,0.5)');
+      text("BASE", (GRID_WIDTH - 1) * CELL_SIZE + CELL_SIZE / 2, canvasHeight - 10);
+
+      // Indicateur de selection sur la case survoltee
+      if (selectedModule && !isDeleteModeActive && !isEvolveModeActive) {
+        let gx = floor(mouseX / CELL_SIZE);
+        let gy = floor(mouseY / CELL_SIZE);
+        if (gx >= 2 && gx < GRID_WIDTH - 1 && gy >= 0 && gy < GRID_HEIGHT && grid[gx][gy] === null) {
+          fill('rgba(0,245,255,0.15)');
+          rect(gx * CELL_SIZE + 1, gy * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2, 2);
+        }
+      }
+
+      textSize(14);
+      textAlign(CENTER, CENTER);
+    }
+
+    // =========================================================
+    // DESSIN DES MODULES
+    // =========================================================
+    function drawModules() {
+      for (let module of modules) {
+        if (module.type === 'wall') {
+          // Mur
+          let c = module.level === 2 ? COL_WALL_LV2 : COL_WALL;
+          fill(c);
+          stroke('rgba(100,100,160,0.4)');
+          strokeWeight(1);
+          rect(module.x * CELL_SIZE + 1, module.y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2, 2);
+          noStroke();
+          fill(255);
+          textSize(10);
+          textAlign(CENTER, CENTER);
+          text(module.hp, module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+          if (module.level === 2) {
+            fill(COL_ORANGE);
+            textSize(8);
+            text("LV2", module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2 + 12);
+          }
+          textSize(14);
+          textAlign(CENTER, CENTER);
+        } else {
+          // Tourelle offensive
+          let col, glowCol;
+          if (module.type === 'melee') {
+            col = COL_MELEE; glowCol = '0,245,255';
+          } else {
+            col = COL_PROJECTILE; glowCol = '157,78,221';
+          }
+
+          if (module.level >= 2) col = COL_UPGRADE2;
+          if (module.level >= 3) col = COL_UPGRADE3;
+
+          let w = module.level >= 2 ? CELL_SIZE * 2 : CELL_SIZE;
+          let h = module.level >= 3 ? CELL_SIZE * 2 : CELL_SIZE;
+
+          // Contenu avec glow
+          drawingContext.shadowBlur  = module.level >= 2 ? 14 : 8;
+          drawingContext.shadowColor = col;
+
+          fill(col + '33');
+          stroke(col);
+          strokeWeight(1);
+          rect(module.x * CELL_SIZE + 1, module.y * CELL_SIZE + 1, w - 2, h - 2, 3);
+
+          drawingContext.shadowBlur = 0;
+          noStroke();
+
+          // Symbole
+          fill(col);
+          textSize(module.level >= 3 ? 18 : 13);
+          textAlign(CENTER, CENTER);
+          text(TURRET_TYPES[module.type].symbol, module.x * CELL_SIZE + w / 2, module.y * CELL_SIZE + h / 2 - (module.level > 1 ? 6 : 0));
+
+          // Niveau
+          if (module.level > 1) {
+            fill(255);
+            textSize(9);
+            text("LV" + module.level, module.x * CELL_SIZE + w / 2, module.y * CELL_SIZE + h / 2 + 8);
+          }
+          // HP pour Sabreur lv3
+          if (module.type === 'melee' && module.level === 3 && module.hp != null) {
+            fill(COL_RED);
+            textSize(8);
+            text(module.hp, module.x * CELL_SIZE + w / 2, module.y * CELL_SIZE + h / 2 + 18);
+          }
+
+          textSize(14);
+          textAlign(CENTER, CENTER);
+
+          // Attaque
+          if (frameCount % TURRET_TYPES[module.type].attackRate === 0) {
+            for (let i = 0; i < enemies.length; i++) {
+              let enemy = enemies[i];
+              if (enemy.isBoss && module.type !== 'projectile') continue;
+
+              let d = dist(module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2, enemy.x, enemy.y);
+              let effectiveDamage = TURRET_TYPES[module.type].damage * (1 + wave * 0.05);
+              let effectiveRange  = TURRET_TYPES[module.type].range  * (1 + wave * 0.02);
+              if (module.level > 1) {
+                effectiveDamage *= (1 + module.level * 0.3);
+                effectiveRange  *= (1 + module.level * 0.1);
+              }
+              if (wave >= 5) effectiveDamage *= 1.5;
+
+              if (module.type === 'melee' && d < effectiveRange) {
+                enemy.hp -= effectiveDamage;
+                if (enemy.hp <= 0) { xp += enemy.xp; updateStats(); }
+              } else if (module.type === 'projectile' && d < effectiveRange) {
+                projectiles.push({
+                  x: module.x * CELL_SIZE + CELL_SIZE / 2,
+                  y: module.y * CELL_SIZE + CELL_SIZE / 2,
+                  target: enemy,
+                  speed: 3,
+                  damage: effectiveDamage
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // =========================================================
+    // DESSIN DES ENNEMIS
+    // =========================================================
+    function drawEnemies() {
+      for (let enemy of enemies) {
+        noStroke();
+
+        if (enemy.isBlackTriangleBoss) {
+          // Boss Triangulaire Noir
+          drawingContext.shadowBlur  = 18;
+          drawingContext.shadowColor = COL_PURPLE;
+          fill(COL_BT_BOSS);
+          stroke(COL_PURPLE);
+          strokeWeight(2);
+          push();
+          translate(enemy.x, enemy.y);
+          triangle(-22, 22, 0, -22, 22, 22);
+          pop();
+          drawingContext.shadowBlur = 0;
+          noStroke();
+        } else if (enemy.isTriangle) {
+          // Triangle normal
+          fill(COL_TRIANGLE);
+          push();
+          translate(enemy.x, enemy.y);
+          triangle(-10, 10, 0, -10, 10, 10);
+          pop();
+        } else if (enemy.type === MEGA_BOSS_TYPE) {
+          // Mega Boss
+          fill(COL_MEGA);
+          stroke(COL_BOSS);
+          strokeWeight(2);
+          rect(enemy.x - CELL_SIZE, enemy.y - CELL_SIZE, CELL_SIZE * 2, CELL_SIZE * 2);
+          noStroke();
+        } else if (enemy.isBoss) {
+          // Boss normal
+          drawingContext.shadowBlur  = 10;
+          drawingContext.shadowColor = COL_BOSS;
+          fill(COL_BOSS);
+          ellipse(enemy.x, enemy.y, 28);
+          drawingContext.shadowBlur = 0;
+        } else {
+          // Ennemis normaux par type
+          let typeIdx = ENEMY_TYPES.indexOf(enemy.type);
+          let c = typeIdx === 0 ? COL_ENEMY_0 : typeIdx === 1 ? COL_ENEMY_1 : COL_ENEMY_2;
+          // Fallback si indexOf renvoie -1 (type non strictement egal par ref)
+          if (typeIdx === -1) c = COL_ENEMY_0;
+          fill(c);
+          ellipse(enemy.x, enemy.y, 18);
+        }
+
+        // Barre de vie
+        let hpRatio = enemy.hp / enemy.maxHp;
+        let hpColor = hpRatio > 0.6 ? '#22c55e' : hpRatio > 0.3 ? '#f59e0b' : '#ef4444';
+        stroke(hpColor);
+        strokeWeight(2);
+        noFill();
+        if (enemy.type === MEGA_BOSS_TYPE) {
+          let bw = CELL_SIZE * 2;
+          let filled = bw * hpRatio;
+          noFill();
+          stroke('#333');
+          rect(enemy.x - CELL_SIZE, enemy.y - CELL_SIZE - 10, bw, 6);
+          stroke(hpColor);
+          fill(hpColor);
+          rect(enemy.x - CELL_SIZE, enemy.y - CELL_SIZE - 10, filled, 6);
+          noFill();
+        } else {
+          let angle = map(hpRatio, 0, 1, 0, TWO_PI);
+          arc(enemy.x, enemy.y, 16, 16, -PI / 2, angle - PI / 2);
+        }
+        noStroke();
+
+        // Tir des triangles
+        if (enemy.isTriangle && enemy.attackRate && frameCount % enemy.attackRate === 0) {
+          let targetModule = null;
+          if (enemy.isBlackTriangleBoss) {
+            let closestArcher = null;
+            let closestArcherDist = Infinity;
+            for (let m of modules) {
+              if (m.type === 'projectile') {
+                let d = dist(enemy.x, enemy.y, m.x * CELL_SIZE + CELL_SIZE / 2, m.y * CELL_SIZE + CELL_SIZE / 2);
+                if (d < closestArcherDist) { closestArcherDist = d; closestArcher = m; }
+              }
+            }
+            if (closestArcher) {
+              targetModule = closestArcher;
+            } else {
+              let closestDist = Infinity;
+              for (let m of modules) {
+                let d = dist(enemy.x, enemy.y, m.x * CELL_SIZE + CELL_SIZE / 2, m.y * CELL_SIZE + CELL_SIZE / 2);
+                if (d < closestDist) { closestDist = d; targetModule = m; }
+              }
+            }
+            if (targetModule) {
+              enemyProjectiles.push({
+                x: enemy.x, y: enemy.y,
+                targetX: targetModule.x * CELL_SIZE + CELL_SIZE / 2,
+                targetY: targetModule.y * CELL_SIZE + CELL_SIZE / 2,
+                speed: BLACK_TRIANGLE_BOSS.projectileSpeed,
+                damage: BLACK_TRIANGLE_BOSS.projectileDamage,
+                fromBlackTriangleBoss: true
+              });
+            }
+          } else {
+            let closestDist = Infinity;
+            for (let m of modules) {
+              let d = dist(enemy.x, enemy.y, m.x * CELL_SIZE + CELL_SIZE / 2, m.y * CELL_SIZE + CELL_SIZE / 2);
+              if (d < closestDist) { closestDist = d; targetModule = m; }
+            }
+            if (targetModule) {
+              enemyProjectiles.push({
+                x: enemy.x, y: enemy.y,
+                targetX: targetModule.x * CELL_SIZE + CELL_SIZE / 2,
+                targetY: targetModule.y * CELL_SIZE + CELL_SIZE / 2,
+                speed: 2,
+                damage: 10
+              });
+            }
+          }
+        }
+
+        // Dialogue Boss Triangulaire Noir
+        if (enemy.isBlackTriangleBoss && frameCount % BT_SPEECH_INTERVAL === 0) {
+          blackTriangleBossSpeech = BT_PHRASES[floor(random(BT_PHRASES.length))];
+          blackTriangleBossSpeechTimer = 120;
+        }
+
+        // Deplacement
+        if (enemy.path.length > 0) {
+          let nextPoint = enemy.path[enemy.pathIndex];
+          let targetX = nextPoint.x * CELL_SIZE + CELL_SIZE / 2;
+          let targetY = nextPoint.y * CELL_SIZE + CELL_SIZE / 2;
+          let dx = targetX - enemy.x;
+          let dy = targetY - enemy.y;
+          let distToTarget = dist(enemy.x, enemy.y, targetX, targetY);
+
+          let nextGridX = floor(targetX / CELL_SIZE);
+          let nextGridY = floor(targetY / CELL_SIZE);
+          let canMove = true;
+          if (!enemy.isBoss && grid[nextGridX] && grid[nextGridX][nextGridY] === 'wall') {
+            canMove = false;
+          }
+
+          if (distToTarget < 5) {
+            enemy.pathIndex++;
+            if (enemy.pathIndex >= enemy.path.length) {
+              enemy.path = [];
+            } else if (!canMove) {
+              let sx = floor(enemy.x / CELL_SIZE);
+              let sy = floor(enemy.y / CELL_SIZE);
+              let p = findPath(sx, sy, GRID_WIDTH - 1, sy, false);
+              if (p.length === 0) p = findPath(sx, sy, GRID_WIDTH - 1, sy, true);
+              enemy.path = p; enemy.pathIndex = 0;
+            }
+          } else if (canMove) {
+            enemy.x += (dx / distToTarget) * enemy.speed;
+            enemy.y += (dy / distToTarget) * enemy.speed;
+          } else {
+            if (!enemy.isBoss) {
+              let moduleIndex = modules.findIndex(m => m.x === nextGridX && m.y === nextGridY && m.type === 'wall');
+              if (moduleIndex !== -1) {
+                let wall = modules[moduleIndex];
+                wall.hp -= 5;
+                if (wall.hp <= 0) {
+                  modules.splice(moduleIndex, 1);
+                  grid[nextGridX][nextGridY] = null;
+                  rechercherCheminsTousEnnemis();
+                }
+              }
+            }
+            let sx = floor(enemy.x / CELL_SIZE);
+            let sy = floor(enemy.y / CELL_SIZE);
+            let p = findPath(sx, sy, GRID_WIDTH - 1, sy, false);
+            if (p.length === 0) p = findPath(sx, sy, GRID_WIDTH - 1, sy, true);
+            if (p.length > 0) { enemy.path = p; enemy.pathIndex = 0; }
+            else { enemy.path = []; }
+          }
+        } else {
+          // Recalcul chemin
+          let sx = floor(enemy.x / CELL_SIZE);
+          let sy = floor(enemy.y / CELL_SIZE);
+          let p = enemy.isBoss
+            ? findPathAerial(sx, sy, GRID_WIDTH - 1, sy)
+            : findPath(sx, sy, GRID_WIDTH - 1, sy, false);
+
+          if (p.length === 0 && !enemy.isBoss) {
+            let foundPath = false;
+            let shortestDist = Infinity;
+            let targetY = sy;
+
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+              if (grid[2][y] !== 'wall') {
+                let d = Math.abs(sy - y);
+                if (d < shortestDist) { shortestDist = d; targetY = y; foundPath = true; }
+              }
+            }
+
+            if (foundPath) {
+              let targetYPos = targetY * CELL_SIZE + CELL_SIZE / 2;
+              let dy = targetYPos - enemy.y;
+              let distToTargetY = Math.abs(dy);
+              if (distToTargetY > 5) {
+                enemy.y += (dy / distToTargetY) * enemy.speed;
+              } else {
+                enemy.y = targetYPos;
+                p = findPath(2, targetY, GRID_WIDTH - 1, targetY, false);
+                if (p.length === 0) p = findPath(2, targetY, GRID_WIDTH - 1, targetY, true);
+                if (p.length > 0) { enemy.path = p; enemy.pathIndex = 0; enemy.x = 2 * CELL_SIZE + CELL_SIZE / 2; }
+              }
+            } else {
+              p = findPath(sx, sy, GRID_WIDTH - 1, sy, true);
+              if (p.length > 0) { enemy.path = p; enemy.pathIndex = 0; }
+              else {
+                let dirs = [{ dx:1,dy:0 },{ dx:-1,dy:0 },{ dx:0,dy:1 },{ dx:0,dy:-1 }];
+                let moved = false;
+                for (let dir of dirs) {
+                  let ngx = sx + dir.dx, ngy = sy + dir.dy;
+                  if (ngx >= 0 && ngx < GRID_WIDTH - 1 && ngy >= 0 && ngy < GRID_HEIGHT
+                    && (grid[ngx][ngy] === null || grid[ngx][ngy] === 'base' || grid[ngx][ngy] === 'melee' || grid[ngx][ngy] === 'projectile')
+                  ) {
+                    enemy.x = ngx * CELL_SIZE + CELL_SIZE / 2;
+                    enemy.y = ngy * CELL_SIZE + CELL_SIZE / 2;
+                    p = findPath(ngx, ngy, GRID_WIDTH - 1, ngy, false);
+                    if (p.length === 0) p = findPath(ngx, ngy, GRID_WIDTH - 1, ngy, true);
+                    if (p.length > 0) { enemy.path = p; enemy.pathIndex = 0; moved = true; break; }
+                  } else if (ngx >= 0 && ngx < GRID_WIDTH - 1 && ngy >= 0 && ngy < GRID_HEIGHT && grid[ngx][ngy] === 'wall') {
+                    let mi = modules.findIndex(m => m.x === ngx && m.y === ngy && m.type === 'wall');
+                    if (mi !== -1) {
+                      modules[mi].hp -= 5;
+                      if (modules[mi].hp <= 0) {
+                        modules.splice(mi, 1);
+                        grid[ngx][ngy] = null;
+                        rechercherCheminsTousEnnemis();
+                        p = findPath(sx, sy, GRID_WIDTH - 1, sy, false);
+                        if (p.length > 0) { enemy.path = p; enemy.pathIndex = 0; moved = true; break; }
+                      }
+                    }
+                  }
+                }
+                if (!moved) {
+                  enemy.x += enemy.speed;
+                  if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE) enemy.x = (GRID_WIDTH - 1) * CELL_SIZE;
+                  sx = floor(enemy.x / CELL_SIZE); sy = floor(enemy.y / CELL_SIZE);
+                  p = findPath(sx, sy, GRID_WIDTH - 1, sy, true);
+                  enemy.path = p; enemy.pathIndex = 0;
+                }
+              }
+            }
+          } else {
+            enemy.path = p; enemy.pathIndex = 0;
+          }
+        }
+      }
+
+      enemies = enemies.filter(e => e.hp > 0 && e.x < canvasWidth);
+    }
+
+    function rechercherCheminsTousEnnemis() {
+      enemies.forEach(e => {
+        if (e.path.length > 0) {
+          let sx = floor(e.x / CELL_SIZE), sy = floor(e.y / CELL_SIZE);
+          let p = e.isBoss ? findPathAerial(sx, sy, GRID_WIDTH - 1, sy) : findPath(sx, sy, GRID_WIDTH - 1, sy, false);
+          if (p.length === 0 && !e.isBoss) p = findPath(sx, sy, GRID_WIDTH - 1, sy, true);
+          e.path = p; e.pathIndex = 0;
+        }
+      });
+    }
+
+    // =========================================================
+    // PROJECTILES JOUEUR
+    // =========================================================
+    function drawProjectiles() {
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        let p = projectiles[i];
+        drawingContext.shadowBlur  = 6;
+        drawingContext.shadowColor = COL_PROJ_P;
+        fill(COL_PROJ_P);
+        noStroke();
+        ellipse(p.x, p.y, 8);
+        drawingContext.shadowBlur = 0;
+
+        let angle = atan2(p.target.y - p.y, p.target.x - p.x);
+        p.x += p.speed * cos(angle);
+        p.y += p.speed * sin(angle);
+        let d = dist(p.x, p.y, p.target.x, p.target.y);
+        if (d < 10) {
+          p.target.hp -= p.damage;
+          if (p.target.hp <= 0) { xp += p.target.xp; updateStats(); }
+          projectiles.splice(i, 1);
+        }
+      }
+    }
+
+    // =========================================================
+    // PROJECTILES ENNEMIS
+    // =========================================================
+    function drawEnemyProjectiles() {
+      for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
+        let p = enemyProjectiles[i];
+        let pSpeed  = p.fromBlackTriangleBoss ? BLACK_TRIANGLE_BOSS.projectileSpeed : 2;
+        let pDamage = p.fromBlackTriangleBoss ? BLACK_TRIANGLE_BOSS.projectileDamage : p.damage;
+        let pColor  = p.fromBlackTriangleBoss ? COL_PURPLE : COL_TRIANGLE;
+
+        drawingContext.shadowBlur  = 6;
+        drawingContext.shadowColor = pColor;
+        fill(pColor);
+        noStroke();
+        ellipse(p.x, p.y, 7);
+        drawingContext.shadowBlur = 0;
+
+        let angle = atan2(p.targetY - p.y, p.targetX - p.x);
+        p.x += pSpeed * cos(angle);
+        p.y += pSpeed * sin(angle);
+        let d = dist(p.x, p.y, p.targetX, p.targetY);
+
+        if (d < 5) {
+          let tgx = floor(p.targetX / CELL_SIZE);
+          let tgy = floor(p.targetY / CELL_SIZE);
+
+          if (p.fromBlackTriangleBoss) {
+            let expR = BLACK_TRIANGLE_BOSS.projectileExplosionRadius;
+            for (let dx = -expR + 1; dx < expR; dx++) {
+              for (let dy = -expR + 1; dy < expR; dy++) {
+                let xx = tgx + dx, yy = tgy + dy;
+                if (xx >= 0 && xx < GRID_WIDTH && yy >= 0 && yy < GRID_HEIGHT) {
+                  let mi = modules.findIndex(m => m.x === xx && m.y === yy);
+                  if (mi !== -1) {
+                    let mod = modules[mi];
+                    if (mod.type === 'wall') {
+                      modules.splice(mi, 1); grid[xx][yy] = null;
+                    } else if (mod.hp != null) {
+                      mod.hp -= pDamage;
+                      if (mod.hp <= 0) { clearModuleFromGrid(mod); modules.splice(mi, 1); }
+                    } else {
+                      clearModuleFromGrid(mod); modules.splice(mi, 1);
+                    }
+                  }
+                }
+              }
+            }
+          } else {
+            let mi = modules.findIndex(m => m.x === tgx && m.y === tgy);
+            if (mi !== -1) {
+              let mod = modules[mi];
+              if (mod.type === 'wall') {
+                modules.splice(mi, 1); grid[tgx][tgy] = null;
+              } else if (mod.hp != null) {
+                mod.hp -= pDamage;
+                if (mod.hp <= 0) { clearModuleFromGrid(mod); modules.splice(mi, 1); }
+              } else {
+                clearModuleFromGrid(mod); modules.splice(mi, 1);
+              }
+            }
+          }
+          rechercherCheminsTousEnnemis();
+          enemyProjectiles.splice(i, 1);
+        }
+      }
+    }
+
+    function clearModuleFromGrid(module) {
+      // Utilise l'orientation stockee (Bug 3 corrige) ou infere depuis le niveau
+      let w, h;
+      if (module.level >= 3) {
+        w = 2; h = 2;
+      } else if (module.level === 2) {
+        // Bug 3 : utiliser l'orientation stockee
+        if (module.orientation === 'vertical') { w = 1; h = 2; }
+        else { w = 2; h = 1; } // horizontal par defaut
+      } else {
+        w = 1; h = 1;
+      }
+      for (let x = module.x; x < module.x + w; x++) {
+        for (let y = module.y; y < module.y + h; y++) {
+          if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+            grid[x][y] = null;
+          }
+        }
+      }
+    }
+
+    // =========================================================
+    // UPDATE GAME
+    // =========================================================
+    function updateGame() {
+      speedMultiplier = modules.length > 10 ? 1.5 : 1;
+
+      enemies.forEach(enemy => {
+        let baseSpeed;
+        if (enemy.isBoss) {
+          if (enemy.isTriangle)            baseSpeed = TRIANGLE_TYPE.speed;
+          else if (enemy.type === MEGA_BOSS_TYPE) baseSpeed = MEGA_BOSS_TYPE.speed;
+          else                             baseSpeed = BOSS_TYPE.speed;
+        } else if (enemy.isTriangle) {
+          baseSpeed = TRIANGLE_TYPE.speed;
+        } else {
+          let idx = min(wave - 1, ENEMY_TYPES.length - 1);
+          baseSpeed = ENEMY_TYPES[idx].speed;
+          baseSpeed *= (1 + wave * 0.02);
+        }
+        enemy.speed = baseSpeed * speedMultiplier;
+      });
+
+      for (let enemy of enemies) {
+        if (enemy.x > (GRID_WIDTH - 1) * CELL_SIZE - 5 && enemy.path.length === 0) {
+          base.hp -= 10;
+          enemy.hp = 0;
+        }
+      }
+      enemies = enemies.filter(e => e.hp > 0);
+
+      if (enemies.length === 0 && gameState === 'playing' && wave > 0 && !waveCompleted) {
+        waveCompleted = true;
+        xp += wave * 5 + 5;
+
+        if (wave === 1 && !tipModalShown) {
+          openModal('tip-modal');
+          tipModalShown = true;
+        } else if (wave === 6 && !tipWave6ModalShown) {
+          openModal('tip-modal-wave6');
+          tipWave6ModalShown = true;
+        } else {
+          if (wave >= 2 && tipModalShown)    { showTip = true;      tipOpacity = 0.3; }
+          if (wave >= 7 && tipWave6ModalShown) { showTipWave6 = true; tipWave6Opacity = 0.3; }
+        }
+        updateStats();
+      }
+
+      if (base.hp <= 0) {
+        gameState = 'gameover';
+        document.getElementById('final-wave').textContent = wave;
+        openModal('game-over-modal');
+        noLoop();
+      }
+
+      updateStats();
+    }
+
+    // =========================================================
+    // SPAWN VAGUE
+    // =========================================================
+    function spawnWave() {
+      wave++;
+      waveCompleted = false;
+      let enemyCount = wave * 5;
+
+      let typesToSpawn = [];
+      if (wave < 5) {
+        let idx = min(wave - 1, ENEMY_TYPES.length - 1);
+        typesToSpawn.push({ type: ENEMY_TYPES[idx], isBoss: false, isTriangle: false });
+      } else if (wave < 10) {
+        let idx = min(wave - 1, ENEMY_TYPES.length - 1);
+        typesToSpawn.push({ type: ENEMY_TYPES[idx], isBoss: false, isTriangle: false });
+        typesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+      } else if (wave < 12) {
+        let idx = min(wave - 1, ENEMY_TYPES.length - 1);
+        typesToSpawn.push({ type: ENEMY_TYPES[idx], isBoss: false, isTriangle: false });
+        typesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+      } else if (wave < 15) {
+        let idx = min(wave - 1, ENEMY_TYPES.length - 1);
+        typesToSpawn.push({ type: ENEMY_TYPES[idx], isBoss: false, isTriangle: false });
+        typesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+      } else if (wave < 20) {
+        let idx = min(wave - 1, ENEMY_TYPES.length - 1);
+        typesToSpawn.push({ type: ENEMY_TYPES[idx], isBoss: false, isTriangle: false });
+        typesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+        typesToSpawn.push({ type: MEGA_BOSS_TYPE, isBoss: true, isTriangle: false });
+      } else if (wave === 20) {
+        let idx = min(wave - 1, ENEMY_TYPES.length - 1);
+        typesToSpawn.push({ type: ENEMY_TYPES[idx], isBoss: false, isTriangle: false });
+        typesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+        typesToSpawn.push({ type: MEGA_BOSS_TYPE, isBoss: true, isTriangle: false });
+        // Boss Triangulaire Noir (unique)
+        let startY = floor(random(GRID_HEIGHT));
+        let btPath = findPathAerial(0, startY, GRID_WIDTH - 1, startY);
+        if (btPath.length === 0) {
+          for (let y = 0; y < GRID_HEIGHT; y++) {
+            btPath = findPathAerial(0, y, GRID_WIDTH - 1, y);
+            if (btPath.length > 0) { startY = y; break; }
+          }
+        }
+        if (btPath.length > 0) {
+          enemies.push({
+            x: 0, y: startY * CELL_SIZE + CELL_SIZE / 2,
+            hp: BLACK_TRIANGLE_BOSS.hp + wave * 5,
+            maxHp: BLACK_TRIANGLE_BOSS.hp + wave * 5,
+            speed: BLACK_TRIANGLE_BOSS.speed * speedMultiplier,
+            path: btPath, pathIndex: 0,
+            xp: BLACK_TRIANGLE_BOSS.xp, energy: BLACK_TRIANGLE_BOSS.energy,
+            isBoss: true, isTriangle: true, isBlackTriangleBoss: true,
+            attackRate: BLACK_TRIANGLE_BOSS.attackRate,
+            type: BLACK_TRIANGLE_BOSS, spawnWave: wave
+          });
+        }
+      } else {
+        let idx = min(wave - 1, ENEMY_TYPES.length - 1);
+        typesToSpawn.push({ type: ENEMY_TYPES[idx], isBoss: false, isTriangle: false });
+        typesToSpawn.push({ type: BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: SUPER_BOSS_TYPE, isBoss: true, isTriangle: false });
+        typesToSpawn.push({ type: TRIANGLE_TYPE, isBoss: false, isTriangle: true });
+        typesToSpawn.push({ type: MEGA_BOSS_TYPE, isBoss: true, isTriangle: false });
+      }
+
+      let perType = Math.floor(enemyCount / (typesToSpawn.length || 1));
+      for (let td of typesToSpawn) {
+        let baseHp = td.type.hp + wave * 5;
+        let attackRate = td.type.attackRate || 0;
+        for (let i = 0; i < perType; i++) {
+          let startY = floor(random(GRID_HEIGHT));
+          let p = td.isBoss
+            ? findPathAerial(0, startY, GRID_WIDTH - 1, startY)
+            : findPath(0, startY, GRID_WIDTH - 1, startY, false);
+          if (p.length === 0) {
+            let found = false;
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+              p = td.isBoss ? findPathAerial(0, y, GRID_WIDTH - 1, y) : findPath(0, y, GRID_WIDTH - 1, y, false);
+              if (p.length > 0) { startY = y; found = true; break; }
+            }
+            if (!found) {
+              for (let y = 0; y < GRID_HEIGHT; y++) {
+                p = findPath(0, y, GRID_WIDTH - 1, y, true);
+                if (p.length > 0) { startY = y; found = true; break; }
+              }
+            }
+            if (!found) continue;
+          }
+          let adjSpeed = td.type.speed * speedMultiplier;
+          if (!td.isBoss && !td.isTriangle) adjSpeed *= (1 + wave * 0.02);
+          enemies.push({
+            x: 0, y: startY * CELL_SIZE + CELL_SIZE / 2,
+            hp: baseHp * (1 + wave * 0.1),
+            maxHp: baseHp * (1 + wave * 0.1),
+            speed: adjSpeed, path: p, pathIndex: 0,
+            xp: td.type.xp, energy: td.type.energy,
+            isBoss: td.isBoss, isTriangle: td.isTriangle,
+            attackRate: attackRate, type: td.type, spawnWave: wave
+          });
+        }
+      }
+      updateStats();
+    }
+
+    // =========================================================
+    // PATHFINDING
+    // =========================================================
+    function findPath(startX, startY, goalX, goalY, allowThroughTurrets = false) {
+      let queue = [{ x: startX, y: startY, cost: 0, path: [{ x: startX, y: startY }] }];
+      let visited = new Set();
+      let costs = Array(GRID_WIDTH).fill(null).map(() => Array(GRID_HEIGHT).fill(Infinity));
+      costs[startX][startY] = 0;
+      visited.add(`${startX},${startY}`);
+
+      while (queue.length > 0) {
+        queue.sort((a, b) => a.cost - b.cost);
+        let { x, y, cost, path } = queue.shift();
+        if (x === goalX) return path;
+
+        let dirs = [{ dx:1,dy:0 },{ dx:0,dy:1 },{ dx:0,dy:-1 },{ dx:-1,dy:0 }];
+        for (let dir of dirs) {
+          let nx = x + dir.dx, ny = y + dir.dy;
+          let key = `${nx},${ny}`;
+          if (nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT && !visited.has(key)) {
+            let isValid = false;
+            if (grid[nx][ny] === null || grid[nx][ny] === 'base') {
+              isValid = true;
+            } else if (allowThroughTurrets && (grid[nx][ny] === 'melee' || grid[nx][ny] === 'projectile')) {
+              isValid = true;
+            }
+            if (isValid) {
+              let cellCost = calculateCellCost(nx, ny);
+              let newCost = cost + cellCost;
+              if (newCost < costs[nx][ny]) {
+                costs[nx][ny] = newCost;
+                visited.add(key);
+                queue.push({ x: nx, y: ny, cost: newCost, path: [...path, { x: nx, y: ny }] });
+              }
+            }
+          }
+        }
+      }
+
+      // Second passage BFS simple
+      queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
+      visited.clear();
+      visited.add(`${startX},${startY}`);
+      while (queue.length > 0) {
+        let { x, y, path } = queue.shift();
+        if (x === goalX) return path;
+        let dirs = [{ dx:1,dy:0 },{ dx:0,dy:1 },{ dx:0,dy:-1 },{ dx:-1,dy:0 }];
+        for (let dir of dirs) {
+          let nx = x + dir.dx, ny = y + dir.dy;
+          let key = `${nx},${ny}`;
+          if (nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT && !visited.has(key)) {
+            let isValid = false;
+            if (grid[nx][ny] === null || grid[nx][ny] === 'base') isValid = true;
+            else if (allowThroughTurrets && (grid[nx][ny] === 'melee' || grid[nx][ny] === 'projectile')) isValid = true;
+            if (isValid) {
+              visited.add(key);
+              queue.push({ x: nx, y: ny, path: [...path, { x: nx, y: ny }] });
+            }
+          }
+        }
+      }
+
+      // Chemin de secours direct
+      let p = [];
+      let x = startX;
+      while (x < goalX) { x++; p.push({ x, y: startY }); }
+      return p;
+    }
+
+    function findPathAerial(startX, startY, goalX, goalY) {
+      let path = [];
+      let x = startX;
+      while (x <= goalX) { path.push({ x, y: startY }); x++; }
+      if (startY !== goalY) path.push({ x: goalX, y: goalY });
+      return path;
+    }
+
+    function isMapFull() {
+      for (let x = 2; x < GRID_WIDTH - 1; x++) {
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          if (grid[x][y] === null) return false;
+        }
+      }
+      return true;
+    }
+
+    function isAreaFree(startX, startY, w, h) {
+      for (let x = startX; x < startX + w; x++) {
+        for (let y = startY; y < startY + h; y++) {
+          if (x >= GRID_WIDTH - 1 || y >= GRID_HEIGHT || x < 2 || grid[x][y] !== null) return false;
+        }
+      }
+      return true;
+    }
+
+    function occupyArea(startX, startY, w, h, moduleType) {
+      for (let x = startX; x < startX + w; x++) {
+        for (let y = startY; y < startY + h; y++) {
+          grid[x][y] = moduleType;
+        }
+      }
+    }
+
+    function calculateCellCost(x, y) {
+      let cost = 1;
+      for (let module of modules) {
+        if (module.type === 'wall') continue;
+        let turretRange = TURRET_TYPES[module.type].range;
+        let d = dist(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2,
+                     module.x * CELL_SIZE + CELL_SIZE / 2, module.y * CELL_SIZE + CELL_SIZE / 2);
+        if (d <= turretRange) cost += 5 * (1 - (d / turretRange));
+      }
+      return cost;
+    }
+
+    // =========================================================
+    // MOUSE PRESSED (placement / delete / evolve)
+    // =========================================================
+    function mousePressed() {
+      if (gameState === 'paused') return;
+
+      let gridX = floor(mouseX / CELL_SIZE);
+      let gridY = floor(mouseY / CELL_SIZE);
+
+      if (gridX >= 0 && gridX < GRID_WIDTH - 1 && gridY >= 0 && gridY < GRID_HEIGHT) {
+        if (gridX < 2) return;
+
+        // ---- Mode Evolution ----
+        if (isEvolveModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
+          let moduleIndex = -1;
+          let foundModule = null;
+          for (let m of modules) {
+            let mw = m.level >= 3 ? 2 : m.level === 2 ? 2 : 1;
+            let mh = m.level >= 3 ? 2 : m.level === 2 ? 1 : 1;
+            if (m.level === 2 && m.orientation === 'vertical') mh = 2, mw = 1;
+            if (gridX >= m.x && gridX < m.x + mw && gridY >= m.y && gridY < m.y + mh) {
+              moduleIndex = modules.indexOf(m);
+              foundModule = m;
+              break;
+            }
+          }
+          if (moduleIndex !== -1) {
+            let module = modules[moduleIndex];
+            if (module.type === 'wall') {
+              if (wave >= 7 && (!module.level || module.level === 1) && xp >= 500) {
+                xp -= 500;
+                module.level = 2;
+                // Bug 2 corrige : hp de TURRET_TYPES.wall est maintenant defini
+                module.hp = TURRET_TYPES.wall.hp * 3; // 150
+                updateStats();
+              } else if (xp < 500) {
+                openModal('xp-warning-modal');
+              } else {
+                showFeedback("Mur deja evolue ou conditions non remplies.");
+              }
+            } else {
+              if (wave >= 7 && module.level === 1 && xp >= 2000) {
+                // Evolution niveau 2
+                grid[module.x][module.y] = null;
+                let canH = gridX + 1 < GRID_WIDTH - 1 && grid[gridX + 1][gridY] === null;
+                let canV = gridY + 1 < GRID_HEIGHT && grid[module.x][gridY + 1] === null;
+                if (canH) {
+                  xp -= 2000;
+                  module.level = 2;
+                  module.orientation = 'horizontal'; // Bug 3 corrige
+                  occupyArea(module.x, module.y, 2, 1, module.type);
+                } else if (canV) {
+                  xp -= 2000;
+                  module.level = 2;
+                  module.orientation = 'vertical'; // Bug 3 corrige
+                  occupyArea(module.x, module.y, 1, 2, module.type);
+                } else {
+                  grid[module.x][module.y] = module.type;
+                  openModal('space-warning-modal');
+                }
+                updateStats();
+              } else if (wave >= 17 && module.level === 2 && xp >= 10000) {
+                // Evolution niveau 3
+                let cw = module.orientation === 'vertical' ? 1 : 2;
+                let ch = module.orientation === 'vertical' ? 2 : 1;
+                // Nettoyer l'espace actuel
+                for (let x = module.x; x < module.x + cw; x++) {
+                  for (let y = module.y; y < module.y + ch; y++) {
+                    if (x < GRID_WIDTH && y < GRID_HEIGHT) grid[x][y] = null;
+                  }
+                }
+                // Bug 5 corrige : verifier l'espace AVANT de faire l'upgrade
+                if (isAreaFree(module.x, module.y, 2, 2)) {
+                  xp -= 10000;
+                  module.level = 3;
+                  module.orientation = null;
+                  if (module.type === 'melee') module.hp = 40;
+                  occupyArea(module.x, module.y, 2, 2, module.type);
+                } else {
+                  // Restaurer et afficher erreur sans changer l'etat
+                  occupyArea(module.x, module.y, cw, ch, module.type);
+                  showFeedback("Pas assez d'espace pour evoluer au niveau 3 !");
+                  openModal('space-warning-modal');
+                }
+                updateStats();
+              } else if (xp < 2000 && module.level === 1) {
+                openModal('xp-warning-modal');
+              } else if (xp < 10000 && module.level === 2) {
+                openModal('xp-warning-modal');
+              } else if (wave < 7) {
+                showFeedback("Disponible a partir de la vague 7 !");
+              } else if (wave < 17 && module.level === 2) {
+                showFeedback("Niveau 3 disponible a partir de la vague 17 !");
+              } else {
+                showFeedback("Conditions d'evolution non remplies.");
+              }
+            }
+          } else {
+            showFeedback("Aucune tourelle a cette position.");
+          }
+          return;
+        }
+
+        // ---- Mode Suppression ----
+        if (isDeleteModeActive && grid[gridX][gridY] && grid[gridX][gridY] !== 'base') {
+          let moduleIndex = -1;
+          for (let i = 0; i < modules.length; i++) {
+            let m = modules[i];
+            let mw, mh;
+            if (m.level >= 3)             { mw = 2; mh = 2; }
+            else if (m.level === 2)       {
+              // Bug 3 corrige : utiliser l'orientation stockee
+              if (m.orientation === 'vertical') { mw = 1; mh = 2; }
+              else { mw = 2; mh = 1; }
+            } else { mw = 1; mh = 1; }
+
+            if (gridX >= m.x && gridX < m.x + mw && gridY >= m.y && gridY < m.y + mh) {
+              moduleIndex = i;
+              break;
+            }
+          }
+          if (moduleIndex !== -1) {
+            let module = modules[moduleIndex];
+            let refund = Math.floor(TURRET_TYPES[module.type].cost / 2);
+            energy += refund;
+            clearModuleFromGrid(module);
+            modules.splice(moduleIndex, 1);
+            rechercherCheminsTousEnnemis();
+            updateStats();
+          }
+          return;
+        }
+
+        // ---- Placement ----
+        if (selectedModule && !isDeleteModeActive && !isEvolveModeActive && !grid[gridX][gridY]) {
+          if (selectedModule === 'projectile' && wave < 5) return;
+
+          // Bug 6 corrige : detecter grille pleine
+          if (isMapFull()) {
+            showFeedback("Grille pleine !");
+            return;
+          }
+          if (energy < TURRET_TYPES[selectedModule].cost) return;
+
+          if (selectedModule === 'wall') {
+            grid[gridX][gridY] = selectedModule;
+            modules.push({ x: gridX, y: gridY, type: selectedModule, hp: TURRET_TYPES.wall.hp });
+            energy -= TURRET_TYPES[selectedModule].cost;
+            rechercherCheminsTousEnnemis();
+            updateStats();
+            return;
+          }
+
+          // Deplacer ennemi si present
+          let eiIdx = enemies.findIndex(e => {
+            let egx = floor(e.x / CELL_SIZE), egy = floor(e.y / CELL_SIZE);
+            return egx === gridX && egy === gridY;
+          });
+          if (eiIdx !== -1) {
+            let enemy = enemies[eiIdx];
+            let dirs = [{ dx:1,dy:0 },{ dx:-1,dy:0 },{ dx:0,dy:1 },{ dx:0,dy:-1 }];
+            let moved = false;
+            for (let dir of dirs) {
+              let ngx = gridX + dir.dx, ngy = gridY + dir.dy;
+              if (ngx >= 0 && ngx < GRID_WIDTH - 1 && ngy >= 0 && ngy < GRID_HEIGHT
+                && (grid[ngx][ngy] === null || grid[ngx][ngy] === 'base')
+              ) {
+                enemy.x = ngx * CELL_SIZE + CELL_SIZE / 2;
+                enemy.y = ngy * CELL_SIZE + CELL_SIZE / 2;
+                let p = enemy.isBoss ? findPathAerial(ngx, ngy, GRID_WIDTH - 1, ngy) : findPath(ngx, ngy, GRID_WIDTH - 1, ngy, false);
+                if (p.length === 0 && !enemy.isBoss) p = findPath(ngx, ngy, GRID_WIDTH - 1, ngy, true);
+                enemy.path = p; enemy.pathIndex = 0;
+                moved = true; break;
+              }
+            }
+            if (!moved) enemies.splice(eiIdx, 1);
+          }
+
+          grid[gridX][gridY] = selectedModule;
+          modules.push({ x: gridX, y: gridY, type: selectedModule, level: 1 });
+          energy -= TURRET_TYPES[selectedModule].cost;
+          rechercherCheminsTousEnnemis();
+          updateStats();
+        }
+      }
+    }
+
+    // =========================================================
+    // UPDATE STATS (DOM)
+    // =========================================================
+    function updateStats() {
+      document.getElementById('stat-wave').textContent = wave;
+      document.getElementById('stat-energy').textContent = energy;
+      document.getElementById('stat-xp').textContent = xp;
+      document.getElementById('stat-hp').textContent = base.hp;
+
+      // Boutons tourelles
+      const meleeBtn = document.getElementById('melee-btn');
+      const projBtn  = document.getElementById('projectile-btn');
+      const wallBtn  = document.getElementById('wall-btn');
+
+      // Melee
+      if (energy < TURRET_TYPES.melee.cost) {
+        meleeBtn.classList.add('locked');
+        document.getElementById('melee-cost').textContent = `10E (-${TURRET_TYPES.melee.cost - energy})`;
+      } else {
+        meleeBtn.classList.remove('locked');
+        document.getElementById('melee-cost').textContent = '10 E';
+      }
+      meleeBtn.classList.toggle('selected', selectedModule === 'melee');
+
+      // Projectile
+      if (wave < 5) {
+        projBtn.classList.add('locked');
+        document.getElementById('projectile-cost').textContent = 'V.5+';
+      } else if (energy < TURRET_TYPES.projectile.cost) {
+        projBtn.classList.add('locked');
+        document.getElementById('projectile-cost').textContent = `20E (-${TURRET_TYPES.projectile.cost - energy})`;
+      } else {
+        projBtn.classList.remove('locked');
+        document.getElementById('projectile-cost').textContent = '20 E';
+      }
+      projBtn.classList.toggle('selected', selectedModule === 'projectile');
+
+      // Wall
+      if (energy < TURRET_TYPES.wall.cost) {
+        wallBtn.classList.add('locked');
+        document.getElementById('wall-cost').textContent = `5E (-${TURRET_TYPES.wall.cost - energy})`;
+      } else {
+        wallBtn.classList.remove('locked');
+        document.getElementById('wall-cost').textContent = '5 E';
+      }
+      wallBtn.classList.toggle('selected', selectedModule === 'wall');
+
+      // Delete btn
+      const deleteBtn = document.getElementById('delete-turret-btn');
+      deleteBtn.classList.toggle('active', isDeleteModeActive);
+
+      // Evolve btn
+      const evolveBtn = document.getElementById('evolve-turret-btn');
+      if (wave < 7) {
+        evolveBtn.classList.add('locked');
+        evolveBtn.textContent = 'Evoluer (V.7+)';
+      } else {
+        evolveBtn.classList.remove('locked');
+        evolveBtn.textContent = 'Evoluer';
+      }
+      evolveBtn.classList.toggle('active', isEvolveModeActive);
+
+      // Heal btn
+      const healBtn = document.getElementById('heal-base-btn');
+      if (wave < 5 || xp < 500 || base.hp >= BASE_HP) {
+        healBtn.classList.add('locked');
+        if (wave < 5) healBtn.textContent = 'Soigner (V.5+)';
+        else if (xp < 500) healBtn.textContent = `Soigner (-${500 - xp} XP)`;
+        else healBtn.textContent = 'Soigner (HP max)';
+      } else {
+        healBtn.classList.remove('locked');
+        healBtn.textContent = 'Soigner (500 XP)';
+      }
+
+      // Echange XP
+      const exchangeBtn = document.getElementById('exchange-xp-energy');
+      const amount = document.querySelector('input[name="exchange-amount"]:checked').value;
+      const reqXp = amount === '1xp' ? 1 : amount === '50xp' ? 50 : 100;
+      if (xp < reqXp) {
+        exchangeBtn.classList.add('locked');
+        exchangeBtn.textContent = `Echange (-${reqXp - xp} XP)`;
+      } else {
+        exchangeBtn.classList.remove('locked');
+        exchangeBtn.textContent = 'Echange XP';
+      }
+    }
+
+    // =========================================================
+    // RESET
+    // =========================================================
+    function resetGame() {
+      grid = [];
+      modules = [];
+      enemies = [];
+      projectiles = [];
+      enemyProjectiles = [];
+      energy = 40;
+      xp = 0;
+      wave = 0;
+      base.hp = BASE_HP;
+      gameState = 'playing';
+      selectedModule = null;
+      isDeleteModeActive = false;
+      isEvolveModeActive = false;
+      waveCompleted = false;
+      showTip = false; tipOpacity = 1;
+      showTipWave6 = false; tipWave6Opacity = 1;
+      speedMultiplier = 1;
+      tipModalShown = false;
+      tipWave6ModalShown = false;
+      blackTriangleBossSpeech = "";
+      blackTriangleBossSpeechTimer = 0;
+      initializeGrid();
+      updateStats();
+      loop();
+    }
+
+    // =========================================================
+    // HELPERS MODALS
+    // =========================================================
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('open');
+      if (id !== 'help-modal') gameState = 'paused';
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+    }
+
+    // =========================================================
+    // EVENT LISTENERS (DOM)
+    // =========================================================
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Tourelles
+      document.getElementById('melee-btn').addEventListener('click', () => {
+        selectedModule = selectedModule === 'melee' ? null : 'melee';
+        isDeleteModeActive = false; isEvolveModeActive = false;
+        updateStats();
+      });
+      document.getElementById('projectile-btn').addEventListener('click', () => {
+        if (wave < 5) return;
+        selectedModule = selectedModule === 'projectile' ? null : 'projectile';
+        isDeleteModeActive = false; isEvolveModeActive = false;
+        updateStats();
+      });
+      document.getElementById('wall-btn').addEventListener('click', () => {
+        selectedModule = selectedModule === 'wall' ? null : 'wall';
+        isDeleteModeActive = false; isEvolveModeActive = false;
+        updateStats();
+      });
+
+      // Supprimer
+      document.getElementById('delete-turret-btn').addEventListener('click', () => {
+        isDeleteModeActive = !isDeleteModeActive;
+        isEvolveModeActive = false; selectedModule = null;
+        updateStats();
+      });
+
+      // Evoluer
+      document.getElementById('evolve-turret-btn').addEventListener('click', () => {
+        if (wave < 7) return;
+        isEvolveModeActive = !isEvolveModeActive;
+        isDeleteModeActive = false; selectedModule = null;
+        updateStats();
+      });
+
+      // Soigner
+      document.getElementById('heal-base-btn').addEventListener('click', () => {
+        if (wave >= 5 && xp >= 500 && base.hp < BASE_HP) {
+          xp -= 500;
+          base.hp = Math.min(BASE_HP, base.hp + 10);
+          updateStats();
+        }
+      });
+
+      // Echange XP
+      document.getElementById('exchange-xp-energy').addEventListener('click', () => {
+        const amount = document.querySelector('input[name="exchange-amount"]:checked').value;
+        const reqXp = amount === '1xp' ? 1 : amount === '50xp' ? 50 : 100;
+        if (xp >= reqXp) {
+          xp -= reqXp;
+          energy += reqXp * 2;
+          updateStats();
+        }
+      });
+
+      // Lancer vague
+      document.getElementById('start-wave').addEventListener('click', () => {
+        if (enemies.length === 0 && gameState === 'playing') spawnWave();
+      });
+
+      // Redemarrer
+      document.getElementById('restart-game').addEventListener('click', () => {
+        closeModal('game-over-modal');
+        resetGame();
+      });
+
+      // Resume apres espace insuffisant
+      document.getElementById('resume-game').addEventListener('click', () => {
+        closeModal('space-warning-modal');
+        gameState = 'playing';
+      });
+
+      // Fermer modale XP
+      document.getElementById('close-xp-warning').addEventListener('click', () => {
+        closeModal('xp-warning-modal');
+        gameState = 'playing';
+      });
+
+      // Fermer astuce vague 1
+      document.getElementById('close-tip').addEventListener('click', () => {
+        closeModal('tip-modal');
+        gameState = 'playing';
+        showTip = true; tipOpacity = 1;
+        updateStats();
+      });
+
+      // Fermer astuce vague 6
+      document.getElementById('close-tip-wave6').addEventListener('click', () => {
+        closeModal('tip-modal-wave6');
+        gameState = 'playing';
+        showTipWave6 = true; tipWave6Opacity = 1;
+        updateStats();
+      });
+
+      // Aide
+      document.getElementById('help-open-btn').addEventListener('click', () => {
+        openModal('help-modal');
+        // Ne pas mettre en pause pour l'aide
+        if (gameState === 'paused') gameState = 'playing';
+      });
+      document.getElementById('help-close-btn').addEventListener('click', () => {
+        closeModal('help-modal');
+      });
+
+      // Fermer modales en cliquant l'overlay (sauf help qui ferme autrement)
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            // Ne fermer que si c'est la modale d'aide ou si le jeu est en pause non critique
+            if (overlay.id === 'help-modal') {
+              closeModal('help-modal');
+            }
+          }
+        });
+      });
+
+    });
+  </script> </body> </html>
