@@ -31,6 +31,9 @@ const STATE = {
     saveKeyClaimed: false,        // pour ne pas re-spawn la clef
     fellInWell: false,            // tombe dans un puit sans fond au moins une fois
     spawnPosition: { x: 0, y: 2, z: 0 }, // position initiale dans la room courante
+    // Notes interactives (chaque note de la salle des boutons fait quelque chose)
+    canJump: false,               // debloque par la note "avancer" si on recule devant
+    notesActivated: {}            // suivi des notes deja declenchees
     currentChest: null,
     // Pick & throw
     carriedObject: null,

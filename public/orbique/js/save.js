@@ -26,7 +26,7 @@ function listSaveSlots() {
 
 function saveToSlot(slotIndex) {
     if (!STATE.canSave) {
-        notify(t('saveNotUnlocked') || 'Sauvegarde non debloquee.');
+        notify(t('saveNotUnlocked') || 'Sauvegarde non débloquée.');
         return;
     }
     const payload = {

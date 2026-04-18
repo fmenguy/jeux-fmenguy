@@ -4,27 +4,19 @@
 
 // --- TUTORIAL ---
 // --- HELPER : 4 puits sans fond aux coins ---
-// Cube tres sombre + lumiere bleutee au fond pour donner une sensation de profondeur.
+// Cube tres sombre + lumiere bleutee au fond. Pas de rebord physique : on marche dedans.
 function addCornerWells(room, marginInset = 1.5) {
     const hw = room.size.w / 2 - marginInset;
     const hd = room.size.d / 2 - marginInset;
     const corners = [[-hw,-hd],[hw,-hd],[-hw,hd],[hw,hd]];
     const wellSize = 1.6;
     for (const [x, z] of corners) {
-        // Trou : plaque noire au sol
-        const hole = addBox(wellSize, 0.05, wellSize, x, 0.025, z, 0x000000);
-        if (hole) {
-            hole.userData = { type: 'well' };
-            interactables.push(hole);
-        }
-        // Bord : 4 petites bandes pour matérialiser le rebord
-        const edge = 0.15;
-        addBox(wellSize + edge*2, 0.1, edge, x, 0.05, z - wellSize/2 - edge/2, 0x222244);
-        addBox(wellSize + edge*2, 0.1, edge, x, 0.05, z + wellSize/2 + edge/2, 0x222244);
-        addBox(edge, 0.1, wellSize, x - wellSize/2 - edge/2, 0.05, z, 0x222244);
-        addBox(edge, 0.1, wellSize, x + wellSize/2 + edge/2, 0.05, z, 0x222244);
-        // Lueur bleutee au fond du puit (suggere la profondeur)
-        const glow = new THREE.PointLight(0x4488ff, 0.4, 3);
+        // Juste un carré noir au sol, rien d'autre. Pas de bord = on peut marcher dedans.
+        addBox(wellSize, 0.05, wellSize, x, 0.025, z, 0x000000, {
+            type: 'well'
+        });
+        // Lueur bleutée au fond du puit (suggère la profondeur)
+        const glow = new THREE.PointLight(0x4488ff, 0.5, 3.5);
         glow.position.set(x, -1.5, z);
         scene.add(glow);
         worldObjects.push(glow);
@@ -152,7 +144,11 @@ function buildTutorial() {
         cube.position.set(pos.x, size / 2, pos.z);
         scene.add(cube);
         worldObjects.push(cube);
-        cube.userData = { pickable: true, type: 'pickable' };
+        cube.userData = {
+            pickable: true,
+            type: 'pickable',
+            originPos: { x: pos.x, y: size / 2, z: pos.z } // pour respawn si tombe dans puit
+        };
         pickables.push(cube);
     }
 
@@ -360,15 +356,12 @@ function buildHub() {
     // Portail vers la Salle des Pesees (puzzle logique, nord-est)
     const weightPortal = addBox(2.5, 3, 0.3, 6, 1.5, 8, 0xaa8833, {
         type: 'portal', target: 'weight_room',
-        label: t('weightRoom') || 'Salle des Pesees'
+        label: t('weightRoom') || 'Salle des Pesées'
     });
     if (weightPortal && weightPortal.material) {
         weightPortal.material.emissive = new THREE.Color(0xffcc44);
         weightPortal.material.emissiveIntensity = 0.4;
     }
-
-    // 4 puits sans fond aux coins (mecanique surreale)
-    addCornerWells(ROOMS.hub, 2.5);
 
     // === SURREALISME : cubes flottants a l'envers au plafond ===
     const ceilingY = 7.5;
@@ -397,9 +390,6 @@ function buildDoorRoom() {
         type: 'portal', target: 'hub',
         label: t('backToHub')
     });
-
-    // 4 puits sans fond
-    addCornerWells(ROOMS.room_doors, 1.8);
 
     // Panneau "Marre de toujours recommencer ?"
     addBox(3, 0.05, 1.4, 0, 0.03, 7, 0x442211, {
@@ -996,14 +986,14 @@ function buildButtonRoom() {
     STATE.buttonRoom.dontPressTimer = 0;
     STATE.buttonRoom.dontPressRewarded = false;
 
-    // Portail de retour (vers hub)
-    addBox(2, 3, 0.3, 0, 1.5, 9, 0x333333, {
+    // Portail de retour (vers hub) -- contre le mur sud, derriere le spawn (z=8)
+    addBox(2, 3, 0.3, 0, 1.5, 10.6, 0x333333, {
         type: 'portal', target: 'hub',
         label: t('backToHub') || 'Retour au hub'
     });
 
     // Panneau d'introduction
-    addBox(4, 0.05, 1.2, 0, 0.03, 6, 0x2a1144, {
+    addBox(4, 0.05, 1.2, 0, 0.03, 5, 0x2a1144, {
         type: 'sign',
         label: t('absurdRoomIntro') || 'Bienvenue. Aucun bouton ne ment. (Sauf un. Ou plusieurs.)'
     });
@@ -1034,16 +1024,16 @@ function buildButtonRoom() {
     makeBtn(0, -3, 0xff2244, 'pressMe', t('btnPressMe') || 'APPUYE-MOI');
 
     // 2. NE PAS APPUYER (jaune) : penalite si tu appuies, reward si tu attends
-    makeBtn(-5, -1, 0xffdd22, 'dontPress', t('btnDontPress') || 'NE PAS APPUYER');
+    makeBtn(-5, -1, 0xffdd22, 'dontPress', t('btnDontPress') || "SURTOUT N'APPUIE PAS");
 
     // 3. INVERSER (cyan) : flip controles verticaux 8s
     makeBtn(5, -1, 0x22ddff, 'invertY', t('btnInvert') || 'INVERSER');
 
     // 4. TELEPORTER (blanc) : teleporte de quelques metres au hasard
-    makeBtn(-5, 3, 0xeeeeee, 'teleport', t('btnTeleport') || 'TELEPORTER');
+    makeBtn(-5, 3, 0xeeeeee, 'teleport', t('btnTeleport') || 'TÉLÉPORTER');
 
     // 5. ZOOM (violet) : oscille le FOV pendant 5s
-    makeBtn(5, 3, 0xaa44ff, 'zoom', t('btnZoom') || 'ZOOM ETRANGE');
+    makeBtn(5, 3, 0xaa44ff, 'zoom', t('btnZoom') || 'ZOOM ÉTRANGE');
 
     // 6. SQRT(-1) (vert acide) : retourne le joueur de 180 degres immediatement
     makeBtn(0, 3, 0x44ff88, 'aboutFace', t('btnAboutFace') || 'PIVOT');
@@ -1064,20 +1054,142 @@ function buildButtonRoom() {
         const y = 4 + Math.random() * 2;
         addBox(0.4, 0.4, 0.4, x, y, z, 0xff44ff);
     }
+
+    // === NOTES SUR LES MURS ===
+    // Mur sud (z=10.8, regarde -z donc rotation PI)
+    addWallNote("Si tu lis ceci, tu devrais avancer.", -7, 2.4, 10.8, Math.PI, { accent: '#ff44dd' });
+    addWallNote("CECI N'EST PAS UNE NOTE.", 7, 2.4, 10.8, Math.PI, { accent: '#44ddff' });
+    // Mur nord (z=-10.8, regarde +z donc rotation 0)
+    addWallNote("Le bouton honnête n'est pas devant toi.", -6, 2.4, -10.8, 0, { accent: '#44ff88' });
+    addWallNote("Tourne-toi parfois. Vraiment.", 6, 2.4, -10.8, 0, { accent: '#ffcc44' });
+    // Mur ouest (x=-10.8, regarde +x donc rotation PI/2)
+    addWallNote("Les murs ne mentent jamais. Sauf celui-là.", -10.8, 2.4, 0, Math.PI / 2, { accent: '#aa44ff' });
+    addWallNote("Si tu vois ce texte à l'envers : c'est normal.", -10.8, 4.0, 5, Math.PI / 2, { accent: '#ff8844', height: 0.7, width: 1.8, upsideDown: true });
+    // Mur est (x=10.8, regarde -x donc rotation -PI/2)
+    addWallNote("Une clé se cache. Pas ici.", 10.8, 2.4, -3, -Math.PI / 2, { accent: '#44ffcc' });
+    addWallNote("Le sol est solide. La vérité, moins.", 10.8, 2.4, 4, -Math.PI / 2, { accent: '#ff44dd' });
+
+    // === MURS INTERNES LABYRINTHIQUES ===
+    // Plusieurs panneaux verticaux qui creent des couloirs decales (pas un vrai labyrinthe, juste de la friction visuelle)
+    // hauteur = 2.5 (mi-mur), largeur variable. Le joueur doit slalomer.
+    const wallH = 2.5;
+    const wallColor = 0x2a1845;
+    // Bandes horizontales decalees
+    addBox(6, wallH, 0.3, -3, wallH/2, -2,  wallColor); // mur en bas a gauche
+    addBox(5, wallH, 0.3, 4,  wallH/2, 1,   wallColor); // mur central decale
+    addBox(7, wallH, 0.3, -2, wallH/2, 6,   wallColor); // mur sud
+    // Bandes verticales
+    addBox(0.3, wallH, 4, -6, wallH/2, 0,   wallColor); // mur ouest
+    addBox(0.3, wallH, 5, 7,  wallH/2, -4,  wallColor); // mur est
+    // Liserés lumineux sur le haut des murs internes (ambiance)
+    const stripColor = 0xff44dd;
+    addBox(6, 0.08, 0.32, -3, wallH + 0.04, -2, stripColor);
+    addBox(5, 0.08, 0.32, 4,  wallH + 0.04, 1,  stripColor);
+    addBox(7, 0.08, 0.32, -2, wallH + 0.04, 6,  stripColor);
+    addBox(0.32, 0.08, 4, -6, wallH + 0.04, 0,  stripColor);
+    addBox(0.32, 0.08, 5, 7,  wallH + 0.04, -4, stripColor);
+}
+
+// --- HELPER : note collee a un mur (texture canvas avec texte) ---
+// rotY : 0 = face -z (mur sud), Math.PI = face +z (mur nord), -PI/2 = face -x (mur ouest), PI/2 = face +x (mur est)
+function addWallNote(text, x, y, z, rotY, opts) {
+    opts = opts || {};
+    const w = opts.width  || 2.4;
+    const h = opts.height || 1.0;
+    const bg = opts.bg || '#1a1a2a';
+    const fg = opts.fg || '#cccccc';
+    const accent = opts.accent || '#ff44dd';
+
+    // Canvas texture
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 256;
+    const ctx = cvs.getContext('2d');
+    // Fond
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 512, 256);
+    // Bordure accent
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(8, 8, 496, 240);
+    // Coins decoratifs
+    ctx.fillStyle = accent;
+    ctx.fillRect(4, 4, 18, 18);
+    ctx.fillRect(490, 4, 18, 18);
+    ctx.fillRect(4, 234, 18, 18);
+    ctx.fillRect(490, 234, 18, 18);
+    // Texte (auto-wrap basique)
+    ctx.fillStyle = fg;
+    ctx.font = "bold 28px monospace";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lines = wrapText(ctx, text, 460);
+    const totalH = lines.length * 36;
+    const startY = 128 - totalH / 2 + 18;
+    if (opts.upsideDown) {
+        // Pivot 180 autour du centre du canvas
+        ctx.save();
+        ctx.translate(256, 128);
+        ctx.rotate(Math.PI);
+        ctx.translate(-256, -128);
+        lines.forEach((line, i) => ctx.fillText(line, 256, startY + i * 36));
+        ctx.restore();
+    } else {
+        lines.forEach((line, i) => ctx.fillText(line, 256, startY + i * 36));
+    }
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.minFilter = THREE.LinearFilter;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
+    const geo = new THREE.PlaneGeometry(w, h);
+    const note = new THREE.Mesh(geo, mat);
+    note.position.set(x, y, z);
+    note.rotation.y = rotY;
+    scene.add(note);
+    worldObjects.push(note);
+    // Si la note a un id, on la rend interactive (clic = onNoteClick)
+    if (opts.id) {
+        note.userData = {
+            type: 'wallNote',
+            noteId: opts.id,
+            label: opts.clickLabel || ' ',
+            onPress: function(obj) { onNoteClick(opts.id, obj); }
+        };
+        // On la met en interactable pour que interact() la trouve
+        // (en utilisant 'button' ne donne pas la bonne hint, on utilise notre type custom)
+        if (typeof interactables !== 'undefined') interactables.push(note);
+    }
+    return note;
+}
+
+function wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+        const test = line ? line + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = test;
+        }
+    }
+    if (line) lines.push(line);
+    return lines;
 }
 
 // --- SALLE DES CUBES (sandbox fun) ---
 // Sans objectif. Plein de cubes a lancer pour le plaisir, plus une cible bonus.
 function buildCubeRoom() {
-    // Portail retour
-    addBox(2, 3, 0.3, 0, 1.5, 11, 0x333333, {
+    // Portail retour -- contre le mur sud, derriere le spawn (z=10)
+    addBox(2, 3, 0.3, 0, 1.5, 12.6, 0x333333, {
         type: 'portal', target: 'hub',
         label: t('backToHub') || 'Retour au hub'
     });
 
-    addBox(4, 0.05, 1.2, 0, 0.03, 8, 0x223344, {
+    addBox(4, 0.05, 1.2, 0, 0.03, 7, 0x223344, {
         type: 'sign',
-        label: t('cubeRoomIntro') || 'Lance les cubes (clic droit). Detruis la cible pour une recompense.'
+        label: t('cubeRoomIntro') || 'Lance les cubes (clic droit). Détruis la cible pour une récompense.'
     });
 
     // Tas de cubes colores partout
@@ -1127,15 +1239,15 @@ function buildWeightRoom() {
     if (!STATE.weightRoom) STATE.weightRoom = {};
     STATE.weightRoom.solved = false;
 
-    // Portail retour
-    addBox(2, 3, 0.3, 0, 1.5, 9, 0x333333, {
+    // Portail retour -- contre le mur sud, derriere le spawn (z=8)
+    addBox(2, 3, 0.3, 0, 1.5, 10.6, 0x333333, {
         type: 'portal', target: 'hub',
         label: t('backToHub') || 'Retour au hub'
     });
 
-    addBox(4, 0.05, 1.2, 0, 0.03, 6, 0x332211, {
+    addBox(4, 0.05, 1.2, 0, 0.03, 5, 0x332211, {
         type: 'sign',
-        label: t('weightRoomIntro') || 'Pose chaque cube colore sur la plaque de sa couleur.'
+        label: t('weightRoomIntro') || 'Pose chaque cube coloré sur la plaque de sa couleur.'
     });
 
     // 3 plaques colorees au sol, alignees
