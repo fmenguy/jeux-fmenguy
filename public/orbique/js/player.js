@@ -285,7 +285,7 @@ function interact() {
             STATE.saveKeyClaimed = true;
             scene.remove(obj);
             interactables = interactables.filter(i => i !== obj);
-            notify(t('saveKeyTaken') || 'Clef de sauvegarde obtenue ! Appuie sur ECHAP pour sauvegarder.');
+            notify(t('saveKeyTaken') || 'Clef de sauvegarde obtenue ! Appuie sur ÉCHAP pour sauvegarder.');
             break;
     }
 
@@ -335,24 +335,54 @@ function checkNonEuclidean() {
     }
 }
 
-// --- PUITS SANS FOND : detection chute ---
+// --- PUITS SANS FOND : detection chute (joueur + cubes) ---
+// Cherche aussi dans worldObjects au cas ou le push interactables aurait foire.
 function checkWells() {
+    const wells = [];
+    for (const obj of interactables) {
+        if (obj.userData && obj.userData.type === 'well') wells.push(obj);
+    }
+    // Fallback : si rien trouve dans interactables, scan worldObjects
+    if (wells.length === 0) {
+        for (const obj of worldObjects) {
+            if (obj.userData && obj.userData.type === 'well') wells.push(obj);
+        }
+    }
+    if (wells.length === 0) return;
+
+    // 1. Chute du joueur (zone elargie : 1.1m de rayon, dans les 2 axes ET en distance euclidienne)
     const px = camera.position.x;
     const pz = camera.position.z;
-    for (const obj of interactables) {
-        if (!obj.userData || obj.userData.type !== 'well') continue;
-        const dx = Math.abs(px - obj.position.x);
-        const dz = Math.abs(pz - obj.position.z);
-        if (dx < 0.9 && dz < 0.9) {
-            // Chute ! Respawn a la position initiale de la room
+    for (const well of wells) {
+        const dx = px - well.position.x;
+        const dz = pz - well.position.z;
+        const planar = Math.sqrt(dx * dx + dz * dz);
+        if (planar < 1.1) {
             const spawn = STATE.spawnPosition || { x: 0, y: 2, z: 0 };
             camera.position.set(spawn.x, spawn.y, spawn.z);
             const wasFirst = !STATE.fellInWell;
             STATE.fellInWell = true;
             notify(wasFirst
-                ? (t('firstFall') || 'Tu es tombe dans le puit sans fond... et tu reapparais.')
-                : (t('fallAgain') || 'Encore tombe.'));
+                ? (t('firstFall') || 'Tu es tombé dans le puits sans fond... et tu réapparais.')
+                : (t('fallAgain') || 'Encore tombé.'));
             return;
+        }
+    }
+
+    // 2. Chute des cubes : respawn a leur origine
+    for (const cube of pickables) {
+        if (cube === STATE.carriedObject) continue;
+        for (const well of wells) {
+            const dx = cube.position.x - well.position.x;
+            const dz = cube.position.z - well.position.z;
+            if (Math.sqrt(dx * dx + dz * dz) < 1.0) {
+                const origin = cube.userData && cube.userData.originPos;
+                if (origin) {
+                    cube.position.set(origin.x, origin.y, origin.z);
+                    cube.rotation.set(0, 0, 0);
+                }
+                break;
+            }
         }
     }
 }
@@ -367,7 +397,7 @@ function onSillyButton(action, obj) {
             if (c < 7) {
                 notify((t('pressMeProgress') || 'Encore...') + ' (' + c + '/7)');
             } else if (c === 7) {
-                notify(t('pressMeReward') || 'OK ca suffit. Voila une clef.');
+                notify(t('pressMeReward') || 'OK ça suffit. Voilà une clef.');
                 STATE.inventory.keys = (STATE.inventory.keys || 0) + 1;
                 if (typeof updateHUD === 'function') updateHUD();
                 // change la couleur du bouton pour signaler accomplissement
@@ -378,22 +408,24 @@ function onSillyButton(action, obj) {
             break;
         }
         case 'dontPress': {
-            // Penalite : eject le joueur loin
-            notify(t('dontPressFail') || 'Je t\'avais dit de ne PAS appuyer.');
-            const angle = Math.random() * Math.PI * 2;
-            camera.position.x += Math.cos(angle) * 4;
-            camera.position.z += Math.sin(angle) * 4;
-            // Reset le timer de proximite
+            // 1ere pression : retour au tutoriel. 2eme et + : message moqueur.
+            STATE.buttonRoom.dontPressCount = (STATE.buttonRoom.dontPressCount || 0) + 1;
+            if (STATE.buttonRoom.dontPressCount === 1) {
+                notify(t('dontPressFirst') || 'Tu n\'as pas écouté. Retour au tutoriel.');
+                setTimeout(() => loadRoom('tutorial'), 800);
+            } else {
+                notify(t('dontPressFail') || 'Tu vois, je t\'avais dit de ne pas appuyer.');
+            }
             STATE.buttonRoom.dontPressTimer = 0;
             STATE.buttonRoom.dontPressRewarded = false;
             break;
         }
         case 'invertY': {
             STATE.controlsInverted.vertical = !STATE.controlsInverted.vertical;
-            notify(t('invertVOn') || 'Vertical inverse pendant 8 secondes.');
+            notify(t('invertVOn') || 'Vertical inversé pendant 8 secondes.');
             setTimeout(() => {
                 STATE.controlsInverted.vertical = !STATE.controlsInverted.vertical;
-                notify(t('invertVOff') || 'Vertical restaure.');
+                notify(t('invertVOff') || 'Vertical restauré.');
             }, 8000);
             break;
         }
@@ -430,7 +462,7 @@ function onSillyButton(action, obj) {
         }
         case 'hidden': {
             // Le bouton cache est le seul qui donne une vraie recompense
-            notify(t('hiddenFound') || 'Tu as trouve le seul bouton honnete.');
+            notify(t('hiddenFound') || 'Tu as trouvé le seul bouton honnête.');
             STATE.inventory.keys = (STATE.inventory.keys || 0) + 1;
             if (typeof updateHUD === 'function') updateHUD();
             if (obj && obj.material) {
@@ -474,11 +506,11 @@ function checkCubeTarget() {
                     target.material.color.set(0x44ff44);
                     target.material.emissive = new THREE.Color(0x44ff44);
                 }
-                notify(t('cubeTargetDone') || 'Cible detruite ! Voila une clef.');
+                notify(t('cubeTargetDone') || 'Cible détruite ! Voilà une clef.');
                 STATE.inventory.keys = (STATE.inventory.keys || 0) + 1;
                 if (typeof updateHUD === 'function') updateHUD();
             } else {
-                notify((t('cubeTargetHit') || 'Touche !') + ' ' + remaining + ' restants');
+                notify((t('cubeTargetHit') || 'Touché !') + ' ' + remaining + ' restants');
             }
         }
     }
@@ -509,14 +541,14 @@ function checkWeightRoom() {
             plate.material.emissiveIntensity = found ? 0.8 : 0.15;
         }
         if (found && !wasActive) {
-            notify(t('platePlaced') || 'Plaque activee.');
+            notify(t('platePlaced') || 'Plaque activée.');
         }
         if (!found) allCorrect = false;
     }
 
     if (allCorrect) {
         STATE.weightRoom.solved = true;
-        notify(t('weightSolved') || 'Toutes les plaques sont actives ! Une clef apparait.');
+        notify(t('weightSolved') || 'Toutes les plaques sont actives ! Une clef apparaît.');
         // Spawn une clef sur le pedestal
         const ped = STATE.weightRoom.pedestal;
         if (ped) {
@@ -524,7 +556,7 @@ function checkWeightRoom() {
             const keyMat = new THREE.MeshStandardMaterial({ color: 0xffcc44, emissive: 0xffcc44, emissiveIntensity: 0.6 });
             const key = new THREE.Mesh(keyGeo, keyMat);
             key.position.set(ped.position.x, ped.position.y + 0.7, ped.position.z);
-            key.userData = { type: 'key', label: t('weightRoomKey') || 'Clef des Pesees', unlocksRoom: 0 };
+            key.userData = { type: 'key', label: t('weightRoomKey') || 'Clef des Pesées', unlocksRoom: 0 };
             scene.add(key);
             worldObjects.push(key);
             interactables.push(key);
@@ -556,7 +588,7 @@ function checkButtonRoomTimers(deltaSeconds) {
         STATE.buttonRoom.dontPressTimer = (STATE.buttonRoom.dontPressTimer || 0) + deltaSeconds;
         if (STATE.buttonRoom.dontPressTimer > 5) {
             STATE.buttonRoom.dontPressRewarded = true;
-            notify(t('dontPressReward') || 'Bravo, tu as resiste. Voila une clef.');
+            notify(t('dontPressReward') || 'Bravo, tu as résisté. Voilà une clef.');
             STATE.inventory.keys = (STATE.inventory.keys || 0) + 1;
             if (typeof updateHUD === 'function') updateHUD();
             // Eteindre/changer le bouton
@@ -580,7 +612,7 @@ function revealHubColors() {
         .sort((a, b) => a - b);
 
     if (visitedPuzzles.length === 0) {
-        notify(t('nothingRevealed') || 'Rien n\'apparait... explore d\'abord les salles');
+        notify(t('nothingRevealed') || 'Rien n\'apparaît... explore d\'abord les salles');
         STATE.hubColorsRevealed = true;
         return;
     }
@@ -598,7 +630,7 @@ function revealHubColors() {
         const portal = addBox(1.4, 2.4, 0.4, x, 1.5, 13, color, {
             type: 'portal',
             target: `puzzle_${num}`,
-            label: (t('colorPortal') || 'Passage colore') + ' #' + num
+            label: (t('colorPortal') || 'Passage coloré') + ' #' + num
         });
         if (portal && portal.material) {
             portal.material.emissive = new THREE.Color(color);
@@ -616,21 +648,13 @@ function revealHubColors() {
     notify(t('colorsRevealed') || 'Des couleurs s\'illuminent au fond...');
 }
 
-// --- PROXIMITY ---
+// --- PROXIMITY (juste le glow visuel, plus de trigger automatique des portails) ---
+// Les portails s'activent uniquement par CLIC (interact() / E), pas par contact.
 function checkProximity() {
     for (const obj of interactables) {
+        if (!obj.material) continue;
         const dist = camera.position.distanceTo(obj.position);
-        if (dist < 2) {
-            if (obj.userData.type === 'portal' && !STATE.portalCooldown) {
-                if (isTutorialBlocking(obj.userData.target)) continue;
-                STATE.portalCooldown = true;
-                loadRoom(obj.userData.target);
-                notify(obj.userData.label);
-                setTimeout(() => STATE.portalCooldown = false, 1000);
-                break;
-            }
-        }
-        if (obj.material && dist < 5) {
+        if (dist < 5) {
             obj.material.emissive = new THREE.Color(0x222222);
             obj.material.emissiveIntensity = Math.max(0, 1 - dist/5);
         }
