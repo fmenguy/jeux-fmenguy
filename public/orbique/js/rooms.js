@@ -263,6 +263,31 @@ function buildTutorial() {
     };
     interactables.push(btn);
 
+    // Si tutoriel deja termine OU mode debug : ouvrir la barriere et placer le portail de sortie
+    if (STATE.tutorialCompleted || STATE.debugMode) {
+        STATE.tutoBarrierOpen = true;
+        if (STATE.tutoBarrier) {
+            // Cacher la barriere visuellement
+            STATE.tutoBarrier.visible = false;
+        }
+        // Spawn portail de sortie immediatement
+        const portalGeo = new THREE.BoxGeometry(3, 4, 0.3);
+        const portalMat = new THREE.MeshStandardMaterial({
+            color: 0x2255aa, emissive: 0x1133aa, emissiveIntensity: 0.8,
+            transparent: true, opacity: 0.7
+        });
+        const portal = new THREE.Mesh(portalGeo, portalMat);
+        portal.position.set(0, 2, -hd + 0.2);
+        scene.add(portal);
+        worldObjects.push(portal);
+        portal.userData = { type: 'portal', target: 'hub', label: 'Retour au hub' };
+        interactables.push(portal);
+        const portalLight = new THREE.PointLight(0x4488ff, 0.8, 10);
+        portalLight.position.set(0, 2, -hd + 1);
+        scene.add(portalLight);
+        worldObjects.push(portalLight);
+    }
+
     // Position camera in zone A
     camera.position.set(0, 2, 9);
 }
