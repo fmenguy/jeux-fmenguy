@@ -3,10 +3,39 @@
 // ============================================================
 
 // --- TUTORIAL ---
+// --- HELPER : 4 puits sans fond aux coins ---
+// Cube tres sombre + lumiere bleutee au fond. Pas de rebord physique : on marche dedans.
+function addCornerWells(room, marginInset = 1.5) {
+    const hw = room.size.w / 2 - marginInset;
+    const hd = room.size.d / 2 - marginInset;
+    const corners = [[-hw,-hd],[hw,-hd],[-hw,hd],[hw,hd]];
+    const wellSize = 1.6;
+    for (const [x, z] of corners) {
+        // Juste un carré noir au sol, rien d'autre. Pas de bord = on peut marcher dedans.
+        addBox(wellSize, 0.05, wellSize, x, 0.025, z, 0x000000, {
+            type: 'well'
+        });
+        // Lueur bleutée au fond du puit (suggère la profondeur)
+        const glow = new THREE.PointLight(0x4488ff, 0.5, 3.5);
+        glow.position.set(x, -1.5, z);
+        scene.add(glow);
+        worldObjects.push(glow);
+    }
+}
+
 function buildTutorial() {
     const room = ROOMS.tutorial;
     const hw = room.size.w / 2;
     const hd = room.size.d / 2;
+
+    // 4 puits sans fond aux coins (decouverte mecanique : il faut SAUTER au-dessus pour tomber)
+    addCornerWells(room, 1.8);
+
+    // Panneau d'indice pres d'un puit (coin sud-est) : il faut revenir une fois le saut debloque
+    addBox(2.6, 0.05, 1.0, 8, 0.03, 8, 0x442211, {
+        type: 'sign',
+        label: 'Reviens ici quand tu sauras sauter pour découvrir le vide.'
+    });
 
     // Soft ambient light
     const tutoAmbient = new THREE.AmbientLight(0xccccdd, 0.5);
@@ -121,7 +150,11 @@ function buildTutorial() {
         cube.position.set(pos.x, size / 2, pos.z);
         scene.add(cube);
         worldObjects.push(cube);
-        cube.userData = { pickable: true, type: 'pickable' };
+        cube.userData = {
+            pickable: true,
+            type: 'pickable',
+            originPos: { x: pos.x, y: size / 2, z: pos.z } // pour respawn si tombe dans puit
+        };
         pickables.push(cube);
     }
 
@@ -305,6 +338,68 @@ function buildHub() {
         type: 'sign',
         label: t('welcome')
     });
+
+    // Portail vers la Salle des Boutons (decouverte cachee : derriere le joueur au spawn)
+    const btnPortal = addBox(2.5, 3, 0.3, 6, 1.5, -8, 0x6622aa, {
+        type: 'portal', target: 'button_room',
+        label: t('buttonRoom') || 'Salle des Boutons'
+    });
+    if (btnPortal && btnPortal.material) {
+        btnPortal.material.emissive = new THREE.Color(0xff44ff);
+        btnPortal.material.emissiveIntensity = 0.4;
+    }
+
+    // Portail vers la Salle des Cubes (sandbox fun, sud-est)
+    const cubePortal = addBox(2.5, 3, 0.3, -6, 1.5, -8, 0x336688, {
+        type: 'portal', target: 'cube_room',
+        label: t('cubeRoom') || 'Salle des Cubes'
+    });
+    if (cubePortal && cubePortal.material) {
+        cubePortal.material.emissive = new THREE.Color(0x66aaff);
+        cubePortal.material.emissiveIntensity = 0.4;
+    }
+
+    // Portail vers la Salle des Pesees (puzzle logique, nord-est)
+    const weightPortal = addBox(2.5, 3, 0.3, 6, 1.5, 8, 0xaa8833, {
+        type: 'portal', target: 'weight_room',
+        label: t('weightRoom') || 'Salle des Pesées'
+    });
+    if (weightPortal && weightPortal.material) {
+        weightPortal.material.emissive = new THREE.Color(0xffcc44);
+        weightPortal.material.emissiveIntensity = 0.4;
+    }
+
+    // Portail "retour au tutoriel" : visible uniquement apres avoir debloque le saut
+    if (STATE.canJump) {
+        const tutoPortal = addBox(2, 2.5, 0.3, -6, 1.25, 8, 0x4488cc, {
+            type: 'portal', target: 'tutorial',
+            label: 'Retour au tutoriel'
+        });
+        if (tutoPortal && tutoPortal.material) {
+            tutoPortal.material.emissive = new THREE.Color(0x88ccff);
+            tutoPortal.material.emissiveIntensity = 0.5;
+        }
+    }
+
+    // === SURREALISME : cubes flottants a l'envers au plafond ===
+    const ceilingY = 7.5;
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + 0.3;
+        const r = 5 + Math.random() * 4;
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+        const size = 0.8 + Math.random() * 0.6;
+        const cube = addBox(size, size, size, x, ceilingY, z, 0x2a1a3a);
+        if (cube) {
+            cube.userData.surrealRotate = true; // pour anim si besoin
+            cube.rotation.set(Math.PI, Math.random() * Math.PI, 0);
+        }
+    }
+    // Panneau "Le sol n'est pas en bas" pendu au plafond
+    addBox(3, 0.05, 1, 0, ceilingY - 0.3, -2, 0x110022, {
+        type: 'sign',
+        label: t('ceilingSign') || "Le sol n'est pas toujours en bas..."
+    });
 }
 
 // --- DOOR ROOM ---
@@ -313,6 +408,39 @@ function buildDoorRoom() {
         type: 'portal', target: 'hub',
         label: t('backToHub')
     });
+
+    // Panneau "Marre de toujours recommencer ?"
+    addBox(3, 0.05, 1.4, 0, 0.03, 7, 0x442211, {
+        type: 'sign',
+        label: t('saveHint') || 'Marre de toujours recommencer ? Trouve la clef de sauvegarde !'
+    });
+
+    // Clef de sauvegarde : visible si conditions remplies et pas encore prise
+    const cond1 = STATE.roomsCompleted.includes('puzzle_1');
+    const cond2 = STATE.roomsCompleted.includes('puzzle_2');
+    const cond3 = STATE.fellInWell === true;
+    if (cond1 && cond2 && cond3 && !STATE.saveKeyClaimed && !STATE.canSave) {
+        // Pedestal au centre nord, sous la lumiere
+        addBox(1.2, 0.6, 1.2, 0, 0.3, 4, 0x554433);
+        const keyGeo = new THREE.BoxGeometry(0.5, 0.7, 0.2);
+        const keyMat = new THREE.MeshStandardMaterial({
+            color: 0x66ccff, emissive: 0x66ccff, emissiveIntensity: 0.8
+        });
+        const key = new THREE.Mesh(keyGeo, keyMat);
+        key.position.set(0, 1.1, 4);
+        key.userData = {
+            type: 'saveKey',
+            label: t('saveKeyLabel') || 'Clef de sauvegarde'
+        };
+        scene.add(key);
+        worldObjects.push(key);
+        interactables.push(key);
+        // Halo
+        const halo = new THREE.PointLight(0x66ccff, 1.4, 8);
+        halo.position.set(0, 2, 4);
+        scene.add(halo);
+        worldObjects.push(halo);
+    }
 
     for (let i = 0; i < 10; i++) {
         const x = -16 + (i % 5) * 8;
@@ -864,6 +992,312 @@ function generateMaze(w, h) {
     maze[1][0] = 0;
     maze[h-2][w-1] = 0;
     return maze;
+}
+
+// --- SALLE DES BOUTONS ABSURDES ---
+// Boutons qui marchent, ne marchent pas, ou se moquent du joueur.
+// Un bouton cache derriere le portail d'entree (joue sur "reculer").
+function buildButtonRoom() {
+    // Etat local de la salle (reset a chaque entree)
+    if (!STATE.buttonRoom) STATE.buttonRoom = {};
+    STATE.buttonRoom.pressMeCount = 0;
+    STATE.buttonRoom.dontPressTimer = 0;
+    STATE.buttonRoom.dontPressRewarded = false;
+
+    // Portail de retour (vers hub) -- contre le mur sud, derriere le spawn (z=8)
+    addBox(2, 3, 0.3, 0, 1.5, 10.6, 0x333333, {
+        type: 'portal', target: 'hub',
+        label: t('backToHub') || 'Retour au hub'
+    });
+
+    // Panneau d'introduction
+    addBox(4, 0.05, 1.2, 0, 0.03, 5, 0x2a1144, {
+        type: 'sign',
+        label: t('absurdRoomIntro') || 'Bienvenue. Aucun bouton ne ment. (Sauf un. Ou plusieurs.)'
+    });
+
+    // Helper pour creer un bouton sur socle
+    function makeBtn(x, z, color, action, label) {
+        // Socle
+        addBox(1.2, 0.5, 1.2, x, 0.25, z, 0x111111);
+        // Bouton lui-meme
+        const btn = addBox(0.8, 0.4, 0.8, x, 0.7, z, color, {
+            type: 'button',
+            label: label,
+            action: action,
+            onPress: function(obj) { onSillyButton(action, obj); }
+        });
+        if (btn && btn.material) {
+            btn.material.emissive = new THREE.Color(color);
+            btn.material.emissiveIntensity = 0.55;
+        }
+        // Mini lumiere pour glow
+        const lt = new THREE.PointLight(color, 0.6, 4);
+        lt.position.set(x, 1.5, z);
+        scene.add(lt); worldObjects.push(lt);
+        return btn;
+    }
+
+    // 1. APPUYE-MOI (rouge, central) : compte les pressions, reward apres 7
+    makeBtn(0, -3, 0xff2244, 'pressMe', t('btnPressMe') || 'APPUYE-MOI');
+
+    // 2. NE PAS APPUYER (jaune) : penalite si tu appuies, reward si tu attends
+    makeBtn(-5, -1, 0xffdd22, 'dontPress', t('btnDontPress') || "SURTOUT N'APPUIE PAS");
+
+    // 3. INVERSER (cyan) : flip controles verticaux 8s
+    makeBtn(5, -1, 0x22ddff, 'invertY', t('btnInvert') || 'INVERSER');
+
+    // 4. TELEPORTER (blanc) : teleporte de quelques metres au hasard
+    makeBtn(-5, 3, 0xeeeeee, 'teleport', t('btnTeleport') || 'TÉLÉPORTER');
+
+    // 5. ZOOM (violet) : oscille le FOV pendant 5s
+    makeBtn(5, 3, 0xaa44ff, 'zoom', t('btnZoom') || 'ZOOM ÉTRANGE');
+
+    // 6. SQRT(-1) (vert acide) : retourne le joueur de 180 degres immediatement
+    makeBtn(0, 3, 0x44ff88, 'aboutFace', t('btnAboutFace') || 'PIVOT');
+
+    // 7. CACHE : derriere le portail d'entree (z=10, le joueur arrive vers z=8)
+    // Le joueur doit reculer/se retourner pour le voir
+    const hidden = makeBtn(0, 10.5, 0x222222, 'hidden', t('btnHidden') || '?');
+    if (hidden && hidden.material) {
+        hidden.material.emissiveIntensity = 0.2;
+    }
+
+    // Cubes flottants surrealistes pour l'ambiance
+    for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const r = 8;
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+        const y = 4 + Math.random() * 2;
+        addBox(0.4, 0.4, 0.4, x, y, z, 0xff44ff);
+    }
+
+    // === NOTES SUR LES MURS ===
+    // Mur sud (z=10.8, regarde -z donc rotation PI)
+    addWallNote("Si tu lis ceci, tu devrais avancer.", -7, 2.4, 10.8, Math.PI, { accent: '#ff44dd', id: 'jumpNote' });
+    addWallNote("CECI N'EST PAS UNE NOTE.", 7, 2.4, 10.8, Math.PI, { accent: '#44ddff' });
+    // Mur nord (z=-10.8, regarde +z donc rotation 0)
+    addWallNote("Le bouton honnête n'est pas devant toi.", -6, 2.4, -10.8, 0, { accent: '#44ff88' });
+    addWallNote("Tourne-toi parfois. Vraiment.", 6, 2.4, -10.8, 0, { accent: '#ffcc44' });
+    // Mur ouest (x=-10.8, regarde +x donc rotation PI/2)
+    addWallNote("Les murs ne mentent jamais. Sauf celui-là.", -10.8, 2.4, 0, Math.PI / 2, { accent: '#aa44ff', id: 'wallSecret' });
+    addWallNote("Si tu vois ce texte à l'envers : c'est normal.", -10.8, 4.0, 5, Math.PI / 2, { accent: '#ff8844', height: 0.7, width: 1.8, upsideDown: true, id: 'invertNote' });
+    // Mur est (x=10.8, regarde -x donc rotation -PI/2)
+    addWallNote("Une clé se cache. Pas ici.", 10.8, 2.4, -3, -Math.PI / 2, { accent: '#44ffcc' });
+    addWallNote("Le sol est solide. La vérité, moins.", 10.8, 2.4, 4, -Math.PI / 2, { accent: '#ff44dd' });
+
+    // === MURS INTERNES LABYRINTHIQUES ===
+    // Plusieurs panneaux verticaux qui creent des couloirs decales (pas un vrai labyrinthe, juste de la friction visuelle)
+    // hauteur = 2.5 (mi-mur), largeur variable. Le joueur doit slalomer.
+    const wallH = 2.5;
+    const wallColor = 0x2a1845;
+    // Bandes horizontales decalees
+    addBox(6, wallH, 0.3, -3, wallH/2, -2,  wallColor); // mur en bas a gauche
+    addBox(5, wallH, 0.3, 4,  wallH/2, 1,   wallColor); // mur central decale
+    addBox(7, wallH, 0.3, -2, wallH/2, 6,   wallColor); // mur sud
+    // Bandes verticales
+    addBox(0.3, wallH, 4, -6, wallH/2, 0,   wallColor); // mur ouest
+    addBox(0.3, wallH, 5, 7,  wallH/2, -4,  wallColor); // mur est
+    // Liserés lumineux sur le haut des murs internes (ambiance)
+    const stripColor = 0xff44dd;
+    addBox(6, 0.08, 0.32, -3, wallH + 0.04, -2, stripColor);
+    addBox(5, 0.08, 0.32, 4,  wallH + 0.04, 1,  stripColor);
+    addBox(7, 0.08, 0.32, -2, wallH + 0.04, 6,  stripColor);
+    addBox(0.32, 0.08, 4, -6, wallH + 0.04, 0,  stripColor);
+    addBox(0.32, 0.08, 5, 7,  wallH + 0.04, -4, stripColor);
+}
+
+// --- HELPER : note collee a un mur (texture canvas avec texte) ---
+// rotY : 0 = face -z (mur sud), Math.PI = face +z (mur nord), -PI/2 = face -x (mur ouest), PI/2 = face +x (mur est)
+function addWallNote(text, x, y, z, rotY, opts) {
+    opts = opts || {};
+    const w = opts.width  || 2.4;
+    const h = opts.height || 1.0;
+    const bg = opts.bg || '#1a1a2a';
+    const fg = opts.fg || '#cccccc';
+    const accent = opts.accent || '#ff44dd';
+
+    // Canvas texture
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 256;
+    const ctx = cvs.getContext('2d');
+    // Fond
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 512, 256);
+    // Bordure accent
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(8, 8, 496, 240);
+    // Coins decoratifs
+    ctx.fillStyle = accent;
+    ctx.fillRect(4, 4, 18, 18);
+    ctx.fillRect(490, 4, 18, 18);
+    ctx.fillRect(4, 234, 18, 18);
+    ctx.fillRect(490, 234, 18, 18);
+    // Texte (auto-wrap basique)
+    ctx.fillStyle = fg;
+    ctx.font = "bold 28px monospace";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lines = wrapText(ctx, text, 460);
+    const totalH = lines.length * 36;
+    const startY = 128 - totalH / 2 + 18;
+    if (opts.upsideDown) {
+        // Pivot 180 autour du centre du canvas
+        ctx.save();
+        ctx.translate(256, 128);
+        ctx.rotate(Math.PI);
+        ctx.translate(-256, -128);
+        lines.forEach((line, i) => ctx.fillText(line, 256, startY + i * 36));
+        ctx.restore();
+    } else {
+        lines.forEach((line, i) => ctx.fillText(line, 256, startY + i * 36));
+    }
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.minFilter = THREE.LinearFilter;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
+    const geo = new THREE.PlaneGeometry(w, h);
+    const note = new THREE.Mesh(geo, mat);
+    note.position.set(x, y, z);
+    note.rotation.y = rotY;
+    scene.add(note);
+    worldObjects.push(note);
+    // Tag pour detection proximite (checkWallNotes dans player.js)
+    note.userData = { type: 'wallNote', noteId: opts.id || null };
+    return note;
+}
+
+function wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+        const test = line ? line + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = test;
+        }
+    }
+    if (line) lines.push(line);
+    return lines;
+}
+
+// --- SALLE DES CUBES (sandbox fun) ---
+// Sans objectif. Plein de cubes a lancer pour le plaisir, plus une cible bonus.
+function buildCubeRoom() {
+    // Portail retour -- contre le mur sud, derriere le spawn (z=10)
+    addBox(2, 3, 0.3, 0, 1.5, 12.6, 0x333333, {
+        type: 'portal', target: 'hub',
+        label: t('backToHub') || 'Retour au hub'
+    });
+
+    addBox(4, 0.05, 1.2, 0, 0.03, 7, 0x223344, {
+        type: 'sign',
+        label: t('cubeRoomIntro') || 'Lance les cubes (clic droit). Détruis la cible pour une récompense.'
+    });
+
+    // Tas de cubes colores partout
+    const colors = [0xff4444, 0x44ff44, 0x4488ff, 0xffcc22, 0xff44ff, 0x44ffff, 0xffaa44];
+    for (let i = 0; i < 28; i++) {
+        const x = (Math.random() - 0.5) * 20;
+        const z = (Math.random() - 0.5) * 16 - 1;
+        const size = 0.5 + Math.random() * 0.5;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const geo = new THREE.BoxGeometry(size, size, size);
+        const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4 });
+        const cube = new THREE.Mesh(geo, mat);
+        // Empile parfois en piles desordonnees
+        const stack = Math.random() < 0.3 ? Math.floor(Math.random() * 3) : 0;
+        cube.position.set(x, size / 2 + stack * size, z);
+        cube.rotation.y = Math.random() * Math.PI;
+        scene.add(cube);
+        worldObjects.push(cube);
+        cube.userData = { pickable: true, type: 'pickable' };
+        pickables.push(cube);
+    }
+
+    // Cible bonus : panneau rouge a abattre en lancant un cube dessus
+    const target = addBox(1.6, 1.6, 0.3, 0, 1.8, -11, 0xff2222, {
+        type: 'cubeTarget',
+        hits: 0,
+        required: 3,
+        label: t('cubeTarget') || 'Cible (lance des cubes)'
+    });
+    if (target && target.material) {
+        target.material.emissive = new THREE.Color(0xff2222);
+        target.material.emissiveIntensity = 0.5;
+    }
+    // Anneau decoratif
+    addBox(2.4, 0.2, 0.4, 0, 2.7, -11, 0x441111);
+    addBox(2.4, 0.2, 0.4, 0, 0.9, -11, 0x441111);
+
+    // Quelques plateformes pour empiler
+    addBox(3, 0.3, 3, -7, 0.15, -5, 0x333333);
+    addBox(3, 0.3, 3, 7, 0.15, -5, 0x333333);
+}
+
+// --- SALLE DES PESEES (puzzle logique) ---
+// 3 plaques colorees au sol. 3 cubes colores. Place chaque cube sur sa plaque.
+// Si tout match : un coffre / clef se revele.
+function buildWeightRoom() {
+    if (!STATE.weightRoom) STATE.weightRoom = {};
+    STATE.weightRoom.solved = false;
+
+    // Portail retour -- contre le mur sud, derriere le spawn (z=8)
+    addBox(2, 3, 0.3, 0, 1.5, 10.6, 0x333333, {
+        type: 'portal', target: 'hub',
+        label: t('backToHub') || 'Retour au hub'
+    });
+
+    addBox(4, 0.05, 1.2, 0, 0.03, 5, 0x332211, {
+        type: 'sign',
+        label: t('weightRoomIntro') || 'Pose chaque cube coloré sur la plaque de sa couleur.'
+    });
+
+    // 3 plaques colorees au sol, alignees
+    const plateData = [
+        { color: 0xff3333, name: 'red',   x: -5, z: -2 },
+        { color: 0x33ff33, name: 'green', x:  0, z: -2 },
+        { color: 0x3399ff, name: 'blue',  x:  5, z: -2 },
+    ];
+    const plates = [];
+    for (const pd of plateData) {
+        const plate = addBox(2, 0.1, 2, pd.x, 0.05, pd.z, pd.color);
+        if (plate && plate.material) {
+            plate.material.emissive = new THREE.Color(pd.color);
+            plate.material.emissiveIntensity = 0.15;
+            plate.userData = { type: 'weightPlate', plateColor: pd.color, plateName: pd.name, active: false };
+        }
+        plates.push(plate);
+    }
+    STATE.weightRoom.plates = plates;
+
+    // 3 cubes colores ranges contre le mur d'entree
+    const cubeData = [
+        { color: 0xff3333, x: -3, z: 4 },
+        { color: 0x33ff33, x:  0, z: 4 },
+        { color: 0x3399ff, x:  3, z: 4 },
+    ];
+    for (const cd of cubeData) {
+        const size = 0.7;
+        const geo = new THREE.BoxGeometry(size, size, size);
+        const mat = new THREE.MeshStandardMaterial({ color: cd.color, roughness: 0.4 });
+        const cube = new THREE.Mesh(geo, mat);
+        cube.position.set(cd.x, size / 2, cd.z);
+        scene.add(cube);
+        worldObjects.push(cube);
+        cube.userData = { pickable: true, type: 'pickable', cubeColor: cd.color };
+        pickables.push(cube);
+    }
+
+    // Pedestal au fond (revele une clef si puzzle resolu)
+    const pedestal = addBox(1.4, 0.6, 1.4, 0, 0.3, -8, 0x554433);
+    pedestal.userData = { type: 'pedestal' };
+    STATE.weightRoom.pedestal = pedestal;
 }
 
 // --- ORB CHAMBER ---

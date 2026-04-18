@@ -22,6 +22,20 @@ const STATE = {
     worldSeed: 0,
     corridorHistory: [],
     portalCooldown: false,
+    // Mecanique "reculer pour reveler"
+    backwardDiscovered: false,    // active des qu'utilisee dans le corridor
+    visitedRooms: [],             // rooms ou le joueur est passe au moins une fois
+    hubColorsRevealed: false,     // portails colores affiches dans le hub
+    // Sauvegarde (debloquee par la clef de sauvegarde)
+    canSave: false,               // joueur a trouve la clef de sauvegarde
+    saveKeyClaimed: false,        // pour ne pas re-spawn la clef
+    fellInWell: false,            // tombe dans un puit sans fond au moins une fois
+    spawnPosition: { x: 0, y: 2, z: 0 }, // position initiale dans la room courante
+    // Notes interactives (chaque note de la salle des boutons fait quelque chose)
+    canJump: false,               // debloque par la note "avancer" si on recule devant
+    notesActivated: {},           // suivi des notes deja declenchees
+    // Mode debug (Konami)
+    debugMode: false,             // si actif : tout debloque, sauf sauvegarde
     currentChest: null,
     // Pick & throw
     carriedObject: null,
@@ -46,6 +60,10 @@ let worldObjects = [];
 let interactables = [];
 let pickables = [];
 let currentRoom = null;
+// Saut (debloque par la note "Si tu lis ceci, tu devrais avancer." en reculant)
+let isJumping = false;
+let jumpVelY = 0;
+const GROUND_Y = 2;
 
 // Stickman hand
 let handMesh = null;
@@ -68,7 +86,10 @@ const ROOMS = {
     puzzle_9: { color: 0x020008, wallColor: 0x050010, size: { w: 20, h: 6, d: 20 } },
     puzzle_10: { color: 0x000000, wallColor: 0x111111, size: { w: 20, h: 6, d: 20 } },
     labyrinth: { color: 0x050505, wallColor: 0x151515, size: { w: 60, h: 4, d: 60 } },
-    orb_chamber: { color: 0xffffff, wallColor: 0xeeeeee, size: { w: 10, h: 10, d: 10 } }
+    orb_chamber: { color: 0xffffff, wallColor: 0xeeeeee, size: { w: 10, h: 10, d: 10 } },
+    button_room: { color: 0x140020, wallColor: 0x200030, size: { w: 22, h: 7, d: 22 } },
+    cube_room:   { color: 0x101820, wallColor: 0x182838, size: { w: 26, h: 8, d: 26 } },
+    weight_room: { color: 0x1a1a10, wallColor: 0x252518, size: { w: 22, h: 6, d: 22 } }
 };
 
 const ROOM_THEMES = {
@@ -81,7 +102,10 @@ const ROOM_THEMES = {
     puzzle_7:  { name: 'abyss', fog: { color: 0x020202, near: 2, far: 20 }, ambient: { color: 0x111111, intensity: 0.15 }, lights: [{ color: 0x444466, intensity: 0.3, pos: [0,9,0], dist: 15 }], particles: 'abyss' },
     puzzle_8:  { name: 'desert', fog: { color: 0x2a1a0a, near: 5, far: 35 }, ambient: { color: 0xaa8844, intensity: 0.5 }, lights: [{ color: 0xffaa44, intensity: 0.7, pos: [0,4,0], dist: 30 }], particles: 'dust' },
     puzzle_9:  { name: 'neon', fog: { color: 0x020008, near: 5, far: 40 }, ambient: { color: 0x110022, intensity: 0.15 }, lights: [{ color: 0xff00ff, intensity: 0.5, pos: [-4,3,0], dist: 15 }, { color: 0x00ffff, intensity: 0.5, pos: [4,3,0], dist: 15 }], particles: 'neon' },
-    puzzle_10: { name: 'void', fog: { color: 0x000000, near: 3, far: 30 }, ambient: { color: 0x444444, intensity: 0.3 }, lights: [{ color: 0xffffff, intensity: 0.6, pos: [0,5,0], dist: 25 }], particles: 'void' }
+    puzzle_10: { name: 'void', fog: { color: 0x000000, near: 3, far: 30 }, ambient: { color: 0x444444, intensity: 0.3 }, lights: [{ color: 0xffffff, intensity: 0.6, pos: [0,5,0], dist: 25 }], particles: 'void' },
+    button_room: { name: 'absurde', fog: { color: 0x140020, near: 4, far: 30 }, ambient: { color: 0x442266, intensity: 0.4 }, lights: [{ color: 0xff44dd, intensity: 0.6, pos: [-5,5,0], dist: 18 }, { color: 0x44ddff, intensity: 0.6, pos: [5,5,0], dist: 18 }], particles: 'neon' },
+    cube_room:   { name: 'sandbox', fog: { color: 0x101820, near: 8, far: 40 }, ambient: { color: 0x445566, intensity: 0.6 }, lights: [{ color: 0xffffff, intensity: 0.7, pos: [0,7,0], dist: 30 }], particles: 'dust' },
+    weight_room: { name: 'logic',   fog: { color: 0x1a1a10, near: 5, far: 35 }, ambient: { color: 0x665544, intensity: 0.5 }, lights: [{ color: 0xffeecc, intensity: 0.7, pos: [0,5,0], dist: 25 }], particles: null }
 };
 
 // Puzzle combos
@@ -225,6 +249,67 @@ function showHandCarrying(show, color) {
     }
 }
 
+// Bouton plein ecran dans le menu
+window.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('fullscreenBtn');
+    if (btn) {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const el = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (el.requestFullscreen) el.requestFullscreen();
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+    }
+});
+
+// === MODE DEBUG (Code Konami) ===
+const KONAMI_SEQ = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let _konamiIdx = 0;
+window.addEventListener('keydown', (e) => {
+    const expected = KONAMI_SEQ[_konamiIdx];
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === expected) {
+        _konamiIdx++;
+        if (_konamiIdx === KONAMI_SEQ.length) {
+            _konamiIdx = 0;
+            activateDebugMode();
+        }
+    } else {
+        _konamiIdx = (k === KONAMI_SEQ[0]) ? 1 : 0;
+    }
+});
+
+function activateDebugMode() {
+    if (STATE.debugMode) return;
+    STATE.debugMode = true;
+    // Tout debloquer
+    STATE.canJump = true;
+    STATE.canSave = true;          // visible mais sauvegarde bloquee (voir save.js)
+    STATE.saveKeyClaimed = true;
+    STATE.fellInWell = true;
+    STATE.backwardDiscovered = true;
+    STATE.tutorialCompleted = true;
+    STATE.doorsUnlocked = [1,2,3,4,5,6,7,8,9,10];
+    STATE.inventory.keys = 99;
+    // Tous les plans
+    STATE.inventory.plans = [1,2,3,4,5,6,7,8,9,10];
+    // Badge visuel
+    const badge = document.getElementById('debugBadge');
+    if (badge) badge.style.display = 'block';
+    // Notification (uniquement si le jeu a demarre)
+    if (STATE.started && typeof notify === 'function') {
+        notify('◆ MODE DEBUG ACTIVÉ ◆ Tout est débloqué. Sauvegarde désactivée.');
+    }
+    // Si on est dans le hub, recharger pour faire apparaitre le portail tuto
+    if (typeof currentRoom !== 'undefined' && currentRoom && typeof loadRoom === 'function') {
+        loadRoom(currentRoom);
+    }
+}
+
 function startGame(difficulty) {
     dbg('startGame()', difficulty);
     STATE.difficulty = difficulty;
@@ -288,7 +373,19 @@ function animate() {
     const newPos = camera.position.clone();
     newPos.add(forward.multiplyScalar(velocity.z));
     newPos.add(right.multiplyScalar(velocity.x));
-    newPos.y = 2;
+
+    // Saut : si actif on simule la gravite verticale, sinon on colle au sol
+    if (STATE.canJump && isJumping) {
+        jumpVelY += -25 * delta;
+        newPos.y = camera.position.y + jumpVelY * delta;
+        if (newPos.y <= GROUND_Y) {
+            newPos.y = GROUND_Y;
+            jumpVelY = 0;
+            isJumping = false;
+        }
+    } else {
+        newPos.y = GROUND_Y;
+    }
 
     camera.position.copy(checkCollision(newPos));
 
@@ -299,6 +396,11 @@ function animate() {
 
     checkNonEuclidean();
     checkProximity();
+    checkWells();
+    checkWallNotes();
+    checkButtonRoomTimers(delta);
+    checkCubeTarget();
+    checkWeightRoom();
     updateInteractHint();
 
     // Tutorial
