@@ -1,3 +1,5 @@
+---
+---
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -36,7 +38,6 @@
       overflow-x: hidden;
     }
 
-    /* ── Background grid ── */
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: 0;
@@ -47,7 +48,6 @@
       pointer-events: none;
     }
 
-    /* ── Header ── */
     header {
       position: relative; z-index: 10;
       padding: 3rem 2rem 2rem;
@@ -84,7 +84,6 @@
       text-transform: uppercase;
     }
 
-    /* ── Main ── */
     main {
       position: relative; z-index: 1;
       max-width: 1100px;
@@ -92,7 +91,6 @@
       padding: 3rem 1.5rem 5rem;
     }
 
-    /* ── Section titles ── */
     .section-label {
       font-family: 'Cinzel', serif;
       font-size: 0.72rem;
@@ -111,7 +109,6 @@
       background: var(--border);
     }
 
-    /* ── Featured grid ── */
     .featured-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -143,7 +140,6 @@
       border-color: var(--violet);
     }
 
-    /* glow top bar */
     .card-featured::before {
       content: '';
       position: absolute; top: 0; left: 0; right: 0;
@@ -256,7 +252,6 @@
     .card-featured:hover .card-cta { gap: 0.7rem; }
     .card-cta::after { content: '→'; }
 
-    /* ── Mini-games grid ── */
     .mini-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -309,7 +304,6 @@
       line-height: 1.5;
     }
 
-    /* ── Footer ── */
     footer {
       position: relative; z-index: 1;
       text-align: center;
@@ -321,7 +315,6 @@
     footer a { color: var(--gold); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
-    /* ── Responsive ── */
     @media (max-width: 480px) {
       header { padding: 3.5rem 1rem 1.5rem; }
       .site-back { top: 1rem; left: 1rem; }
@@ -340,13 +333,12 @@
 
 <main>
 
-  <!-- FEATURED -->
   <div class="section-label">Jeux complets</div>
   <div class="featured-grid">
 
-    <a class="card-featured" href="fda/">
+    <a class="card-featured" href="/fda/">
       <div class="card-banner card-banner--fda">
-        <img src="fda/assets/fda.webp" alt="Forge des Âges" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <img src="/fda/assets/fda.webp" alt="Forge des Âges" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <span class="card-banner-icon" style="display:none">⚒</span>
       </div>
       <div class="card-body">
@@ -357,19 +349,19 @@
       </div>
     </a>
 
-    <a class="card-featured card-featured--violet" href="eryndor/">
+    <a class="card-featured card-featured--violet" href="/eryndor/">
       <div class="card-banner card-banner--eryndor">
         <span class="card-banner-icon">⚔</span>
       </div>
       <div class="card-body">
         <span class="card-tag card-tag--full">Jeu complet</span>
         <div class="card-title">Eryndor : Duel d'IA</div>
-        <div class="card-desc">Simulation fantasy en mode spectateur. Deux agents Claude (Sonnet vs Haiku par défaut) s'affrontent à la tête des humains et des elfes. Apporte ta clé API au lancement.</div>
+        <div class="card-desc">Simulation fantasy en mode spectateur. Deux agents Claude s'affrontent à la tête des humains et des elfes. Apporte ta clé API au lancement.</div>
         <span class="card-cta">Jouer</span>
       </div>
     </a>
 
-    <a class="card-featured card-featured--cyan" href="orbique/">
+    <a class="card-featured card-featured--cyan" href="/orbique/">
       <div class="card-banner card-banner--orbique">
         <span class="card-banner-icon">🔵</span>
       </div>
@@ -383,11 +375,10 @@
 
   </div>
 
-  <!-- MINI-JEUX -->
   <div class="section-label">Mini-jeux</div>
   <div class="mini-grid">
 
-    <a class="card-mini" href="zentel/zentel.html">
+    <a class="card-mini" href="/zentel/zentel.html">
       <div class="card-mini-header">
         <span class="card-mini-icon">🔮</span>
         <span class="card-mini-title">Zentel</span>
@@ -395,7 +386,7 @@
       <div class="card-mini-desc">Expérimentation visuelle interactive générée avec p5.js.</div>
     </a>
 
-    <a class="card-mini" href="ecosim/ecosystem.html">
+    <a class="card-mini" href="/ecosim/ecosystem.html">
       <div class="card-mini-header">
         <span class="card-mini-icon">🌿</span>
         <span class="card-mini-title">EcoSim</span>
@@ -403,7 +394,7 @@
       <div class="card-mini-desc">Simulation d'écosystème. Créatures, nourriture, prédateurs — observez l'équilibre se construire.</div>
     </a>
 
-    <a class="card-mini" href="conway/">
+    <a class="card-mini" href="/conway/">
       <div class="card-mini-header">
         <span class="card-mini-icon">🧬</span>
         <span class="card-mini-title">Jeu de la Vie</span>
