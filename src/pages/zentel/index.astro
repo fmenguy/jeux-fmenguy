@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zentel -- Arcade FM</title>
+  <title>Zentel · Arcade FM</title>
   <link rel="icon" type="image/x-icon" href="/zentel/assets/zentel.ico" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -83,6 +83,26 @@
       letter-spacing: 0.1em;
       text-shadow: 0 0 12px var(--neon);
       white-space: nowrap;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: text-shadow 0.2s, color 0.2s;
+    }
+    .header-title:hover {
+      color: #fff;
+      text-shadow: 0 0 18px var(--neon), 0 0 4px #fff;
+    }
+    .header-title::after {
+      content: ' ⟳';
+      font-size: 0.85em;
+      opacity: 0.5;
+      transition: opacity 0.2s, transform 0.4s;
+      display: inline-block;
+    }
+    .header-title:hover::after {
+      opacity: 1;
+      transform: rotate(180deg);
     }
 
     .header-stats {
@@ -133,6 +153,44 @@
       color: var(--neon);
       border-color: var(--neon);
       box-shadow: 0 0 8px var(--neon-glow);
+    }
+    .tips-btn { font-size: 0.95rem; }
+    .tips-btn:hover {
+      color: #fde047;
+      border-color: rgba(253,224,71,0.5);
+      box-shadow: 0 0 8px rgba(253,224,71,0.25);
+    }
+
+    /* Liste des astuces */
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      margin: 0.8rem 0;
+    }
+    .tip-item {
+      background: var(--surface);
+      border-left: 3px solid #fde047;
+      padding: 0.6rem 0.9rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      color: var(--text);
+      text-align: left;
+    }
+    .tip-item .tip-source {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+    }
+    .tips-empty {
+      color: var(--muted);
+      font-style: italic;
+      padding: 1rem;
+      text-align: center;
     }
 
     /* ---- Main layout ---- */
@@ -318,6 +376,81 @@
       pointer-events: none;
     }
 
+    /* ---- Debug panel (Konami) ---- */
+    .debug-badge {
+      display: none;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: #ff00ff;
+      border: 1px solid #ff00ff;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 6px #ff00ff;
+      animation: debug-pulse 1.6s ease-in-out infinite;
+    }
+    .debug-badge.on { display: inline-block; }
+    @keyframes debug-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    .debug-panel {
+      display: none;
+      position: fixed;
+      bottom: 70px;
+      right: 12px;
+      z-index: 250;
+      background: rgba(20, 0, 30, 0.95);
+      border: 1px solid #ff00ff;
+      border-radius: 6px;
+      padding: 0.7rem 0.9rem;
+      min-width: 180px;
+      box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+    }
+    .debug-panel.on { display: block; }
+    .debug-panel-title {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: #ff00ff;
+      text-shadow: 0 0 6px #ff00ff;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .debug-close {
+      background: none;
+      border: none;
+      color: #ff00ff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0;
+      line-height: 1;
+    }
+    .debug-btn {
+      display: block;
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      background: rgba(255, 0, 255, 0.08);
+      border: 1px solid rgba(255, 0, 255, 0.4);
+      color: #f0c0ff;
+      padding: 0.32rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 0.3rem;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .debug-btn:last-child { margin-bottom: 0; }
+    .debug-btn:hover {
+      background: rgba(255, 0, 255, 0.18);
+      color: #fff;
+      box-shadow: 0 0 8px rgba(255, 0, 255, 0.3);
+    }
+
     /* ---- Modals ---- */
     .modal-overlay {
       display: none;
@@ -435,7 +568,8 @@
   <!-- ===== HEADER ===== -->
   <header class="header">
     <a href="/" class="back-btn">&#8592; Arcade FM</a>
-    <span class="header-title">ZENTEL</span>
+    <button class="header-title" type="button" onclick="window.location.reload()" title="Cliquer pour relancer le jeu">ZENTEL</button>
+    <span class="debug-badge" id="debug-badge" title="Mode debug actif (Konami)">DEBUG</span>
     <div class="header-stats">
       <div class="stat-chip wave">
         <span class="label">Vague</span>
@@ -453,6 +587,7 @@
         <span class="label">Base</span>
         <span class="val" id="stat-hp">100</span>
       </div>
+      <button class="help-btn tips-btn" id="tips-open-btn" title="Revoir les astuces" style="display:none;">💡</button>
       <button class="help-btn" id="help-open-btn" title="Aide">?</button>
     </div>
   </header>
@@ -569,7 +704,7 @@
   <!-- ===== MODAL : Aide ===== -->
   <div class="modal-overlay" id="help-modal">
     <div class="modal-box help">
-      <h2>Aide -- Zentel</h2>
+      <h2>Aide · Zentel</h2>
 
       <h3>Tourelles</h3>
       <table class="help-table">
@@ -595,7 +730,7 @@
             <td><span class="color-dot" style="background:rgba(100,100,160,0.8)"></span>Barriere Energetique</td>
             <td>5 E</td>
             <td>Mur (50 HP)</td>
-            <td>--</td>
+            <td>aucune</td>
             <td>Debut</td>
           </tr>
         </tbody>
@@ -671,6 +806,31 @@
         <button class="modal-close-btn" id="help-close-btn">Fermer</button>
       </div>
     </div>
+  </div>
+
+  <!-- ===== MODAL : Récap astuces ===== -->
+  <div class="modal-overlay" id="tips-recap-modal">
+    <div class="modal-box">
+      <h2>💡 Astuces vues</h2>
+      <div class="tips-list" id="tips-recap-list">
+        <!-- rempli dynamiquement -->
+      </div>
+      <button class="modal-close-btn" id="close-tips-recap">Fermer</button>
+    </div>
+  </div>
+
+  <!-- ===== PANNEAU DEBUG (Konami) ===== -->
+  <div class="debug-panel" id="debug-panel">
+    <div class="debug-panel-title">
+      <span>◆ DEBUG MODE ◆</span>
+      <button class="debug-close" id="debug-close" type="button" title="Fermer">✕</button>
+    </div>
+    <button class="debug-btn" type="button" data-debug="sim10">Simuler vague 10 (avec setup)</button>
+    <button class="debug-btn" type="button" data-debug="addEnergy">+200 Énergie</button>
+    <button class="debug-btn" type="button" data-debug="addXp">+1000 XP</button>
+    <button class="debug-btn" type="button" data-debug="killAll">Tuer tous les ennemis</button>
+    <button class="debug-btn" type="button" data-debug="healFull">Soigner base (100 HP)</button>
+    <button class="debug-btn" type="button" data-debug="nextWave">Vague suivante (force)</button>
   </div>
 
   <!-- ===== SCRIPT PRINCIPAL ===== -->
@@ -1905,6 +2065,12 @@
       document.getElementById('stat-xp').textContent = xp;
       document.getElementById('stat-hp').textContent = base.hp;
 
+      // Bouton "Astuces vues" : visible des qu'une astuce a ete vue
+      const tipsBtn = document.getElementById('tips-open-btn');
+      if (tipsBtn) {
+        tipsBtn.style.display = (tipModalShown || tipWave6ModalShown) ? 'flex' : 'none';
+      }
+
       // Boutons tourelles
       const meleeBtn = document.getElementById('melee-btn');
       const projBtn  = document.getElementById('projectile-btn');
@@ -2131,6 +2297,136 @@
       });
       document.getElementById('help-close-btn').addEventListener('click', () => {
         closeModal('help-modal');
+      });
+
+      // ============ RÉCAP DES ASTUCES VUES ============
+      const TIPS_DEFINITIONS = [
+        { wave: 1, source: 'Vague 1',
+          text: 'Pense à échanger ton XP en énergie pour poser un nouveau Sabreur Quantique.' },
+        { wave: 6, source: 'Vague 6',
+          text: 'Garde ton XP pour faire évoluer tes tourelles (vague 7+ pour le niveau 2).' },
+      ];
+
+      function openTipsRecap() {
+        const list = document.getElementById('tips-recap-list');
+        const seen = TIPS_DEFINITIONS.filter(t =>
+          (t.wave === 1 && tipModalShown) ||
+          (t.wave === 6 && tipWave6ModalShown)
+        );
+        if (seen.length === 0) {
+          list.innerHTML = '<div class="tips-empty">Aucune astuce vue pour le moment.</div>';
+        } else {
+          list.innerHTML = seen.map(t =>
+            `<div class="tip-item"><span class="tip-source">${t.source}</span>${t.text}</div>`
+          ).join('');
+        }
+        openModal('tips-recap-modal');
+        if (gameState === 'paused') gameState = 'playing';
+      }
+
+      document.getElementById('tips-open-btn').addEventListener('click', openTipsRecap);
+      document.getElementById('close-tips-recap').addEventListener('click', () => {
+        closeModal('tips-recap-modal');
+      });
+      // Fermer en cliquant l'overlay
+      document.getElementById('tips-recap-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'tips-recap-modal') closeModal('tips-recap-modal');
+      });
+
+      // ============ KONAMI CODE + DEBUG MODE ============
+      const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+      let konamiIdx = 0;
+      let debugActive = false;
+
+      window.addEventListener('keydown', (e) => {
+        const expected = KONAMI[konamiIdx];
+        const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        if (key === expected) {
+          konamiIdx++;
+          if (konamiIdx === KONAMI.length) {
+            konamiIdx = 0;
+            activateDebug();
+          }
+        } else {
+          konamiIdx = (key === KONAMI[0]) ? 1 : 0;
+        }
+      });
+
+      function activateDebug() {
+        debugActive = true;
+        document.getElementById('debug-badge').classList.add('on');
+        document.getElementById('debug-panel').classList.add('on');
+        showFeedback('◆ MODE DEBUG ACTIVE ◆', 2500);
+      }
+
+      document.getElementById('debug-close').addEventListener('click', () => {
+        document.getElementById('debug-panel').classList.remove('on');
+      });
+
+      // Helper : place une tourelle de force (sans cout, sans verifs)
+      function debugPlaceTurret(type, gx, gy) {
+        if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) return;
+        if (grid[gx][gy]) return;
+        grid[gx][gy] = type;
+        if (type === 'wall') {
+          modules.push({ x: gx, y: gy, type: 'wall', hp: TURRET_TYPES.wall.hp });
+        } else {
+          modules.push({ x: gx, y: gy, type: type, level: 1 });
+        }
+      }
+
+      // Actions debug
+      document.querySelectorAll('.debug-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.debug;
+          switch (action) {
+            case 'sim10': {
+              // Reset propre puis setup vague 9 (le joueur lance la 10)
+              resetGame();
+              wave = 9;
+              energy = 300;
+              xp = 3000;
+              base.hp = BASE_HP;
+              // Setup defensif : 4 sabreurs colonne 5, 3 archers colonne 9, 2 murs colonne 7
+              const meleePositions   = [[5,2],[5,4],[5,5],[5,7]];
+              const projPositions    = [[9,3],[9,5],[9,7]];
+              const wallPositions    = [[7,4],[7,6]];
+              meleePositions.forEach(([x,y]) => debugPlaceTurret('melee', x, y));
+              projPositions.forEach(([x,y])  => debugPlaceTurret('projectile', x, y));
+              wallPositions.forEach(([x,y])  => debugPlaceTurret('wall', x, y));
+              rechercherCheminsTousEnnemis();
+              gameState = 'playing';
+              loop();
+              updateStats();
+              showFeedback('Vague 10 prete : tourelles posees, lance la vague !', 3000);
+              break;
+            }
+            case 'addEnergy':
+              energy += 200; updateStats();
+              showFeedback('+200 E', 1200);
+              break;
+            case 'addXp':
+              xp += 1000; updateStats();
+              showFeedback('+1000 XP', 1200);
+              break;
+            case 'killAll':
+              if (enemies.length === 0) { showFeedback('Aucun ennemi'); break; }
+              enemies.forEach(e => { xp += (e.type ? e.type.xp : 0) || 0; });
+              enemies = [];
+              updateStats();
+              showFeedback('Ennemis elimines', 1200);
+              break;
+            case 'healFull':
+              base.hp = BASE_HP; updateStats();
+              showFeedback('Base soignee', 1200);
+              break;
+            case 'nextWave':
+              if (enemies.length > 0) { showFeedback('Vague en cours'); break; }
+              if (gameState !== 'playing') gameState = 'playing';
+              spawnWave();
+              break;
+          }
+        });
       });
 
       // Fermer modales en cliquant l'overlay (sauf help qui ferme autrement)
