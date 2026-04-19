@@ -8,6 +8,7 @@ import {
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
 import { resetQuestSig, startNextQuest } from './quests.js'
+import { clearVegetation } from './vegetation.js'
 
 // ============================================================================
 // Persistance localStorage. Une seule slot "auto" pour l'instant.
@@ -113,7 +114,8 @@ function serializeSnapshot() {
     resources: { ...state.resources },
     gameStats: { ...state.gameStats },
     questIndex: state.questIndex,
-    questCompletedAt: state.questCompletedAt
+    questCompletedAt: state.questCompletedAt,
+    season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone }
   }
 }
 
@@ -132,6 +134,7 @@ function clearEverything() {
   state.researchTickAccum = 0
   for (const id in state.techs) state.techs[id].unlocked = false
   clearAllPlacements()
+  clearVegetation()
   clearColonists()
   state.contextBubbles.lastCategoryTriggerAt.clear()
   state.contextBubbles.lastLineByCategory.clear()
@@ -213,6 +216,11 @@ function applySnapshot(data) {
   // quetes : on redemarre a l'index sauve
   state.questIndex = data.questIndex || 0
   state.questCompletedAt = data.questCompletedAt || -1
+  if (data.season) {
+    state.season.idx = data.season.idx || 0
+    state.season.elapsed = data.season.elapsed || 0
+    state.season.cyclesDone = data.season.cyclesDone || 0
+  }
   startNextQuest()
 
   state.lastJobTime = performance.now() / 1000
