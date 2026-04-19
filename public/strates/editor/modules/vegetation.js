@@ -11,9 +11,9 @@ import { SEASONS } from './seasons.js'
 // Les couleurs suivent la saison courante via une mise a jour lente.
 // ============================================================================
 
-const MAX_GRASS = 3500
-const MAX_FLOWERS = 800
-const MAX_WHEAT = 3000
+const MAX_GRASS = 5000
+const MAX_FLOWERS = 1200
+const MAX_WHEAT = 4500
 
 // ---------- brins d'herbe ----------
 const grassGeo = new THREE.BoxGeometry(0.04, 0.22, 0.04)

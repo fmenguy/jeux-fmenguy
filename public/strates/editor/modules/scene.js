@@ -27,7 +27,7 @@ app.appendChild(renderer.domElement)
 
 export const scene = new THREE.Scene()
 scene.background = new THREE.Color(0xcfe6f5)
-scene.fog = new THREE.FogExp2(0xcfe6f5, 0.014)
+scene.fog = new THREE.FogExp2(0xcfe6f5, 0.005)
 
 export const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 800)
 camera.position.set(GRID * 0.9, GRID * 0.7, GRID * 0.9)
@@ -63,7 +63,7 @@ sun.shadow.mapSize.set(2048, 2048)
 sun.shadow.camera.near = 1
 sun.shadow.camera.far = 200
 {
-  const d = 60
+  const d = 80
   sun.shadow.camera.left = -d
   sun.shadow.camera.right = d
   sun.shadow.camera.top = d
