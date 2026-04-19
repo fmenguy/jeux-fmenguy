@@ -6,7 +6,7 @@ import { state } from './modules/state.js'
 import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
-import { refreshBushBerries, countActiveResearchers } from './modules/placements.js'
+import { refreshBushBerries, countActiveResearchers, tickTreeGrowth } from './modules/placements.js'
 import { tryBlockedTechBubble } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests } from './modules/quests.js'
@@ -108,6 +108,7 @@ function tick(nowMs) {
 
   tickSeasons(dt)
   tickVegetationSeasons(dt)
+  tickTreeGrowth(dt)
   tickAudio()
   // HUD saison
   if (!tick._lastSeasonHUD || t - tick._lastSeasonHUD >= 1.0) {
