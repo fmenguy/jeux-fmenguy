@@ -45,7 +45,7 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 - [ ] 2.1 Séparation claire éditeur vs jeu (nouvelle page `play/`)
 - [ ] 2.2 Écran d'accueil `/strates/` (Nouvelle partie, Charger, Éditeur, Crédits)
 - [ ] 2.3 Scénarios prédéfinis (îlot calme, archipel venté, vallée montagneuse)
-- [ ] 2.4 Système d'âges et passage, de l'âge de pierre à l'âge de l'espace
+- [ ] 2.4 Système d'âges et passage, de l'âge de pierre à l'âge de l'espace (voir vision **Tech tree XXL** dans `strates-design-ideas.md` : 7 âges + 6 branches thématiques + 60 à 90 techs en graphe, inspiré Total War Warhammer et Craft the World, passage d'âge à la FDA par conditions cumulatives)
 - [ ] 2.5 Mode campagne / mode sandbox / endgame cyclique (changement de planète)
 
 ### Axe 3, gameplay
