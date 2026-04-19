@@ -3,6 +3,47 @@
 import * as game from './forge-game.js';
 
 // ============================================================
+// 0. Pseudo joueur (stocke en localStorage, demande au 1er contact)
+// ============================================================
+const PSEUDO_KEY = 'fda_playerName';
+function getPseudo() {
+  return localStorage.getItem(PSEUDO_KEY) || '';
+}
+function askPseudo() {
+  // Prompt simple au 1er lancement
+  let name = prompt("Bienvenue dans Forge des Âges ! Quel est ton nom, bâtisseur ?", "");
+  if (name) name = name.trim().slice(0, 24);
+  if (name) {
+    localStorage.setItem(PSEUDO_KEY, name);
+    return name;
+  }
+  return '';
+}
+// Remplace {pseudo} dans un message par le nom du joueur (ou 'Bâtisseur' si vide)
+function personalize(text) {
+  if (!text) return text;
+  const p = getPseudo() || 'Bâtisseur';
+  return text.replace(/\{pseudo\}/g, p);
+}
+// Expose globalement pour les modules qui veulent personnaliser
+window.fdaPersonalize = personalize;
+
+// Observer le narratif pour appliquer la personnalisation en continu
+function setupNarrativePersonalization() {
+  const narr = document.getElementById('narrative');
+  if (!narr) return;
+  // 1) personnalise le texte actuel
+  if (narr.innerHTML.includes('{pseudo}')) narr.innerHTML = personalize(narr.innerHTML);
+  // 2) MutationObserver : toute modif future est aussi personnalisee
+  const obs = new MutationObserver(() => {
+    if (narr.innerHTML.includes('{pseudo}')) {
+      narr.innerHTML = personalize(narr.innerHTML);
+    }
+  });
+  obs.observe(narr, { childList: true, characterData: true, subtree: true });
+}
+
+// ============================================================
 // 1. Objectif Actuel (mirror du systeme d'indices, mis en haut)
 // ============================================================
 const objBox    = () => document.getElementById('currentObjective');
@@ -287,6 +328,19 @@ function renderTechTree() {
       <div class="tech-teaser-label">D'autres âges<br>viendront</div>
     </div>`;
   wrap.appendChild(teaser);
+}
+
+// ============================================================
+// Bulle d'aide sur le claim (message transparent sur le petit lag)
+// ============================================================
+function injectClaimHelpBubble() {
+  const box = document.getElementById('currentObjective');
+  if (!box || document.getElementById('claimHelpBubble')) return;
+  const bubble = document.createElement('div');
+  bubble.id = 'claimHelpBubble';
+  bubble.className = 'claim-help-bubble';
+  bubble.innerHTML = `ℹ N'hésite pas à cliquer plusieurs fois sur <b>Réclamer</b> si ça ne répond pas du 1er coup (petit bug en cours de résolution).`;
+  box.appendChild(bubble);
 }
 
 // ============================================================
@@ -705,6 +759,28 @@ function tick() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Demande le pseudo au 1er contact (ne bloque pas si l'utilisateur annule)
+  if (!getPseudo()) {
+    setTimeout(askPseudo, 600); // petit delai pour laisser l'UI s'afficher
+  }
+  setupNarrativePersonalization();
+
+  // Nudge anti-rush : au tout debut, petit message invitant a la patience.
+  // Affiche une seule fois par partie (ou par navigateur).
+  if (!localStorage.getItem('fda_patienceNudged')) {
+    setTimeout(() => {
+      const narr = document.getElementById('narrative');
+      if (narr) {
+        narr.innerHTML = `Prends ton temps, {pseudo}. Forge des Âges est un jeu lent qui recompense la patience : chaque age se construit sur le precedent. Observe ton Objectif en haut et consulte Sagesses quand tu bloques.`;
+        narr.innerHTML = personalize(narr.innerHTML);
+      }
+      localStorage.setItem('fda_patienceNudged', '1');
+    }, 2000);
+  }
+
+  // Petite bulle d'info sur l'objectif : rappelle qu'il peut y avoir du lag au claim
+  setTimeout(injectClaimHelpBubble, 800);
+
   wireClaim();
   tick();
   setInterval(tick, 1000);
