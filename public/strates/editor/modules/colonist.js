@@ -1,0 +1,630 @@
+import * as THREE from 'three'
+import {
+  GRID, MIN_STRATES, MAX_STRATES, WATER_LEVEL, SHALLOW_WATER_LEVEL,
+  COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
+  MALE_NAMES, FEMALE_NAMES, GENDER_SYMBOLS, GENDER_COLORS,
+  CHIEF_COLOR, SPEECH_LINES, SPEECH_LINES_INSISTENT, COL
+} from './constants.js'
+import { state } from './state.js'
+import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
+import { topVoxelIndex, colorForLayer, isDeepWater } from './terrain.js'
+import { aStar, findApproach } from './pathfind.js'
+import { jobKey, removeJob } from './jobs.js'
+import { findResearchBuildingById, isCellOccupied } from './placements.js'
+import { findNearestBush, refreshBushBerries } from './placements.js'
+import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
+import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
+import { activeSpeakers } from './speech.js'
+
+export const COLONIST_COLORS = [0xffcf6b, 0x6bd0ff, 0xff8a8a, 0xb78aff, 0x8aff9c, 0xffa07a, 0x98ddca]
+
+function pickUniqueName(gender, usedSet) {
+  const pool = gender === 'M' ? MALE_NAMES : FEMALE_NAMES
+  const free = pool.filter(n => !usedSet.has(n))
+  if (free.length > 0) {
+    const n = free[Math.floor(Math.random() * free.length)]
+    usedSet.add(n)
+    return n
+  }
+  const romans = ['II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII']
+  for (const suf of romans) {
+    for (const base of pool) {
+      const candidate = base + ' ' + suf
+      if (!usedSet.has(candidate)) { usedSet.add(candidate); return candidate }
+    }
+  }
+  const fallback = pool[0] + ' #' + usedSet.size
+  usedSet.add(fallback)
+  return fallback
+}
+
+export function topY(x, z) {
+  const t = state.cellTop[z * GRID + x]
+  if (t >= WATER_LEVEL && t <= SHALLOW_WATER_LEVEL) return t - 0.2
+  return t
+}
+
+export function scheduleFlash(x, z) {
+  state.flashes.push({ x, z, t: 0 })
+  const i = topVoxelIndex(x, z)
+  if (i < 0) return
+  state.instanced.setColorAt(i, COL.flash)
+  if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+}
+
+export class Colonist {
+  constructor(id, x, z, opts) {
+    this.id = id
+    this.isChief = false
+    this.x = x; this.z = z
+    this.tx = x + 0.5
+    this.tz = z + 0.5
+    this.ty = topY(x, z)
+    this.vy = 0
+    this.state = 'IDLE'
+    this.path = null
+    this.pathStep = 0
+    this.targetJob = null
+    this.targetBush = null
+    this.targetBuildJob = null
+    this.workTimer = 0
+    this.bounce = 0
+    this.isWandering = false
+    this.wanderPause = 2 + Math.random() * 4
+    this.lookTimer = 1 + Math.random() * 3
+    this.targetYaw = 0
+    this.speechTimer = 0
+    this.nextSpeech = 10 + Math.random() * 10
+    this.lastLine = null
+    this.researchBuildingId = null
+    this.lastContextLine = null
+    if (opts && opts.restore) {
+      const r = opts.restore
+      this.gender = r.gender || 'M'
+      this.name = r.name
+      state.usedNames.add(this.name)
+      this.isChief = !!r.isChief
+      this.researchBuildingId = r.researchBuildingId != null ? r.researchBuildingId : null
+      if (typeof r.ty === 'number') this.ty = r.ty
+      if (r.state) this.state = r.state
+    } else if (opts && opts.forceName) {
+      this.gender = opts.forceGender || 'M'
+      this.name = opts.forceName
+      state.usedNames.add(this.name)
+      this.isChief = !!opts.isChief
+    } else {
+      this.gender = Math.random() < 0.5 ? 'M' : 'F'
+      this.name = pickUniqueName(this.gender, state.usedNames)
+    }
+    this.relationships = new Map()
+    const col = COLONIST_COLORS[id % COLONIST_COLORS.length]
+    this.group = new THREE.Group()
+    const bodyMat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.7, flatShading: true })
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xf3d6a8, roughness: 0.7, flatShading: true })
+    const pantsCol = this.isChief ? 0x6b4a2b : 0x3a3a4a
+    const pantsMat = new THREE.MeshStandardMaterial({ color: pantsCol, roughness: 0.8, flatShading: true })
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.38), bodyMat)
+    body.position.y = 0.78; body.castShadow = true
+    const legGeo = new THREE.BoxGeometry(0.2, 0.5, 0.22)
+    const legL = new THREE.Mesh(legGeo, pantsMat)
+    legL.position.set(-0.14, 0.25, 0); legL.castShadow = true
+    const legR = new THREE.Mesh(legGeo, pantsMat)
+    legR.position.set(0.14, 0.25, 0); legR.castShadow = true
+    this.legL = legL; this.legR = legR
+    const armGeo = new THREE.BoxGeometry(0.16, 0.5, 0.18)
+    const armL = new THREE.Mesh(armGeo, bodyMat)
+    armL.position.set(-0.34, 0.78, 0); armL.castShadow = true
+    const armR = new THREE.Mesh(armGeo, bodyMat)
+    armR.position.set(0.34, 0.78, 0); armR.castShadow = true
+    this.armL = armL; this.armR = armR
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), headMat)
+    head.position.y = 1.28; head.castShadow = true
+    if (this.gender === 'F') {
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.9, flatShading: true })
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.2, 0.46), hairMat)
+      hair.position.y = 1.46; hair.castShadow = true
+      this.group.add(hair)
+    } else {
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x2e2218, roughness: 0.9, flatShading: true })
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, 0.44), hairMat)
+      hair.position.y = 1.51; hair.castShadow = true
+      this.group.add(hair)
+    }
+    if (this.isChief) {
+      const crownMat = new THREE.MeshStandardMaterial({ color: 0xf2c94c, roughness: 0.35, metalness: 0.7, flatShading: true })
+      const crownBase = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), crownMat)
+      crownBase.position.y = 1.58; crownBase.castShadow = true
+      this.group.add(crownBase)
+      const spikeGeo = new THREE.BoxGeometry(0.1, 0.14, 0.1)
+      for (let si = 0; si < 4; si++) {
+        const ang = (si / 4) * Math.PI * 2
+        const spike = new THREE.Mesh(spikeGeo, crownMat)
+        spike.position.set(Math.cos(ang) * 0.18, 1.7, Math.sin(ang) * 0.18)
+        spike.castShadow = true
+        this.group.add(spike)
+      }
+    }
+    this.group.add(body); this.group.add(head)
+    this.group.add(legL); this.group.add(legR)
+    this.group.add(armL); this.group.add(armR)
+    this.group.position.set(this.tx, this.ty, this.tz)
+    scene.add(this.group)
+    this.lineMat = new THREE.LineDashedMaterial({ color: col, dashSize: 0.2, gapSize: 0.15, transparent: true, opacity: 0.6 })
+    this.lineGeo = new THREE.BufferGeometry()
+    this.line = new THREE.Line(this.lineGeo, this.lineMat)
+    scene.add(this.line)
+    this.bubbleCanvas = makeBubbleCanvas()
+    this.bubbleTex = new THREE.CanvasTexture(this.bubbleCanvas)
+    this.bubbleTex.minFilter = THREE.LinearFilter
+    this.bubbleMat = new THREE.SpriteMaterial({ map: this.bubbleTex, transparent: true, depthTest: false, depthWrite: false })
+    this.bubbleMat.opacity = 0
+    this.bubble = new THREE.Sprite(this.bubbleMat)
+    this.bubble.scale.set(2.4, 0.75, 1)
+    this.bubble.position.set(0, 2.75, 0)
+    this.bubble.visible = false
+    this.bubble.renderOrder = 999
+    this.group.add(this.bubble)
+    this.labelCanvas = makeLabelCanvas()
+    drawLabel(this.labelCanvas, this.name, this.gender, this.isChief)
+    this.labelTex = new THREE.CanvasTexture(this.labelCanvas)
+    this.labelTex.minFilter = THREE.LinearFilter
+    this.labelMat = new THREE.SpriteMaterial({ map: this.labelTex, transparent: true, depthTest: false, depthWrite: false })
+    this.label = new THREE.Sprite(this.labelMat)
+    this.label.scale.set(1.35, 0.34, 1)
+    this.label.position.set(0, 1.85, 0)
+    this.label.visible = true
+    this.label.renderOrder = 998
+    this.group.add(this.label)
+  }
+
+  say(line, isHint) {
+    this.lastLine = line
+    this.lastLineHint = !!isHint
+    drawBubble(this.bubbleCanvas, line, !!isHint)
+    this.bubbleTex.needsUpdate = true
+    this.speechTimer = isHint ? 6.0 : 4.0
+    this.bubble.visible = true
+    this.bubbleMat.opacity = 1
+  }
+  sayHint(line) { this.say(line, true) }
+
+  updateSpeech(dt) {
+    if (this.speechTimer <= 0) {
+      if (this.bubble.visible) { this.bubble.visible = false; this.bubbleMat.opacity = 0 }
+      return
+    }
+    this.speechTimer -= dt
+    if (this.speechTimer <= 0.5) {
+      this.bubbleMat.opacity = Math.max(0, this.speechTimer / 0.5)
+    } else {
+      this.bubbleMat.opacity = 1
+    }
+    if (this.speechTimer <= 0) {
+      this.bubble.visible = false
+      this.bubbleMat.opacity = 0
+    }
+  }
+
+  pickWander() {
+    for (let tries = 0; tries < 10; tries++) {
+      const dx = Math.floor((Math.random() * 7) - 3)
+      const dz = Math.floor((Math.random() * 7) - 3)
+      if (dx === 0 && dz === 0) continue
+      const nx = this.x + dx, nz = this.z + dz
+      if (nx < 0 || nz < 0 || nx >= GRID || nz >= GRID) continue
+      const top = state.cellTop[nz * GRID + nx]
+      if (top <= 0) continue
+      if (isDeepWater(nx, nz)) continue
+      let occupied = false
+      for (const other of state.colonists) {
+        if (other === this) continue
+        if (other.x === nx && other.z === nz) { occupied = true; break }
+      }
+      if (occupied) continue
+      const path = aStar(this.x, this.z, nx, nz)
+      if (path && path.length > 1 && path.length < 8) {
+        this.path = path
+        this.pathStep = 0
+        this.isWandering = true
+        this.state = 'MOVING'
+        this.updateTrail()
+        return true
+      }
+    }
+    return false
+  }
+
+  pickJob() {
+    let best = null, bestD = Infinity
+    for (const [, j] of state.jobs) {
+      if (j.claimedBy) continue
+      const d = Math.abs(j.x - this.x) + Math.abs(j.z - this.z)
+      if (d < bestD) { bestD = d; best = j }
+    }
+    if (!best) return false
+    const approach = findApproach(this.x, this.z, best.x, best.z)
+    if (!approach) return false
+    best.claimedBy = this
+    this.targetJob = best
+    this.path = approach.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = false
+    this.updateTrail()
+    return true
+  }
+
+  pickBuildJob() {
+    if (totalBuildStock() <= 0) return false
+    let best = null, bestD = Infinity
+    for (const [, j] of state.buildJobs) {
+      if (j.claimedBy) continue
+      const colonTop = state.cellTop[this.z * GRID + this.x]
+      const targetTop = state.cellTop[j.z * GRID + j.x]
+      if (targetTop - colonTop > 3) continue
+      const d = Math.abs(j.x - this.x) + Math.abs(j.z - this.z)
+      if (d < bestD) { bestD = d; best = j }
+    }
+    if (!best) return false
+    const approach = findApproach(this.x, this.z, best.x, best.z)
+    if (!approach) return false
+    best.claimedBy = this
+    this.targetBuildJob = best
+    this.path = approach.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = false
+    this.updateTrail()
+    return true
+  }
+
+  pickHarvest() {
+    const bush = findNearestBush(this.x, this.z, HARVEST_RADIUS)
+    if (!bush) return false
+    const approach = findApproach(this.x, this.z, bush.x, bush.z)
+    if (!approach) return false
+    bush.claimedBy = this
+    this.targetBush = bush
+    this.path = approach.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = false
+    this.updateTrail()
+    return true
+  }
+
+  updateTrail() {
+    if (!this.path) { this.lineGeo.setFromPoints([]); return }
+    const pts = []
+    for (let i = this.pathStep; i < this.path.length; i++) {
+      const [x, z] = this.path[i]
+      pts.push(new THREE.Vector3(x + 0.5, topY(x, z) + 0.05, z + 0.5))
+    }
+    this.lineGeo.setFromPoints(pts)
+    this.line.computeLineDistances()
+  }
+
+  applyGravity(dt) {
+    const groundY = topY(this.x, this.z)
+    if (this.ty > groundY + 1e-4) {
+      this.vy -= GRAVITY * dt
+      this.ty += this.vy * dt
+      if (this.ty <= groundY) { this.ty = groundY; this.vy = 0 }
+    } else if (this.ty < groundY) {
+      this.ty = groundY; this.vy = 0
+    } else {
+      this.vy = 0
+    }
+  }
+
+  update(dt) {
+    this.applyGravity(dt)
+    this.updateSpeech(dt)
+    if (this.state !== 'MOVING' && this.legL) {
+      const k = Math.min(1, dt * 8)
+      this.legL.rotation.x *= (1 - k)
+      this.legR.rotation.x *= (1 - k)
+      this.armL.rotation.x *= (1 - k)
+      this.armR.rotation.x *= (1 - k)
+    }
+
+    if (this.state === 'RESEARCHING') {
+      this.lineGeo.setFromPoints([])
+      const building = findResearchBuildingById(this.researchBuildingId)
+      if (!building) {
+        this.researchBuildingId = null
+        this.state = 'IDLE'
+        return
+      }
+      const dx = (building.x + 0.5) - this.tx
+      const dz = (building.z + 0.5) - this.tz
+      this.group.rotation.y = Math.atan2(dx, dz)
+      const bob = Math.sin(performance.now() * 0.0025) * 0.06
+      this.group.position.set(this.tx, this.ty + bob, this.tz)
+      this.nextSpeech -= dt
+      if (this.nextSpeech <= 0) {
+        this.nextSpeech = 15 + Math.random() * 10
+      }
+      return
+    }
+
+    if (this.state === 'IDLE') {
+      this.lineGeo.setFromPoints([])
+      if (this.researchBuildingId != null) {
+        const building = findResearchBuildingById(this.researchBuildingId)
+        if (!building) {
+          this.researchBuildingId = null
+        } else {
+          const approach = findApproach(this.x, this.z, building.x, building.z)
+          if (approach) {
+            this.path = approach.path
+            this.pathStep = 0
+            this.state = 'MOVING'
+            this.isWandering = false
+            this.updateTrail()
+            return
+          }
+        }
+      }
+      if (state.jobs.size > 0) { if (this.pickJob()) return }
+      if (state.buildJobs.size > 0) { if (this.pickBuildJob()) return }
+      if (this.pickHarvest()) return
+      this.wanderPause -= dt
+      this.lookTimer -= dt
+      if (this.lookTimer <= 0) {
+        this.targetYaw = this.group.rotation.y + (Math.random() - 0.5) * 1.2
+        this.lookTimer = 1.5 + Math.random() * 3.5
+      }
+      const dy = this.targetYaw - this.group.rotation.y
+      this.group.rotation.y += dy * Math.min(1, dt * 1.5)
+      if (this.wanderPause <= 0) {
+        if (this.pickWander()) this.wanderPause = 2 + Math.random() * 4
+        else this.wanderPause = 1 + Math.random() * 2
+      }
+      this.group.position.set(this.tx, this.ty, this.tz)
+      this.nextSpeech -= dt
+      if (this.nextSpeech <= 0) {
+        if (this.speechTimer <= 0 && activeSpeakers() < 2) {
+          const noJobSince = performance.now() / 1000 - state.lastJobTime
+          const insistent = (state.jobs.size === 0 && noJobSince > 15) && Math.random() < 0.6
+          const pool = insistent ? SPEECH_LINES_INSISTENT : SPEECH_LINES
+          let line, guard = 0
+          do { line = pool[Math.floor(Math.random() * pool.length)]; guard++ }
+          while (line === this.lastLine && guard < 5)
+          this.say(line)
+        }
+        const noJobSince = performance.now() / 1000 - state.lastJobTime
+        const base = (state.jobs.size === 0 && noJobSince > 15) ? 6 : 12
+        this.nextSpeech = base + Math.random() * 8
+      }
+      return
+    }
+
+    if (this.state === 'MOVING') {
+      if (this.isWandering && (state.jobs.size > 0 || state.buildJobs.size > 0 || this.researchBuildingId != null)) {
+        this.isWandering = false
+        this.path = null
+        this.state = 'IDLE'
+        this.lineGeo.setFromPoints([])
+        return
+      }
+      if (!this.path || this.pathStep >= this.path.length) {
+        if (this.isWandering) {
+          this.isWandering = false
+          this.state = 'IDLE'
+          this.path = null
+          this.lineGeo.setFromPoints([])
+          this.wanderPause = 2 + Math.random() * 4
+          return
+        }
+        if (this.researchBuildingId != null && !this.targetJob && !this.targetBush) {
+          this.state = 'RESEARCHING'
+          this.path = null
+          this.lineGeo.setFromPoints([])
+          this.group.position.set(this.tx, this.ty, this.tz)
+          return
+        }
+        this.state = 'WORKING'
+        this.workTimer = 0
+        this.lineGeo.setFromPoints([])
+        return
+      }
+      const [nx, nz] = this.path[this.pathStep]
+      const targetX = nx + 0.5
+      const targetZ = nz + 0.5
+      const dx = targetX - this.tx
+      const dz = targetZ - this.tz
+      const dist = Math.hypot(dx, dz)
+      const speed = this.isWandering ? COLONIST_SPEED * 0.5 : COLONIST_SPEED
+      const step = speed * dt
+      if (dist <= step) {
+        this.tx = targetX; this.tz = targetZ
+        this.x = nx; this.z = nz
+        this.pathStep++
+        this.updateTrail()
+      } else {
+        this.tx += (dx / dist) * step
+        this.tz += (dz / dist) * step
+      }
+      const walkPhase = performance.now() * 0.012
+      const bob = Math.abs(Math.sin(walkPhase)) * 0.05
+      this.group.position.set(this.tx, this.ty + bob, this.tz)
+      this.group.rotation.y = Math.atan2(dx, dz)
+      this.targetYaw = this.group.rotation.y
+      const swing = Math.sin(walkPhase) * 0.6
+      if (this.legL) this.legL.rotation.x = swing
+      if (this.legR) this.legR.rotation.x = -swing
+      if (this.armL) this.armL.rotation.x = -swing
+      if (this.armR) this.armR.rotation.x = swing
+      return
+    }
+
+    if (this.state === 'WORKING') {
+      this.workTimer += dt
+      const focusTarget = this.targetJob || this.targetBush || this.targetBuildJob
+      if (focusTarget) {
+        const dx = (focusTarget.x + 0.5) - this.tx
+        const dz = (focusTarget.z + 0.5) - this.tz
+        this.group.rotation.y = Math.atan2(dx, dz)
+      }
+      this.bounce = Math.sin(this.workTimer * 12) * 0.08
+      const grounded = this.ty <= topY(this.x, this.z) + 1e-4 && this.vy === 0
+      this.group.position.set(this.tx, this.ty + (grounded ? Math.abs(this.bounce) : 0), this.tz)
+      const duration = this.targetBush ? HARVEST_DURATION : (this.targetBuildJob ? 1.5 : WORK_DURATION)
+      if (this.workTimer >= duration) {
+        if (this.targetJob) {
+          const { x, z } = this.targetJob
+          const top = state.cellTop[z * GRID + x]
+          if (top > MIN_STRATES) {
+            const i = state.instanceIndex[z * GRID + x][top - 1]
+            state.instanced.setMatrixAt(i, HIDDEN_MATRIX)
+            state.instanced.instanceMatrix.needsUpdate = true
+            state.cellTop[z * GRID + x] = top - 1
+            scheduleFlash(x, z)
+          }
+          const minedBiome = state.cellBiome[z * GRID + x]
+          incrStockForBiome(minedBiome)
+          removeJob(x, z, true)
+          state.resources.stone++
+          state.gameStats.minesCompleted++
+          this.targetJob = null
+        }
+        if (this.targetBuildJob) {
+          const { x, z } = this.targetBuildJob
+          const top = state.cellTop[z * GRID + x]
+          if (top < MAX_STRATES && consumeBuildStock()) {
+            const biome = state.cellBiome[z * GRID + x]
+            const newY = top
+            const slot = state.nextFreeVoxelIdx++
+            tmpObj.position.set(x + 0.5, newY + 0.5, z + 0.5)
+            tmpObj.rotation.set(0, 0, 0)
+            tmpObj.scale.set(1, 1, 1)
+            tmpObj.updateMatrix()
+            state.instanced.setMatrixAt(slot, tmpObj.matrix)
+            const colTop = colorForLayer(biome, newY, newY + 1)
+            tmpColor.copy(colTop)
+            state.instanced.setColorAt(slot, tmpColor)
+            state.origColor[slot] = tmpColor.clone()
+            const oldTopIdx = state.instanceIndex[z * GRID + x][top - 1]
+            if (oldTopIdx != null) {
+              const under = colorForLayer(biome, top - 1, newY + 1)
+              tmpColor.copy(under)
+              state.instanced.setColorAt(oldTopIdx, tmpColor)
+              state.origColor[oldTopIdx] = tmpColor.clone()
+            }
+            state.instanceIndex[z * GRID + x][newY] = slot
+            state.cellTop[z * GRID + x] = newY + 1
+            state.instanced.instanceMatrix.needsUpdate = true
+            if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+            const k = jobKey(x, z)
+            const m = state.buildMarkers.get(k)
+            if (m) { m.parent.remove(m); state.buildMarkers.delete(k) }
+            state.buildJobs.delete(k)
+          } else {
+            this.targetBuildJob.claimedBy = null
+          }
+          this.targetBuildJob = null
+        }
+        if (this.targetBush) {
+          const bush = this.targetBush
+          const picked = bush.berries
+          if (picked > 0) {
+            bush.berries = 0
+            state.resources.berries += picked
+            state.gameStats.totalBerriesHarvested += picked
+            refreshBushBerries(bush)
+            bush.regenTimer = 0
+          }
+          bush.claimedBy = null
+          this.targetBush = null
+        }
+        this.state = 'IDLE'
+        this.path = null
+        this.group.position.set(this.tx, this.ty, this.tz)
+      }
+    }
+  }
+
+  dispose() {
+    scene.remove(this.group)
+    scene.remove(this.line)
+    this.group.traverse(o => { if (o.material) o.material.dispose?.(); if (o.geometry) o.geometry.dispose?.() })
+    this.lineGeo.dispose()
+    this.lineMat.dispose()
+    this.bubbleTex.dispose()
+    this.bubbleMat.dispose()
+    this.labelTex.dispose()
+    this.labelMat.dispose()
+  }
+}
+
+export function findSpawn() {
+  const cx = Math.floor(GRID / 2), cz = Math.floor(GRID / 2)
+  for (let r = 0; r < 12; r++) {
+    for (let dz = -r; dz <= r; dz++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const x = cx + dx, z = cz + dz
+        if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
+        const top = state.cellTop[z * GRID + x]
+        if (top >= 2 && top <= 4 && state.cellBiome[z * GRID + x] !== 'sand') {
+          return { x, z }
+        }
+      }
+    }
+  }
+  for (let r = 0; r < GRID; r++) {
+    for (let dz = -r; dz <= r; dz++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const x = cx + dx, z = cz + dz
+        if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
+        if (state.cellTop[z * GRID + x] > SHALLOW_WATER_LEVEL) return { x, z }
+      }
+    }
+  }
+  return { x: cx, z: cz }
+}
+
+export function spawnColonist(x, z, opts) {
+  const id = state.colonists.length
+  const c = new Colonist(id, x, z, opts)
+  state.colonists.push(c)
+  return c
+}
+
+export function clearColonists() {
+  for (const c of state.colonists) c.dispose()
+  state.colonists.length = 0
+  state.usedNames.clear()
+}
+
+export function spawnColonsAroundHouse(hx, hz, count) {
+  const spawned = []
+  const tried = new Set()
+  for (let r = 1; r <= 2 && spawned.length < count; r++) {
+    for (let dz = -r; dz <= r && spawned.length < count; dz++) {
+      for (let dx = -r; dx <= r && spawned.length < count; dx++) {
+        if (dx === 0 && dz === 0) continue
+        const x = hx + dx, z = hz + dz
+        if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
+        const k = z * GRID + x
+        if (tried.has(k)) continue
+        tried.add(k)
+        const top = state.cellTop[k]
+        if (top <= SHALLOW_WATER_LEVEL) continue
+        if (isCellOccupied(x, z)) continue
+        let occ = false
+        for (const c of state.colonists) if (c.x === x && c.z === z) { occ = true; break }
+        if (occ) continue
+        spawnColonist(x, z)
+        spawned.push({ x, z })
+      }
+    }
+  }
+  while (spawned.length < count) {
+    const fx = Math.max(0, Math.min(GRID - 1, hx + spawned.length))
+    const fz = Math.max(0, Math.min(GRID - 1, hz))
+    spawnColonist(fx, fz)
+    spawned.push({ x: fx, z: fz })
+  }
+  return spawned
+}
