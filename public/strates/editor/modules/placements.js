@@ -231,6 +231,18 @@ export function removeOresIn(cells) {
   rebuildOres(kept.slice())
 }
 
+export function isTreeOn(x, z) {
+  for (const t of state.trees) if (t.x === x && t.z === z) return true
+  return false
+}
+
+// Abat un arbre et renvoie true si un arbre etait present.
+export function chopTreeAt(x, z) {
+  if (!isTreeOn(x, z)) return false
+  removeTreesIn([{ x, z }])
+  return true
+}
+
 // Extrait le filon d'une cellule et renvoie son type (ex: 'ore-gold'), ou null
 // si pas de filon. Utilise par le colon quand il mine une tuile a filon.
 export function extractOreAt(x, z) {

@@ -168,6 +168,11 @@ export const CONTEXT_COOLDOWN = 45
 export const FIELD_NO_RESEARCH_DELAY_MAX = 30
 
 export const TECH_BUBBLE_LINES = {
+  'axe-stone': [
+    "Il nous faudrait une hache pour cet arbre.",
+    "Sans hache, je ne peux pas l'abattre.",
+    "Taille-moi une hache en pierre avant."
+  ],
   'pick-stone': [
     "Il nous faudrait une pioche en pierre.",
     "Je ne peux pas casser ca sans une meilleure pioche.",
