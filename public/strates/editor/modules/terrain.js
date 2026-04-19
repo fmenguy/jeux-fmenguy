@@ -34,9 +34,10 @@ export function makeHeightmap() {
       const nz = z / GRID - 0.5
       const hill = Math.max(0, 1 - (nx * nx + nz * nz) * 3.2)
       const valley = Math.max(0, 0.7 - Math.abs((x - cx * 0.7) / (GRID * 0.18)))
-      const base = fbm(x * 0.06, z * 0.06, 5)
-      const ridges = Math.abs(fbm(x * 0.11 + 12, z * 0.11 + 8, 3))
-      let elev = 0.6 + base * 1.4 + hill * 3.2 - valley * 1.4 + ridges * 0.8
+      const base = fbm(x * 0.045, z * 0.045, 5)
+      const ridges = Math.abs(fbm(x * 0.085 + 12, z * 0.085 + 8, 4))
+      const peak = Math.pow(Math.max(0, fbm(x * 0.025 + 50, z * 0.025 + 50, 2)), 2) * 4
+      let elev = 0.6 + base * 1.8 + hill * 3.4 - valley * 1.4 + ridges * 1.4 + peak
       elev += Math.max(0, (x - GRID * 0.7) / GRID) * 4.0
 
       const edgeDist = Math.min(x, z, GRID - 1 - x, GRID - 1 - z)
