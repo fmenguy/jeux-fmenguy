@@ -319,7 +319,7 @@ function applyToolAtCell(cell) {
         const k = c.z * GRID + c.x
         if (state.toolState.paintedThisStroke.has('f' + k)) continue
         state.toolState.paintedThisStroke.add('f' + k)
-        if (rng() < 0.6 && !isCellOccupied(c.x, c.z)) addTree(c.x, c.z)
+        if (rng() < 0.6 && !isCellOccupied(c.x, c.z)) addTree(c.x, c.z, { growing: true })
       }
       break
     }
@@ -436,7 +436,7 @@ function applyToolToStrata(cells) {
   for (const c of cells) {
     switch (t) {
       case 'forest':
-        if (!isCellOccupied(c.x, c.z)) addTree(c.x, c.z)
+        if (!isCellOccupied(c.x, c.z)) addTree(c.x, c.z, { growing: true })
         break
       case 'rock':
         if (!isCellOccupied(c.x, c.z)) addRock(c.x, c.z)

@@ -32,7 +32,17 @@ leafMesh.frustumCulled = false
 leafMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_TREES * 3), 3)
 scene.add(leafMesh)
 
-export function addTree(gx, gz) {
+function applyTreeMatrix(t) {
+  const s = t.targetScale * Math.max(0.08, t.growth)
+  tmpObj.position.set(t.x + 0.5 + t.jx, t.top, t.z + 0.5 + t.jz)
+  tmpObj.rotation.set(0, t.rot, 0)
+  tmpObj.scale.setScalar(s)
+  tmpObj.updateMatrix()
+  trunkMesh.setMatrixAt(t.slot, tmpObj.matrix)
+  leafMesh.setMatrixAt(t.slot, tmpObj.matrix)
+}
+
+export function addTree(gx, gz, opts) {
   if (state.trees.length >= MAX_TREES) return
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return
@@ -41,21 +51,24 @@ export function addTree(gx, gz) {
   const jz = (rng() - 0.5) * 0.6
   const scale = 0.8 + rng() * 0.5
   const rot = rng() * Math.PI * 2
-  const i = state.trees.length
-  tmpObj.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
-  tmpObj.rotation.set(0, rot, 0)
-  tmpObj.scale.setScalar(scale)
-  tmpObj.updateMatrix()
-  trunkMesh.setMatrixAt(i, tmpObj.matrix)
-  leafMesh.setMatrixAt(i, tmpObj.matrix)
+  const slot = state.trees.length
+  const growing = opts && opts.growing
+  const entry = {
+    x: gx, z: gz,
+    slot, jx, jz, rot, top,
+    targetScale: scale,
+    growth: (opts && opts.growth != null) ? opts.growth : (growing ? 0.12 : 1)
+  }
+  applyTreeMatrix(entry)
   tmpColor.setHSL(0.28 + (rng() - 0.5) * 0.06, 0.5 + rng() * 0.15, 0.32 + rng() * 0.1)
-  leafMesh.setColorAt(i, tmpColor)
-  trunkMesh.count = i + 1
-  leafMesh.count = i + 1
+  leafMesh.setColorAt(slot, tmpColor)
+  trunkMesh.count = slot + 1
+  leafMesh.count = slot + 1
   trunkMesh.instanceMatrix.needsUpdate = true
   leafMesh.instanceMatrix.needsUpdate = true
   if (leafMesh.instanceColor) leafMesh.instanceColor.needsUpdate = true
-  state.trees.push({ x: gx, z: gz })
+  state.trees.push(entry)
+  return entry
 }
 
 export function removeTreesIn(cells) {
@@ -65,7 +78,24 @@ export function removeTreesIn(cells) {
   if (kept.length === state.trees.length) return
   state.trees.length = 0
   trunkMesh.count = 0; leafMesh.count = 0
-  for (const t of kept) addTree(t.x, t.z)
+  for (const t of kept) addTree(t.x, t.z, { growth: t.growth })
+}
+
+// animation de pousse : chaque arbre avec growth < 1 grandit sur ~12 s
+export function tickTreeGrowth(dt) {
+  let changed = false
+  const RATE = 1 / 12
+  for (const t of state.trees) {
+    if (t.growth < 1) {
+      t.growth = Math.min(1, t.growth + dt * RATE)
+      applyTreeMatrix(t)
+      changed = true
+    }
+  }
+  if (changed) {
+    trunkMesh.instanceMatrix.needsUpdate = true
+    leafMesh.instanceMatrix.needsUpdate = true
+  }
 }
 
 // ============================================================================
