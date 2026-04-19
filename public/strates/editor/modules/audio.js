@@ -1,25 +1,18 @@
 import { state } from './state.js'
+import { SEASONS } from './seasons.js'
 
 // ============================================================================
-// Lecteur audio : une piste par age. Charge les fichiers depuis
-// public/strates/audio/<age>.mp3. Crossfade lent quand l'age change.
-// Bouton HUD pour toggle mute. Etat memorise en localStorage.
-//
-// Pour ajouter une piste : deposer un fichier MP3/OGG dans
-// public/strates/audio/ et l'ajouter a TRACKS ci-dessous.
-// Sources suggerees : pixabay.com/fr/music/, freemusicarchive.org,
-// opengameart.org. Preferer des boucles ambient douces (lofi, piano,
-// flute, harpe, cordes). Duree ideale 2 a 5 minutes.
+// Lecteur audio : une piste par saison. Charge les fichiers depuis
+// public/strates/editor/audio/<saison>.mp3. Crossfade lent quand la saison
+// change. Bouton HUD pour toggle mute. Etat memorise en localStorage.
 // ============================================================================
 
-// Mapping age -> chemin. null si pas de fichier dispo (on reste silencieux).
-// L'age courant est determine par la tech la plus haute debloquee.
+// Mapping saison -> chemin. Les fichiers absents sont ignores silencieusement.
 const TRACKS = {
-  stone:  './audio/stone.mp3',
-  bronze: './audio/bronze.mp3',
-  iron:   './audio/iron.mp3',
-  gold:   './audio/gold.mp3'
-  // plus tard : industrial, modern, atomic, space
+  spring: './audio/printemps.mp3',
+  summer: './audio/ete.mp3',
+  autumn: './audio/automne.mp3',
+  winter: './audio/hiver.mp3'
 }
 
 const LOFI_MUTE_KEY = 'strates-audio-muted'
@@ -27,18 +20,13 @@ const TARGET_VOLUME = 0.55
 const FADE_SECONDS = 2.5
 
 let muted = true
-let current = null          // { age, audio, gain }
-let pending = null          // { age, audio, startAt }
-let lastCheckedAge = null
+let current = null
+let lastCheckedSeason = null
 let fadeInterval = null
 
-function getCurrentAge() {
-  const t = state.techs
-  if (!t) return 'stone'
-  if (t['pick-gold'] && t['pick-gold'].unlocked) return 'gold'
-  if (t['pick-iron'] && t['pick-iron'].unlocked) return 'iron'
-  if (t['pick-bronze'] && t['pick-bronze'].unlocked) return 'bronze'
-  return 'stone'
+function getCurrentSeasonId() {
+  if (state.season && SEASONS[state.season.idx]) return SEASONS[state.season.idx].id
+  return 'spring'
 }
 
 function createAudio(src) {
@@ -57,13 +45,22 @@ function stopFade() {
   }
 }
 
-function crossfadeTo(age) {
-  if (current && current.age === age) return
-  const src = TRACKS[age]
-  if (!src) return
+function crossfadeTo(season) {
+  if (current && current.season === season) return
+  const src = TRACKS[season]
+  if (!src) {
+    // aucune piste pour cette saison, on eteint simplement l'ancienne
+    if (current) {
+      const prev = current
+      current = null
+      try { prev.audio.pause() } catch (e) {}
+      prev.audio.src = ''
+    }
+    return
+  }
   stopFade()
   const prev = current
-  const next = { age, audio: createAudio(src) }
+  const next = { season, audio: createAudio(src) }
   next.audio.addEventListener('error', () => {
     // fichier absent, on abandonne silencieusement
     if (current === next) current = null
@@ -112,7 +109,7 @@ export function setMuted(m) {
   try { localStorage.setItem(LOFI_MUTE_KEY, muted ? '1' : '0') } catch (e) {}
   applyMute()
   updateButton()
-  if (!muted && !current) crossfadeTo(getCurrentAge())
+  if (!muted && !current) crossfadeTo(getCurrentSeasonId())
 }
 
 export function toggleMute() { setMuted(!muted) }
@@ -127,10 +124,10 @@ function updateButton() {
 
 export function tickAudio() {
   if (muted) return
-  const age = getCurrentAge()
-  if (age !== lastCheckedAge) {
-    lastCheckedAge = age
-    crossfadeTo(age)
+  const s = getCurrentSeasonId()
+  if (s !== lastCheckedSeason) {
+    lastCheckedSeason = s
+    crossfadeTo(s)
   }
 }
 
@@ -146,7 +143,7 @@ export function initAudio() {
 
   // demarrage passif au premier geste utilisateur (autoplay policy)
   const onFirstGesture = () => {
-    if (!muted) crossfadeTo(getCurrentAge())
+    if (!muted) crossfadeTo(getCurrentSeasonId())
     window.removeEventListener('pointerdown', onFirstGesture)
     window.removeEventListener('keydown', onFirstGesture)
   }
