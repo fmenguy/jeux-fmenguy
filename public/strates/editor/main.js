@@ -19,6 +19,7 @@ import { hasSave, loadGame, startAutoSave } from './modules/persistence.js'
 import { tickSeasons, currentSeason, forceSeasonRepaint } from './modules/seasons.js'
 import { buildVegetation, tickVegetationSeasons } from './modules/vegetation.js'
 import { initAudio, tickAudio } from './modules/audio.js'
+import { buildFog, tickFog } from './modules/fog.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -35,6 +36,7 @@ if (hasSave('auto') && loadGame('auto')) {
   populateDefaultScene()
 }
 buildVegetation()
+buildFog()
 setTool('nav')
 setBrush(1)
 refreshHUD()
@@ -109,6 +111,7 @@ function tick(nowMs) {
   tickSeasons(dt)
   tickVegetationSeasons(dt)
   tickTreeGrowth(dt)
+  tickFog(dt)
   tickAudio()
   // HUD saison
   if (!tick._lastSeasonHUD || t - tick._lastSeasonHUD >= 1.0) {
