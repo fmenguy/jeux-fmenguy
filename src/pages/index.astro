@@ -289,8 +289,14 @@
       display: flex;
       flex-direction: column;
       gap: 0.6rem;
-      cursor: not-allowed;
-      opacity: 0.85;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+    .card-wip:hover {
+      transform: translateY(-3px);
+      border-color: rgba(245,158,11,0.6);
+      background: var(--surface2);
     }
     .card-wip-header {
       display: flex;
@@ -460,24 +466,21 @@
 
   </div>
 
-  <div class="section-label">À venir</div>
+  <div class="section-label">En développement</div>
   <div class="featured-grid">
 
-    <div class="card-wip">
+    <a class="card-wip" href="/strates/editor/">
       <div class="card-wip-header">
         <span class="card-wip-icon">🌍</span>
         <div>
           <div class="card-wip-title">Strates <span style="font-size:0.65rem;color:#7a8090;font-weight:400;">(titre provisoire)</span></div>
-          <div class="card-wip-subtitle">En conception</div>
+          <div class="card-wip-subtitle">Alpha très précoce</div>
         </div>
       </div>
       <div class="card-wip-desc">
-        Sandbox god-game inspiré de Godus, From Dust et Spore. Terrain sculptable en strates (herbe, terre, roche), génération automatique de plots habitables sur les zones plates, agents autonomes qui cherchent ressources, construisent et forment des villages.
+        Pré-démo d'un sandbox god-game inspiré de Godus, From Dust et Spore. Terrain voxel en strates, colons autonomes, premiers bâtiments. Tout reste à construire, mais c'est jouable.
       </div>
-      <div class="card-wip-refs">
-        Inspirations : Godus (terrain layers, plots), From Dust (Ubisoft, manipulation de matière), Spore (évolution).
-      </div>
-    </div>
+    </a>
 
   </div>
 
