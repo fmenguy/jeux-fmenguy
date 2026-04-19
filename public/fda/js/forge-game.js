@@ -166,9 +166,15 @@ export const shardEffects = [
 
 export const dynamicHints = [
   {
-    condition: () => chief === 0 && axes < 25,
-    message: "Fabrique au moins 25 haches !",
-    cost: { axes: 20, passive: true }, // Vérification passive
+    condition: () => villagers < 5,
+    message: "Attire 5 villageois en récoltant des baies. Ils t'aideront ensuite à fabriquer des outils.",
+    cost: { passive: true },
+    id: "firstVillagers",
+  },
+  {
+    condition: () => villagers >= 5 && chief === 0,
+    message: "Atteins 25 villageois et fabrique-leur à chacun une hache (25 villageois + 25 haches) pour préparer un chef.",
+    cost: { passive: true },
     id: "prepareForChief",
   },
   {
@@ -202,6 +208,12 @@ export const dynamicHints = [
     message: "Construis un puits pour augmenter ton stock d’eau.",
     cost: { water: 100, passive: true }, // Vérification passive
     id: "wellHint",
+  },
+  {
+    condition: () => villagers >= 5 && (currentSeason === 2 || currentSeason === 3) && coats < villagers,
+    message: "L'hiver approche ! Fabrique un manteau pour chacun de tes villageois (1 manteau par habitant).",
+    cost: { passive: true },
+    id: "winterCoats",
   },
   {
     condition: () => tinkers >= 1 && wood >= 100 && stone >= 100,
@@ -509,28 +521,27 @@ export function craftBakery() {
 }
 
 export function craftSawmill() {
-  if (wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture")) {
-    setWood(wood - 50);
-    setStone(stone - 20);
-    setMetals(metals - 5);
+  // Bois et pierre etant des ressources de base, la scierie est dispo des qu'on a un bricoleur.
+  if (wood >= 30 && stone >= 15 && tinkers >= 1) {
+    setWood(wood - 30);
+    setStone(stone - 15);
     setSawmills(sawmills + 1);
     syncVillageBuildings();
     document.getElementById("narrative").textContent = "Une scierie est construite ! Elle produit 0.5 bois par seconde.";
   } else {
-    return { error: "Il te faut 50 bois, 20 pierre, 5 métaux et avoir découvert les métaux ou être dans l’Âge de l’Agriculture !" };
+    return { error: "Il te faut 30 bois, 15 pierre et au moins 1 bricoleur !" };
   }
 }
 
 export function craftStoneQuarry() {
-  if (wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture")) {
-    setWood(wood - 50);
-    setStone(stone - 20);
-    setMetals(metals - 5);
+  if (wood >= 30 && stone >= 15 && tinkers >= 1) {
+    setWood(wood - 30);
+    setStone(stone - 15);
     setStoneQuarries(stoneQuarries + 1);
     syncVillageBuildings();
     document.getElementById("narrative").textContent = "Une carrière de pierre est construite ! Elle produit 0.5 pierre par seconde.";
   } else {
-    return { error: "Il te faut 50 bois, 20 pierre, 5 métaux et être dans l’Âge des Métaux ou l’Âge de l’Agriculture !" };
+    return { error: "Il te faut 30 bois, 15 pierre et au moins 1 bricoleur !" };
   }
 }
 
@@ -1049,6 +1060,21 @@ export function gameLoop() {
 
   if (villagers >= 1 && water === 0) {
     document.getElementById("narrative").textContent = "Attention, un villageois consomme de l’eau ! Puise de l’eau.";
+  }
+
+  // Mort par le froid : pendant l'hiver, si pas assez de manteaux, des villageois meurent.
+  // Frequence : 1 mort par tranche de 30 ticks (30s) si coats < villagers.
+  if (currentSeason === 3 && villagers > coats) {
+    if (typeof gameLoop._coldTick !== 'number') gameLoop._coldTick = 0;
+    gameLoop._coldTick++;
+    if (gameLoop._coldTick >= 30) {
+      gameLoop._coldTick = 0;
+      setVillagers(Math.max(0, villagers - 1));
+      result.alert = `Un villageois est mort de froid ! Il manque ${villagers - 1 - coats} manteau(x).`;
+      document.getElementById("narrative").textContent = "L'hiver est rude... Fabrique vite des manteaux pour les survivants.";
+    }
+  } else {
+    gameLoop._coldTick = 0;
   }
 
   setSeasonTimer(seasonTimer + 1);
