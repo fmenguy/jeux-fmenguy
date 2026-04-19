@@ -1,35 +1,36 @@
 import * as THREE from 'three'
-import { GRID } from './constants.js'
+import { GRID, MAX_STRATES } from './constants.js'
 import { state } from './state.js'
 import { scene, tmpObj } from './scene.js'
 
 // ============================================================================
-// Fog of war style Age of Empires : chaque cellule a 3 etats.
-//   0 = jamais vue (noir opaque)
-//   1 = exploree (gris semi-opaque)
-//   2 = actuellement visible (pas de fog)
+// Fog of war style Age of Empires.
+//   0 = jamais vue : colonne de brume opaque blanc-bleu cotonneux qui cache
+//       completement le contenu de la tuile jusqu'a une hauteur MAX_STRATES+2
+//   1 = exploree : meme colonne mais semi-transparente grise (on voit le
+//       terrain fige)
+//   2 = actuellement visible : pas de fog
 //
-// Chaque entite (colon, maison, labo) a un rayon de vision. Les cellules
-// dans le rayon passent a 2. Les cellules qui etaient a 2 mais ne sont plus
-// en vision passent a 1.
-//
-// Rendu : un InstancedMesh de plans carres, un par cellule. Scale 1 si fog,
-// 0 si visible. Couleur noir/gris selon etat.
+// Les entites (arbres, rochers, filons, buissons, maisons, labos, colons)
+// sont masquees quand leur tuile est a 0. Visibles si 1 ou 2. Les colons
+// sont toujours visibles car ils bougent et rendraient le jeu incompreh.
 // ============================================================================
 
 const COLONIST_VIEW = 7
 const HOUSE_VIEW = 10
 const RESEARCH_VIEW = 12
 
-const fogGeo = new THREE.PlaneGeometry(1.01, 1.01)
-fogGeo.rotateX(-Math.PI / 2)
+// Colonne de brume : un cube plat et haut qui depasse au-dessus du voxel top
+// pour couvrir arbres et batiments.
+const FOG_HEIGHT = MAX_STRATES + 3
+const fogGeo = new THREE.BoxGeometry(1.02, FOG_HEIGHT, 1.02)
+fogGeo.translate(0, FOG_HEIGHT / 2, 0)
 const fogMat = new THREE.MeshBasicMaterial({
   color: 0xffffff,
   transparent: true,
-  opacity: 1,
+  opacity: 0.95,
   depthWrite: false
 })
-// instanceColor pour distinguer unseen (noir opaque) vs explored (gris opaque)
 export const fogMesh = new THREE.InstancedMesh(fogGeo, fogMat, GRID * GRID)
 fogMesh.frustumCulled = false
 fogMesh.renderOrder = 500
@@ -39,19 +40,17 @@ scene.add(fogMesh)
 const HIDDEN_MATRIX = new THREE.Matrix4().makeScale(0, 0, 0)
 const tmpCol = new THREE.Color()
 
+// palettes brume
+const COL_UNSEEN = new THREE.Color(0.82, 0.86, 0.92)   // blanc-bleu cotonneux
+const COL_EXPLORED = new THREE.Color(0.52, 0.56, 0.62) // gris plus sombre
+
 let built = false
 
 export function buildFog() {
   if (!state.visited) state.visited = new Uint8Array(GRID * GRID)
-  fogMesh.count = GRID * GRID
-  for (let z = 0; z < GRID; z++) {
-    for (let x = 0; x < GRID; x++) {
-      const idx = z * GRID + x
-      placeFogCell(x, z, idx, state.visited[idx])
-    }
-  }
-  fogMesh.instanceMatrix.needsUpdate = true
-  if (fogMesh.instanceColor) fogMesh.instanceColor.needsUpdate = true
+  // revelation initiale immediate autour des entites pour que le camp soit
+  // visible des le premier frame au lieu d'attendre 0.6s
+  recomputeVisibility(true)
   built = true
 }
 
@@ -61,21 +60,14 @@ function placeFogCell(x, z, idx, visState) {
     return
   }
   const top = state.cellTop ? state.cellTop[idx] : 0
-  tmpObj.position.set(x + 0.5, top + 0.02, z + 0.5)
+  tmpObj.position.set(x + 0.5, top, z + 0.5)
   tmpObj.rotation.set(0, 0, 0)
   tmpObj.scale.set(1, 1, 1)
   tmpObj.updateMatrix()
   fogMesh.setMatrixAt(idx, tmpObj.matrix)
-  if (visState === 0) tmpCol.setRGB(0.02, 0.02, 0.04)
-  else tmpCol.setRGB(0.18, 0.20, 0.25)
+  if (visState === 0) tmpCol.copy(COL_UNSEEN)
+  else tmpCol.copy(COL_EXPLORED)
   fogMesh.setColorAt(idx, tmpCol)
-  // alpha via couleur (l'opacity est 1 sur le material pour ne pas re-setter)
-  // Pour avoir une "alpha" par instance, on joue sur le fait que instanceColor
-  // est un multiplicateur ; ici on veut un voile assez opaque donc on laisse
-  // la couleur sombre faire le travail. On ajoute un discard via scale Y
-  // pour explored vs unseen ?
-  // Plus simple : explored = plane plus mince (scale Y = 0.5) pour laisser
-  // voir un peu en dessous si on rend en cherchant l'effet.
 }
 
 let accum = 0
@@ -106,17 +98,14 @@ function revealAround(cx, cz, radius) {
   }
 }
 
-function recomputeVisibility() {
+function recomputeVisibility(forceApply) {
   if (!state.visited) return
-  // d'abord : toutes les cellules "2" (visibles) passent a "1" (exploree)
   for (let i = 0; i < state.visited.length; i++) {
     if (state.visited[i] === 2) state.visited[i] = 1
   }
-  // puis : on revele autour de chaque entite
   for (const c of state.colonists) revealAround(c.tx, c.tz, COLONIST_VIEW)
   for (const h of state.houses) revealAround(h.x + 0.5, h.z + 0.5, HOUSE_VIEW)
   for (const r of state.researchHouses) revealAround(r.x + 0.5, r.z + 0.5, RESEARCH_VIEW)
-  // update visuel
   for (let z = 0; z < GRID; z++) {
     for (let x = 0; x < GRID; x++) {
       const idx = z * GRID + x
@@ -125,6 +114,22 @@ function recomputeVisibility() {
   }
   fogMesh.instanceMatrix.needsUpdate = true
   if (fogMesh.instanceColor) fogMesh.instanceColor.needsUpdate = true
+  applyEntityVisibility()
+  void forceApply
+}
+
+// Masque les entites dont la tuile est "jamais vue" (0). En "explored" (1)
+// ou "visible" (2) elles sont affichees (snapshot ou live).
+function applyEntityVisibility() {
+  // houses / research: Groups Three.js
+  for (const h of state.houses) {
+    const hidden = state.visited[h.z * GRID + h.x] === 0
+    if (h.group) h.group.visible = !hidden
+  }
+  for (const r of state.researchHouses) {
+    const hidden = state.visited[r.z * GRID + r.x] === 0
+    if (r.group) r.group.visible = !hidden
+  }
 }
 
 export function clearFog() {
