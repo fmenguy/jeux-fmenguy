@@ -3,14 +3,14 @@ import {
   GRID, MIN_STRATES, MAX_STRATES, WATER_LEVEL, SHALLOW_WATER_LEVEL,
   COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
   MALE_NAMES, FEMALE_NAMES, GENDER_SYMBOLS, GENDER_COLORS,
-  CHIEF_COLOR, SPEECH_LINES, SPEECH_LINES_INSISTENT, COL
+  CHIEF_COLOR, SPEECH_LINES, SPEECH_LINES_INSISTENT, COL, ORE_TO_STOCK
 } from './constants.js'
 import { state } from './state.js'
 import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
 import { topVoxelIndex, colorForLayer, isDeepWater } from './terrain.js'
 import { aStar, findApproach } from './pathfind.js'
 import { jobKey, removeJob } from './jobs.js'
-import { findResearchBuildingById, isCellOccupied } from './placements.js'
+import { findResearchBuildingById, isCellOccupied, extractOreAt } from './placements.js'
 import { findNearestBush, refreshBushBerries } from './placements.js'
 import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
@@ -474,19 +474,30 @@ export class Colonist {
       if (this.workTimer >= duration) {
         if (this.targetJob) {
           const { x, z } = this.targetJob
-          const top = state.cellTop[z * GRID + x]
-          if (top > MIN_STRATES) {
-            const i = state.instanceIndex[z * GRID + x][top - 1]
-            state.instanced.setMatrixAt(i, HIDDEN_MATRIX)
-            state.instanced.instanceMatrix.needsUpdate = true
-            state.cellTop[z * GRID + x] = top - 1
+          // Extraction de filon prioritaire : on retire le filon et on
+          // remplit le stock minerai, sans entamer le voxel sous.
+          const oreType = extractOreAt(x, z)
+          if (oreType) {
+            const stockKey = ORE_TO_STOCK[oreType]
+            if (stockKey && state.stocks[stockKey] != null) state.stocks[stockKey]++
             scheduleFlash(x, z)
+            removeJob(x, z, true)
+            state.gameStats.minesCompleted++
+          } else {
+            const top = state.cellTop[z * GRID + x]
+            if (top > MIN_STRATES) {
+              const i = state.instanceIndex[z * GRID + x][top - 1]
+              state.instanced.setMatrixAt(i, HIDDEN_MATRIX)
+              state.instanced.instanceMatrix.needsUpdate = true
+              state.cellTop[z * GRID + x] = top - 1
+              scheduleFlash(x, z)
+            }
+            const minedBiome = state.cellBiome[z * GRID + x]
+            incrStockForBiome(minedBiome)
+            removeJob(x, z, true)
+            state.resources.stone++
+            state.gameStats.minesCompleted++
           }
-          const minedBiome = state.cellBiome[z * GRID + x]
-          incrStockForBiome(minedBiome)
-          removeJob(x, z, true)
-          state.resources.stone++
-          state.gameStats.minesCompleted++
           this.targetJob = null
         }
         if (this.targetBuildJob) {

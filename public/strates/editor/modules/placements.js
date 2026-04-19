@@ -231,6 +231,16 @@ export function removeOresIn(cells) {
   rebuildOres(kept.slice())
 }
 
+// Extrait le filon d'une cellule et renvoie son type (ex: 'ore-gold'), ou null
+// si pas de filon. Utilise par le colon quand il mine une tuile a filon.
+export function extractOreAt(x, z) {
+  const k = z * GRID + x
+  const type = state.cellOre[k]
+  if (!type) return null
+  removeOresIn([{ x, z }])
+  return type
+}
+
 // ============================================================================
 // Buissons de baies
 // ============================================================================
@@ -557,5 +567,8 @@ export function isBushOn(x, z) {
   return false
 }
 export function isMineBlocked(x, z) {
-  return isHouseOn(x, z) || isOreOn(x, z) || isBushOn(x, z)
+  // Les filons ne sont plus bloquants : on "mine" un filon pour l'extraire
+  // (retire le filon, remplit le stock minerai, le voxel sous reste en place).
+  // Seules les maisons et buissons restent bloquants.
+  return isHouseOn(x, z) || isBushOn(x, z)
 }

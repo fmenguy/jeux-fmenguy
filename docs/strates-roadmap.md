@@ -50,7 +50,7 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 
 ### Axe 3, gameplay
 
-- [ ] 3.1 Extraction dédiée des filons (outil séparé, remplit stocks)
+- [x] 3.1 Extraction dédiée des filons (livré session 6 : mine = extraction si filon présent, gating tech, stocks remplis)
 - [ ] 3.2 Outils et métiers spécialisés (hache, pelle, houe, faucille, marteau, canne)
 - [ ] 3.3 Interface gestion des rôles par colon (cases à cocher, priorités)
 - [ ] 3.4 Besoins vitaux (faim, sommeil, social) + cycle jour/nuit mécanique
