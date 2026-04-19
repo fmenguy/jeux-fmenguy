@@ -4,6 +4,29 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-19 (session 4) : Modularisation ES6 et persistance localStorage
+
+### Modularisation (axe technique 1.1)
+- Découpage de `main.js` (3533 lignes) en 18 modules ES6 natifs dans `public/strates/editor/modules/` : `constants`, `state`, `rng`, `scene`, `terrain`, `placements`, `stocks`, `tech`, `pathfind`, `jobs`, `bubbles`, `speech`, `colonist`, `quests`, `worldgen`, `interaction`, `camera-pan`, `hud`.
+- `main.js` devient un bootstrap de 25 lignes qui importe et démarre la tick loop.
+- Pas de bundler, imports ES6 natifs relatifs, importmap Three.js inchangée.
+- Etat mutable partagé via un objet container `state` exporté par `state.js` (contourne les limites des `let` exportés).
+- PRNG réassignable via container `prng` pour permettre à worldgen de changer le seed.
+- Aucune régression fonctionnelle (terrain, colons, pathfind, bulles, jobs, tech tree, Shift+strate, ZQSD, quêtes).
+
+### Persistance localStorage (axe technique 1.2)
+- Nouveau module `persistence.js` avec `saveGame`, `loadGame`, `hasSave`, `deleteSave`, `startAutoSave`.
+- Format JSON versionné (v1), clé `strates-save-auto`.
+- Sauvegarde complète du terrain (heightmap, biomeNoise, cellTop, cellBiome, cellSurface, cellOre), des entités (arbres, rochers, filons, buissons, maisons, labo), des colons (id, nom, genre, chef, position, état, labo assigné), des jobs, stocks, techs, ressources, stats, quêtes.
+- Sauvegarde auto toutes les 30 s, au `beforeunload` et au passage en onglet caché.
+- Au démarrage, si une save existe elle est chargée automatiquement, sinon `populateDefaultScene` génère un monde neuf.
+- Nouveaux boutons HUD : "Sauver" (manuel), "Charger" (recharge la save auto), "Nouvelle" (confirme puis efface la save et regénère).
+- Reconstruction du terrain via nouvelle fonction `rebuildTerrainFromState()` dans `terrain.js` qui recrée l'InstancedMesh sans régénérer le Perlin.
+- `Colonist` accepte désormais une option `restore` pour forcer nom, genre, chef, ty, state, researchBuildingId.
+- `addBush` retourne désormais le bush créé (au lieu de `true`) pour permettre la restauration des baies et regenTimer.
+
+---
+
 ## 2026-04-19 (session 3) : Colons vivants, hints, tech tree visuel, monde peuplé
 
 ### Colons enrichis
