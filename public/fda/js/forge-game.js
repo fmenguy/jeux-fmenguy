@@ -417,19 +417,19 @@ export function craftRemedy() {
   }
 }
 
+function hasRoomForBuilding() {
+  return villagesData.some(v => v.buildings.filter(b => b !== "well").length < maxBuildingsPerVillage);
+}
+
 export function craftMine() {
-  const canAddBuilding = villagesData.some(village => village.buildings.length < maxBuildingsPerVillage);
-  const minersRequired = mines > 0 ? 25 : 0; // 25 mineurs requis uniquement pour les mines supplémentaires
+  const canAddBuilding = hasRoomForBuilding();
+  const minersRequired = mines > 0 ? 25 : 0;
   if (wood >= 50 && stone >= 20 && tinkers >= 1 && miners >= minersRequired && discoveredMetals && canAddBuilding) {
     setWood(wood - 50);
     setStone(stone - 20);
     setMines(mines + 1);
+    syncVillageBuildings();
     document.getElementById("narrative").textContent = "Une mine est construite ! Tu peux maintenant extraire des métaux.";
-
-    const villageIndex = villagesData.findIndex(village => village.buildings.length < maxBuildingsPerVillage);
-    if (villageIndex !== -1) {
-      villagesData[villageIndex].buildings.push("mine");
-    }
   } else {
     let reasons = [];
     if (wood < 50) reasons.push("pas assez de bois (" + wood + "/50)");
@@ -437,12 +437,13 @@ export function craftMine() {
     if (tinkers < 1) reasons.push("pas assez de bricoleurs (" + tinkers + "/1)");
     if (miners < minersRequired) reasons.push("pas assez de mineurs (" + miners + "/" + minersRequired + ")");
     if (!discoveredMetals) reasons.push("métaux non découverts");
-    if (!canAddBuilding) reasons.push("limite de bâtiments atteinte dans tous les villages");
+    if (!canAddBuilding) reasons.push("village plein ! Fonde un nouveau village");
     return { error: "Il te faut 50 bois, 20 pierre, 1 bricoleur" + (minersRequired > 0 ? ", 25 mineurs" : "") + " et les métaux découverts ! " + reasons.join(", ") };
   }
 }
 
 export function craftWorkshop() {
+  if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
   if (wood >= 20 && stone >= 10 && fibers >= 5 && discoveredFibers) {
     setWood(wood - 20);
     setStone(stone - 10);
@@ -457,6 +458,7 @@ export function craftWorkshop() {
 }
 
 export function craftHerbalist() {
+  if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
   if (wood >= 15 && stone >= 5 && herbs >= 5 && discoveredHerbs) {
     setWood(wood - 15);
     setStone(stone - 5);
@@ -472,6 +474,7 @@ export function craftHerbalist() {
 }
 
 export function craftWheatField() {
+  if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
   if (wood >= 20 && stone >= 10 && herbs >= 5 && discoveredHerbs) {
     setWood(wood - 20);
     setStone(stone - 10);
@@ -486,6 +489,7 @@ export function craftWheatField() {
 }
 
 export function craftMill() {
+  if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
   if (wood >= 50 && stone >= 20 && metals >= 5 && wheatFields > 0) {
     setWood(wood - 50);
     setStone(stone - 20);
@@ -503,6 +507,7 @@ export function craftMill() {
 }
 
 export function craftBakery() {
+  if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
   if (wood >= 50 && stone >= 20 && flour >= 5 && currentAge === "Âge de l’Agriculture") {
     setWood(wood - 50);
     setStone(stone - 20);
@@ -521,7 +526,7 @@ export function craftBakery() {
 }
 
 export function craftSawmill() {
-  // Bois et pierre etant des ressources de base, la scierie est dispo des qu'on a un bricoleur.
+  if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
   if (wood >= 30 && stone >= 15 && tinkers >= 1) {
     setWood(wood - 30);
     setStone(stone - 15);
@@ -534,6 +539,7 @@ export function craftSawmill() {
 }
 
 export function craftStoneQuarry() {
+  if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
   if (wood >= 30 && stone >= 15 && tinkers >= 1) {
     setWood(wood - 30);
     setStone(stone - 15);
@@ -546,6 +552,7 @@ export function craftStoneQuarry() {
 }
 
 export function craftWarehouse() {
+  if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
   if (wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture")) {
     setWood(wood - 100);
     setStone(stone - 50);
@@ -806,11 +813,9 @@ export function assignBuildingsToVillages() {
 }
 
 export function syncVillageBuildings() {
-  villagesData.forEach(village => {
-    village.buildings = [];
-  });
+  villagesData.forEach(village => { village.buildings = []; });
 
-  const buildingTypes = [
+  const limitedTypes = [
     { type: "mine", count: mines },
     { type: "workshop", count: workshops },
     { type: "herbalist", count: herbalists },
@@ -822,16 +827,32 @@ export function syncVillageBuildings() {
     { type: "warehouse", count: warehouses },
   ];
 
-  buildingTypes.forEach(({ type, count }) => {
-    let remaining = count;
-    let villageIndex = 0;
-
-    while (remaining > 0 && villageIndex < villagesData.length) {
-      villagesData[villageIndex].buildings.push(type);
-      remaining--;
-      villageIndex = (villageIndex + 1) % villagesData.length;
+  for (const { type, count } of limitedTypes) {
+    let placed = 0;
+    let startIdx = 0;
+    while (placed < count) {
+      let found = false;
+      for (let a = 0; a < villagesData.length; a++) {
+        const vi = (startIdx + a) % villagesData.length;
+        const n = villagesData[vi].buildings.filter(b => b !== "well").length;
+        if (n < maxBuildingsPerVillage) {
+          villagesData[vi].buildings.push(type);
+          startIdx = vi;
+          placed++;
+          found = true;
+          break;
+        }
+      }
+      if (!found) break; // Plus de place dans aucun village
     }
-  });
+  }
+
+  // Puits : illimités, distribués en round-robin
+  let wi = 0;
+  for (let i = 0; i < wells; i++) {
+    villagesData[wi % villagesData.length].buildings.push("well");
+    wi++;
+  }
 }
 
 export function seekShard() {
