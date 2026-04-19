@@ -4,6 +4,25 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-19 (session 6) : Extraction des filons (axe 3.1)
+
+### Extraction
+- Les filons sont désormais récoltables via l'outil **Miner (2)**.
+- Le colon se rend sur la tuile du filon, anime le minage, puis :
+  - **si cellule avec filon** : retire le filon, incrémente le stock correspondant (`copper`, `iron`, `coal`, `silver`, `gold`, `amethyst`), laisse le voxel sous intact.
+  - **sinon** : minage normal, retire le voxel top, incrémente `stone` ou `dirt`.
+- `extractOreAt(x, z)` dans `placements.js` retire proprement le filon et renvoie son type.
+- `isMineBlocked` allégé : ne bloque plus sur filon, seulement maison et buisson.
+
+### Gating tech côté joueur
+- `applyToolAtCell` et `applyToolToStrata` appellent désormais `canMineCell` avant `addJob` et enregistrent `lastBlockedMineTech` si la tech manque, ce qui déclenche la bulle indice bleue.
+- Le minerai suit le mapping `ORE_TECH` existant : cuivre/charbon → `pick-bronze`, fer/argent → `pick-iron`, or/améthyste → `pick-gold`.
+
+### Doc
+- Panneau d'aide mis à jour : section dédiée à l'extraction des filons.
+
+---
+
 ## 2026-04-19 (session 5) : Saisons, audio lofi, décorations végétales
 
 ### Cycle de saisons
