@@ -48,7 +48,7 @@ export function refreshStocksLine() {
   for (const k of STOCK_KEYS) {
     if (state.stocks[k] > 0) parts.push(STOCK_LABELS[k] + ' ' + state.stocks[k])
   }
-  stocksLineEl.textContent = 'Stocks: ' + (parts.length ? parts.join(', ') : 'vide')
+  stocksLineEl.textContent = 'Stocks : ' + (parts.length ? parts.join(', ') : 'vide')
 }
 
 export function refreshTechsPanel() {
@@ -126,20 +126,31 @@ export function refreshHUD() {
   refreshTechsPanel()
 }
 
+function stateLabel(c) {
+  if (c.isWandering) return 'flâne'
+  switch (c.state) {
+    case 'IDLE': return 'repos'
+    case 'MOVING': return 'marche'
+    case 'WORKING': return 'travaille'
+    case 'RESEARCHING': return 'recherche'
+    default: return c.state
+  }
+}
+
 let lastColonsListSig = ''
 export function updateColonsList() {
   if (!colonsListEl) return
   if (colonsListEl.classList.contains('hidden')) return
   let sig = ''
   for (const c of state.colonists) {
-    const st = c.isWandering ? 'WANDER' : (c.state === 'RESEARCHING' ? 'RESEARCH' : c.state)
+    const st = stateLabel(c)
     sig += c.id + ':' + c.name + ':' + c.gender + ':' + (c.isChief ? 'C' : '') + ':' + st + '|'
   }
   if (sig === lastColonsListSig) return
   lastColonsListSig = sig
   const parts = []
   for (const c of state.colonists) {
-    const st = c.isWandering ? 'WANDER' : (c.state === 'RESEARCHING' ? 'RESEARCH' : c.state)
+    const st = stateLabel(c)
     const sym = GENDER_SYMBOLS[c.gender]
     const chiefMark = c.isChief
       ? '<span class="cchief" style="color:' + CHIEF_COLOR + ';margin-right:4px;">' + CHIEF_STAR + '</span>'
