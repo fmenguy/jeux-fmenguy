@@ -961,14 +961,16 @@ function generateCorridorSegments(startZ) {
 }
 
 // --- LABYRINTH ---
+// Maze 11x11 (DFS recursive backtracker). Cellules carved = indices IMPAIRS uniquement.
+// Donc l'orbe et le spawn doivent etre sur des cellules impair-impair pour etre accessibles.
 function buildLabyrinth() {
-    camera.position.set(0, 2, 28);
-
-    const maze = generateMaze(15, 15);
+    const mazeW = 11, mazeH = 11;
     const cellSize = 4;
-    const offsetX = -30;
-    const offsetZ = -30;
+    const offsetX = -(mazeW * cellSize) / 2;
+    const offsetZ = -(mazeH * cellSize) / 2;
+    const maze = generateMaze(mazeW, mazeH);
 
+    // Construction des murs
     for (let y = 0; y < maze.length; y++) {
         for (let x = 0; x < maze[y].length; x++) {
             if (maze[y][x] === 1) {
@@ -979,23 +981,94 @@ function buildLabyrinth() {
         }
     }
 
+    // Spawn DANS la maze a la cellule (1,1) (toujours carved, premier carve)
+    const spawnX = offsetX + 1 * cellSize;
+    const spawnZ = offsetZ + 1 * cellSize;
+    camera.position.set(spawnX, 2, spawnZ);
+    STATE.spawnPosition = { x: spawnX, y: 2, z: spawnZ };
+    // Caméra regarde vers le sud-est (loin de l'entree, vers l'interieur)
+    if (typeof euler !== 'undefined') {
+        euler.set(0, -Math.PI / 4, 0, 'YXZ');
+        camera.quaternion.setFromEuler(euler);
+    }
+
+    // Portail de retour vers le hub : colle au spawn pour pouvoir ressortir facilement
+    addBox(2, 3, 0.3, spawnX, 1.5, spawnZ - 1.6, 0x333333, {
+        type: 'portal', target: 'hub',
+        label: t('back')
+    });
+    // Petite lumiere sur le portail pour le reperer
+    const backLt = new THREE.PointLight(0x88ccff, 0.8, 6);
+    backLt.position.set(spawnX, 2.5, spawnZ - 1.6);
+    scene.add(backLt); worldObjects.push(backLt);
+
+    // Orbe : cellule (mazeW-2, mazeH-2) = (9, 9) garantie carved (toujours impaire)
+    let orbCellX = mazeW - 2, orbCellY = mazeH - 2;
     if (STATE.inventory.plans.length >= STATE.totalPlans) {
         const orbColor = !STATE.inventory.orbs.whiteI ? 0xffffff : 0x000000;
         const orbId = !STATE.inventory.orbs.whiteI ? 'whiteI' :
                      !STATE.inventory.orbs.blackI ? 'blackI' :
                      !STATE.inventory.orbs.whiteII ? 'whiteII' : 'blackII';
 
-        addSphere(0.5, offsetX + 14 * cellSize, 1.5, offsetZ + 14 * cellSize, orbColor, {
+        const orbX = offsetX + orbCellX * cellSize;
+        const orbZ = offsetZ + orbCellY * cellSize;
+        const orbMesh = addSphere(0.5, orbX, 1.5, orbZ, orbColor, {
             type: 'orb',
             orbId: orbId,
+            pickable: true,
             label: orbColor === 0xffffff ? t('orbWhite') : t('orbBlack')
         });
-    }
+        if (orbMesh) pickables.push(orbMesh);
+        // Halo visible de loin
+        const orbLt = new THREE.PointLight(orbColor === 0xffffff ? 0xffffff : 0x6688ff, 1.2, 8);
+        orbLt.position.set(orbX, 2.2, orbZ);
+        scene.add(orbLt); worldObjects.push(orbLt);
 
-    addBox(2, 3, 0.3, 0, 1.5, 29, 0x333333, {
-        type: 'portal', target: 'hub',
-        label: t('back')
-    });
+        // Mode debug : ligne de guidage rose au sol depuis spawn jusqu'a l'orbe
+        if (STATE.debugMode) {
+            const path = bfsMaze(maze, 1, 1, orbCellX, orbCellY);
+            for (const [cx, cy] of path) {
+                const wx = offsetX + cx * cellSize;
+                const wz = offsetZ + cy * cellSize;
+                const marker = addBox(cellSize * 0.4, 0.05, cellSize * 0.4, wx, 0.03, wz, 0xff44dd);
+                if (marker && marker.material) {
+                    marker.material.emissive = new THREE.Color(0xff44dd);
+                    marker.material.emissiveIntensity = 0.8;
+                }
+            }
+        }
+    }
+}
+
+// BFS sur la grille du maze : trouve le plus court chemin entre 2 cellules carved
+function bfsMaze(maze, sx, sy, ex, ey) {
+    const w = maze[0].length, h = maze.length;
+    const visited = Array.from({length: h}, () => Array(w).fill(false));
+    const prev = Array.from({length: h}, () => Array(w).fill(null));
+    const q = [[sx, sy]];
+    visited[sy][sx] = true;
+    while (q.length) {
+        const [x, y] = q.shift();
+        if (x === ex && y === ey) break;
+        for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+            const nx = x + dx, ny = y + dy;
+            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+            if (visited[ny][nx] || maze[ny][nx] === 1) continue;
+            visited[ny][nx] = true;
+            prev[ny][nx] = [x, y];
+            q.push([nx, ny]);
+        }
+    }
+    // Reconstruire le chemin
+    const path = [];
+    let cur = [ex, ey];
+    while (cur) {
+        path.push(cur);
+        const p = prev[cur[1]][cur[0]];
+        if (!p) break;
+        cur = p;
+    }
+    return path.reverse();
 }
 
 function generateMaze(w, h) {
