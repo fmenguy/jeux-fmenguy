@@ -4,24 +4,24 @@ import * as THREE from 'three'
 // Constantes globales du prototype Strates
 // ============================================================================
 
-export const GRID = 48
-export const MAX_STRATES = 6
+export const GRID = 96
+export const MAX_STRATES = 10
 export const MIN_STRATES = 1
 export const WATER_LEVEL = 1.0
 export const SHALLOW_WATER_LEVEL = 1.6
-export const EDGE_DEEP_RING = 3
-export const EDGE_SHALLOW_RING = 2
-export const FALLOFF_SPAN = 6
+export const EDGE_DEEP_RING = 5
+export const EDGE_SHALLOW_RING = 4
+export const FALLOFF_SPAN = 12
 export const VOXEL = 1
 export const COLONIST_SPEED = 2.0
 export const WORK_DURATION = 2.0
 export const MAX_STEP = 2
 export const GRAVITY = 20
-export const MAX_TREES = 4000
-export const MAX_ROCKS = 2000
-export const MAX_ORES = 2000
+export const MAX_TREES = 6000
+export const MAX_ROCKS = 3000
+export const MAX_ORES = 3000
 export const MAX_CRYSTALS = MAX_ORES * 4
-export const MAX_BUSHES = 2000
+export const MAX_BUSHES = 3000
 export const MAX_BUSH_LEAVES = MAX_BUSHES * 5
 export const MAX_BUSH_BERRIES = MAX_BUSHES * 4
 export const BERRIES_PER_BUSH = 3
@@ -168,6 +168,11 @@ export const CONTEXT_COOLDOWN = 45
 export const FIELD_NO_RESEARCH_DELAY_MAX = 30
 
 export const TECH_BUBBLE_LINES = {
+  'axe-stone': [
+    "Il nous faudrait une hache pour cet arbre.",
+    "Sans hache, je ne peux pas l'abattre.",
+    "Taille-moi une hache en pierre avant."
+  ],
   'pick-stone': [
     "Il nous faudrait une pioche en pierre.",
     "Je ne peux pas casser ca sans une meilleure pioche.",

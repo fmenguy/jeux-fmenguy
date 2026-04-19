@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Strates, editeur de carte</title>
+  <title>Strates, éditeur de carte</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background: #0b0d12; overflow: hidden; font-family: system-ui, sans-serif; color: #f3ecdd; user-select: none; }
     #app { position: fixed; inset: 0; }
@@ -214,6 +214,195 @@
       padding: 10px; text-align: center;
       color: #d9b15a; font-style: italic; font-size: 11px;
     }
+
+    /* Bouton audio flottant */
+    #btn-audio {
+      position: fixed; right: 16px; bottom: 150px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(180deg, rgba(138,196,255,0.3), rgba(60,100,180,0.6));
+      border: 1px solid rgba(138,196,255,0.55);
+      color: #e6f3ff; font-size: 18px; font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      z-index: 30;
+      transition: transform 0.15s;
+    }
+    #btn-audio:hover { transform: translateY(-2px); }
+    #btn-audio.on {
+      background: linear-gradient(180deg, rgba(255,217,138,0.4), rgba(168,134,42,0.7));
+      border-color: rgba(255,217,138,0.6);
+      color: #fff5d8;
+    }
+
+    /* Pastille saison */
+    #season-pill {
+      position: fixed; left: 50%; top: 16px; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(15,18,24,0.8);
+      border: 1px solid rgba(255,217,138,0.35);
+      border-radius: 22px;
+      padding: 6px 16px 6px 12px;
+      backdrop-filter: blur(8px);
+      color: #f3ecdd;
+      font-size: 13px; letter-spacing: 0.06em;
+      z-index: 11;
+      text-transform: capitalize;
+    }
+    #season-pill #season-icon { font-size: 16px; }
+
+    /* Bouton d'aide flottant */
+    #btn-help {
+      position: fixed; right: 16px; bottom: 100px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(180deg, rgba(255,217,138,0.35), rgba(168,134,42,0.6));
+      border: 1px solid rgba(255,217,138,0.6);
+      color: #fff5d8; font-size: 20px; font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      z-index: 30;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    #btn-help:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(255,217,138,0.3);
+    }
+
+    /* Hint discret au premier chargement */
+    #help-hint {
+      position: fixed; right: 66px; bottom: 108px;
+      background: rgba(15,18,24,0.88);
+      color: #ffd98a;
+      padding: 6px 12px; border-radius: 8px;
+      font-size: 12px;
+      border: 1px solid rgba(255,217,138,0.35);
+      z-index: 29;
+      pointer-events: none;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    #help-hint.hidden { display: none; }
+    @keyframes hintPulse {
+      0%, 100% { opacity: 0.8; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(-3px); }
+    }
+
+    /* Panneau d'aide */
+    #help-panel {
+      position: fixed; inset: 40px;
+      background: linear-gradient(180deg, rgba(20,24,30,0.96), rgba(15,18,24,0.98));
+      border: 1px solid rgba(255,217,138,0.4);
+      border-radius: 14px;
+      padding: 0;
+      backdrop-filter: blur(12px);
+      color: #f3ecdd;
+      z-index: 50;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+    }
+    #help-panel.hidden { display: none; }
+    .help-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255,217,138,0.2);
+      background: rgba(255,217,138,0.05);
+    }
+    .help-header h3 {
+      margin: 0; font-size: 18px; color: #ffd98a;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    #btn-help-close {
+      background: transparent; border: none; color: #c7b98c;
+      font-size: 28px; cursor: pointer; padding: 0 8px;
+      line-height: 1;
+    }
+    #btn-help-close:hover { color: #ffd98a; }
+    .help-body {
+      padding: 20px 32px; overflow-y: auto; flex: 1;
+      max-width: 900px; margin: 0 auto;
+      font-size: 14px; line-height: 1.6;
+    }
+    .help-body section { margin-bottom: 22px; }
+    .help-body h4 {
+      margin: 0 0 8px 0; font-size: 13px;
+      color: #ffd98a; letter-spacing: 0.1em;
+      text-transform: uppercase; font-weight: 700;
+      border-left: 3px solid #a8862a; padding-left: 10px;
+    }
+    .help-body p { margin: 6px 0; color: #e9e2cf; }
+    .help-body ul { margin: 6px 0; padding-left: 24px; }
+    .help-body li { margin: 3px 0; color: #e9e2cf; }
+    .help-body b { color: #ffd98a; }
+    .help-body::-webkit-scrollbar { width: 8px; }
+    .help-body::-webkit-scrollbar-thumb { background: rgba(255,217,138,0.3); border-radius: 4px; }
+
+    /* Save menu */
+    #save-menu {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.72); z-index: 60;
+    }
+    #save-menu.hidden { display: none; }
+    .save-modal {
+      width: 560px; max-width: 92vw;
+      background: linear-gradient(180deg, rgba(20,24,30,0.96), rgba(15,18,24,0.98));
+      border: 1px solid rgba(255,217,138,0.45);
+      border-radius: 14px; overflow: hidden;
+      color: #f3ecdd;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+    }
+    .save-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,217,138,0.2);
+      background: rgba(255,217,138,0.05);
+    }
+    .save-header h3 {
+      margin: 0; color: #ffd98a; letter-spacing: 0.12em;
+      text-transform: uppercase; font-size: 14px; font-weight: 700;
+    }
+    #save-menu-close {
+      background: transparent; border: none; color: #c7b98c;
+      font-size: 24px; cursor: pointer; padding: 0 4px; line-height: 1;
+    }
+    #save-menu-close:hover { color: #ffd98a; }
+    .save-slots { padding: 14px 20px; display: flex; flex-direction: column; gap: 8px; }
+    .save-auto { padding: 0 20px 16px; }
+    .save-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+    }
+    .save-row.empty { opacity: 0.6; }
+    .save-row.auto {
+      border-color: rgba(138,196,255,0.35);
+      background: rgba(120,180,255,0.06);
+    }
+    .save-row .slot-label {
+      font-weight: 700; color: #ffd98a;
+      min-width: 52px; font-size: 13px;
+    }
+    .save-row .slot-info {
+      flex: 1; font-size: 11px; color: #c7b98c;
+      font-variant-numeric: tabular-nums; font-family: monospace;
+    }
+    .save-row button {
+      padding: 4px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      border: 1px solid;
+    }
+    .save-row .btn-save {
+      background: rgba(138,196,255,0.18); border-color: #8ac4ff; color: #e6f3ff;
+    }
+    .save-row .btn-load {
+      background: rgba(136,204,68,0.15); border-color: #88cc44; color: #aaff88;
+    }
+    .save-row .btn-del {
+      background: rgba(204,68,68,0.15); border-color: #cc4444; color: #ff8888;
+    }
+    .save-row button[disabled] { opacity: 0.3; cursor: not-allowed; }
   </style>
   <script type="importmap">
   {
@@ -225,28 +414,32 @@
   </script>
 </head>
 <body>
-  <div id="loader">generation du monde...</div>
+  <div id="loader">génération du monde...</div>
   <div id="app"></div>
 
+  <button id="btn-help" title="Aide et explications">?</button>
+  <button id="btn-audio" title="Activer la musique">&#9834;</button>
+  <div id="season-pill" title="Saison en cours"><span id="season-icon">&#127804;</span><span id="season-name">printemps</span></div>
+
   <div id="hud">
-    <div><b>Strates</b>, editeur de carte</div>
-    <div class="row"><span class="key">FPS</span><span class="val" id="fps">0</span></div>
-    <div class="row"><span class="key">Outil</span><span class="val" id="hud-tool">naviguer</span></div>
-    <h4 id="colons-header"><span class="caret">&#9660;</span> Colons : <span id="c-count">0</span></h4>
+    <div><b>Strates</b>, éditeur de carte</div>
+    <div class="row" title="Images par seconde"><span class="key">FPS</span><span class="val" id="fps">0</span></div>
+    <div class="row" title="Outil actuellement sélectionné"><span class="key">Outil</span><span class="val" id="hud-tool">naviguer</span></div>
+    <h4 id="colons-header" title="Clic pour replier la liste"><span class="caret">&#9660;</span> Colons : <span id="c-count">0</span></h4>
     <div id="colons-list"></div>
-    <div class="row"><span class="key">Jobs en attente</span><span class="val" id="jobs">0</span></div>
-    <div class="row"><span class="key">IDLE / MOVING / WORKING</span><span class="val"><span id="idle">0</span> / <span id="moving">0</span> / <span id="working">0</span></span></div>
-    <div class="row"><span class="key">Colons qui parlent</span><span class="val" id="talking">0</span></div>
+    <div class="row" title="Tâches désignées en attente d'exécution"><span class="key">Tâches en attente</span><span class="val" id="jobs">0</span></div>
+    <div class="row" title="Colons au repos / en déplacement / au travail"><span class="key">Repos / Marche / Travail</span><span class="val"><span id="idle">0</span> / <span id="moving">0</span> / <span id="working">0</span></span></div>
+    <div class="row" title="Nombre de colons affichant une bulle"><span class="key">Colons qui parlent</span><span class="val" id="talking">0</span></div>
     <h4>Placement</h4>
     <div class="row"><span class="key">Arbres / Rochers / Maisons</span><span class="val"><span id="c-trees">0</span> / <span id="c-rocks">0</span> / <span id="c-houses">0</span></span></div>
     <div class="row"><span class="key">Champs / Filons</span><span class="val"><span id="c-fields">0</span> / <span id="c-ores">0</span></span></div>
     <div class="row"><span class="key">Buissons</span><span class="val" id="c-bushes">0</span></div>
-    <div class="row"><span class="key">Recherche (bat / chercheurs)</span><span class="val"><span id="c-research">0</span> / <span id="c-researchers">0</span></span></div>
+    <div class="row" title="Bâtiments de recherche posés / colons actuellement chercheurs"><span class="key">Laboratoires / Chercheurs</span><span class="val"><span id="c-research">0</span> / <span id="c-researchers">0</span></span></div>
     <div id="c-ores-detail" style="font-size: 11px; color: #c7b98c; margin-top: 2px;"></div>
     <h4>Ressources</h4>
-    <div class="row"><span class="key">baies / bois / pierre</span><span class="val"><span id="r-berries">0</span> / <span id="r-wood">0</span> / <span id="r-stone">0</span></span></div>
-    <div id="stocks-line" style="font-size: 11px; color: #c7b98c; margin-top: 2px;">Stocks: vide</div>
-    <div class="row" style="margin-top: 4px;"><span class="key">Recherche</span><span class="val"><span id="r-points">0</span> pts</span></div>
+    <div class="row" title="Ressources cumulées depuis les récoltes"><span class="key">Baies / Bois / Pierre</span><span class="val"><span id="r-berries">0</span> / <span id="r-wood">0</span> / <span id="r-stone">0</span></span></div>
+    <div id="stocks-line" style="font-size: 11px; color: #c7b98c; margin-top: 2px;" title="Ressources prêtes à être posées par les colons (outil Placer)">Stocks : vide</div>
+    <div class="row" style="margin-top: 4px;" title="Points produits par les chercheurs au laboratoire, utilisés pour débloquer les technologies"><span class="key">Points de recherche</span><span class="val"><span id="r-points">0</span> pts</span></div>
   </div>
 
   <div id="techs" style="position: fixed; right: 16px; top: 320px; width: 280px; background: rgba(15,18,24,0.82); border: 1px solid rgba(120,180,255,0.4); border-radius: 12px; padding: 12px 14px; backdrop-filter: blur(8px); color: #f3ecdd; font-size: 12px; line-height: 1.4; box-shadow: 0 6px 22px rgba(0,0,0,0.4); z-index: 11;">
@@ -335,12 +528,87 @@
     <div id="quests-body"></div>
   </div>
 
-  <div id="help">
-    <div><b>Naviguer</b>, clic gauche orbite, droit pan, molette zoom</div>
-    <div><b>Miner</b>, peint des colonnes que les colons viennent miner. Clic droit bref sur un job actif pour l'annuler</div>
-    <div><b>Outils bleus</b>, placement direct reserve a l'editeur</div>
-    <div><b>Raccourcis</b>, 1 a 9, R reset</div>
-    <div><b>Poser une Maison</b>, spawn 2 colons adjacents</div>
+  <div id="help-panel" class="hidden">
+    <div class="help-header">
+      <h3>Bienvenue dans Strates</h3>
+      <button id="btn-help-close" title="Fermer (Échap)">×</button>
+    </div>
+    <div class="help-body">
+      <section>
+        <h4>Contrôles de la caméra</h4>
+        <ul>
+          <li><b>Clic gauche maintenu</b> : faire pivoter la caméra</li>
+          <li><b>Clic droit maintenu</b> : déplacer la caméra latéralement</li>
+          <li><b>Molette</b> : zoomer / dézoomer</li>
+          <li><b>Z Q S D</b> ou <b>W A S D</b> : déplacer la caméra au clavier</li>
+        </ul>
+      </section>
+      <section>
+        <h4>Les colons</h4>
+        <p>Vos colons vivent en autonomie. Ils errent, se parlent, récoltent les baies, et exécutent les tâches que vous leur désignez. François ♂ est le chef (couronne dorée). Ils montent au maximum 2 blocs de dénivelé.</p>
+      </section>
+      <section>
+        <h4>Poser des tâches</h4>
+        <ul>
+          <li><b>Miner (2)</b> : peint en rouge les blocs à creuser. Clic droit bref sur un marqueur pour annuler.</li>
+          <li><b>Placer (3)</b> : pose un bloc de terre ou de pierre puisé dans vos stocks.</li>
+          <li><b>Shift + clic gauche</b> : applique l'outil sur toute la strate (même biome, même hauteur).</li>
+          <li><b>Shift + clic droit</b> : annule tous les ordres sur la strate.</li>
+        </ul>
+      </section>
+      <section>
+        <h4>Ramasser avant de miner</h4>
+        <p>Ce qui est posé sur une tuile doit être <b>ramassé avant</b> de pouvoir miner le voxel en dessous. Un seul ordre Miner traite un obstacle à la fois, dans cet ordre : <b>arbre</b> (+bois), <b>rocher</b> (+pierre ×2-3), <b>filon</b> (+minerai), <b>buisson</b> (+1 à 3 baies bonus), puis <b>voxel</b>. Pour récolter un buisson au maximum (5 à 15 baies), laissez les colons le cueillir naturellement quand ils sont libres.</p>
+      </section>
+      <section>
+        <h4>Les points de recherche</h4>
+        <p>Posez une <b>maison à toit bleu</b> (outil <b>Recherche, 0</b>). Un colon disponible y sera automatiquement affecté. Tant qu'il y est, il génère <b>1 point toutes les 3 secondes</b>. Ces points servent à débloquer les technologies dans le panneau <b>TECH</b> à droite (pioches successives : pierre, bronze, fer, or). Chaque tech permet d'exploiter des filons plus rares.</p>
+      </section>
+      <section>
+        <h4>Abattre les arbres</h4>
+        <p>Les arbres doivent être abattus pour libérer une tuile et récolter du bois. Débloquez d'abord la <b>hache en pierre</b> dans le panneau TECH (4 points de recherche). Ensuite, utilisez <b>Miner (2)</b> sur une tuile avec arbre : le colon va abattre et remplit le compteur "bois".</p>
+      </section>
+      <section>
+        <h4>Extraire les filons</h4>
+        <p>Les tas colorés sur les montagnes sont des <b>filons</b> (cuivre, fer, charbon, argent, or, améthyste). Pour les récolter, utilisez l'outil <b>Miner (2)</b> sur la tuile du filon. Le colon va sur place et remplit le stock correspondant. Chaque minerai requiert une pioche adéquate (cuivre/charbon = pioche bronze, fer/argent = pioche fer, or/améthyste = pioche or). Sans la bonne tech, le colon refuse et un indice bleu apparaît.</p>
+      </section>
+      <section>
+        <h4>Les quêtes</h4>
+        <p>En haut à droite, la quête active vous guide. Une fois complétée, la suivante apparaît. Elles balisent les premiers pas sans vous contraindre.</p>
+      </section>
+      <section>
+        <h4>Outils éditeur (cadre bleu)</h4>
+        <p>Ces outils servent à peupler la carte manuellement : forêt, rocher, filon, maison, champ, baies. Dans le mode jeu final (à venir), ils ne seront pas accessibles au joueur ; ici on peut tout essayer librement.</p>
+      </section>
+      <section>
+        <h4>Sauvegarde</h4>
+        <p>Votre partie est sauvegardée <b>automatiquement</b> toutes les 30 secondes. Les boutons <b>Sauver</b>, <b>Charger</b> et <b>Nouvelle</b> en bas à droite permettent d'agir manuellement.</p>
+      </section>
+      <section>
+        <h4>Raccourcis clavier</h4>
+        <ul>
+          <li><b>1 à 9, 0</b> : changer d'outil</li>
+          <li><b>R</b> : nouvelle partie (confirmation demandée)</li>
+          <li><b>?</b> ou <b>H</b> : ouvrir cette aide</li>
+          <li><b>Échap</b> : fermer cette aide</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  <div id="help-hint">
+    Appuyez sur <b>?</b> pour l'aide
+  </div>
+
+  <div id="save-menu" class="hidden">
+    <div class="save-modal">
+      <div class="save-header">
+        <h3>Sauvegardes</h3>
+        <button id="save-menu-close" title="Fermer (Échap)">×</button>
+      </div>
+      <div class="save-slots" id="save-slots"></div>
+      <div class="save-auto" id="save-auto"></div>
+    </div>
   </div>
 
   <div id="actionbar">
@@ -351,8 +619,8 @@
       <button class="tool" data-tool="build">Placer<span class="key">3</span></button>
     </div>
     <div class="group placement">
-      <span class="group-label">editeur</span>
-      <button class="tool" data-tool="forest">Foret<span class="key">4</span></button>
+      <span class="group-label">éditeur</span>
+      <button class="tool" data-tool="forest">Forêt<span class="key">4</span></button>
       <button class="tool" data-tool="rock">Rocher<span class="key">5</span></button>
       <button class="tool" data-tool="ore">Filon<span class="sub" id="ore-sub">or</span><span class="key">6</span></button>
       <button class="tool" data-tool="house">Maison<span class="key">7</span></button>
@@ -373,5 +641,36 @@
   </div>
 
   <script type="module" src="./main.js"></script>
+  <script>
+    (function () {
+      const panel = document.getElementById('help-panel')
+      const btnOpen = document.getElementById('btn-help')
+      const btnClose = document.getElementById('btn-help-close')
+      const hint = document.getElementById('help-hint')
+      const HINT_SEEN = 'strates-help-seen'
+      function open() {
+        panel.classList.remove('hidden')
+        if (hint) hint.classList.add('hidden')
+        try { localStorage.setItem(HINT_SEEN, '1') } catch (e) {}
+      }
+      function close() { panel.classList.add('hidden') }
+      if (btnOpen) btnOpen.addEventListener('click', open)
+      if (btnClose) btnClose.addEventListener('click', close)
+      window.addEventListener('keydown', (e) => {
+        const target = e.target
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+        if (e.key === '?' || e.key === 'h' || e.key === 'H') { e.preventDefault(); open() }
+        if (e.key === 'Escape' && !panel.classList.contains('hidden')) close()
+      })
+      // masque le hint si deja vu
+      try { if (localStorage.getItem(HINT_SEEN) === '1' && hint) hint.classList.add('hidden') } catch (e) {}
+      // ouvre automatiquement au premier lancement apres quelques secondes
+      try {
+        if (!localStorage.getItem(HINT_SEEN)) {
+          setTimeout(() => { if (panel.classList.contains('hidden') && hint) hint.style.opacity = '1' }, 1500)
+        }
+      } catch (e) {}
+    })()
+  </script>
 </body>
 </html>
