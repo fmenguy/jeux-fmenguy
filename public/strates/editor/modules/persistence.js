@@ -12,12 +12,27 @@ import { clearVegetation } from './vegetation.js'
 import { clearFog, buildFog } from './fog.js'
 
 // ============================================================================
-// Persistance localStorage. Une seule slot "auto" pour l'instant.
-// Format JSON versionne, tableaux typed convertis en Array standard.
+// Persistance localStorage. Slots : 'auto' (ecrase en continu) + 1..5 manuels.
 // ============================================================================
 
 const STORAGE_KEY_PREFIX = 'strates-save-'
 const SAVE_VERSION = 1
+export const MANUAL_SLOT_COUNT = 5
+
+export function listSlots() {
+  const out = []
+  for (let i = 1; i <= MANUAL_SLOT_COUNT; i++) {
+    const raw = localStorage.getItem(STORAGE_KEY_PREFIX + i)
+    if (!raw) { out.push({ index: i, data: null }); continue }
+    try {
+      const data = JSON.parse(raw)
+      out.push({ index: i, meta: { savedAt: data.savedAt, cyclesDone: data.season ? data.season.cyclesDone : 0, colonists: (data.colonists || []).length } })
+    } catch (e) {
+      out.push({ index: i, corrupted: true })
+    }
+  }
+  return out
+}
 
 export function hasSave(slot = 'auto') {
   return !!localStorage.getItem(STORAGE_KEY_PREFIX + slot)
