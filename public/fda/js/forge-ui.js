@@ -161,8 +161,8 @@ export function updateDisplay() {
   }
 
   document.getElementById("mineSection").style.display = discoveredMetals ? "block" : "none";
-  document.getElementById("craftSawmillBtn").disabled = !(wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture"));
-  document.getElementById("craftStoneQuarryBtn").disabled = !(wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture"));
+  document.getElementById("craftSawmillBtn").disabled = !(wood >= 30 && stone >= 15 && tinkers >= 1);
+  document.getElementById("craftStoneQuarryBtn").disabled = !(wood >= 30 && stone >= 15 && tinkers >= 1);
   document.getElementById("craftWarehouseBtn").disabled = !(wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === "Âge de l’Agriculture"));
   document.getElementById("craftAxeBtn").disabled = !(wood >= 5 && stone >= 2);
   document.getElementById("craftBucketBtn").disabled = !(wood >= 5 && stone >= 2);
@@ -246,8 +246,8 @@ export function updateDisplay() {
   document.getElementById("herbalistSection").style.display = discoveredHerbs ? "block" : "none";
   document.getElementById("wheatFieldSection").style.display = discoveredHerbs ? "block" : "none";
   document.getElementById("millSection").style.display = wheatFields > 0 ? "block" : "none";
-  document.getElementById("sawmillSection").style.display = discoveredMetals || currentAge === "Âge de l’Agriculture" ? "block" : "none";
-  document.getElementById("stoneQuarrySection").style.display = discoveredMetals || currentAge === "Âge de l’Agriculture" ? "block" : "none";
+  document.getElementById("sawmillSection").style.display = tinkers >= 1 ? "block" : "none";
+  document.getElementById("stoneQuarrySection").style.display = tinkers >= 1 ? "block" : "none";
   document.getElementById("warehouseSection").style.display = discoveredMetals || currentAge === "Âge de l’Agriculture" ? "block" : "none";
   document.getElementById("saveGameBtn").disabled = false;
   document.getElementById("loadGameBtn").disabled = false;
@@ -286,20 +286,50 @@ export function updateExplorationDisplay() {
   }
 }
 
+// Alerte avec croix de fermeture + timer minimal d'affichage (6s)
+// pour eviter que l'alerte disparaisse avant que le joueur ait pu lire.
+let _alertMinHideAt = 0;
 export function showAlert(message) {
   const alertBox = document.getElementById("alert");
-  alertBox.textContent = message;
-  alertBox.style.display = "block";
+  if (!alertBox) return;
+  if (alertBox.dataset.lastMsg !== message) {
+    alertBox.dataset.lastMsg = message;
+    _alertMinHideAt = Date.now() + 6000;
+  }
+  alertBox.innerHTML = '';
+  const text = document.createElement('span');
+  text.className = 'alert-text';
+  text.textContent = message;
+  const close = document.createElement('button');
+  close.className = 'alert-close';
+  close.setAttribute('aria-label', 'Fermer');
+  close.textContent = '×';
+  close.addEventListener('click', (e) => {
+    e.stopPropagation();
+    _alertMinHideAt = 0;
+    alertBox.dataset.lastMsg = '';
+    alertBox.style.display = "none";
+  });
+  alertBox.appendChild(text);
+  alertBox.appendChild(close);
+  alertBox.style.display = "flex";
 }
 
 export function hideAlert() {
-  document.getElementById("alert").style.display = "none";
+  const alertBox = document.getElementById("alert");
+  if (!alertBox) return;
+  if (Date.now() < _alertMinHideAt) return; // respecte le delai minimum
+  alertBox.dataset.lastMsg = '';
+  alertBox.style.display = "none";
 }
 
 export function updateHintButton() {
   const buyHintBtn = document.getElementById("buyHintBtn");
   const hintCost = document.getElementById("hintCost");
   const noHintMessage = document.getElementById("noHintMessage");
+  // Le bouton et le message n'existent plus dans le DOM (refonte v24+)
+  // L'objectif courant est gere par forge-enhance.js, on court-circuite ici.
+  if (!buyHintBtn || !hintCost || !noHintMessage) return;
 
   if (currentHint) {
     noHintMessage.style.display = "none";

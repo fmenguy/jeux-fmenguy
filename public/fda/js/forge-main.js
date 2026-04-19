@@ -1,7 +1,7 @@
 import { initGame, gameLoop, gatherBerries, gatherWood, gatherStone, gatherWater, gatherMeat, gatherFibers, gatherMetals, craftAxe, craftBucket, craftPickaxe, craftBow, craftCoat, craftMetalAxe, craftRemedy, craftWell, craftMine, craftWorkshop, craftHerbalist, craftWheatField, craftMill, craftBakery, craftSawmill, craftStoneQuarry, craftWarehouse, recruitVillager, appointChief, recruitTinker, recruitPicker, recruitHunter, recruitResearcher, sendExplorers, recruitMiner, recruitFarmer, foundVillage, seekShard, dynamicHints, purchasedHints, setCurrentHint, setIsMusicPlaying } from './forge-game.js';
 import { updateDisplay, updateResourcesDisplay, updateSeasonDisplay, updateExplorationDisplay, showAlert, hideAlert, enableDragAndDrop, applyCraftOrder, buyHint, toggleHints, enhancedUpdateDisplay } from './forge-ui.js';
 import { saveGame, loadGame, exportSave, importSavePrompt } from './forge-save.js';
-import { initMap } from './forge-map.js';
+// initMap retire : l'onglet Carte a ete supprime au profit de l'Arbre des Ages
 
 // Exporter les fonctions globales pour les événements onclick
 window.gatherBerries = () => {
@@ -407,11 +407,10 @@ function initializeSaveEventListeners() {
 // Initialisation du jeu après le chargement du DOM
 document.addEventListener('DOMContentLoaded', () => {
   initGame();
-  initMap();
   enhancedUpdateDisplay();
   updateSeasonDisplay();
-  enableDragAndDrop();
-  applyCraftOrder();
+  // Drag-and-drop des sections desactive : on garde l'ordre fixe pour aider la memorisation.
+  // enableDragAndDrop(); applyCraftOrder();
   initializeAudioEventListeners();
   initializeSaveEventListeners(); // Ajoute les écouteurs pour les boutons de sauvegarde une seule fois
 
@@ -429,9 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (button.dataset.tab === 'gameTab') {
         setTimeout(() => {
           enhancedUpdateDisplay();
-          enableDragAndDrop();
-          applyCraftOrder();
-          initializeAudioEventListeners(); // Réapplique uniquement les écouteurs audio
+          initializeAudioEventListeners();
         }, 0);
       }
     });
@@ -447,9 +444,9 @@ setInterval(() => {
     hideAlert();
   }
   updateResourcesDisplay();
+  updateSeasonDisplay(); // chaque tick : la barre de saison se remplit progressivement
   if (result && (result.ageChanged || result.seasonChanged)) {
     enhancedUpdateDisplay();
-    updateSeasonDisplay();
   }
   updateExplorationDisplay();
 }, 1000);

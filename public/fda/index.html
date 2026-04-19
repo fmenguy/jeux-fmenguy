@@ -13,6 +13,8 @@
 <body>
   <!-- Bouton musique : toggle play/pause unique en haut a droite -->
   <button id="toggleSidebarBtn" class="sidebar-toggle" title="Activer / couper la musique"><i class="fas fa-music"></i></button>
+  <!-- Bouton sauvegarde : ouvre le panneau des 5 slots -->
+  <button id="openSaveMenuBtn" class="save-menu-toggle" title="Sauvegardes"><i class="fas fa-floppy-disk"></i></button>
 
   <div style="text-align: center; margin-bottom: 20px;">
     <img src="assets/fda.webp" alt="Forge des Âges Logo" style="width: 180px; height: auto;">
@@ -22,7 +24,7 @@
   <div id="tabs">
     <button class="tab-button active" data-tab="gameTab">Jeu</button>
     <button class="tab-button" data-tab="techTab">Arbre des Âges</button>
-    <button class="tab-button" data-tab="mapTab">Carte</button>
+    <button class="tab-button" data-tab="hintsTab">Sagesses</button>
   </div>
 
   <!-- Contenu des onglets -->
@@ -40,7 +42,7 @@
       </div>
       <div id="agesList"></div>
       <div id="narrative">
-        Ici, tout est sauvage. Récolte des baies pour survivre et attirer des amis.
+        Ici, tout est sauvage. Récolte des baies pour survivre et attirer des amis. Consulte l'onglet <strong>Sagesses</strong> à tout moment pour retrouver les indices déjà révélés.
       </div>
 
       <!-- Objectif Actuel : indice courant en mode quete (mis en avant) -->
@@ -123,31 +125,31 @@
       <div class="columns">
         <div class="section" id="fabricationSection">
           <h2>Fabrication</h2>
-          <div class="craft" id="metalAxeSection" style="display: none" draggable="true">
+          <div class="craft" id="metalAxeSection" style="display: none">
             <p><span class="icon">🪓</span> Hache Métal: <span id="metalAxes">0</span></p>
             <button id="craftMetalAxeBtn" onclick="craftMetalAxe()">Fabriquer (5 Métaux, 5 Bois)</button><span class="tooltip">Coupe le bois encore plus vite.</span>
           </div>
-          <div class="craft" id="axeSection" draggable="true">
+          <div class="craft" id="axeSection">
             <p><span class="icon">🪓</span> Hache: <span id="axes">0</span></p>
             <button id="craftAxeBtn" onclick="craftAxe()">Fabriquer (5 Bois, 2 Pierre)</button><span class="tooltip">Une hache coupe le bois plus vite.</span>
           </div>
-          <div class="craft" id="bucketSection" draggable="true">
+          <div class="craft" id="bucketSection">
             <p><span class="icon">⚱️</span> Seau: <span id="buckets">0</span></p>
             <button id="craftBucketBtn" onclick="craftBucket()">Fabriquer (5 Bois, 2 Pierre)</button><span class="tooltip">Un seau récolte plus d'eau</span>
           </div>
-          <div class="craft" id="pickaxeSection" style="display: none" draggable="true">
+          <div class="craft" id="pickaxeSection" style="display: none">
             <p><span class="icon">⛏️</span> Pioche: <span id="pickaxes">0</span></p>
             <button id="craftPickaxeBtn" onclick="craftPickaxe()">Fabriquer (10 Bois, 5 Pierre)</button><span class="tooltip">Une pioche récolte plus de pierre.</span>
           </div>
-          <div class="craft" id="bowSection" style="display: none" draggable="true">
+          <div class="craft" id="bowSection" style="display: none">
             <p><span class="icon">🏹</span> Arc: <span id="bows">0</span></p>
             <button id="craftBowBtn" onclick="craftBow()">Fabriquer (10 Bois, 5 Pierre)</button><span class="tooltip">Un arc récolte plus de viande.</span>
           </div>
-          <div class="craft" id="coatSection" style="display: none" draggable="true">
+          <div class="craft" id="coatSection" style="display: none">
             <p><span class="icon">🧥</span> Manteau: <span id="coats">0</span></p>
             <button id="craftCoatBtn" onclick="craftCoat()">Fabriquer (10 Fibres, 5 Bois)</button><span class="tooltip">Protège du froid en Hiver.</span>
           </div>
-          <div class="craft" id="remedySection" style="display: none" draggable="true">
+          <div class="craft" id="remedySection" style="display: none">
             <p><span class="icon">💊</span> Remède: <span id="remedies">0</span></p>
             <button id="craftRemedyBtn" onclick="craftRemedy()">Fabriquer (5 Herbes, 5 Eau)</button><span class="tooltip">Prolonge la survie sans ressources.</span>
           </div>
@@ -155,43 +157,43 @@
 
         <div class="section" id="buildingsSection">
           <h2>Bâtiments</h2>
-          <div class="craft" id="wellSection" style="display: none" draggable="true">
+          <div class="craft" id="wellSection" style="display: none">
             <p><span class="icon">⛏️</span> Puits: <span id="wells">0</span></p>
             <button id="craftWellBtn" onclick="craftWell()">Construire (10 Bois, 5 Pierre)</button><span class="tooltip">Un puits stocke 1000 eaux et récolte de l'eau en fonction du nombre de seaux</span>
           </div>
-          <div class="craft" id="mineSection" style="display: none" draggable="true">
+          <div class="craft" id="mineSection" style="display: none">
             <p><span class="icon">⛏️</span> Mine: <span id="mines">0</span></p>
             <button id="craftMineBtn" onclick="craftMine()">Construire (50 Bois, 20 Pierre, 1 Bricoleur)</button><span class="tooltip">Une mine produit des métaux automatiquement.</span>
           </div>
-          <div class="craft" id="workshopSection" style="display: none" draggable="true">
+          <div class="craft" id="workshopSection" style="display: none">
             <p><span class="icon">🛠️</span> Atelier: <span id="workshops">0</span></p>
             <button id="craftWorkshopBtn" onclick="craftWorkshop()">Construire (20 Bois, 10 Pierre, 5 Fibres)</button><span class="tooltip">Un atelier améliore les fibres.</span>
           </div>
-          <div class="craft" id="herbalistSection" style="display: none" draggable="true">
+          <div class="craft" id="herbalistSection" style="display: none">
             <p><span class="icon">🌿</span> Herboristerie: <span id="herbalists">0</span></p>
             <button id="craftHerbalistBtn" onclick="craftHerbalist()">Construire (15 Bois, 5 Pierre, 5 Herbes)</button><span class="tooltip">Une herboristerie améliore les remèdes.</span>
           </div>
-          <div class="craft" id="wheatFieldSection" style="display: none" draggable="true">
+          <div class="craft" id="wheatFieldSection" style="display: none">
             <p><span class="icon">🌾</span> Champs de Blé: <span id="wheatFields">0</span></p>
             <button id="craftWheatFieldBtn" onclick="craftWheatField()">Construire (20 Bois, 10 Pierre, 5 Herbes)</button><span class="tooltip">Les champs permettent de cultiver le blé.</span>
           </div>
-          <div class="craft" id="millSection" style="display: none" draggable="true">
+          <div class="craft" id="millSection" style="display: none">
             <p><span class="icon">🏭</span> Moulin: <span id="mills">0</span></p>
             <button id="craftMillBtn" onclick="craftMill()">Construire (50 Bois, 20 Pierre, 5 Métaux)</button><span class="tooltip">Un moulin transforme le blé en farine.</span>
           </div>
-          <div class="craft" id="bakerySection" style="display: none" draggable="true">
+          <div class="craft" id="bakerySection" style="display: none">
             <p><span class="icon">🥖</span> Boulangerie: <span id="bakeries">0</span></p>
             <button id="craftBakeryBtn" onclick="craftBakery()">Construire (50 Bois, 20 Pierre, 5 Farine)</button><span class="tooltip">Une boulangerie produit du pain à partir de farine et d'eau.</span>
           </div>
-          <div class="craft" id="sawmillSection" style="display: none" draggable="true">
+          <div class="craft" id="sawmillSection" style="display: none">
             <p><span class="icon">🛠️</span> Scierie: <span id="sawmills">0</span></p>
-            <button id="craftSawmillBtn" onclick="craftSawmill()">Construire (50 Bois, 20 Pierre, 5 Métaux)</button><span class="tooltip">Une scierie produit du bois automatiquement.</span>
+            <button id="craftSawmillBtn" onclick="craftSawmill()">Construire (30 Bois, 15 Pierre, 1 Bricoleur)</button><span class="tooltip">Une scierie produit du bois automatiquement.</span>
           </div>
-          <div class="craft" id="stoneQuarrySection" style="display: none" draggable="true">
+          <div class="craft" id="stoneQuarrySection" style="display: none">
             <p><span class="icon">⛏️</span> Carrière de Pierre: <span id="stoneQuarries">0</span></p>
-            <button id="craftStoneQuarryBtn" onclick="craftStoneQuarry()">Construire (50 Bois, 20 Pierre, 5 Métaux)</button><span class="tooltip">Une carrière produit de la pierre automatiquement.</span>
+            <button id="craftStoneQuarryBtn" onclick="craftStoneQuarry()">Construire (30 Bois, 15 Pierre, 1 Bricoleur)</button><span class="tooltip">Une carrière produit de la pierre automatiquement.</span>
           </div>
-          <div class="craft" id="warehouseSection" style="display: none" draggable="true">
+          <div class="craft" id="warehouseSection" style="display: none">
             <p><span class="icon">🏬</span> Entrepôt: <span id="warehouses">0</span></p>
             <button id="craftWarehouseBtn" onclick="craftWarehouse()">Construire (100 Bois, 50 Pierre, 10 Métaux)</button><span class="tooltip">Un entrepôt stocke 50 000 unités de ressources premières (sauf nourriture et fibres).</span>
           </div>
@@ -205,7 +207,7 @@
           </div>
           <div class="worker" id="chiefSection" style="display: none">
             <p><span class="icon">👑</span> Chef: <span id="chief">0</span></p>
-            <button id="appointChiefBtn" onclick="appointChief()">Nommer (25 Haches, 25 Villageois)</button><span class="tooltip">Un chef aide tout le monde à travailler ensemble (1 chef max par 25 villageois).</span>
+            <button id="appointChiefBtn" onclick="appointChief()">Nommer (25 Haches, 25 Villageois)</button><span class="tooltip">Un chef coordonne ton peuple. Limite : 1 par village fondé.</span>
           </div>
           <div class="worker" id="tinkerSection" style="display: none">
             <p><span class="icon">🔧</span> Bricoleur: <span id="tinkers">0</span></p>
@@ -241,15 +243,6 @@
           </div>
         </div>
 
-        <div class="section" id="hintSection">
-          <h2>Indices</h2>
-          <p id="noHintMessage">Aucun indice disponible</p>
-          <button id="buyHintBtn" onclick="buyHint()">Acheter un indice</button>
-          <p id="hintCost" class="tooltip"></p>
-          <button id="toggleHintsBtn" onclick="toggleHints()">Afficher/Masquer</button>
-          <ul id="purchasedHintsList" style="display: block"></ul>
-        </div>
-
         <div class="section" id="relicSection" style="display: none">
           <h2>Reliques</h2>
           <div class="relic">
@@ -259,12 +252,13 @@
         </div>
       </div>
 
-      <div id="saveLoadSection">
-        <h2>Sauvegarde</h2>
-        <button id="saveGameBtn">Sauvegarder</button>
-        <button id="loadGameBtn">Charger</button>
-        <button id="exportSaveBtn">Exporter</button>
-        <button id="importSaveBtn">Importer</button>
+      <!-- Le panneau de sauvegarde est ouvert via le bouton 💾 en haut.
+           Les boutons d'origine sont conserves caches pour ne pas casser les listeners forge-main.js -->
+      <div id="saveLoadSection" style="display:none">
+        <button id="saveGameBtn"></button>
+        <button id="loadGameBtn"></button>
+        <button id="exportSaveBtn"></button>
+        <button id="importSaveBtn"></button>
       </div>
     </div>
 
@@ -277,31 +271,13 @@
       </div>
     </div>
 
-    <!-- Onglet Carte -->
-    <div id="mapTab" class="tab-pane">
-      <div id="mapSection">
-        <h2>Carte du Monde</h2>
-        <div class="map-container">
-          <canvas id="gameMap"></canvas>
-          <div id="mapLegend">
-            <h3>Légende</h3>
-            <ul>
-              <li><span class="legend-color" style="background-color: #d2b48c;"></span> Sol</li>
-              <li><span class="legend-color" style="background-color: #2f231a;"></span> Village</li>
-              <li><span class="legend-color" style="background-color: #1e90ff;"></span> Puits</li>
-              <li><span class="legend-color" style="background-color: #696969;"></span> Mine</li>
-              <li><span class="legend-color" style="background-color: #8b4513;"></span> Atelier</li>
-              <li><span class="legend-color" style="background-color: #228b22;"></span> Herboristerie</li>
-              <li><span class="legend-color" style="background-color: #f4a460;"></span> Champ de Blé</li>
-              <li><span class="legend-color" style="background-color: #cd853f;"></span> Moulin</li>
-              <li><span class="legend-color" style="background-color: #deb887;"></span> Boulangerie</li>
-              <li><span class="legend-color" style="background-color: #a0522d;"></span> Scierie</li>
-              <li><span class="legend-color" style="background-color: #808080;"></span> Carrière de Pierre</li>
-              <li><span class="legend-color" style="background-color: #4682b4;"></span> Entrepôt</li>
-              <li><span class="legend-color" style="background-color: #d4a017;"></span> Villageois</li>
-              <li><span class="legend-color" style="background-color: #000000;"></span> Brouillard de Guerre</li>
-            </ul>
-          </div>
+    <!-- Onglet Sagesses : indices deja debloques -->
+    <div id="hintsTab" class="tab-pane">
+      <div id="hintsWrapper">
+        <h2 class="hints-title">Sagesses Acquises</h2>
+        <p class="hints-intro">Chaque indice révélé reste consigné ici. Reviens-y quand tu doutes du chemin à suivre.</p>
+        <div id="hintSection">
+          <ul id="purchasedHintsList"></ul>
         </div>
       </div>
     </div>
@@ -318,8 +294,8 @@
     </a>
   </footer>
 
-  <script src="js/forge-main.js" type="module"></script>
-  <script src="js/forge-enhance.js" type="module"></script>
+  <script src="js/forge-main.js?v=50" type="module"></script>
+  <script src="js/forge-enhance.js?v=50" type="module"></script>
 
   <audio id="backgroundMusic" loop>
     <source src="assets/audio/ambiance_fda.mp3" type="audio/mpeg">
