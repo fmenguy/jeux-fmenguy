@@ -53,6 +53,7 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 - [ ] 2.9 **Pêche et maritime** : tech ports de pêche (bronze), bateaux de pêche, bateaux maritimes (fer, exploration/commerce). Nouvelle ressource poisson.
 - [ ] 2.10 **Sons d'ambiance** : bruit de pas doux dans la neige (crack léger), vent dans les feuillages, clapotis d'eau, chant d'oiseaux au printemps
 - [ ] 2.11 **Séparation éditeur / mode jeu + Godmod** : les outils éditeur actuels (forêt, rocher, filon, maison, champ, baies) impactent réellement la partie, mais seraient réservés à un panneau "Godmod" / mode créatif séparé. En mode jeu, le joueur ne peut que désigner des ordres aux colons.
+- [ ] 2.12 **Stocks utiles à la construction** : en mode jeu, poser une maison ou un bâtiment consomme X pierre + Y bois + Z terre au lieu d'être gratuit. L'outil Placer (blocs) propose un choix de matériau (pierre / terre / sable) au lieu de prendre le plus abondant. Les stocks deviennent la monnaie d'échange réelle, au-delà du sculpt de paysage.
 
 ### Axe 6, social (idées en vrac, à préciser)
 

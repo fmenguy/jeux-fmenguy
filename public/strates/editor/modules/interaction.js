@@ -17,7 +17,7 @@ import { canMineCell } from './tech.js'
 import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
-import { saveGame, loadGame, hasSave, deleteSave } from './persistence.js'
+import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
 
 // ============================================================================
 // Curseur wireframe
@@ -169,24 +169,94 @@ if (btnReset) btnReset.addEventListener('click', () => {
   resetWorld(refreshHUD)
 })
 
-const btnSave = document.getElementById('btn-save')
-if (btnSave) btnSave.addEventListener('click', () => {
-  const ok = saveGame('auto')
-  btnSave.textContent = ok ? 'Sauve!' : 'Echec'
-  setTimeout(() => { btnSave.textContent = 'Sauver' }, 1200)
-})
+function openSaveMenu() {
+  renderSaveSlots()
+  const m = document.getElementById('save-menu')
+  if (m) m.classList.remove('hidden')
+}
+function closeSaveMenu() {
+  const m = document.getElementById('save-menu')
+  if (m) m.classList.add('hidden')
+}
 
-const btnLoad = document.getElementById('btn-load')
-if (btnLoad) btnLoad.addEventListener('click', () => {
-  if (!hasSave('auto')) {
-    btnLoad.textContent = 'Aucune'
-    setTimeout(() => { btnLoad.textContent = 'Charger' }, 1200)
-    return
+function formatTs(ts) {
+  const d = new Date(ts)
+  const pad = n => String(n).padStart(2, '0')
+  return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+}
+
+function renderSaveSlots() {
+  const container = document.getElementById('save-slots')
+  const autoC = document.getElementById('save-auto')
+  if (!container || !autoC) return
+  container.innerHTML = ''
+  const slots = listSlots()
+  for (const slot of slots) {
+    const row = document.createElement('div')
+    row.className = 'save-row' + (slot.meta ? '' : ' empty')
+    const label = document.createElement('div')
+    label.className = 'slot-label'
+    label.textContent = '#' + slot.index
+    row.appendChild(label)
+    const info = document.createElement('div')
+    info.className = 'slot-info'
+    if (slot.corrupted) info.textContent = 'corrompu'
+    else if (slot.meta) info.textContent = formatTs(slot.meta.savedAt) + '  ·  ' + slot.meta.colonists + ' colons  ·  cycle ' + (slot.meta.cyclesDone || 0)
+    else info.innerHTML = '<em>emplacement libre</em>'
+    row.appendChild(info)
+    const bSave = document.createElement('button')
+    bSave.className = 'btn-save'
+    bSave.textContent = slot.meta ? 'Ecraser' : 'Sauver'
+    bSave.addEventListener('click', () => { saveGame(slot.index); renderSaveSlots() })
+    row.appendChild(bSave)
+    const bLoad = document.createElement('button')
+    bLoad.className = 'btn-load'
+    bLoad.textContent = 'Charger'
+    bLoad.disabled = !slot.meta
+    bLoad.addEventListener('click', () => {
+      if (loadGame(slot.index)) { refreshHUD(); closeSaveMenu() }
+    })
+    row.appendChild(bLoad)
+    const bDel = document.createElement('button')
+    bDel.className = 'btn-del'
+    bDel.textContent = '×'
+    bDel.disabled = !slot.meta
+    bDel.addEventListener('click', () => { if (confirm('Supprimer l emplacement ' + slot.index + ' ?')) { deleteSave(slot.index); renderSaveSlots() } })
+    row.appendChild(bDel)
+    container.appendChild(row)
   }
-  const ok = loadGame('auto')
-  if (ok) refreshHUD()
-  btnLoad.textContent = ok ? 'Charge!' : 'Echec'
-  setTimeout(() => { btnLoad.textContent = 'Charger' }, 1200)
+  // slot auto en bas
+  autoC.innerHTML = ''
+  const autoRow = document.createElement('div')
+  autoRow.className = 'save-row auto' + (hasSave('auto') ? '' : ' empty')
+  const aLabel = document.createElement('div')
+  aLabel.className = 'slot-label'
+  aLabel.textContent = 'Auto'
+  autoRow.appendChild(aLabel)
+  const aInfo = document.createElement('div')
+  aInfo.className = 'slot-info'
+  aInfo.textContent = hasSave('auto') ? 'derniere sauvegarde auto (toutes les 30 s)' : 'pas encore de sauvegarde auto'
+  autoRow.appendChild(aInfo)
+  const aLoad = document.createElement('button')
+  aLoad.className = 'btn-load'
+  aLoad.textContent = 'Charger'
+  aLoad.disabled = !hasSave('auto')
+  aLoad.addEventListener('click', () => { if (loadGame('auto')) { refreshHUD(); closeSaveMenu() } })
+  autoRow.appendChild(aLoad)
+  autoC.appendChild(autoRow)
+}
+
+const btnSave = document.getElementById('btn-save')
+if (btnSave) btnSave.addEventListener('click', openSaveMenu)
+const btnLoad = document.getElementById('btn-load')
+if (btnLoad) btnLoad.addEventListener('click', openSaveMenu)
+const btnSaveClose = document.getElementById('save-menu-close')
+if (btnSaveClose) btnSaveClose.addEventListener('click', closeSaveMenu)
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const m = document.getElementById('save-menu')
+    if (m && !m.classList.contains('hidden')) closeSaveMenu()
+  }
 })
 
 window.addEventListener('keydown', (e) => {
