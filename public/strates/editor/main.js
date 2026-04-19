@@ -18,7 +18,7 @@ import { setTool, setBrush } from './modules/interaction.js'
 import { hasSave, loadGame, startAutoSave } from './modules/persistence.js'
 import { tickSeasons, currentSeason, forceSeasonRepaint } from './modules/seasons.js'
 import { buildVegetation, tickVegetationSeasons } from './modules/vegetation.js'
-import { initAudio } from './modules/audio.js'
+import { initAudio, tickAudio } from './modules/audio.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -108,6 +108,7 @@ function tick(nowMs) {
 
   tickSeasons(dt)
   tickVegetationSeasons(dt)
+  tickAudio()
   // HUD saison
   if (!tick._lastSeasonHUD || t - tick._lastSeasonHUD >= 1.0) {
     tick._lastSeasonHUD = t
