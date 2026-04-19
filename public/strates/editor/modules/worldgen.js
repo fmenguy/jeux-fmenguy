@@ -11,6 +11,7 @@ import {
 import { spawnColonist, clearColonists, findSpawn } from './colonist.js'
 import { startNextQuest, resetQuestSig } from './quests.js'
 import { scene } from './scene.js'
+import { clearVegetation, buildVegetation } from './vegetation.js'
 
 // ============================================================================
 // Scene par defaut : hameau, arbres, rochers, filons, baies, champs, colons
@@ -172,6 +173,7 @@ export function resetWorld(refreshHUD) {
   state.researchPoints = 0
   for (const id in state.techs) state.techs[id].unlocked = false
   clearAllPlacements()
+  clearVegetation()
   clearColonists()
   const newSeed = Math.floor(Math.random() * 0xffffff)
   prng.seedRand = mulberry32(newSeed)
@@ -179,6 +181,9 @@ export function resetWorld(refreshHUD) {
   rebuildPerm()
   buildTerrain()
   populateDefaultScene()
+  buildVegetation()
+  state.season.idx = 0
+  state.season.elapsed = 0
   state.lastJobTime = performance.now() / 1000
   state.resources.berries = 0
   state.resources.wood = 0

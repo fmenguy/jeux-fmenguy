@@ -3,19 +3,35 @@ import { state } from './state.js'
 import { rebuildTerrainFromState, repaintCellSurface } from './terrain.js'
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
-  clearAllPlacements, isCellOccupied
+  addManorFromSave, clearAllPlacements, isCellOccupied
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
 import { resetQuestSig, startNextQuest } from './quests.js'
+import { clearVegetation } from './vegetation.js'
 
 // ============================================================================
-// Persistance localStorage. Une seule slot "auto" pour l'instant.
-// Format JSON versionne, tableaux typed convertis en Array standard.
+// Persistance localStorage. Slots : 'auto' (ecrase en continu) + 1..5 manuels.
 // ============================================================================
 
 const STORAGE_KEY_PREFIX = 'strates-save-'
 const SAVE_VERSION = 1
+export const MANUAL_SLOT_COUNT = 5
+
+export function listSlots() {
+  const out = []
+  for (let i = 1; i <= MANUAL_SLOT_COUNT; i++) {
+    const raw = localStorage.getItem(STORAGE_KEY_PREFIX + i)
+    if (!raw) { out.push({ index: i, data: null }); continue }
+    try {
+      const data = JSON.parse(raw)
+      out.push({ index: i, meta: { savedAt: data.savedAt, cyclesDone: data.season ? data.season.cyclesDone : 0, colonists: (data.colonists || []).length } })
+    } catch (e) {
+      out.push({ index: i, corrupted: true })
+    }
+  }
+  return out
+}
 
 export function hasSave(slot = 'auto') {
   return !!localStorage.getItem(STORAGE_KEY_PREFIX + slot)
@@ -86,6 +102,7 @@ function serializeSnapshot() {
       regenTimer: b.regenTimer
     })),
     houses: state.houses.map(h => ({ x: h.x, z: h.z })),
+    manors: state.manors.map(m => ({ x: m.x, z: m.z })),
     researchHouses: state.researchHouses.map(r => ({
       x: r.x, z: r.z, id: r.id,
       assignedColonistId: r.assignedColonistId
@@ -113,7 +130,9 @@ function serializeSnapshot() {
     resources: { ...state.resources },
     gameStats: { ...state.gameStats },
     questIndex: state.questIndex,
-    questCompletedAt: state.questCompletedAt
+    questCompletedAt: state.questCompletedAt,
+    season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone },
+    visited: state.visited ? Array.from(state.visited) : null
   }
 }
 
@@ -132,6 +151,7 @@ function clearEverything() {
   state.researchTickAccum = 0
   for (const id in state.techs) state.techs[id].unlocked = false
   clearAllPlacements()
+  clearVegetation()
   clearColonists()
   state.contextBubbles.lastCategoryTriggerAt.clear()
   state.contextBubbles.lastLineByCategory.clear()
@@ -172,6 +192,7 @@ function applySnapshot(data) {
     }
   }
   for (const h of data.houses) if (!isCellOccupied(h.x, h.z)) addHouse(h.x, h.z)
+  for (const m of (data.manors || [])) addManorFromSave(m.x, m.z)
   for (const rh of data.researchHouses) {
     if (isCellOccupied(rh.x, rh.z)) continue
     const entry = addResearchHouse(rh.x, rh.z)
@@ -213,6 +234,11 @@ function applySnapshot(data) {
   // quetes : on redemarre a l'index sauve
   state.questIndex = data.questIndex || 0
   state.questCompletedAt = data.questCompletedAt || -1
+  if (data.season) {
+    state.season.idx = data.season.idx || 0
+    state.season.elapsed = data.season.elapsed || 0
+    state.season.cyclesDone = data.season.cyclesDone || 0
+  }
   startNextQuest()
 
   state.lastJobTime = performance.now() / 1000

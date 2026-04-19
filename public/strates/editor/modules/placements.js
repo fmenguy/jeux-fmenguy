@@ -32,7 +32,17 @@ leafMesh.frustumCulled = false
 leafMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_TREES * 3), 3)
 scene.add(leafMesh)
 
-export function addTree(gx, gz) {
+function applyTreeMatrix(t) {
+  const s = t.targetScale * Math.max(0.08, t.growth)
+  tmpObj.position.set(t.x + 0.5 + t.jx, t.top, t.z + 0.5 + t.jz)
+  tmpObj.rotation.set(0, t.rot, 0)
+  tmpObj.scale.setScalar(s)
+  tmpObj.updateMatrix()
+  trunkMesh.setMatrixAt(t.slot, tmpObj.matrix)
+  leafMesh.setMatrixAt(t.slot, tmpObj.matrix)
+}
+
+export function addTree(gx, gz, opts) {
   if (state.trees.length >= MAX_TREES) return
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return
@@ -41,21 +51,24 @@ export function addTree(gx, gz) {
   const jz = (rng() - 0.5) * 0.6
   const scale = 0.8 + rng() * 0.5
   const rot = rng() * Math.PI * 2
-  const i = state.trees.length
-  tmpObj.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
-  tmpObj.rotation.set(0, rot, 0)
-  tmpObj.scale.setScalar(scale)
-  tmpObj.updateMatrix()
-  trunkMesh.setMatrixAt(i, tmpObj.matrix)
-  leafMesh.setMatrixAt(i, tmpObj.matrix)
+  const slot = state.trees.length
+  const growing = opts && opts.growing
+  const entry = {
+    x: gx, z: gz,
+    slot, jx, jz, rot, top,
+    targetScale: scale,
+    growth: (opts && opts.growth != null) ? opts.growth : (growing ? 0.12 : 1)
+  }
+  applyTreeMatrix(entry)
   tmpColor.setHSL(0.28 + (rng() - 0.5) * 0.06, 0.5 + rng() * 0.15, 0.32 + rng() * 0.1)
-  leafMesh.setColorAt(i, tmpColor)
-  trunkMesh.count = i + 1
-  leafMesh.count = i + 1
+  leafMesh.setColorAt(slot, tmpColor)
+  trunkMesh.count = slot + 1
+  leafMesh.count = slot + 1
   trunkMesh.instanceMatrix.needsUpdate = true
   leafMesh.instanceMatrix.needsUpdate = true
   if (leafMesh.instanceColor) leafMesh.instanceColor.needsUpdate = true
-  state.trees.push({ x: gx, z: gz })
+  state.trees.push(entry)
+  return entry
 }
 
 export function removeTreesIn(cells) {
@@ -65,45 +78,86 @@ export function removeTreesIn(cells) {
   if (kept.length === state.trees.length) return
   state.trees.length = 0
   trunkMesh.count = 0; leafMesh.count = 0
-  for (const t of kept) addTree(t.x, t.z)
+  for (const t of kept) addTree(t.x, t.z, { growth: t.growth })
+}
+
+// animation de pousse : chaque arbre avec growth < 1 grandit sur ~12 s
+export function tickTreeGrowth(dt) {
+  let changed = false
+  const RATE = 1 / 12
+  for (const t of state.trees) {
+    if (t.growth < 1) {
+      t.growth = Math.min(1, t.growth + dt * RATE)
+      applyTreeMatrix(t)
+      changed = true
+    }
+  }
+  if (changed) {
+    trunkMesh.instanceMatrix.needsUpdate = true
+    leafMesh.instanceMatrix.needsUpdate = true
+  }
 }
 
 // ============================================================================
-// Rochers
+// Rochers : tas de 2 a 3 cailloux ramasses au sol (chaque rocher consomme
+// jusqu'a 3 instances dans l'InstancedMesh, d'ou la capacite x3).
 // ============================================================================
-const rockGeo = new THREE.BoxGeometry(0.7, 1.4, 0.7)
-rockGeo.translate(0, 0.7, 0)
-const rockMatInst = new THREE.MeshStandardMaterial({ color: 0x5a5550, roughness: 0.95, flatShading: true })
-export const rockMesh = new THREE.InstancedMesh(rockGeo, rockMatInst, MAX_ROCKS)
+const ROCK_INSTANCE_CAP = MAX_ROCKS * 3
+const rockGeo = new THREE.BoxGeometry(0.55, 0.45, 0.55)
+rockGeo.translate(0, 0.225, 0)
+const rockMatInst = new THREE.MeshStandardMaterial({ color: 0xa0998e, roughness: 0.95, flatShading: true })
+export const rockMesh = new THREE.InstancedMesh(rockGeo, rockMatInst, ROCK_INSTANCE_CAP)
 rockMesh.castShadow = true
 rockMesh.receiveShadow = true
 rockMesh.count = 0
 rockMesh.frustumCulled = false
-rockMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_ROCKS * 3), 3)
+rockMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(ROCK_INSTANCE_CAP * 3), 3)
 scene.add(rockMesh)
+
+function placeRockChunk(i, cx, cy, cz, sx, sy, sz, rotY, g) {
+  tmpObj.position.set(cx, cy, cz)
+  tmpObj.rotation.set(0, rotY, 0)
+  tmpObj.scale.set(sx, sy, sz)
+  tmpObj.updateMatrix()
+  rockMesh.setMatrixAt(i, tmpObj.matrix)
+  tmpColor.setRGB(g, g * 0.98, g * 0.95)
+  rockMesh.setColorAt(i, tmpColor)
+}
 
 export function addRock(gx, gz) {
   if (state.rocks.length >= MAX_ROCKS) return
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return
   const rng = prng.rng
-  const jx = (rng() - 0.5) * 0.4
-  const jz = (rng() - 0.5) * 0.4
-  const scale = 0.7 + rng() * 0.6
-  const rot = rng() * Math.PI * 2
-  const i = state.rocks.length
-  tmpObj.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
-  tmpObj.rotation.set(0, rot, 0)
-  tmpObj.scale.set(scale, 0.5 + rng() * 0.8, scale)
-  tmpObj.updateMatrix()
-  rockMesh.setMatrixAt(i, tmpObj.matrix)
-  const g = 0.3 + rng() * 0.15
-  tmpColor.setRGB(g, g, g + 0.02)
-  rockMesh.setColorAt(i, tmpColor)
-  rockMesh.count = i + 1
+  const baseX = gx + 0.5
+  const baseZ = gz + 0.5
+  const startIdx = rockMesh.count
+  const chunkCount = 2 + Math.floor(rng() * 2) // 2 ou 3 cailloux
+  const indices = []
+  for (let k = 0; k < chunkCount; k++) {
+    if (rockMesh.count >= ROCK_INSTANCE_CAP) break
+    const i = rockMesh.count
+    // premier caillou au centre, les suivants en satellites
+    const ang = rng() * Math.PI * 2
+    const dist = k === 0 ? 0 : 0.18 + rng() * 0.22
+    const cx = baseX + Math.cos(ang) * dist
+    const cz = baseZ + Math.sin(ang) * dist
+    // tailles variees, base plus grosse, satellites plus petits
+    const baseScale = k === 0 ? (0.85 + rng() * 0.35) : (0.5 + rng() * 0.35)
+    const sx = baseScale
+    const sz = baseScale * (0.85 + rng() * 0.3)
+    const sy = baseScale * (0.55 + rng() * 0.25)
+    const rotY = rng() * Math.PI * 2
+    // gris clair chaleureux, legere variation
+    const g = 0.55 + rng() * 0.15
+    placeRockChunk(i, cx, top, cz, sx, sy, sz, rotY, g)
+    rockMesh.count = i + 1
+    indices.push(i)
+  }
   rockMesh.instanceMatrix.needsUpdate = true
   if (rockMesh.instanceColor) rockMesh.instanceColor.needsUpdate = true
-  state.rocks.push({ x: gx, z: gz })
+  state.rocks.push({ x: gx, z: gz, indices })
+  return startIdx
 }
 
 export function removeRocksIn(cells) {
@@ -207,6 +261,28 @@ export function removeOresIn(cells) {
   rebuildOres(kept.slice())
 }
 
+export function isTreeOn(x, z) {
+  for (const t of state.trees) if (t.x === x && t.z === z) return true
+  return false
+}
+
+// Abat un arbre et renvoie true si un arbre etait present.
+export function chopTreeAt(x, z) {
+  if (!isTreeOn(x, z)) return false
+  removeTreesIn([{ x, z }])
+  return true
+}
+
+// Extrait le filon d'une cellule et renvoie son type (ex: 'ore-gold'), ou null
+// si pas de filon. Utilise par le colon quand il mine une tuile a filon.
+export function extractOreAt(x, z) {
+  const k = z * GRID + x
+  const type = state.cellOre[k]
+  if (!type) return null
+  removeOresIn([{ x, z }])
+  return type
+}
+
 // ============================================================================
 // Buissons de baies
 // ============================================================================
@@ -285,10 +361,13 @@ export function addBush(gx, gz) {
   bushBerryMesh.instanceMatrix.needsUpdate = true
   if (bushBerryMesh.instanceColor) bushBerryMesh.instanceColor.needsUpdate = true
 
+  // maxBerries aleatoire entre 5 et 14 pour que les buissons soient
+  // productifs : la recolte normale vaut largement plus que le minage brut.
+  const maxB = 5 + Math.floor(rng() * 10)
   const bush = {
     x: gx, z: gz,
-    berries: BERRIES_PER_BUSH,
-    maxBerries: BERRIES_PER_BUSH,
+    berries: Math.min(maxB, 3 + Math.floor(rng() * 8)), // part deja partiellement remplie
+    maxBerries: maxB,
     leafIndices,
     berryIndices,
     berryMatrices: berryPositions,
@@ -380,6 +459,99 @@ export function removeHousesIn(cells) {
       scene.remove(state.houses[i].group)
       state.houses[i].group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
       state.houses.splice(i, 1)
+    }
+  }
+}
+
+// ============================================================================
+// Manoirs : fusion de 4 maisons en 2x2
+// ============================================================================
+function makeManor() {
+  const rng = prng.rng
+  const g = new THREE.Group()
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xc4bab0, roughness: 0.88, flatShading: true })
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x7a3528, roughness: 0.82, flatShading: true })
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x9e9690, roughness: 0.92, flatShading: true })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.8, 1.9), wallMat)
+  body.position.y = 0.9; body.castShadow = true; body.receiveShadow = true
+  g.add(body)
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.62, 1.4, 4), roofMat)
+  roof.position.y = 2.5; roof.rotation.y = Math.PI / 4
+  roof.castShadow = true
+  g.add(roof)
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.75, 0.7), stoneMat)
+  tower.position.y = 2.25; tower.castShadow = true
+  g.add(tower)
+  const towerRoof = new THREE.Mesh(new THREE.ConeGeometry(0.54, 1.05, 4), roofMat)
+  towerRoof.position.y = 3.35; towerRoof.rotation.y = Math.PI / 4
+  towerRoof.castShadow = true
+  g.add(towerRoof)
+  for (const [cx, cz] of [[-0.55, -0.45], [0.45, 0.5]]) {
+    const ch = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.48, 0.2), stoneMat)
+    ch.position.set(cx, 2.42, cz); ch.castShadow = true
+    g.add(ch)
+  }
+  g.rotation.y = Math.floor(rng() * 4) * Math.PI / 2
+  return g
+}
+
+function _placeManorGroup(ox, oz) {
+  const tops = [
+    state.cellTop[ oz      * GRID + ox   ],
+    state.cellTop[ oz      * GRID + ox+1 ],
+    state.cellTop[(oz + 1) * GRID + ox   ],
+    state.cellTop[(oz + 1) * GRID + ox+1 ]
+  ]
+  const top = Math.max(...tops)
+  const g = makeManor()
+  g.position.set(ox + 1, top, oz + 1)
+  scene.add(g)
+  const entry = { x: ox, z: oz, group: g }
+  state.manors.push(entry)
+  return entry
+}
+
+function isPlainHouseOn(x, z) {
+  for (const h of state.houses) if (h.x === x && h.z === z) return true
+  return false
+}
+
+export function checkManorMerge(gx, gz) {
+  for (let ox = gx - 1; ox <= gx; ox++) {
+    for (let oz = gz - 1; oz <= gz; oz++) {
+      if (ox < 0 || oz < 0 || ox + 1 >= GRID || oz + 1 >= GRID) continue
+      if (
+        isPlainHouseOn(ox,   oz  ) &&
+        isPlainHouseOn(ox+1, oz  ) &&
+        isPlainHouseOn(ox,   oz+1) &&
+        isPlainHouseOn(ox+1, oz+1)
+      ) {
+        removeHousesIn([{x:ox,z:oz},{x:ox+1,z:oz},{x:ox,z:oz+1},{x:ox+1,z:oz+1}])
+        return _placeManorGroup(ox, oz)
+      }
+    }
+  }
+  return null
+}
+
+export function addManorFromSave(ox, oz) {
+  return _placeManorGroup(ox, oz)
+}
+
+export function removeManorsIn(cells) {
+  if (!state.manors.length) return
+  const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
+  for (let i = state.manors.length - 1; i >= 0; i--) {
+    const m = state.manors[i]
+    if (
+      cellSet.has( m.z      * GRID + m.x   ) ||
+      cellSet.has( m.z      * GRID + m.x+1 ) ||
+      cellSet.has((m.z + 1) * GRID + m.x   ) ||
+      cellSet.has((m.z + 1) * GRID + m.x+1 )
+    ) {
+      scene.remove(m.group)
+      m.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+      state.manors.splice(i, 1)
     }
   }
 }
@@ -503,6 +675,11 @@ export function clearAllPlacements() {
     h.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
   }
   state.houses.length = 0
+  for (const m of state.manors) {
+    scene.remove(m.group)
+    m.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+  }
+  state.manors.length = 0
   clearAllResearchHouses()
 }
 
@@ -513,14 +690,36 @@ export function isCellOccupied(x, z) {
   for (const t of state.trees) if (t.x === x && t.z === z) return true
   for (const r of state.rocks) if (r.x === x && r.z === z) return true
   for (const h of state.houses) if (h.x === x && h.z === z) return true
+  for (const m of state.manors) if ((x === m.x || x === m.x+1) && (z === m.z || z === m.z+1)) return true
   for (const h of state.researchHouses) if (h.x === x && h.z === z) return true
   for (const b of state.bushes) if (b.x === x && b.z === z) return true
   if (state.cellOre[z * GRID + x]) return true
   return false
 }
 
+export function isRockOn(x, z) {
+  for (const r of state.rocks) if (r.x === x && r.z === z) return true
+  return false
+}
+
+// Retire le rocher present sur la tuile (tas de 2 a 3 cailloux), renvoie la
+// quantite de pierre recoltee (environ 2 par caillou).
+export function collectRockAt(x, z) {
+  let chunks = 0
+  for (const r of state.rocks) {
+    if (r.x === x && r.z === z) {
+      chunks = (r.indices && r.indices.length) ? r.indices.length : 2
+      break
+    }
+  }
+  if (!chunks) return 0
+  removeRocksIn([{ x, z }])
+  return chunks * 2
+}
+
 export function isHouseOn(x, z) {
   for (const h of state.houses) if (h.x === x && h.z === z) return true
+  for (const m of state.manors) if ((x === m.x || x === m.x+1) && (z === m.z || z === m.z+1)) return true
   for (const h of state.researchHouses) if (h.x === x && h.z === z) return true
   return false
 }
@@ -533,5 +732,20 @@ export function isBushOn(x, z) {
   return false
 }
 export function isMineBlocked(x, z) {
-  return isHouseOn(x, z) || isOreOn(x, z) || isBushOn(x, z)
+  // Plus rien n'est "bloquant" au sens strict : tout peut etre designe, mais
+  // la logique d'execution dans colonist detecte le contenu et agit en
+  // consequence (abat arbre, ramasse rocher, extrait filon, recolte buisson,
+  // sinon mine le voxel). Seules les maisons et laboratoires restent
+  // intouchables car ce sont des constructions que le joueur efface
+  // explicitement avec Effacer.
+  return isHouseOn(x, z)
+}
+
+// Recolte complete d'un buisson quand on mine le voxel dessous : retire le
+// buisson et renvoie 1 a 3 baies bonus. La recolte "normale" via pickHarvest
+// donne beaucoup plus (voir maxBerries sur addBush).
+export function grabBushAt(x, z) {
+  if (!isBushOn(x, z)) return 0
+  removeBushesIn([{ x, z }])
+  return 1 + Math.floor(Math.random() * 3)
 }

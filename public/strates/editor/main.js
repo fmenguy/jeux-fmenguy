@@ -6,7 +6,7 @@ import { state } from './modules/state.js'
 import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
-import { refreshBushBerries, countActiveResearchers } from './modules/placements.js'
+import { refreshBushBerries, countActiveResearchers, tickTreeGrowth } from './modules/placements.js'
 import { tryBlockedTechBubble } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests } from './modules/quests.js'
@@ -16,6 +16,9 @@ import {
 } from './modules/hud.js'
 import { setTool, setBrush } from './modules/interaction.js'
 import { hasSave, loadGame, startAutoSave } from './modules/persistence.js'
+import { tickSeasons, currentSeason, forceSeasonRepaint } from './modules/seasons.js'
+import { buildVegetation, tickVegetationSeasons } from './modules/vegetation.js'
+import { initAudio, tickAudio } from './modules/audio.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -27,21 +30,32 @@ startNextQuest()
 
 buildTerrain()
 if (hasSave('auto') && loadGame('auto')) {
-  // monde restaure depuis la sauvegarde auto, rien a faire de plus
+  forceSeasonRepaint()
 } else {
   populateDefaultScene()
 }
+buildVegetation()
 setTool('nav')
 setBrush(1)
 refreshHUD()
 startAutoSave(30)
+initAudio()
 
 state.lastJobTime = performance.now() / 1000
 
 const tmpColor = new THREE.Color()
 const clock = new THREE.Clock()
+const TARGET_FPS = 60
+const FRAME_MIN_MS = 1000 / TARGET_FPS
+let lastFrameMs = 0
 
-function tick() {
+function tick(nowMs) {
+  if (nowMs == null) nowMs = performance.now()
+  if (nowMs - lastFrameMs < FRAME_MIN_MS - 0.5) {
+    requestAnimationFrame(tick)
+    return
+  }
+  lastFrameMs = nowMs
   const dt = Math.min(0.1, clock.getDelta())
   const t = clock.elapsedTime
   waterMat.uniforms.uTime.value = t
@@ -89,6 +103,23 @@ function tick() {
         b.berries = Math.min(b.maxBerries, b.berries + 1)
         refreshBushBerries(b)
       }
+    }
+  }
+
+  tickSeasons(dt)
+  tickVegetationSeasons(dt)
+  tickTreeGrowth(dt)
+  tickAudio()
+  // HUD saison
+  if (!tick._lastSeasonHUD || t - tick._lastSeasonHUD >= 1.0) {
+    tick._lastSeasonHUD = t
+    const sEl = document.getElementById('season-name')
+    const sIcon = document.getElementById('season-icon')
+    if (sEl || sIcon) {
+      const cs = currentSeason()
+      const icons = { spring: '\u{1F33C}', summer: '\u2600', autumn: '\u{1F342}', winter: '\u2744' }
+      if (sEl) sEl.textContent = cs.name
+      if (sIcon) sIcon.textContent = icons[cs.id] || '\u{1F33F}'
     }
   }
 

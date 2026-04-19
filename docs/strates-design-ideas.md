@@ -169,23 +169,82 @@ Panneau #quests (haut droite, bordure dorée). 3 quêtes initiales actives au d�
 - Besoins et nourriture (faim, consommation baies/pain).
 - Relations et reproduction naturelle.
 
-## Tech tree et passage d'âges
+## Tech tree XXL et passage d'âges
 
-Progression type Empire Earth (confirmé vision initiale). Âges pressentis :
+### Ambition
 
-1. Âge de pierre (démarrage)
-2. Âge du bronze
-3. Âge du fer (médiéval, pivot de fait du jeu)
-4. Âge industriel
-5. Plus tard : moderne, futuriste ? À voir.
+Arbre de recherche gigantesque, inspiré **Total War Warhammer** (High Elves: une grille 8 colonnes × 6 rangs) et **Craft the World** (arbre qui part dans toutes les directions, lié à l'époque). Pas 4 techs linéaires comme actuellement, plutôt **60 à 90 techs** réparties sur 7 âges et 6 branches thématiques, avec prérequis croisés qui obligent à faire des choix.
 
-Les âges se débloquent par action du joueur (pas passifs) : collecte de ressources seuils, construction d'un bâtiment clé, validation par le joueur d'un passage. Les habitants évoluent seuls sur le plan social mais l'action du joueur reste obligatoire pour la progression technique.
+### Les 7 âges (+ endgame cyclique)
 
-Chaque âge débloque :
-- Nouveaux outils (pioche bronze, pioche fer, pelle, hache, scie, marteau).
-- Nouveaux bâtiments (forge, moulin, mine profonde, scierie).
-- Nouvelles ressources exploitables.
-- Nouvelles compétences de colons.
+Inspiration Empire Earth, étendue à la vision long terme du projet.
+
+1. **Âge de pierre** : démarrage, cueillette, premières pioches.
+2. **Âge du bronze** : alliages, premières routes, couples.
+3. **Âge du fer** : pivot médiéval (châteaux, forge, blé cultivé).
+4. **Âge industriel** : vapeur, usines, premiers trains.
+5. **Âge moderne** : électricité, chemins de fer, mines profondes.
+6. **Âge atomique** : réacteurs, villes, automatismes.
+7. **Âge de l'espace** : fusées, stations orbitales.
+8. **Endgame cyclique** : changement de planète, regénération avec biomes exotiques.
+
+### Les 6 branches thématiques
+
+Chaque branche traverse tous les âges, avec 8 à 15 techs réparties. Les branches se croisent (une tech de la branche Savoir peut requérir une tech de la branche Construction).
+
+| Branche | Couleur | Exemples de techs par âge |
+|---|---|---|
+| **Outils** | gris / bronze / fer | pioches, haches, pelles, marteaux, houes, faucilles, perforatrices |
+| **Agriculture** | vert doré | champs, moulin, four à pain, élevage, brasserie, serres, hydroponie |
+| **Construction** | bois brun | maisons améliorées, forge, scierie, moulin à eau, aqueducs, palais, gratte-ciels |
+| **Militaire** | rouge grenat | palissade, archers, guet, chevaliers, canons, tranchées, missiles (déclenchable aux événements) |
+| **Savoir** | bleu | école, bibliothèque, université, imprimerie, laboratoire scientifique, internet, IA |
+| **Âge** (transition) | doré | bâtiments monuments qui déclenchent le passage d'âge lorsque certaines techs des autres branches sont acquises |
+
+### Mécanique de progression (à la FDA)
+
+Comme dans le projet jumeau FDA, le passage d'un âge à l'autre se fait par **conditions cumulatives** sur plusieurs branches :
+
+- **Âge du bronze** requiert : avoir débloqué pioche pierre (Outils) + avoir construit 1 forge (Construction) + avoir 3 chercheurs actifs (Savoir).
+- **Âge du fer** requiert : pioche bronze + moulin (Agriculture) + première route (Construction) + 5 chercheurs.
+- Etc.
+
+Le passage d'âge est **déclaré** par le joueur (clic sur le bâtiment monument correspondant) une fois les conditions remplies. Animation cinématique courte, bulle d'annonce, déblocage des techs du nouveau âge.
+
+**Recherche à débloquer** : à l'intérieur d'un âge atteint, les techs sont accessibles une par une en dépensant des points de recherche. Les coûts doivent croître fortement (5 → 30 → 100 → 300 → 1000 pts pour les plus avancées) pour que le rythme reste lent une fois la colonie grosse. Plusieurs chercheurs = plusieurs labos = plus de points par seconde, mais moins de colons disponibles pour le reste. Arbitrage permanent.
+
+### Prérequis croisés
+
+Exemples inspirés Total War :
+
+- **Pioche de fer** (Outils, âge fer) requiert : pioche bronze + forge améliorée (Construction).
+- **Cathédrale** (Construction, âge fer) requiert : aqueduc (Construction) + scribe (Savoir).
+- **Hydroponie** (Agriculture, âge espace) requiert : serre (Agriculture) + panneau solaire (Construction) + génie génétique (Savoir).
+
+Un tech ne peut pas être débloqué tant qu'UN de ses prérequis n'est pas rempli. L'arbre forme un graphe orienté acyclique, pas juste une chaîne linéaire.
+
+### Visualisation
+
+Panneau Tech actuel (liste verticale 4 entrées) insuffisant pour 60+ techs. À refaire en **arbre visuel interactif** :
+
+- Vue scrollable/zoomable (pan à la souris, molette = zoom), plein écran ou modale large.
+- Colonnes = âges, lignes = branches thématiques. Même structure que FDA dans `forge-enhance.js TECH_TREE`.
+- Chaque tech = carte (icône emoji + nom + coût + état), liens visibles entre prérequis et descendants.
+- États visuels : verrouillée (opacity 0.3), prérequis OK (bordure neutre), recherchable (glow bleu), en cours (progress bar), débloquée (glow doré).
+- Filtres par branche (toggle Outils / Agri / Construction / Militaire / Savoir / Âge).
+- Recherche texte (filtrer les techs visibles par nom).
+- Les âges non atteints sont masqués ou teased en flou, pour préserver la surprise (comme FDA qui cache les âges futurs).
+
+### Implémentation pressentie
+
+- **Data-driven** : un JSON (ou objet JS) `TECH_TREE` listant toutes les techs avec `{ id, name, age, branch, icon, cost, requires: [ids], unlocks: { buildings: [], tools: [], colonistSkills: [] } }`.
+- Aligné sur l'axe 1.5 de la roadmap (data-driven configs), faire les deux ensemble.
+- Au démarrage : charger le JSON, construire le graphe, calculer les niveaux de profondeur, positionner les cartes visuellement.
+- Conserver le panneau Tech actuel en version "résumé/compacte" pour les 3 techs recherchables à court terme, le grand arbre s'ouvre via un bouton dédié.
+
+### Ce qui est déjà en place (proto minimal)
+
+Les 4 techs actuelles (`pick-stone`, `pick-bronze`, `pick-iron`, `pick-gold`) forment juste la branche **Outils, colonne Minage**, et leurs coûts (5, 15, 30, 60) sont volontairement petits pour valider la boucle. Elles seront intégrées à l'arbre XXL lorsqu'on le construira.
 
 ## Outils et compétences des colons
 
