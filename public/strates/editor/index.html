@@ -23,6 +23,31 @@
     #hud .key { color: #c7b98c; }
     #hud .val { color: #fff; font-variant-numeric: tabular-nums; }
     #hud h4 { margin: 8px 0 2px 0; font-size: 12px; color: #ffd98a; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+    #hud { pointer-events: auto; }
+    #colons-header { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+    #colons-header .caret { font-size: 10px; opacity: 0.7; transition: transform 0.15s; }
+    #colons-header.collapsed .caret { transform: rotate(-90deg); }
+    #colons-list {
+      margin-top: 4px; max-height: 220px; overflow-y: auto;
+      font-size: 11px; line-height: 1.4;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 4px;
+    }
+    #colons-list.hidden { display: none; }
+    #colons-list .clist-row {
+      display: flex; justify-content: space-between; gap: 8px;
+      padding: 1px 0;
+    }
+    #colons-list .cname { color: #f3ecdd; }
+    #colons-list .csym { font-weight: 600; margin-left: 4px; }
+    #colons-list .csym.M { color: #4a7fc0; }
+    #colons-list .csym.F { color: #d06b8e; }
+    #colons-list .cstate {
+      color: #c7b98c; font-size: 10px; letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+    #colons-list::-webkit-scrollbar { width: 6px; }
+    #colons-list::-webkit-scrollbar-thumb { background: rgba(255,217,138,0.25); border-radius: 3px; }
 
     #help {
       position: fixed; right: 16px; top: 16px;
@@ -131,6 +156,64 @@
       cursor: pointer;
     }
     .btn-ctrl:hover { background: rgba(65, 75, 94, 0.9); }
+
+    #quests {
+      position: fixed; right: 16px; top: 16px;
+      width: 280px;
+      background: rgba(15, 18, 24, 0.82);
+      border: 1px solid rgba(168, 134, 42, 0.55);
+      border-radius: 12px;
+      padding: 12px 14px;
+      backdrop-filter: blur(8px);
+      color: #f3ecdd;
+      font-size: 12px; line-height: 1.4;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.4);
+      z-index: 11;
+    }
+    #quests h3 {
+      margin: 0 0 8px 0; font-size: 11px;
+      color: #d9b15a; letter-spacing: 0.14em;
+      font-weight: 700; text-transform: uppercase;
+    }
+    .quest {
+      padding: 8px 10px; margin-bottom: 6px;
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #a8862a;
+      border-radius: 4px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .quest.done {
+      background: rgba(217, 177, 90, 0.22);
+      border-left-color: #ffd98a;
+      animation: questFlash 0.8s ease-out;
+    }
+    @keyframes questFlash {
+      0% { background: rgba(255, 240, 180, 0.7); }
+      100% { background: rgba(217, 177, 90, 0.22); }
+    }
+    .quest .qtitle { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #f3ecdd; }
+    .quest .qdot {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block; flex-shrink: 0;
+    }
+    .quest .qbar {
+      margin-top: 6px; height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px; overflow: hidden;
+    }
+    .quest .qfill {
+      height: 100%; background: linear-gradient(90deg, #a8862a, #ffd98a);
+      width: 0%; transition: width 0.35s ease-out;
+    }
+    .quest .qprog {
+      margin-top: 3px; font-size: 10px;
+      color: #c7b98c; font-variant-numeric: tabular-nums;
+    }
+    .quest.done .qfill { background: linear-gradient(90deg, #ffd98a, #fff5d8); }
+    #quests .qdone-msg {
+      padding: 10px; text-align: center;
+      color: #d9b15a; font-style: italic; font-size: 11px;
+    }
   </style>
   <script type="importmap">
   {
@@ -149,46 +232,83 @@
     <div><b>Strates</b>, editeur de carte</div>
     <div class="row"><span class="key">FPS</span><span class="val" id="fps">0</span></div>
     <div class="row"><span class="key">Outil</span><span class="val" id="hud-tool">naviguer</span></div>
-    <h4>Colons</h4>
+    <h4 id="colons-header"><span class="caret">&#9660;</span> Colons : <span id="c-count">0</span></h4>
+    <div id="colons-list"></div>
     <div class="row"><span class="key">Jobs en attente</span><span class="val" id="jobs">0</span></div>
     <div class="row"><span class="key">IDLE / MOVING / WORKING</span><span class="val"><span id="idle">0</span> / <span id="moving">0</span> / <span id="working">0</span></span></div>
     <div class="row"><span class="key">Colons qui parlent</span><span class="val" id="talking">0</span></div>
+    <div class="row" style="margin-top: 4px;">
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #c7b98c;">
+        <input type="checkbox" id="toggle-names-in-bubbles" style="cursor: pointer;">
+        Afficher les noms dans les bulles
+      </label>
+    </div>
     <h4>Placement</h4>
     <div class="row"><span class="key">Arbres / Rochers / Maisons</span><span class="val"><span id="c-trees">0</span> / <span id="c-rocks">0</span> / <span id="c-houses">0</span></span></div>
     <div class="row"><span class="key">Champs / Filons</span><span class="val"><span id="c-fields">0</span> / <span id="c-ores">0</span></span></div>
+    <div class="row"><span class="key">Buissons</span><span class="val" id="c-bushes">0</span></div>
+    <div class="row"><span class="key">Recherche (bat / chercheurs)</span><span class="val"><span id="c-research">0</span> / <span id="c-researchers">0</span></span></div>
     <div id="c-ores-detail" style="font-size: 11px; color: #c7b98c; margin-top: 2px;"></div>
+    <h4>Ressources</h4>
+    <div class="row"><span class="key">baies / bois / pierre</span><span class="val"><span id="r-berries">0</span> / <span id="r-wood">0</span> / <span id="r-stone">0</span></span></div>
+    <div id="stocks-line" style="font-size: 11px; color: #c7b98c; margin-top: 2px;">Stocks: vide</div>
+    <div class="row" style="margin-top: 4px;"><span class="key">Recherche</span><span class="val"><span id="r-points">0</span> pts</span></div>
+  </div>
+
+  <div id="techs" style="position: fixed; right: 16px; top: 320px; width: 280px; background: rgba(15,18,24,0.82); border: 1px solid rgba(120,180,255,0.4); border-radius: 12px; padding: 12px 14px; backdrop-filter: blur(8px); color: #f3ecdd; font-size: 12px; line-height: 1.4; box-shadow: 0 6px 22px rgba(0,0,0,0.4); z-index: 11;">
+    <h3 style="margin: 0 0 8px 0; font-size: 11px; color: #8ac4ff; letter-spacing: 0.14em; font-weight: 700; text-transform: uppercase;">Tech</h3>
+    <div id="techs-body"></div>
+  </div>
+  <style>
+    .tech { padding: 6px 8px; margin-bottom: 4px; background: rgba(255,255,255,0.03); border-left: 3px solid #456; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 6px; transition: background 0.3s, border-color 0.3s; }
+    .tech.locked { opacity: 0.55; }
+    .tech.ready { border-left-color: #8ac4ff; }
+    .tech.done { border-left-color: #ffd98a; background: rgba(217,177,90,0.15); }
+    .tech.flash { animation: techFlash 0.8s ease-out; }
+    @keyframes techFlash { 0% { background: rgba(255,240,180,0.85); } 100% { background: rgba(217,177,90,0.15); } }
+    .tech .tname { font-weight: 600; font-size: 11px; }
+    .tech .tcost { font-size: 10px; color: #c7b98c; }
+    .tech button { font-size: 10px; padding: 3px 8px; border-radius: 5px; border: 1px solid #8ac4ff; background: rgba(120,180,255,0.18); color: #e6f3ff; cursor: pointer; }
+    .tech button[disabled] { opacity: 0.4; cursor: not-allowed; }
+    .tech .tdone { font-size: 10px; color: #ffd98a; }
+  </style>
+
+  <div id="quests">
+    <h3>Quêtes</h3>
+    <div id="quests-body"></div>
   </div>
 
   <div id="help">
     <div><b>Naviguer</b>, clic gauche orbite, droit pan, molette zoom</div>
-    <div><b>Designer Miner</b>, peint des colonnes que les colons viennent miner</div>
+    <div><b>Miner</b>, peint des colonnes que les colons viennent miner. Clic droit bref sur un job actif pour l'annuler</div>
     <div><b>Outils bleus</b>, placement direct reserve a l'editeur</div>
-    <div><b>Raccourcis</b>, 1 a 9, R reset, C ajouter colon</div>
+    <div><b>Raccourcis</b>, 1 a 9, R reset</div>
+    <div><b>Poser une Maison</b>, spawn 2 colons adjacents</div>
   </div>
 
   <div id="actionbar">
     <div class="group colons">
       <span class="group-label">colons</span>
       <button class="tool active" data-tool="nav">Naviguer<span class="key">1</span></button>
-      <button class="tool" data-tool="mine">Designer<br>Miner<span class="key">2</span></button>
-      <button class="tool" data-tool="cancel">Annuler<br>job<span class="key">3</span></button>
+      <button class="tool" data-tool="mine">Miner<span class="key">2</span></button>
+      <button class="tool" data-tool="build">Placer<span class="key">3</span></button>
     </div>
     <div class="group placement">
       <span class="group-label">editeur</span>
-      <button class="tool" data-tool="tree">Arbre<span class="key">4</span></button>
-      <button class="tool" data-tool="forest">Foret<span class="key">5</span></button>
-      <button class="tool" data-tool="rock">Rocher<span class="key">6</span></button>
-      <button class="tool" data-tool="ore">Filon<span class="sub" id="ore-sub">or</span><span class="key">7</span></button>
-      <button class="tool" data-tool="house">Maison<span class="key">8</span></button>
-      <button class="tool" data-tool="field">Champ<span class="key">9</span></button>
+      <button class="tool" data-tool="forest">Foret<span class="key">4</span></button>
+      <button class="tool" data-tool="rock">Rocher<span class="key">5</span></button>
+      <button class="tool" data-tool="ore">Filon<span class="sub" id="ore-sub">or</span><span class="key">6</span></button>
+      <button class="tool" data-tool="house">Maison<span class="key">7</span></button>
+      <button class="tool" data-tool="research">Recherche<span class="key">0</span></button>
+      <button class="tool" data-tool="field">Champ<span class="key">8</span></button>
+      <button class="tool" data-tool="bush">Baies<span class="key">9</span></button>
       <button class="tool" data-tool="erase">Effacer</button>
     </div>
     <div class="group controls">
       <span class="group-label">pinceau</span>
-      <button class="brush" data-brush="1">1</button>
-      <button class="brush active" data-brush="3">3</button>
+      <button class="brush active" data-brush="1">1</button>
+      <button class="brush" data-brush="3">3</button>
       <button class="brush" data-brush="5">5</button>
-      <button class="btn-ctrl" id="btn-addcolon" title="Ajouter un colon (C)">+ Colon</button>
       <button class="btn-ctrl" id="btn-reset" title="Regenerer la carte (R)">Reset</button>
     </div>
   </div>
