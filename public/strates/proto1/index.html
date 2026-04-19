@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strates, Proto 1</title>
+  <style>
+    html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #cfe7f5; font-family: system-ui, sans-serif; }
+    #app { width: 100vw; height: 100vh; display: block; }
+    #hud {
+      position: fixed; top: 8px; left: 8px; z-index: 10;
+      background: rgba(255,255,255,0.85); padding: 8px 10px; border-radius: 6px;
+      font-size: 13px; color: #222; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      min-width: 180px;
+    }
+    #hud .row { display: flex; justify-content: space-between; gap: 12px; }
+    #hud b { color: #111; }
+    #controls {
+      position: fixed; top: 8px; right: 8px; z-index: 10;
+      background: rgba(255,255,255,0.85); padding: 8px; border-radius: 6px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    #controls button {
+      padding: 6px 10px; border: 1px solid #999; background: #f7f7f7;
+      border-radius: 4px; cursor: pointer; font-size: 13px;
+    }
+    #controls button.active { background: #88c; color: white; border-color: #557; }
+    #hint {
+      position: fixed; bottom: 8px; left: 8px; z-index: 10;
+      background: rgba(255,255,255,0.75); padding: 6px 10px; border-radius: 6px;
+      font-size: 12px; color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div class="row"><span>FPS</span><b id="fps">0</b></div>
+    <div class="row"><span>Taille</span><b id="size">64</b></div>
+    <div class="row"><span>Chunks</span><b id="chunks">0</b></div>
+    <div class="row"><span>Triangles</span><b id="tris">0</b></div>
+    <div class="row"><span>Draw calls</span><b id="calls">0</b></div>
+  </div>
+  <div id="controls">
+    <button id="btn64" class="active">64 x 64</button>
+    <button id="btn128">128 x 128 (x4)</button>
+    <button id="btn256">256 x 256 (x16)</button>
+  </div>
+  <div id="hint">Clic gauche, rotation. Clic droit, pan. Molette, zoom.</div>
+  <canvas id="app"></canvas>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
