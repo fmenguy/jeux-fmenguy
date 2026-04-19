@@ -4,6 +4,10 @@ Journal d'idées au fil de la conception du jeu. Toutes les idées ici ne seront
 
 Voir aussi [strates-notes.md](strates-notes.md) pour la vision initiale.
 
+## Positionnement (confirmé 2026-04-19)
+
+Strates est pensé comme la **version 3D simulation de vie** du jeu FDA (Forge des Âges), qui existe déjà dans ce repo en version 2D. Même univers thématique (âges successifs, médiéval en pivot, progression technologique), mais transposé en sim de colons voxel. Les deux jeux peuvent partager lore, noms, iconographie à terme. FDA reste l'expérience courte et arcade, Strates est l'expérience longue et profonde.
+
 ## Pivot central (confirmé 2026-04-19)
 
 Le joueur ne terraforme pas directement. Il **désigne des zones de travail** via un pinceau. Des **colons autonomes** exécutent les ordres selon leurs outils et compétences. Références : The Settlers, Dwarf Fortress, Timberborn, Banished, RimWorld. Plus que Godus ou From Dust.
@@ -56,6 +60,115 @@ Dans certains biomes (montagne, grotte, caverne profonde), des **voxels de roche
 
 Le système sert de **gate naturel de progression** : on voit les ressources avant de pouvoir y accéder, ce qui motive à avancer dans la tech tree. Comme Timberborn avec ses niveaux d'eau ou Dwarf Fortress avec ses métaux profonds.
 
+## Recherche et arbre technologique
+
+Système central de progression, à placer au cœur du gameplay. Inspiré Civilization, Banished, The Settlers.
+
+### Bâtiment de recherche
+- **Maison avec toit bleu** (variante visuelle d'une maison classique), outil de placement dédié dans l'éditeur et plus tard déblocable via quête dans le mode jeu.
+- Représente la "hutte du sage", "bibliothèque", "laboratoire" selon l'âge.
+- Nécessite **un colon attribué à la recherche** pour produire des points de recherche.
+- Sans colon attribué, le bâtiment existe mais ne produit rien.
+
+### Déclencheurs contextuels (bulles colons)
+Les colons expriment des besoins via bulles quand le joueur les met dans une situation qui appelle un déblocage tech. Exemples :
+- Plusieurs champs posés sans houe déblocage : "Il me faut une houe", "Comment on fait pour manger du pain ?", "Ces champs servent à rien sans outils".
+- Minage de roche dure sans pioche adéquate : "Ma pioche ne fait rien", "Il faut du bronze pour casser ça".
+- Arbres à abattre sans hache : "Pas d'arbre sans hache".
+- Manque de nourriture : "J'ai faim", "On a plus de baies".
+
+Ces bulles contextuelles sont **ciblées** (un colon près de la situation concernée) plutôt qu'aléatoires, pour orienter le joueur vers la tech à débloquer.
+
+### Arbre technologique initial (âge de pierre)
+- **Houe** : permet de cultiver les champs (ajoute une quête "Récolter 10 blés"). Requiert X points de recherche.
+- **Hache en pierre** : permet d'abattre les arbres (avant, les arbres sont juste décoratifs).
+- **Pioche en pierre** : permet de miner les rochers (récolte de pierre).
+- **Four à pain** : transforme blé récolté en pain, nourriture plus riche que les baies.
+- **Cueillette améliorée** : +1 baie par buisson récolté.
+
+Puis débloque le passage à l'âge du bronze, nouveau tier, etc.
+
+### Attribution des métiers
+- Interface de **gestion des rôles** (inspirée RimWorld) : pour chaque colon, cocher les compétences qu'il peut exercer.
+- Un colon dédié recherche ne fait plus de minage, errance, récolte, sauf en mode secours.
+- Plus tard : progression dans la compétence (expérience, niveau), bonus productivité.
+
+### Implémentation v1 (éditeur, état 2026-04-19)
+
+Base technique dans `public/strates/editor/main.js` (unique fichier ~2500 lignes) et `index.html`.
+
+#### Terrain et rendu
+
+- Génération Perlin FBM (PRNG mulberry32, octaves) avec falloff insulaire (bordures forcées à eau profonde sur 3 tiles, eau peu profonde sur 2 tiles).
+- Chunks 16x16 avec face culling complet (seules les faces visibles sont générées via `BufferGeometry` et `vertexColors`). Pas de lag sur une grille 48x48x8.
+- Biomes : herbe, forêt, sable, roche, neige. Palettes voxel désaturées et chaleureuses (style Dorfromantik).
+- Eau double plan : profonde (`#1a3a5e`) et peu profonde (`#5ba8c4`), `ShaderMaterial` avec ondulations animées.
+- Sky shader Three.js, `EffectComposer` avec `UnrealBloom` + vignette, `ACESFilmicToneMapping`.
+- `InstancedMesh` pour arbres et rochers (`frustumCulled = false` pour éviter le culling erroné quand le bounding sphere est en (0,0,0)).
+
+#### Colons
+
+- Machine à états : `IDLE / MOVING / WORKING / RESEARCHING / wander`.
+- A\* pathfinding 2D sur grille de colonnes, franchissement max 2 voxels, eau profonde bloquante, eau peu profonde traversable.
+- Gravité : si le sol disparaît sous un colon (minage), il tombe immédiatement.
+- Errance en idle : déplacement aléatoire toutes les 5 à 12 s.
+- Bulles 2D CSS au-dessus de la tête, pool de phrases aléatoires + bulles contextuelles prioritaires.
+- Identité : nom tiré dans `MALE_NAMES` (21) ou `FEMALE_NAMES` (21), genre ♂/♀ affiché en couleur. François est le chef (étoile dorée ★, `isChief=true`, toujours spawné en premier).
+- Toggle affichage noms (bouton HUD), prénoms absents des bulles par défaut (la bulle est un monologue intérieur).
+- Spawn : 2 colons par maison posée.
+
+#### Outils de placement (barre bas de page)
+
+| Raccourci | Outil | Contrainte |
+|---|---|---|
+| 1 | Naviguer | Pas de job, caméra libre |
+| 2 | Miner | Gate tech (voir ci-dessous) |
+| 3 | Placer (déposer voxel) | Stock requis, tile libre, portée vert ≤ 3 |
+| 4 | Forêt | Herbe / forêt uniquement |
+| 5 | Rocher | Partout sauf eau |
+| 6 | Filon | Roche / neige uniquement |
+| 7 | Maison | Herbe / forêt / sable |
+| 8 | Champ | Herbe uniquement |
+| 9 | Baies | Herbe / forêt uniquement |
+| 0 | Recherche (toit bleu) | Toute surface solide |
+| Eff | Effacer | Retire entité ou voxel |
+
+Pinceau : rayon 1 / 3 / 5 (chiffres en bas à droite, défaut = 1).
+
+Shift + clic : sélection BFS de toute la strate (même biome, même hauteur, max 200 tiles).
+
+#### Stocks et ressources
+
+Objet `stocks` : `stone, dirt, copper, silver, iron, coal, gold, amethyst`. Incrément automatique à chaque minage via `incrStockForBiome` (grass/forest/sand → dirt, rock/snow → stone). Les filons bloquent le minage direct (mapping `ORE_TO_STOCK` prêt pour une prochaine feature d'extraction dédiée). Affichage HUD compact, types vides masqués.
+
+L'outil Placer consomme le stock le plus abondant (pierre ou terre).
+
+#### Recherche et tech tree
+
+Bâtiment de recherche (toit bleu `#3c7fb8`) : à la pose, le colon IDLE le plus proche lui est attribué (`researchBuildingId`), il passe en état `RESEARCHING` et produit 1 point toutes les 3 s dans `researchPoints`.
+
+4 techs initiales débloquables dans l'ordre : `pick-stone` (5 pts) → `pick-bronze` (15 pts) → `pick-iron` (30 pts) → `pick-gold` (60 pts). Panneau HUD "Tech" avec bouton "Rechercher" par tech, flash doré au déblocage.
+
+`canMineCell` vérifie la tech : roche/neige requiert `pick-stone`, filons suivent `ORE_TECH` (cuivre/charbon → bronze, fer/argent → fer, or/améthyste → or). Jobs refusés déclenchent une bulle contextuelle (cooldown 60 s par tech).
+
+Bulles contextuelles supplémentaires : `field-no-research` (2+ champs posés sans bâtiment de recherche) et `empty-lab` (bâtiment sans chercheur).
+
+#### Quêtes
+
+Panneau #quests (haut droite, bordure dorée). 3 quêtes initiales actives au démarrage :
+- "Construire une 2ème maison" (déclenche spawn 2 colons, récompense +5 pts recherche).
+- "Miner 5 blocs" (avec pioche stone).
+- "Récolter 5 baies".
+
+#### Ce qui manque (prochaines itérations)
+
+- Extraction des filons (outil ou job dédié, distinct du minage de bloc).
+- Interface de gestion des rôles par colon (cocher les compétences).
+- Visuel différencié pour le chercheur (pupitre, animation lecture).
+- Outils Hache (abattage arbre) et Pelle (sculpt terrain) séparés.
+- Besoins et nourriture (faim, consommation baies/pain).
+- Relations et reproduction naturelle.
+
 ## Tech tree et passage d'âges
 
 Progression type Empire Earth (confirmé vision initiale). Âges pressentis :
@@ -85,6 +198,9 @@ Chaque colon peut avoir un ou plusieurs rôles (comme RimWorld) :
 - Maçon (construction)
 - Forgeron (forge, raffinage)
 - Chasseur, pêcheur (plus tard)
+- **Bricoleur** (plus tard) : sait construire des **escaliers voxel** (marches posées en cascade sur une falaise) qui permettent à tous les colons de monter ou descendre au-delà de la limite de 2 voxels de franchissement. Débloque la verticalité à grande échelle sans passer par le minage systématique. Métier à débloquer via une tech ou une quête spécifique.
+
+Règle de franchissement de base (sans bricoleur) : un colon peut monter ou descendre **au maximum 2 voxels** de différence entre deux tiles adjacentes. Au-delà, il faut soit miner une colonne pour créer un passage, soit poser un escalier (bricoleur). Cette limite crée du sens pour le métier bricoleur et force la planification du relief.
 
 Une action de désignation sélectionne automatiquement le colon avec la meilleure compétence ET l'outil dispo ET le chemin accessible le plus court. Priorités paramétrables par le joueur (Dwarf Fortress style).
 
@@ -135,6 +251,52 @@ Les colons ne sont pas de simples unités RTS exécutant des ordres. Ils ont une
 - Plus tard : **bulles de job** (icône pioche quand ils travaillent, icône point d'interrogation quand ils cherchent un job, icône zzz quand ils dorment).
 - Plus tard : **noms propres** par colon, affichés dans la bulle ou au survol.
 
+### Identité et relations
+
+Chaque colon possède désormais une identité minimale (implémentée proto4.1) qui servira de socle aux systèmes sociaux futurs.
+
+- **Nom + genre** à la naissance. Nom tiré dans un pool français (30+ prénoms masculins, 30+ prénoms féminins, mélange médiéval, classique, moderne). Unicité garantie dans la colonie, suffixe romain (II, III, etc.) si le pool est épuisé. Genre M ou F en 50/50 au spawn. Symboles typographiques ♂ (bleu) et ♀ (rose saumon) utilisés dans la bulle de dialogue, dans l'étiquette de survol et dans la liste HUD.
+- **Structure `relationships`** déjà présente sur chaque colon (Map vide) prête à accueillir des entrées du type `{ colonistId, type, strength }`.
+- **Types de relations prévus** : couple, famille (parent, enfant, fratrie), amitié, rivalité. Chaque relation porte une intensité évolutive (0 à 1) qui monte avec le temps passé ensemble, le travail partagé, les interactions réussies, et qui descend avec les conflits ou l'éloignement prolongé.
+- **Influence prévue sur les bulles** : phrases qui citent d'autres colons ("J'ai vu Aldric aujourd'hui", "Clotilde est pénible en ce moment", "Maël me manque"), phrases de couple, disputes, déclarations. Le pool de phrases d'un colon s'enrichit selon ses relations actives.
+- **Influence prévue sur le pathfind et le travail** : les colons amis ou en couple ont tendance à choisir un job proche d'un proche ou à converger vers la même zone de pause. Possibilité de dyades de travail (deux colons qui minent ensemble, plus efficaces mais moins flexibles).
+- **Reproduction naturelle** : un couple stabilisé (intensité haute, temps écoulé, maison disponible) peut produire un enfant. La colonie croît sans bouton artificiel, uniquement par le tissu social. Cela remplace à terme le spawn fixe de 2 colons par maison posée.
+- **Conflits et ruptures** : les rivalités dégradent la productivité quand les colons sont forcés de cohabiter, génèrent des bulles négatives, peuvent mener à un départ volontaire (colon qui quitte la carte) si trop prolongé.
+
+## Quêtes et objectifs (inspiré FDA)
+
+Le jeu propose au joueur une **progression via quêtes** qui structure les premières heures et balise la progression. Reprend l'esprit de FDA (quêtes d'âge, objectifs concrets, déblocages échelonnés).
+
+### Mécanique
+- Panneau de quêtes (colonne droite ou top HUD) avec quête active + progression (ex: "Récolter 5 baies", barre 3/5).
+- Complétion déclenche récompense (ressource, déblocage d'outil, point de tech, cinématique courte).
+- Plusieurs quêtes peuvent coexister (principale + secondaires).
+- Quêtes d'âge (objectif majeur de l'âge courant) et quêtes flash (petites tâches opportunistes type "un colon a faim, nourris-le").
+
+### Premiers exemples de quêtes
+- **Récolter 5 baies** (tutoriel, âge de pierre démarrage). Nécessite des buissons de baies violettes à faire pousser naturellement sur la carte.
+- **Abattre 3 arbres** pour collecter du bois.
+- **Miner 10 blocs de pierre** avec la première pioche.
+- **Construire une deuxième maison** pour accueillir plus de colons.
+- **Atteindre l'âge du bronze** en collectant 5 de cuivre + 5 d'étain.
+- **Former un couple** (quête sociale, les colons le font seuls quand les conditions sont réunies).
+
+### Ressources récoltables initiales
+- **Baies** (buissons violets, régénèrent lentement). Nourriture de base à l'âge de pierre.
+- **Bois** (arbres abattus).
+- **Pierre** (minage roche basique).
+- **Fibres** (herbe cueillie). Pour corde, vêtements primitifs.
+- Puis selon âge : minerais (cuivre, étain, fer, or), argile, charbon.
+
+## Mort des colons (prévu pour plus tard, pas implémenté dans la v1)
+
+Pour l'instant les colons ne meurent pas (v alpha). À terme, ils auront :
+- **Besoins vitaux** : faim, soif, sommeil. Un colon négligé décline puis meurt.
+- **Vieillesse** : mort naturelle après N années de jeu (rythme à calibrer pour que la colonie survive plusieurs générations en temps de jeu raisonnable).
+- **Accidents** : chute, animal sauvage, éboulement en mine.
+- **Maladies** (plus tard, avec saisons).
+- Enterrement avec cimetière en voxel, tombe persistante, effet moral sur les autres colons selon les relations (deuil d'un proche déprime).
+
 ## Idées ouvertes à explorer plus tard
 
 - **Catastrophes** : incendie de forêt, inondation, éboulement, maladie.
@@ -146,12 +308,6 @@ Les colons ne sont pas de simples unités RTS exécutant des ordres. Ils ont une
 
 ## Statut
 
-Phase : prototypes techniques.
+Phase : éditeur consolidé (voir [strates-changelog.md](strates-changelog.md) pour l'historique détaillé).
 
-Protos actifs :
-- proto2 : sculpting manuel, bac à sable d'outils.
-- proto3 : beauty-shot de référence visuelle.
-- proto4 : core gameplay (désignation + colons + pathfind + minage + gravité).
-- proto5 : worldbuilder (barre placement).
-
-proto1 est à supprimer (stress-test obsolète, fonctionnalités absorbées par les autres).
+Un seul proto actif : `public/strates/editor/` qui fusionne tous les anciens protos. Sert à la fois de mapmaker et de banc de test gameplay. Les anciens protos numérotés (1 à 5) ont été supprimés.
