@@ -516,16 +516,16 @@ window.addEventListener('pointerup', () => { state.toolState.isPainting = false 
 // ---------------------------------------------------------------------------
 // Clic droit bref : annulation de job
 // ---------------------------------------------------------------------------
-function cancelJobAt(x, z) {
+function cancelJobAt(x, z, skipHUDRefresh) {
   const k = jobKey(x, z)
   if (state.jobs.has(k)) {
     removeJob(x, z, false)
-    refreshHUD()
+    if (!skipHUDRefresh) refreshHUD()
     return true
   }
   if (state.buildJobs.has(k)) {
     removeBuildJob(x, z)
-    refreshHUD()
+    if (!skipHUDRefresh) refreshHUD()
     return true
   }
   return false
@@ -534,7 +534,7 @@ function cancelJobAt(x, z) {
 let rclickStart = null
 dom.addEventListener('pointerdown', (e) => {
   if (e.button !== 2) return
-  rclickStart = { x: e.clientX, y: e.clientY, t: performance.now() }
+  rclickStart = { x: e.clientX, y: e.clientY, t: performance.now(), shift: e.shiftKey }
 })
 dom.addEventListener('pointerup', (e) => {
   if (e.button !== 2) return
@@ -543,11 +543,20 @@ dom.addEventListener('pointerup', (e) => {
   const dx = e.clientX - rclickStart.x
   const dy = e.clientY - rclickStart.y
   const dist2 = dx * dx + dy * dy
+  const wasShift = rclickStart.shift
   rclickStart = null
   if (dt > 200) return
   if (dist2 > 16) return
   const cell = pickCell(e.clientX, e.clientY)
   if (!cell) return
+  // Shift + clic droit bref : annule toute la strate sous le curseur
+  if (wasShift) {
+    const cells = computeStrata(cell.x, cell.z)
+    let cancelled = 0
+    for (const c of cells) if (cancelJobAt(c.x, c.z, true)) cancelled++
+    if (cancelled > 0) refreshHUD()
+    return
+  }
   cancelJobAt(cell.x, cell.z)
 })
 
