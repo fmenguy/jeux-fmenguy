@@ -273,10 +273,10 @@ let researchPoints = 0;
 const RESEARCH_TICK = 3.0; // secondes entre deux points par chercheur
 
 const techs = {
-  'pick-stone':    { name: 'Pioche en pierre',  cost: 5,  req: null,           unlocked: false },
-  'pick-bronze':   { name: 'Pioche en bronze',  cost: 15, req: 'pick-stone',   unlocked: false },
-  'pick-iron':     { name: 'Pioche en fer',     cost: 30, req: 'pick-bronze',  unlocked: false },
-  'pick-gold':     { name: 'Pioche en or',      cost: 60, req: 'pick-iron',    unlocked: false }
+  'pick-stone':    { name: 'Pioche en pierre',  cost: 5,  req: null,           age: 'pierre', icon: 'P', tint: '#9ca3af', unlocked: false },
+  'pick-bronze':   { name: 'Pioche en bronze',  cost: 15, req: 'pick-stone',   age: 'bronze', icon: 'B', tint: '#b87333', unlocked: false },
+  'pick-iron':     { name: 'Pioche en fer',     cost: 30, req: 'pick-bronze',  age: 'fer',    icon: 'F', tint: '#c0c5cc', unlocked: false },
+  'pick-gold':     { name: 'Pioche en or',      cost: 60, req: 'pick-iron',    age: 'or',     icon: 'O', tint: '#f2c94c', unlocked: false }
 };
 
 // mapping type de filon -> tech requise
@@ -1584,7 +1584,7 @@ function tryTriggerContextBubble(nowSec) {
         if (candidates.length > 0 && activeSpeakers() < 2) {
           const speaker = candidates[Math.floor(Math.random() * candidates.length)];
           const line = pickContextLine(SPEECH_CONTEXT_FIELD_NO_RESEARCH, 'field-no-research');
-          speaker.say(line);
+          speaker.sayHint(line);
           markContextTriggered('field-no-research', nowSec);
           return true;
         }
@@ -1603,7 +1603,7 @@ function tryTriggerContextBubble(nowSec) {
         if (candidates.length > 0) {
           const speaker = candidates[Math.floor(Math.random() * candidates.length)];
           const line = pickContextLine(SPEECH_CONTEXT_EMPTY_LAB, 'empty-lab');
-          speaker.say(line);
+          speaker.sayHint(line);
           markContextTriggered('empty-lab', nowSec);
           return true;
         }
@@ -1637,33 +1637,29 @@ function makeBubbleCanvas() {
   return c;
 }
 
-let showNamesInBubbles = false;
-
-function drawBubble(canvas, text, name, gender, isChief) {
+function drawBubble(canvas, text, isHint) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const padX = 22;
-  const headerFont = '700 26px system-ui, sans-serif';
   const bodyFont = '500 30px system-ui, sans-serif';
-  const sym = gender ? GENDER_SYMBOLS[gender] : '';
-  const starPrefix = isChief ? (CHIEF_STAR + ' ') : '';
-  const header = (showNamesInBubbles && name) ? (starPrefix + name + (sym ? ' ' + sym : '')) : '';
-  ctx.font = headerFont;
-  const hMetrics = header ? ctx.measureText(header) : { width: 0 };
   ctx.font = bodyFont;
   const bMetrics = ctx.measureText(text);
-  const tw = Math.min(canvas.width - padX * 2, Math.max(hMetrics.width, bMetrics.width));
+  const tw = Math.min(canvas.width - padX * 2, bMetrics.width);
   const bw = tw + padX * 2;
-  const hasHeader = header.length > 0;
-  const bh = hasHeader ? 92 : 64;
+  const bh = 64;
   const bx = (canvas.width - bw) / 2;
   const by = 10;
   const r = 18;
+  // palette bulle : blanche par defaut, bleue "indice joueur" pour les hints
+  const fillCol = isHint ? '#dff0ff' : '#ffffff';
+  const borderCol = isHint ? '#4a90e2' : 'rgba(0,0,0,0.15)';
+  const textCol = isHint ? '#0d2947' : '#1a1f2a';
+  const borderW = isHint ? 3 : 2;
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath(); ctx.roundRect(bx + 3, by + 5, bw, bh, r); ctx.fill();
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-  ctx.lineWidth = 2;
+  ctx.fillStyle = fillCol;
+  ctx.strokeStyle = borderCol;
+  ctx.lineWidth = borderW;
   ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill(); ctx.stroke();
   const cxp = canvas.width / 2;
   const tipY = by + bh + 18;
@@ -1672,43 +1668,25 @@ function drawBubble(canvas, text, name, gender, isChief) {
   ctx.lineTo(cxp + 12, by + bh - 1);
   ctx.lineTo(cxp, tipY);
   ctx.closePath();
-  ctx.fillStyle = '#ffffff'; ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.stroke();
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = fillCol; ctx.fill();
+  ctx.strokeStyle = borderCol; ctx.stroke();
+  ctx.fillStyle = fillCol;
   ctx.fillRect(cxp - 11, by + bh - 3, 22, 3);
+  if (isHint) {
+    // petite ampoule a gauche pour indice
+    ctx.fillStyle = '#ffd98a';
+    ctx.beginPath();
+    ctx.arc(bx + 22, by + bh / 2, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#4a90e2';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  if (hasHeader) {
-    ctx.font = headerFont;
-    const headerY = by + 24;
-    // on dessine etoile (si chef) + nom + symbole separes pour colorer chacun
-    const nameOnly = name;
-    const starStr = isChief ? (CHIEF_STAR + ' ') : '';
-    const starW = starStr ? ctx.measureText(starStr).width : 0;
-    const nameW = ctx.measureText(nameOnly).width;
-    const symW = sym ? ctx.measureText(' ' + sym).width : 0;
-    const totalW = starW + nameW + symW;
-    const startX = canvas.width / 2 - totalW / 2;
-    ctx.textAlign = 'left';
-    if (starStr) {
-      ctx.fillStyle = CHIEF_COLOR;
-      ctx.fillText(starStr, startX, headerY);
-    }
-    ctx.fillStyle = '#1a1f2a';
-    ctx.fillText(nameOnly, startX + starW, headerY);
-    if (sym) {
-      ctx.fillStyle = GENDER_COLORS[gender] || '#1a1f2a';
-      ctx.fillText(' ' + sym, startX + starW + nameW, headerY);
-    }
-    ctx.fillStyle = '#1a1f2a';
-    ctx.textAlign = 'center';
-    ctx.font = bodyFont;
-    ctx.fillText(text, canvas.width / 2, by + 66, canvas.width - padX * 2);
-  } else {
-    ctx.fillStyle = '#1a1f2a';
-    ctx.font = bodyFont;
-    ctx.fillText(text, canvas.width / 2, by + bh / 2, canvas.width - padX * 2);
-  }
+  ctx.fillStyle = textCol;
+  ctx.font = bodyFont;
+  ctx.fillText(text, canvas.width / 2, by + bh / 2, canvas.width - padX * 2);
 }
 
 // Etiquette persistante nom + genre (sprite au-dessus de la tete au survol)
@@ -1812,11 +1790,65 @@ class Colonist {
     this.group = new THREE.Group();
     const bodyMat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.7, flatShading: true });
     const headMat = new THREE.MeshStandardMaterial({ color: 0xf3d6a8, roughness: 0.7, flatShading: true });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.5), bodyMat);
-    body.position.y = 0.5; body.castShadow = true;
+    const pantsCol = this.isChief ? 0x6b4a2b : 0x3a3a4a;
+    const pantsMat = new THREE.MeshStandardMaterial({ color: pantsCol, roughness: 0.8, flatShading: true });
+    // torse
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.38), bodyMat);
+    body.position.y = 0.78; body.castShadow = true;
+    // jambes (animees en marche)
+    const legGeo = new THREE.BoxGeometry(0.2, 0.5, 0.22);
+    const legL = new THREE.Mesh(legGeo, pantsMat);
+    legL.position.set(-0.14, 0.25, 0);
+    legL.castShadow = true;
+    const legR = new THREE.Mesh(legGeo, pantsMat);
+    legR.position.set(0.14, 0.25, 0);
+    legR.castShadow = true;
+    this.legL = legL; this.legR = legR;
+    // bras (animes en marche)
+    const armGeo = new THREE.BoxGeometry(0.16, 0.5, 0.18);
+    const armL = new THREE.Mesh(armGeo, bodyMat);
+    armL.position.set(-0.34, 0.78, 0);
+    armL.castShadow = true;
+    const armR = new THREE.Mesh(armGeo, bodyMat);
+    armR.position.set(0.34, 0.78, 0);
+    armR.castShadow = true;
+    this.armL = armL; this.armR = armR;
+    // tete
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), headMat);
-    head.position.y = 1.2; head.castShadow = true;
+    head.position.y = 1.28; head.castShadow = true;
+    // cheveux ou coiffe selon genre
+    if (this.gender === 'F') {
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.9, flatShading: true });
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.2, 0.46), hairMat);
+      hair.position.y = 1.46;
+      hair.castShadow = true;
+      this.group.add(hair);
+    } else {
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x2e2218, roughness: 0.9, flatShading: true });
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, 0.44), hairMat);
+      hair.position.y = 1.51;
+      hair.castShadow = true;
+      this.group.add(hair);
+    }
+    // couronne doree pour le chef
+    if (this.isChief) {
+      const crownMat = new THREE.MeshStandardMaterial({ color: 0xf2c94c, roughness: 0.35, metalness: 0.7, flatShading: true });
+      const crownBase = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), crownMat);
+      crownBase.position.y = 1.58;
+      crownBase.castShadow = true;
+      this.group.add(crownBase);
+      const spikeGeo = new THREE.BoxGeometry(0.1, 0.14, 0.1);
+      for (let si = 0; si < 4; si++) {
+        const ang = (si / 4) * Math.PI * 2;
+        const spike = new THREE.Mesh(spikeGeo, crownMat);
+        spike.position.set(Math.cos(ang) * 0.18, 1.7, Math.sin(ang) * 0.18);
+        spike.castShadow = true;
+        this.group.add(spike);
+      }
+    }
     this.group.add(body); this.group.add(head);
+    this.group.add(legL); this.group.add(legR);
+    this.group.add(armL); this.group.add(armR);
     this.group.position.set(this.tx, this.ty, this.tz);
     scene.add(this.group);
     this.lineMat = new THREE.LineDashedMaterial({ color: col, dashSize: 0.2, gapSize: 0.15, transparent: true, opacity: 0.6 });
@@ -1830,7 +1862,7 @@ class Colonist {
     this.bubbleMat.opacity = 0;
     this.bubble = new THREE.Sprite(this.bubbleMat);
     this.bubble.scale.set(2.4, 0.75, 1);
-    this.bubble.position.set(0, 2.2, 0);
+    this.bubble.position.set(0, 2.75, 0);
     this.bubble.visible = false;
     this.bubble.renderOrder = 999;
     this.group.add(this.bubble);
@@ -1841,21 +1873,23 @@ class Colonist {
     this.labelTex.minFilter = THREE.LinearFilter;
     this.labelMat = new THREE.SpriteMaterial({ map: this.labelTex, transparent: true, depthTest: false, depthWrite: false });
     this.label = new THREE.Sprite(this.labelMat);
-    this.label.scale.set(1.6, 0.4, 1);
-    this.label.position.set(0, 1.75, 0);
-    this.label.visible = false;
+    this.label.scale.set(1.35, 0.34, 1);
+    this.label.position.set(0, 1.85, 0);
+    this.label.visible = true;
     this.label.renderOrder = 998;
     this.group.add(this.label);
   }
 
-  say(line) {
+  say(line, isHint) {
     this.lastLine = line;
-    drawBubble(this.bubbleCanvas, line, this.name, this.gender, this.isChief);
+    this.lastLineHint = !!isHint;
+    drawBubble(this.bubbleCanvas, line, !!isHint);
     this.bubbleTex.needsUpdate = true;
-    this.speechTimer = 4.0;
+    this.speechTimer = isHint ? 6.0 : 4.0;
     this.bubble.visible = true;
     this.bubbleMat.opacity = 1;
   }
+  sayHint(line) { this.say(line, true); }
 
   updateSpeech(dt) {
     if (this.speechTimer <= 0) {
@@ -1992,6 +2026,14 @@ class Colonist {
   update(dt) {
     this.applyGravity(dt);
     this.updateSpeech(dt);
+    // relache jambes/bras hors MOVING
+    if (this.state !== 'MOVING' && this.legL) {
+      const k = Math.min(1, dt * 8);
+      this.legL.rotation.x *= (1 - k);
+      this.legR.rotation.x *= (1 - k);
+      this.armL.rotation.x *= (1 - k);
+      this.armR.rotation.x *= (1 - k);
+    }
 
     if (this.state === 'RESEARCHING') {
       // chercheur immobile a cote du batiment, animation bob lent
@@ -2116,10 +2158,17 @@ class Colonist {
         this.tx += (dx / dist) * step;
         this.tz += (dz / dist) * step;
       }
-      const bob = this.isWandering ? Math.sin(performance.now() * 0.006) * 0.04 : 0;
+      const walkPhase = performance.now() * 0.012;
+      const bob = Math.abs(Math.sin(walkPhase)) * 0.05;
       this.group.position.set(this.tx, this.ty + bob, this.tz);
       this.group.rotation.y = Math.atan2(dx, dz);
       this.targetYaw = this.group.rotation.y;
+      // animation jambes/bras en opposition
+      const swing = Math.sin(walkPhase) * 0.6;
+      if (this.legL) this.legL.rotation.x = swing;
+      if (this.legR) this.legR.rotation.x = -swing;
+      if (this.armL) this.armL.rotation.x = -swing;
+      if (this.armR) this.armR.rotation.x = swing;
       return;
     }
 
@@ -2310,28 +2359,106 @@ function populateDefaultScene() {
     }
   }
 
-  // 10 a 15 arbres dans les zones forestieres
+  // Forets denses dans les zones forestieres (bosquets de 3 a 6 arbres)
   let placed = 0;
-  const targetTrees = 12;
-  for (let tries = 0; tries < 800 && placed < targetTrees; tries++) {
+  const targetTrees = 55;
+  for (let tries = 0; tries < 3000 && placed < targetTrees; tries++) {
     const x = Math.floor(rng() * GRID);
     const z = Math.floor(rng() * GRID);
     if (cellBiome[z * GRID + x] !== 'forest') continue;
     if (isCellOccupied(x, z)) continue;
     addTree(x, z);
     placed++;
+    // bosquet : tentative d'ajout sur 2 a 4 voisins immediats
+    const clusterSize = 2 + Math.floor(rng() * 3);
+    for (let k = 0; k < clusterSize && placed < targetTrees; k++) {
+      const nx = x + Math.floor(rng() * 5) - 2;
+      const nz = z + Math.floor(rng() * 5) - 2;
+      if (nx < 0 || nz < 0 || nx >= GRID || nz >= GRID) continue;
+      if (cellBiome[nz * GRID + nx] !== 'forest') continue;
+      if (isCellOccupied(nx, nz)) continue;
+      addTree(nx, nz);
+      placed++;
+    }
   }
 
-  // quelques buissons de baies disperses
+  // Arbres isoles sur l'herbe (sensation champs/bocage)
+  let grassTrees = 0;
+  const targetGrassTrees = 15;
+  for (let tries = 0; tries < 800 && grassTrees < targetGrassTrees; tries++) {
+    const x = Math.floor(rng() * GRID);
+    const z = Math.floor(rng() * GRID);
+    if (cellBiome[z * GRID + x] !== 'grass') continue;
+    if (isCellOccupied(x, z)) continue;
+    // un peu a l'ecart du hameau pour ne pas encombrer
+    const dh = Math.abs(x - spawn.x) + Math.abs(z - spawn.z);
+    if (dh < 4) continue;
+    addTree(x, z);
+    grassTrees++;
+  }
+
+  // Rochers disperses (montagnes et neige)
+  let rocksPlaced = 0;
+  const targetRocks = 30;
+  for (let tries = 0; tries < 1500 && rocksPlaced < targetRocks; tries++) {
+    const x = Math.floor(rng() * GRID);
+    const z = Math.floor(rng() * GRID);
+    const biome = cellBiome[z * GRID + x];
+    if (biome !== 'rock' && biome !== 'snow' && biome !== 'grass') continue;
+    if (isCellOccupied(x, z)) continue;
+    // majorite en montagne
+    if (biome === 'grass' && rng() > 0.25) continue;
+    addRock(x, z);
+    rocksPlaced++;
+  }
+
+  // Filons dans la montagne
+  const ORE_SEEDS = ['ore-copper', 'ore-iron', 'ore-coal', 'ore-gold', 'ore-silver'];
+  let oresPlaced = 0;
+  const targetOres = 10;
+  for (let tries = 0; tries < 1200 && oresPlaced < targetOres; tries++) {
+    const x = Math.floor(rng() * GRID);
+    const z = Math.floor(rng() * GRID);
+    const biome = cellBiome[z * GRID + x];
+    if (biome !== 'rock' && biome !== 'snow') continue;
+    if (isCellOccupied(x, z)) continue;
+    const type = ORE_SEEDS[Math.floor(rng() * ORE_SEEDS.length)];
+    addOre(x, z, type);
+    oresPlaced++;
+  }
+
+  // Buissons de baies disperses
   let bushPlaced = 0;
-  const targetBushes = 8;
-  for (let tries = 0; tries < 600 && bushPlaced < targetBushes; tries++) {
+  const targetBushes = 14;
+  for (let tries = 0; tries < 900 && bushPlaced < targetBushes; tries++) {
     const x = Math.floor(rng() * GRID);
     const z = Math.floor(rng() * GRID);
     const biome = cellBiome[z * GRID + x];
     if (biome !== 'grass' && biome !== 'forest') continue;
     if (isCellOccupied(x, z)) continue;
     if (addBush(x, z)) bushPlaced++;
+  }
+
+  // Champs cultives pres du hameau (parcelles rectangulaires)
+  const FIELD_PATCHES = [
+    { cx: spawn.x + 4, cz: spawn.z + 2, w: 3, h: 2 },
+    { cx: spawn.x - 5, cz: spawn.z + 3, w: 2, h: 3 },
+    { cx: spawn.x + 1, cz: spawn.z + 5, w: 4, h: 2 }
+  ];
+  for (const patch of FIELD_PATCHES) {
+    for (let dz = 0; dz < patch.h; dz++) {
+      for (let dx = 0; dx < patch.w; dx++) {
+        const x = patch.cx + dx;
+        const z = patch.cz + dz;
+        if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue;
+        if (cellBiome[z * GRID + x] !== 'grass') continue;
+        if (isCellOccupied(x, z)) continue;
+        const k = z * GRID + x;
+        if (cellSurface[k]) continue;
+        cellSurface[k] = 'field';
+        repaintCellSurface(x, z);
+      }
+    }
   }
 
   // 5 colons autour du hameau, le premier est François (le chef)
@@ -2586,20 +2713,6 @@ brushBtns.forEach(b => b.addEventListener('click', () => setBrush(parseInt(b.dat
 
 document.getElementById('btn-reset').addEventListener('click', resetWorld);
 
-const toggleNamesEl = document.getElementById('toggle-names-in-bubbles');
-if (toggleNamesEl) {
-  toggleNamesEl.checked = showNamesInBubbles;
-  toggleNamesEl.addEventListener('change', (e) => {
-    showNamesInBubbles = !!e.target.checked;
-    // redessine les bulles des colons qui parlent actuellement
-    for (const c of colonists) {
-      if (c.speechTimer > 0 && c.lastLine) {
-        drawBubble(c.bubbleCanvas, c.lastLine, c.name, c.gender, c.isChief);
-        c.bubbleTex.needsUpdate = true;
-      }
-    }
-  });
-}
 
 window.addEventListener('keydown', (e) => {
   const map = {
@@ -3145,31 +3258,46 @@ function refreshTechsPanel() {
   if (rPointsEl) rPointsEl.textContent = researchPoints;
   if (!techsBodyEl) return;
   const order = ['pick-stone', 'pick-bronze', 'pick-iron', 'pick-gold'];
-  const parts = [];
-  for (const id of order) {
+  const parts = ['<div class="tech-tree">'];
+  for (let i = 0; i < order.length; i++) {
+    const id = order[i];
     const t = techs[id];
     const reqOk = !t.req || techs[t.req].unlocked;
     const canAfford = researchPoints >= t.cost;
-    let cls = 'tech';
+    let state = 'locked';
+    if (t.unlocked) state = 'done';
+    else if (reqOk && canAfford) state = 'ready';
+    else if (reqOk) state = 'available';
+    // connecteur vers tech precedente
+    if (i > 0) {
+      const prevDone = techs[order[i - 1]].unlocked;
+      parts.push('<div class="tech-link ' + (prevDone ? 'active' : '') + '"></div>');
+    }
+    // progression bar
+    const progPct = t.unlocked ? 100 : Math.min(100, Math.round((researchPoints / t.cost) * 100));
     let right;
     if (t.unlocked) {
-      cls += ' done';
-      right = '<span class="tdone">debloquee</span>';
-    } else if (reqOk && canAfford) {
-      cls += ' ready';
-      right = '<button data-tech="' + id + '">Rechercher</button>';
+      right = '<span class="tdone">OK</span>';
+    } else if (state === 'ready') {
+      right = '<button data-tech="' + id + '">' + t.cost + ' pts</button>';
+    } else if (state === 'available') {
+      right = '<span class="tcost">' + t.cost + ' pts</span>';
     } else {
-      cls += ' locked';
-      if (!reqOk) right = '<span class="tcost">prerequis</span>';
-      else right = '<span class="tcost">' + t.cost + ' pts</span>';
+      right = '<span class="tcost" style="opacity:0.6">verrou</span>';
     }
     parts.push(
-      '<div class="' + cls + '" id="tech-' + id + '">' +
-        '<div><div class="tname">' + t.name + '</div><div class="tcost">cout ' + t.cost + ' pts</div></div>' +
-        right +
+      '<div class="tech-node ' + state + '" id="tech-' + id + '">' +
+        '<div class="tech-icon" style="background:' + t.tint + '">' + t.icon + '</div>' +
+        '<div class="tech-info">' +
+          '<div class="tname">' + t.name + '</div>' +
+          '<div class="tage">Age ' + t.age + '</div>' +
+          (t.unlocked ? '' : '<div class="tech-prog"><div class="tech-prog-fill" style="width:' + progPct + '%"></div></div>') +
+        '</div>' +
+        '<div class="tech-action">' + right + '</div>' +
       '</div>'
     );
   }
+  parts.push('</div>');
   techsBodyEl.innerHTML = parts.join('');
   techsBodyEl.querySelectorAll('button[data-tech]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3232,7 +3360,7 @@ function tryBlockedTechBubble(nowSec) {
   }
   if (!best || bestD > 12) return false;
   const line = pool[Math.floor(Math.random() * pool.length)];
-  best.say(line);
+  best.sayHint(line);
   lastTechBubbleByTech.set(tech, nowSec);
   lastBlockedMineTech = null;
   return true;

@@ -4,6 +4,39 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-19 (session 3) : Colons vivants, hints, tech tree visuel, monde peuplé
+
+### Colons enrichis
+- Silhouettes retravaillées : torse + jambes + bras + tête + cheveux différenciés M/F.
+- François porte une couronne dorée voxel (base + 4 pointes) à la place de la simple étoile de bandeau.
+- Animation de marche : swing jambes et bras en opposition, bob vertical calé sur le pas.
+- Retour au repos progressif (lerp) quand le colon passe en IDLE, WORKING ou RESEARCHING.
+
+### Noms permanents au-dessus de la tête
+- Étiquette nom + genre (+ étoile chef) affichée en permanence au-dessus de chaque colon (auparavant seulement au survol).
+- Bulle de dialogue remontée à y=2.75 pour ne pas chevaucher l'étiquette.
+- Suppression du toggle HUD "Afficher les noms dans les bulles". Les bulles ne portent plus jamais le nom (pensée intérieure du colon).
+
+### Bulles indice bleues
+- Nouvelle variante `sayHint(line)` dessinant une bulle bleu pâle cerclée de bleu vif avec une pastille jaune style ampoule.
+- Utilisée automatiquement pour les situations pédagogiques : minage bloqué par manque de tech, champs posés sans labo, labo sans chercheur.
+- Durée d'affichage rallongée (6 s vs 4 s) pour laisser le joueur lire.
+
+### Monde peuplé au spawn
+- Forêts denses en bosquets de 3 à 6 arbres (~55 arbres en zone forêt), plus 15 arbres isolés sur herbe à distance du hameau.
+- 30 rochers répartis (majorité montagne, quelques-uns épars sur herbe).
+- 10 filons initiaux (cuivre, fer, charbon, argent, or) en montagne.
+- 14 buissons de baies distribués sur herbe et forêt.
+- 3 parcelles de champs cultivés pré-posées autour du hameau.
+
+### Tech tree visuel
+- Panneau `#techs` refait : cards avec pastille colorée (pierre grise, bronze, fer, or), nom, âge, barre de progression remplie par les points de recherche accumulés.
+- Connecteurs verticaux entre techs, colorés quand la tech précédente est débloquée.
+- États visuels : locked, available, ready (glow bleu), done (glow doré).
+- Bouton de recherche stylisé (gradient, hover lift).
+
+---
+
 ## 2026-04-19 (session 2) : Stocks, Placer, Tech tree, Bords eau, Shift-sélection
 
 ### Stocks de ressources
