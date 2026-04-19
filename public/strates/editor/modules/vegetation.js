@@ -60,6 +60,9 @@ const FLOWER_COLORS = [
 ]
 
 let built = false
+// scales de base memorisees pour pouvoir les moduler par saison sans perdre la valeur d'origine
+const flowerBase = new Float32Array(MAX_FLOWERS)
+const wheatBaseY = new Float32Array(MAX_WHEAT)
 
 export function buildVegetation() {
   // pose une fois pour toutes les brins et epis, a chaque generation/chargement
@@ -91,7 +94,8 @@ export function buildVegetation() {
           tmpObj.scale.set(1, h, 1)
           tmpObj.updateMatrix()
           wheatMesh.setMatrixAt(wheatMesh.count, tmpObj.matrix)
-          tmpColor.setRGB(0.9, 0.78, 0.35) // base doree, ajustee par saison
+          wheatBaseY[wheatMesh.count] = h
+          tmpColor.setRGB(0.9, 0.78, 0.35)
           wheatMesh.setColorAt(wheatMesh.count, tmpColor)
           wheatMesh.count++
         }
@@ -129,6 +133,7 @@ export function buildVegetation() {
           tmpObj.scale.set(sc, sc, sc)
           tmpObj.updateMatrix()
           flowerMesh.setMatrixAt(flowerMesh.count, tmpObj.matrix)
+          flowerBase[flowerMesh.count] = sc
           tmpColor.copy(FLOWER_COLORS[Math.floor(rng() * FLOWER_COLORS.length)])
           flowerMesh.setColorAt(flowerMesh.count, tmpColor)
           flowerMesh.count++
@@ -145,19 +150,57 @@ export function buildVegetation() {
   built = true
 }
 
-// cache le mesh fleurs/herbe selon saison en modifiant le visible count
-let seasonMuteAccum = 0
-export function tickVegetationSeasons(dt) {
+// Couleurs de ble par saison (semis -> pleine croissance -> moisson -> repos)
+const WHEAT_COLORS = {
+  spring: new THREE.Color(0.55, 0.85, 0.40), // vert tendre
+  summer: new THREE.Color(0.90, 0.82, 0.35), // dore
+  autumn: new THREE.Color(0.88, 0.65, 0.28), // moisson bronze
+  winter: new THREE.Color(0.55, 0.52, 0.45)  // repos fane
+}
+const WHEAT_SCALE_Y = { spring: 0.7, summer: 1.0, autumn: 0.9, winter: 0.3 }
+
+let lastAppliedSeasonId = null
+
+function repaintWheat() {
+  const id = SEASONS[state.season.idx].id
+  const col = WHEAT_COLORS[id] || WHEAT_COLORS.summer
+  const sy = WHEAT_SCALE_Y[id] || 1
+  for (let i = 0; i < wheatMesh.count; i++) {
+    tmpColor.copy(col).offsetHSL(((i * 0.137) % 1 - 0.5) * 0.03, 0, ((i * 0.271) % 1 - 0.5) * 0.08)
+    wheatMesh.setColorAt(i, tmpColor)
+    wheatMesh.getMatrixAt(i, tmpObj.matrix)
+    tmpObj.matrix.decompose(tmpObj.position, tmpObj.quaternion, tmpObj.scale)
+    const base = wheatBaseY[i] || 1
+    tmpObj.scale.set(1, base * sy, 1)
+    tmpObj.updateMatrix()
+    wheatMesh.setMatrixAt(i, tmpObj.matrix)
+  }
+  wheatMesh.instanceMatrix.needsUpdate = true
+  if (wheatMesh.instanceColor) wheatMesh.instanceColor.needsUpdate = true
+}
+
+function repaintFlowers() {
+  const density = SEASONS[state.season.idx].density.flowers || 0
+  for (let i = 0; i < flowerMesh.count; i++) {
+    const visible = (i / Math.max(1, flowerMesh.count)) <= density
+    flowerMesh.getMatrixAt(i, tmpObj.matrix)
+    tmpObj.matrix.decompose(tmpObj.position, tmpObj.quaternion, tmpObj.scale)
+    const baseScale = flowerBase[i] || 1
+    const target = visible ? baseScale : 0.001
+    tmpObj.scale.set(target, target, target)
+    tmpObj.updateMatrix()
+    flowerMesh.setMatrixAt(i, tmpObj.matrix)
+  }
+  flowerMesh.instanceMatrix.needsUpdate = true
+}
+
+export function tickVegetationSeasons() {
   if (!built) return
-  seasonMuteAccum += dt
-  if (seasonMuteAccum < 1.5) return
-  seasonMuteAccum = 0
-  // densite fleurs : suit SEASONS.density.flowers
-  const cur = SEASONS[state.season.idx].density
-  // fleurs : on masque certaines instances en shrinkant la scale a 0 via matrix
-  // approche simple : on modifie juste le count visible
-  const flowerMax = flowerMesh.instanceMatrix.count
-  void flowerMax
+  const id = SEASONS[state.season.idx].id
+  if (id === lastAppliedSeasonId) return
+  lastAppliedSeasonId = id
+  repaintWheat()
+  repaintFlowers()
 }
 
 // reset total (appel au reset et au chargement de save)
@@ -169,4 +212,5 @@ export function clearVegetation() {
   flowerMesh.instanceMatrix.needsUpdate = true
   wheatMesh.instanceMatrix.needsUpdate = true
   built = false
+  lastAppliedSeasonId = null
 }
