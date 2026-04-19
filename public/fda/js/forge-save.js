@@ -330,14 +330,19 @@ export function exportSave(slot) {
     bakeries,
     unlockedAges,
   };
-  const saveString = btoa(JSON.stringify(saveData));
+  // btoa ne supporte pas l'unicode directement (accents, apostrophe courbe).
+  // On encode en UTF-8 d'abord.
+  const json = JSON.stringify(saveData);
+  const saveString = btoa(unescape(encodeURIComponent(json)));
   prompt("Voici votre sauvegarde. Copiez ce texte :", saveString);
 }
 
 export function importSavePrompt() {
   const saveString = prompt("Collez votre sauvegarde ici :");
   if (saveString) {
-    const saveData = JSON.parse(atob(saveString));
+    // Decoder UTF-8 (cf. exportSave qui encode en UTF-8 avant btoa)
+    const decoded = decodeURIComponent(escape(atob(saveString)));
+    const saveData = JSON.parse(decoded);
     setBerries(saveData.berries);
     setWood(saveData.wood);
     setStone(saveData.stone);
