@@ -336,8 +336,6 @@ function initializeAudioEventListeners() {
       console.log("Bouton Play cliqué");
       window.playMusic();
     });
-  } else {
-    console.error("Élément playMusicBtn non trouvé");
   }
 
   if (pauseBtn) {
@@ -345,8 +343,6 @@ function initializeAudioEventListeners() {
       console.log("Bouton Pause cliqué");
       window.pauseMusic();
     });
-  } else {
-    console.error("Élément pauseMusicBtn non trouvé");
   }
 
   if (volumeSlider && volumePercentage) {
@@ -361,8 +357,6 @@ function initializeAudioEventListeners() {
         console.error("Élément backgroundMusic non trouvé pour ajuster le volume");
       }
     });
-  } else {
-    console.error("Élément volumeSlider ou volumePercentage non trouvé");
   }
 }
 
