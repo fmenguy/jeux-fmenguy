@@ -7,9 +7,19 @@ import { state } from './state.js'
 
 export function techUnlocked(id) { return !!(state.techs[id] && state.techs[id].unlocked) }
 
+function hasTreeAt(x, z) {
+  for (const t of state.trees) if (t.x === x && t.z === z) return true
+  return false
+}
+
 export function canMineCell(x, z) {
   if (x < 0 || z < 0 || x >= GRID || z >= GRID) return { ok: false, reason: 'hors-carte', requiredTech: null }
   const biome = state.cellBiome[z * GRID + x]
+  // arbre present : requiert hache
+  if (hasTreeAt(x, z)) {
+    if (!techUnlocked('axe-stone')) return { ok: false, reason: 'tech', requiredTech: 'axe-stone' }
+    return { ok: true, reason: null, requiredTech: null }
+  }
   const oreType = state.cellOre ? state.cellOre[z * GRID + x] : null
   if (oreType) {
     const req = ORE_TECH[oreType]

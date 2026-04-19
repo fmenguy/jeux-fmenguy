@@ -4,6 +4,27 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-19 (session 7) : Abattage d'arbres et hache en pierre (axe 3.2 MVP)
+
+### Nouvelle tech
+- `axe-stone` (Hache en pierre), coût 4 pts, âge de pierre, sans prérequis. Débloque l'abattage des arbres.
+
+### Abattage
+- L'outil **Miner (2)** détecte désormais si la tuile contient un arbre.
+  - **Arbre présent** : le colon abat l'arbre, remplit `resources.wood`, l'arbre est retiré du mesh. Le voxel sous reste en place.
+  - **Filon** : extraction (session 6).
+  - **Sinon** : minage classique.
+- `canMineCell` requiert `axe-stone` pour les tuiles à arbre. Sans la tech, bulle indice bleue "Il nous faudrait une hache pour cet arbre".
+- Nouveau helper `isTreeOn(x, z)` et `chopTreeAt(x, z)` dans `placements.js`.
+
+### Audio playlist par âge
+- Refactor `modules/audio.js` : lecteur `<audio>` HTML5 avec crossfade 2,5 s.
+- Mapping âge → fichier dans `public/strates/editor/audio/stone.mp3`, `bronze.mp3`, `iron.mp3`, `gold.mp3`.
+- README dans `public/strates/editor/audio/` avec sources suggérées (Pixabay, FMA, OpenGameArt, Incompetech).
+- Âge courant déduit automatiquement des pioches débloquées.
+
+---
+
 ## 2026-04-19 (session 6) : Extraction des filons (axe 3.1)
 
 ### Extraction
