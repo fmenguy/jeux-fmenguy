@@ -47,6 +47,11 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 - [ ] 2.3 Scénarios prédéfinis (îlot calme, archipel venté, vallée montagneuse)
 - [ ] 2.4 Système d'âges et passage, de l'âge de pierre à l'âge de l'espace (voir vision **Tech tree XXL** dans `strates-design-ideas.md` : 7 âges + 6 branches thématiques + 60 à 90 techs en graphe, inspiré Total War Warhammer et Craft the World, passage d'âge à la FDA par conditions cumulatives)
 - [ ] 2.5 Mode campagne / mode sandbox / endgame cyclique (changement de planète)
+- [ ] 2.6 **Map plus grande + fog of war** (style Age of Empires) : révélation progressive par vision des colons et bâtiments (rayon ~8-12 tuiles), cellules explorées restent visibles en version figée
+- [ ] 2.7 **Verticalité Minecraft** : hauteurs jusqu'à 10 blocs (montagnes) + minage jusqu'à 4 blocs sous la surface. Neige permanente sur les sommets. Danger de chute (voir besoins 3.4).
+- [ ] 2.8 **Animaux** (axe à part entière) : cerfs, sangliers passifs, loups agressifs, chasse. Plus tard : élevage (poules, moutons, vaches).
+- [ ] 2.9 **Pêche et maritime** : tech ports de pêche (bronze), bateaux de pêche, bateaux maritimes (fer, exploration/commerce). Nouvelle ressource poisson.
+- [ ] 2.10 **Sons d'ambiance** : bruit de pas doux dans la neige (crack léger), vent dans les feuillages, clapotis d'eau, chant d'oiseaux au printemps
 
 ### Axe 3, gameplay
 

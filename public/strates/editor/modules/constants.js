@@ -4,14 +4,14 @@ import * as THREE from 'three'
 // Constantes globales du prototype Strates
 // ============================================================================
 
-export const GRID = 48
-export const MAX_STRATES = 6
+export const GRID = 72
+export const MAX_STRATES = 10
 export const MIN_STRATES = 1
 export const WATER_LEVEL = 1.0
 export const SHALLOW_WATER_LEVEL = 1.6
-export const EDGE_DEEP_RING = 3
-export const EDGE_SHALLOW_RING = 2
-export const FALLOFF_SPAN = 6
+export const EDGE_DEEP_RING = 4
+export const EDGE_SHALLOW_RING = 3
+export const FALLOFF_SPAN = 9
 export const VOXEL = 1
 export const COLONIST_SPEED = 2.0
 export const WORK_DURATION = 2.0
