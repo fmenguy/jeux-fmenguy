@@ -1,4 +1,4 @@
-# Strates, editeur de carte
+# Strates, editeur de carte http://localhost:4321/strates/editor/index.html
 
 Editeur complet qui fusionne proto3 (visuel Dorfromantik, Sky, bloom, vignette, eau ShaderMaterial, maisons voxel), proto4 (colons InstancedMesh avec machine a etats, pathfind A*, gravite, errance, bulles de dialogue, designer Miner) et proto5 (barre de placement direct, filons cyclables, pinceau).
 
