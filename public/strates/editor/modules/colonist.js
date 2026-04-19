@@ -10,7 +10,7 @@ import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
 import { topVoxelIndex, colorForLayer, isDeepWater } from './terrain.js'
 import { aStar, findApproach } from './pathfind.js'
 import { jobKey, removeJob } from './jobs.js'
-import { findResearchBuildingById, isCellOccupied, extractOreAt } from './placements.js'
+import { findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn } from './placements.js'
 import { findNearestBush, refreshBushBerries } from './placements.js'
 import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
@@ -474,6 +474,14 @@ export class Colonist {
       if (this.workTimer >= duration) {
         if (this.targetJob) {
           const { x, z } = this.targetJob
+          // Arbre present : abattage prioritaire. Retire l'arbre, +wood.
+          if (isTreeOn(x, z) && chopTreeAt(x, z)) {
+            state.resources.wood++
+            scheduleFlash(x, z)
+            removeJob(x, z, true)
+            state.gameStats.minesCompleted++
+            this.targetJob = null
+          } else {
           // Extraction de filon prioritaire : on retire le filon et on
           // remplit le stock minerai, sans entamer le voxel sous.
           const oreType = extractOreAt(x, z)
@@ -497,6 +505,7 @@ export class Colonist {
             removeJob(x, z, true)
             state.resources.stone++
             state.gameStats.minesCompleted++
+          }
           }
           this.targetJob = null
         }
