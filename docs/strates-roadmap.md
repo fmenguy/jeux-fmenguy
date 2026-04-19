@@ -52,6 +52,19 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 - [ ] 2.8 **Animaux** (axe à part entière) : cerfs, sangliers passifs, loups agressifs, chasse. Plus tard : élevage (poules, moutons, vaches).
 - [ ] 2.9 **Pêche et maritime** : tech ports de pêche (bronze), bateaux de pêche, bateaux maritimes (fer, exploration/commerce). Nouvelle ressource poisson.
 - [ ] 2.10 **Sons d'ambiance** : bruit de pas doux dans la neige (crack léger), vent dans les feuillages, clapotis d'eau, chant d'oiseaux au printemps
+- [ ] 2.11 **Séparation éditeur / mode jeu + Godmod** : les outils éditeur actuels (forêt, rocher, filon, maison, champ, baies) impactent réellement la partie, mais seraient réservés à un panneau "Godmod" / mode créatif séparé. En mode jeu, le joueur ne peut que désigner des ordres aux colons.
+
+### Axe 6, social (idées en vrac, à préciser)
+
+- [ ] 6.1 **Fiches personnages** : clic sur un colon → panneau détaillé (nom, âge, métier, outils portés, relations, besoins, inventaire, historique). Édition directe de certains champs (métier, priorité).
+- [ ] 6.2 Relations visibles (voir 3.5) : liens entre fiches, arbre généalogique.
+- [ ] 6.3 Journal personnel par colon (bref historique des événements vécus).
+
+### Axe 7, villes et villages (idées en vrac)
+
+- [ ] 7.1 **Fiches de village** : chaque maison regroupe un village, panneau qui liste habitants, stocks locaux, bâtiments rattachés, niveau de satisfaction.
+- [ ] 7.2 Hiérarchie village → hameau → ville selon population et bâtiments.
+- [ ] 7.3 Zones de confort (rayon autour d'un puits, d'une place centrale).
 
 ### Axe 3, gameplay
 
