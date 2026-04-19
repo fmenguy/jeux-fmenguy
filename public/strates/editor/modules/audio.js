@@ -1,161 +1,121 @@
+import { state } from './state.js'
+
 // ============================================================================
-// Audio ambient lofi procedural (Web Audio API, aucun fichier externe).
-// Drone bas + arpege pentatonique doux + noise filtre pour texture.
-// Toggle mute via bouton HUD. Demarre au premier geste utilisateur (politique
-// autoplay navigateurs).
+// Lecteur audio : une piste par age. Charge les fichiers depuis
+// public/strates/audio/<age>.mp3. Crossfade lent quand l'age change.
+// Bouton HUD pour toggle mute. Etat memorise en localStorage.
+//
+// Pour ajouter une piste : deposer un fichier MP3/OGG dans
+// public/strates/audio/ et l'ajouter a TRACKS ci-dessous.
+// Sources suggerees : pixabay.com/fr/music/, freemusicarchive.org,
+// opengameart.org. Preferer des boucles ambient douces (lofi, piano,
+// flute, harpe, cordes). Duree ideale 2 a 5 minutes.
 // ============================================================================
 
-let ctx = null
-let masterGain = null
-let muted = true
-let started = false
+// Mapping age -> chemin. null si pas de fichier dispo (on reste silencieux).
+// L'age courant est determine par la tech la plus haute debloquee.
+const TRACKS = {
+  stone:  './audio/stone.mp3',
+  bronze: './audio/bronze.mp3',
+  iron:   './audio/iron.mp3',
+  gold:   './audio/gold.mp3'
+  // plus tard : industrial, modern, atomic, space
+}
 
 const LOFI_MUTE_KEY = 'strates-audio-muted'
+const TARGET_VOLUME = 0.55
+const FADE_SECONDS = 2.5
 
-function createEngine() {
-  if (ctx) return
-  const AC = window.AudioContext || window.webkitAudioContext
-  if (!AC) return
-  ctx = new AC()
-  masterGain = ctx.createGain()
-  masterGain.gain.value = 0.0
-  masterGain.connect(ctx.destination)
+let muted = true
+let current = null          // { age, audio, gain }
+let pending = null          // { age, audio, startAt }
+let lastCheckedAge = null
+let fadeInterval = null
 
-  // drone bas, deux oscillateurs legerement detunes
-  const droneGain = ctx.createGain()
-  droneGain.gain.value = 0.18
-  const droneFilter = ctx.createBiquadFilter()
-  droneFilter.type = 'lowpass'
-  droneFilter.frequency.value = 420
-  droneFilter.Q.value = 0.6
-  droneGain.connect(droneFilter)
-  droneFilter.connect(masterGain)
+function getCurrentAge() {
+  const t = state.techs
+  if (!t) return 'stone'
+  if (t['pick-gold'] && t['pick-gold'].unlocked) return 'gold'
+  if (t['pick-iron'] && t['pick-iron'].unlocked) return 'iron'
+  if (t['pick-bronze'] && t['pick-bronze'].unlocked) return 'bronze'
+  return 'stone'
+}
 
-  const osc1 = ctx.createOscillator()
-  osc1.type = 'triangle'
-  osc1.frequency.value = 55 // La1 bas
-  osc1.connect(droneGain)
-  const osc2 = ctx.createOscillator()
-  osc2.type = 'sine'
-  osc2.frequency.value = 82.41 // Mi2 (quinte)
-  osc2.detune.value = 6
-  osc2.connect(droneGain)
-  osc1.start()
-  osc2.start()
+function createAudio(src) {
+  const a = new Audio()
+  a.src = src
+  a.loop = true
+  a.volume = 0
+  a.preload = 'auto'
+  return a
+}
 
-  // lent vibrato sur osc2 pour animer
-  const lfo = ctx.createOscillator()
-  const lfoGain = ctx.createGain()
-  lfoGain.gain.value = 3
-  lfo.frequency.value = 0.12
-  lfo.connect(lfoGain)
-  lfoGain.connect(osc2.frequency)
-  lfo.start()
+function stopFade() {
+  if (fadeInterval != null) {
+    clearInterval(fadeInterval)
+    fadeInterval = null
+  }
+}
 
-  // arpege aleatoire lent (gammes pentatoniques)
-  const SCALE = [220, 246.94, 293.66, 329.63, 392, 440, 493.88, 587.33]
-  const arpGain = ctx.createGain()
-  arpGain.gain.value = 0
-  const arpFilter = ctx.createBiquadFilter()
-  arpFilter.type = 'lowpass'
-  arpFilter.frequency.value = 1800
-  arpFilter.Q.value = 1.2
-  arpGain.connect(arpFilter)
-  arpFilter.connect(masterGain)
-
-  function playArpNote() {
-    if (!ctx || muted) return
-    const now = ctx.currentTime
-    const f = SCALE[Math.floor(Math.random() * SCALE.length)]
-    const osc = ctx.createOscillator()
-    osc.type = 'sine'
-    osc.frequency.value = f
-    const noteGain = ctx.createGain()
-    noteGain.gain.setValueAtTime(0, now)
-    noteGain.gain.linearRampToValueAtTime(0.08, now + 0.3)
-    noteGain.gain.exponentialRampToValueAtTime(0.001, now + 3.5)
-    osc.connect(noteGain)
-    noteGain.connect(arpGain)
-    osc.start(now)
-    osc.stop(now + 4.0)
-    // note occasionnelle d'octave pour color
-    if (Math.random() < 0.15) {
-      const osc2 = ctx.createOscillator()
-      osc2.type = 'triangle'
-      osc2.frequency.value = f * 2
-      const g2 = ctx.createGain()
-      g2.gain.setValueAtTime(0, now)
-      g2.gain.linearRampToValueAtTime(0.04, now + 0.3)
-      g2.gain.exponentialRampToValueAtTime(0.001, now + 3.5)
-      osc2.connect(g2)
-      g2.connect(arpGain)
-      osc2.start(now + 0.2)
-      osc2.stop(now + 4.0)
+function crossfadeTo(age) {
+  if (current && current.age === age) return
+  const src = TRACKS[age]
+  if (!src) return
+  stopFade()
+  const prev = current
+  const next = { age, audio: createAudio(src) }
+  next.audio.addEventListener('error', () => {
+    // fichier absent, on abandonne silencieusement
+    if (current === next) current = null
+    next.audio.remove()
+  }, { once: true })
+  next.audio.addEventListener('canplaythrough', () => {
+    if (muted) return
+    next.audio.play().catch(() => {})
+  }, { once: true })
+  current = next
+  // fade lent
+  const steps = 30
+  let step = 0
+  const startPrev = prev ? prev.audio.volume : 0
+  fadeInterval = setInterval(() => {
+    step++
+    const t = step / steps
+    if (next.audio) next.audio.volume = muted ? 0 : TARGET_VOLUME * t
+    if (prev && prev.audio) prev.audio.volume = startPrev * (1 - t)
+    if (step >= steps) {
+      stopFade()
+      if (prev && prev.audio) {
+        try { prev.audio.pause() } catch (e) {}
+        prev.audio.src = ''
+        prev.audio.remove?.()
+      }
     }
+  }, (FADE_SECONDS * 1000) / steps)
+}
+
+function applyMute() {
+  if (!current || !current.audio) return
+  if (muted) {
+    current.audio.volume = 0
+    try { current.audio.pause() } catch (e) {}
+  } else {
+    current.audio.volume = TARGET_VOLUME
+    current.audio.play().catch(() => {})
   }
-
-  // augmente le gain arp progressivement
-  arpGain.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 5)
-
-  function scheduleNext() {
-    const delayMs = 1800 + Math.random() * 3500
-    setTimeout(() => {
-      playArpNote()
-      scheduleNext()
-    }, delayMs)
-  }
-  scheduleNext()
-
-  // noise filtre discret pour texture cassette
-  const bufferSize = 2 * ctx.sampleRate
-  const noiseBuf = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-  const data = noiseBuf.getChannelData(0)
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
-  const noise = ctx.createBufferSource()
-  noise.buffer = noiseBuf
-  noise.loop = true
-  const noiseFilter = ctx.createBiquadFilter()
-  noiseFilter.type = 'bandpass'
-  noiseFilter.frequency.value = 800
-  noiseFilter.Q.value = 0.5
-  const noiseGain = ctx.createGain()
-  noiseGain.gain.value = 0.02
-  noise.connect(noiseFilter)
-  noiseFilter.connect(noiseGain)
-  noiseGain.connect(masterGain)
-  noise.start()
 }
 
 export function isMuted() { return muted }
 
-export function toggleMute() {
-  setMuted(!muted)
-}
-
 export function setMuted(m) {
   muted = !!m
   try { localStorage.setItem(LOFI_MUTE_KEY, muted ? '1' : '0') } catch (e) {}
-  if (!ctx) {
-    if (!muted) ensureStarted()
-    updateButton()
-    return
-  }
-  const now = ctx.currentTime
-  masterGain.gain.cancelScheduledValues(now)
-  masterGain.gain.linearRampToValueAtTime(muted ? 0 : 0.6, now + 1.2)
+  applyMute()
   updateButton()
+  if (!muted && !current) crossfadeTo(getCurrentAge())
 }
 
-function ensureStarted() {
-  if (started) return
-  started = true
-  createEngine()
-  if (!ctx) return
-  if (ctx.state === 'suspended') ctx.resume()
-  const now = ctx.currentTime
-  masterGain.gain.cancelScheduledValues(now)
-  masterGain.gain.linearRampToValueAtTime(muted ? 0 : 0.6, now + 1.5)
-}
+export function toggleMute() { setMuted(!muted) }
 
 function updateButton() {
   const btn = document.getElementById('btn-audio')
@@ -165,24 +125,28 @@ function updateButton() {
   btn.classList.toggle('on', !muted)
 }
 
+export function tickAudio() {
+  if (muted) return
+  const age = getCurrentAge()
+  if (age !== lastCheckedAge) {
+    lastCheckedAge = age
+    crossfadeTo(age)
+  }
+}
+
 export function initAudio() {
-  // memoire mute
   try {
     const s = localStorage.getItem(LOFI_MUTE_KEY)
-    if (s === '0') muted = false
-    else muted = true // par defaut muet pour respecter autoplay policies
+    muted = s !== '0' // par defaut muet
   } catch (e) { muted = true }
 
   const btn = document.getElementById('btn-audio')
-  if (btn) btn.addEventListener('click', () => {
-    ensureStarted()
-    toggleMute()
-  })
+  if (btn) btn.addEventListener('click', () => toggleMute())
   updateButton()
 
-  // demarrage passif : si non mute, on attend le premier geste pour init
+  // demarrage passif au premier geste utilisateur (autoplay policy)
   const onFirstGesture = () => {
-    if (!muted) ensureStarted()
+    if (!muted) crossfadeTo(getCurrentAge())
     window.removeEventListener('pointerdown', onFirstGesture)
     window.removeEventListener('keydown', onFirstGesture)
   }
