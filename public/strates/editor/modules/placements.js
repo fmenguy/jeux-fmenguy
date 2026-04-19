@@ -464,6 +464,99 @@ export function removeHousesIn(cells) {
 }
 
 // ============================================================================
+// Manoirs : fusion de 4 maisons en 2x2
+// ============================================================================
+function makeManor() {
+  const rng = prng.rng
+  const g = new THREE.Group()
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xc4bab0, roughness: 0.88, flatShading: true })
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x7a3528, roughness: 0.82, flatShading: true })
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x9e9690, roughness: 0.92, flatShading: true })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.8, 1.9), wallMat)
+  body.position.y = 0.9; body.castShadow = true; body.receiveShadow = true
+  g.add(body)
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.62, 1.4, 4), roofMat)
+  roof.position.y = 2.5; roof.rotation.y = Math.PI / 4
+  roof.castShadow = true
+  g.add(roof)
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.75, 0.7), stoneMat)
+  tower.position.y = 2.25; tower.castShadow = true
+  g.add(tower)
+  const towerRoof = new THREE.Mesh(new THREE.ConeGeometry(0.54, 1.05, 4), roofMat)
+  towerRoof.position.y = 3.35; towerRoof.rotation.y = Math.PI / 4
+  towerRoof.castShadow = true
+  g.add(towerRoof)
+  for (const [cx, cz] of [[-0.55, -0.45], [0.45, 0.5]]) {
+    const ch = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.48, 0.2), stoneMat)
+    ch.position.set(cx, 2.42, cz); ch.castShadow = true
+    g.add(ch)
+  }
+  g.rotation.y = Math.floor(rng() * 4) * Math.PI / 2
+  return g
+}
+
+function _placeManorGroup(ox, oz) {
+  const tops = [
+    state.cellTop[ oz      * GRID + ox   ],
+    state.cellTop[ oz      * GRID + ox+1 ],
+    state.cellTop[(oz + 1) * GRID + ox   ],
+    state.cellTop[(oz + 1) * GRID + ox+1 ]
+  ]
+  const top = Math.max(...tops)
+  const g = makeManor()
+  g.position.set(ox + 1, top, oz + 1)
+  scene.add(g)
+  const entry = { x: ox, z: oz, group: g }
+  state.manors.push(entry)
+  return entry
+}
+
+function isPlainHouseOn(x, z) {
+  for (const h of state.houses) if (h.x === x && h.z === z) return true
+  return false
+}
+
+export function checkManorMerge(gx, gz) {
+  for (let ox = gx - 1; ox <= gx; ox++) {
+    for (let oz = gz - 1; oz <= gz; oz++) {
+      if (ox < 0 || oz < 0 || ox + 1 >= GRID || oz + 1 >= GRID) continue
+      if (
+        isPlainHouseOn(ox,   oz  ) &&
+        isPlainHouseOn(ox+1, oz  ) &&
+        isPlainHouseOn(ox,   oz+1) &&
+        isPlainHouseOn(ox+1, oz+1)
+      ) {
+        removeHousesIn([{x:ox,z:oz},{x:ox+1,z:oz},{x:ox,z:oz+1},{x:ox+1,z:oz+1}])
+        return _placeManorGroup(ox, oz)
+      }
+    }
+  }
+  return null
+}
+
+export function addManorFromSave(ox, oz) {
+  return _placeManorGroup(ox, oz)
+}
+
+export function removeManorsIn(cells) {
+  if (!state.manors.length) return
+  const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
+  for (let i = state.manors.length - 1; i >= 0; i--) {
+    const m = state.manors[i]
+    if (
+      cellSet.has( m.z      * GRID + m.x   ) ||
+      cellSet.has( m.z      * GRID + m.x+1 ) ||
+      cellSet.has((m.z + 1) * GRID + m.x   ) ||
+      cellSet.has((m.z + 1) * GRID + m.x+1 )
+    ) {
+      scene.remove(m.group)
+      m.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+      state.manors.splice(i, 1)
+    }
+  }
+}
+
+// ============================================================================
 // Batiments de recherche (toit bleu)
 // ============================================================================
 function makeResearchHouse() {
@@ -582,6 +675,11 @@ export function clearAllPlacements() {
     h.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
   }
   state.houses.length = 0
+  for (const m of state.manors) {
+    scene.remove(m.group)
+    m.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+  }
+  state.manors.length = 0
   clearAllResearchHouses()
 }
 
@@ -592,6 +690,7 @@ export function isCellOccupied(x, z) {
   for (const t of state.trees) if (t.x === x && t.z === z) return true
   for (const r of state.rocks) if (r.x === x && r.z === z) return true
   for (const h of state.houses) if (h.x === x && h.z === z) return true
+  for (const m of state.manors) if ((x === m.x || x === m.x+1) && (z === m.z || z === m.z+1)) return true
   for (const h of state.researchHouses) if (h.x === x && h.z === z) return true
   for (const b of state.bushes) if (b.x === x && b.z === z) return true
   if (state.cellOre[z * GRID + x]) return true
@@ -620,6 +719,7 @@ export function collectRockAt(x, z) {
 
 export function isHouseOn(x, z) {
   for (const h of state.houses) if (h.x === x && h.z === z) return true
+  for (const m of state.manors) if ((x === m.x || x === m.x+1) && (z === m.z || z === m.z+1)) return true
   for (const h of state.researchHouses) if (h.x === x && h.z === z) return true
   return false
 }
