@@ -758,6 +758,74 @@ function tick() {
   } catch (e) { /* silencieux */ }
 }
 
+// ============================================================
+// CONSEILS CONTEXTUELS : petits indices sous les sections
+// ============================================================
+const SECTION_TIPS = {
+  workforce: [
+    { condition: () => game.villagers >= 10 && game.pickers < 2,
+      text: "Recrute des cueilleurs pour automatiser la récolte de baies." },
+    { condition: () => game.axes >= 5 && game.hunters < 1 && game.villagers >= 15,
+      text: "Un chasseur rapporte de la viande, plus nourrissante que les baies." },
+    { condition: () => game.villageFounded && game.tinkers < 1,
+      text: "Un bricoleur débloque la scierie et la carrière." },
+    { condition: () => game.tinkers >= 1 && game.miners < 5 && game.discoveredMetals,
+      text: "Plus tu as de mineurs, plus tu extrais de métaux vite." },
+    { condition: () => game.tinkers >= 10 && game.researchers < 1,
+      text: "10 bricoleurs peuvent devenir un chercheur, clé des découvertes." },
+    { condition: () => game.villagers >= 40 && game.pickers < 5,
+      text: "Avec 40 habitants, tu as besoin de plus de cueilleurs pour ne pas manquer de nourriture." },
+    { condition: () => game.water < 20 && game.villagers > 5,
+      text: "L'eau est basse ! Construis un puits ou récolte avant que les villageois meurent de soif." },
+    { condition: () => game.currentSeason === 3 && game.coats < game.villagers,
+      text: "C'est l'hiver ! Fabrique des manteaux vite ou tes villageois mourront de froid." },
+  ],
+  buildings: [
+    { condition: () => game.tinkers >= 1 && game.sawmills < 1,
+      text: "Une scierie produit du bois automatiquement, libère du temps pour le reste." },
+    { condition: () => game.tinkers >= 1 && game.stoneQuarries < 1,
+      text: "Une carrière extrait de la pierre sans effort de ta part." },
+    { condition: () => game.wells < 2 && game.villagers >= 10,
+      text: "Avec plus de villageois, un second puits évite la pénurie d'eau." },
+    { condition: () => game.discoveredMetals && game.mines < 1,
+      text: "Les métaux sont découverts ! Une mine te permettra de les extraire." },
+    { condition: () => game.discoveredHerbs && game.herbalists < 1,
+      text: "Construis une herboristerie pour fabriquer des remèdes et ralentir les morts." },
+    { condition: () => game.wheatFields >= 1 && game.mills < 1,
+      text: "Un moulin transforme le blé en farine, base de l'alimentation de l'âge agricole." },
+    { condition: () => game.villagesData.length > 0 && game.villagesData.every(v => v.buildings.filter(b => b !== "well").length >= game.maxBuildingsPerVillage) && game.villagers >= 50,
+      text: "Tes villages sont pleins ! Fonde un nouveau village pour construire davantage." },
+  ],
+};
+
+let _tipEls = {};
+
+function getOrCreateTipEl(sectionId) {
+  if (_tipEls[sectionId]) return _tipEls[sectionId];
+  const section = document.getElementById(sectionId);
+  if (!section) return null;
+  const el = document.createElement('p');
+  el.className = 'section-ctx-tip';
+  section.appendChild(el);
+  _tipEls[sectionId] = el;
+  return el;
+}
+
+function updateContextualTips() {
+  const sections = [
+    { id: 'workforceSection', key: 'workforce' },
+    { id: 'buildingsSection', key: 'buildings' },
+  ];
+  for (const { id, key } of sections) {
+    const el = getOrCreateTipEl(id);
+    if (!el) continue;
+    const tips = SECTION_TIPS[key];
+    const active = tips.find(t => { try { return t.condition(); } catch { return false; } });
+    el.textContent = active ? active.text : '';
+    el.hidden = !active;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Demande le pseudo au 1er contact (ne bloque pas si l'utilisateur annule)
   if (!getPseudo()) {
@@ -784,6 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
   wireClaim();
   tick();
   setInterval(tick, 1000);
+  setInterval(updateContextualTips, 2000);
   const openSaveBtn = document.getElementById('openSaveMenuBtn');
   if (openSaveBtn) openSaveBtn.addEventListener('click', openSaveMenu);
   // Re-applique les caps juste apres chaque clic, en phase BUBBLE et SYNCHRONE
