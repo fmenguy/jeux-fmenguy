@@ -290,6 +290,13 @@ function applyToolAtCell(cell) {
     const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
     for (const c of cells) {
       if (isMineBlocked(c.x, c.z)) continue
+      const check = canMineCell(c.x, c.z)
+      if (!check.ok) {
+        if (check.reason === 'tech' && check.requiredTech) {
+          state.lastBlockedMineTech = { x: c.x, z: c.z, tech: check.requiredTech, t: performance.now() / 1000 }
+        }
+        continue
+      }
       addJob(c.x, c.z)
     }
     return
@@ -388,6 +395,13 @@ function applyToolToStrata(cells) {
   if (t === 'mine') {
     for (const c of cells) {
       if (isMineBlocked(c.x, c.z)) continue
+      const check = canMineCell(c.x, c.z)
+      if (!check.ok) {
+        if (check.reason === 'tech' && check.requiredTech) {
+          state.lastBlockedMineTech = { x: c.x, z: c.z, tech: check.requiredTech, t: performance.now() / 1000 }
+        }
+        continue
+      }
       addJob(c.x, c.z)
     }
     refreshHUD()
