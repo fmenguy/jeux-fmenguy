@@ -7,6 +7,7 @@
   <title>Forge des Âges</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link id="mobileStyles" rel="stylesheet" href="css/styles-mobile.css" disabled />
+  <link rel="stylesheet" href="css/theme-refonte.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -314,7 +315,7 @@
 
   <footer>
     <div class="footer-left">
-      <span>Forge des Âges - Version 2.3</span><br />
+      <span>Forge des Âges · Version 2.4 (refonte visuelle)</span><br />
       <a href="docs/changelog-2.3.html" class="changelog-link">Changelog</a>
     </div>
   </footer>
@@ -357,6 +358,60 @@
     const hiddenTabs = document.getElementById('hiddenTabs');
     hiddenTabs.addEventListener('mouseover', () => { hiddenTabs.style.opacity = '1'; });
     hiddenTabs.addEventListener('mouseout', () => { hiddenTabs.style.opacity = '0.3'; });
+
+    // Persistance musique : ON/OFF + volume mémorisés entre sessions.
+    // Premier chargement : musique OFF par défaut (autoplay bloqué par les navigateurs).
+    document.addEventListener('DOMContentLoaded', () => {
+      const music = document.getElementById('backgroundMusic');
+      const toggleBtn = document.getElementById('toggleSidebarBtn');
+      const volSlider = document.getElementById('volumeSlider');
+      const volPct = document.getElementById('volumePercentage');
+      if (!music || !toggleBtn) return;
+
+      const savedVol = parseInt(localStorage.getItem('fda_musicVolume') ?? '50', 10);
+      const wantsMusic = localStorage.getItem('fda_musicEnabled') === 'true';
+      music.volume = savedVol / 100;
+      if (volSlider) volSlider.value = savedVol;
+      if (volPct) volPct.textContent = savedVol + '%';
+
+      const setMutedClass = (muted) => toggleBtn.classList.toggle('muted', muted);
+      setMutedClass(!wantsMusic);
+
+      // Tenter autoplay si l'utilisateur l'avait activé
+      if (wantsMusic) {
+        music.play().then(() => setMutedClass(false))
+          .catch(() => {
+            // autoplay bloqué : démarrer au premier clic utilisateur
+            const startOnce = () => {
+              music.play().then(() => setMutedClass(false)).catch(() => {});
+              document.removeEventListener('click', startOnce);
+            };
+            document.addEventListener('click', startOnce, { once: true });
+          });
+      }
+
+      // Clic sur le bouton musique : bascule ON/OFF (en plus d'ouvrir la sidebar)
+      toggleBtn.addEventListener('click', (e) => {
+        if (e.shiftKey) return; // shift+clic = juste ouvrir la sidebar sans toggle
+        const playing = !music.paused;
+        if (playing) {
+          music.pause();
+          localStorage.setItem('fda_musicEnabled', 'false');
+          setMutedClass(true);
+        } else {
+          music.play().then(() => {
+            localStorage.setItem('fda_musicEnabled', 'true');
+            setMutedClass(false);
+          }).catch(() => {});
+        }
+      });
+
+      if (volSlider) {
+        volSlider.addEventListener('input', (e) => {
+          localStorage.setItem('fda_musicVolume', e.target.value);
+        });
+      }
+    });
   </script>
 </body>
 </html>
