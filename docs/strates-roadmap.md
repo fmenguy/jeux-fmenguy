@@ -78,7 +78,7 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 - [ ] 3.7 Événements et catastrophes (incendies, inondations, éboulements, animaux)
 - [ ] 3.8 Économie et commerce (marchands ambulants, troc)
 
-### Axe 4, visuel et UX
+### Axe 4, visuel et UX (**PRIORITÉ remontée** : le jeu est jugé trop basique par l'utilisateur, les chantiers visuels de cet axe passent devant le reste)
 
 - [ ] 4.1 Signatures Dorfromantik (cel-shading, brume, heure dorée, HDRI eau)
 - [ ] 4.2 Cycle jour/nuit (soleil qui tourne, lanternes qui s'allument)
