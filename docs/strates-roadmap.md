@@ -45,13 +45,32 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 - [ ] 2.1 Séparation claire éditeur vs jeu (nouvelle page `play/`)
 - [ ] 2.2 Écran d'accueil `/strates/` (Nouvelle partie, Charger, Éditeur, Crédits)
 - [ ] 2.3 Scénarios prédéfinis (îlot calme, archipel venté, vallée montagneuse)
-- [ ] 2.4 Système d'âges et passage, de l'âge de pierre à l'âge de l'espace
+- [ ] 2.4 Système d'âges et passage, de l'âge de pierre à l'âge de l'espace (voir vision **Tech tree XXL** dans `strates-design-ideas.md` : 7 âges + 6 branches thématiques + 60 à 90 techs en graphe, inspiré Total War Warhammer et Craft the World, passage d'âge à la FDA par conditions cumulatives)
 - [ ] 2.5 Mode campagne / mode sandbox / endgame cyclique (changement de planète)
+- [ ] 2.6 **Map plus grande + fog of war** (style Age of Empires) : révélation progressive par vision des colons et bâtiments (rayon ~8-12 tuiles), cellules explorées restent visibles en version figée
+- [ ] 2.7 **Verticalité Minecraft** : hauteurs jusqu'à 10 blocs (montagnes) + minage jusqu'à 4 blocs sous la surface. Neige permanente sur les sommets. Danger de chute (voir besoins 3.4).
+- [ ] 2.8 **Animaux** (axe à part entière) : cerfs, sangliers passifs, loups agressifs, chasse. Plus tard : élevage (poules, moutons, vaches).
+- [ ] 2.9 **Pêche et maritime** : tech ports de pêche (bronze), bateaux de pêche, bateaux maritimes (fer, exploration/commerce). Nouvelle ressource poisson.
+- [ ] 2.10 **Sons d'ambiance** : bruit de pas doux dans la neige (crack léger), vent dans les feuillages, clapotis d'eau, chant d'oiseaux au printemps
+- [ ] 2.11 **Séparation éditeur / mode jeu + Godmod** : les outils éditeur actuels (forêt, rocher, filon, maison, champ, baies) impactent réellement la partie, mais seraient réservés à un panneau "Godmod" / mode créatif séparé. En mode jeu, le joueur ne peut que désigner des ordres aux colons.
+- [ ] 2.12 **Stocks utiles à la construction** : en mode jeu, poser une maison ou un bâtiment consomme X pierre + Y bois + Z terre au lieu d'être gratuit. L'outil Placer (blocs) propose un choix de matériau (pierre / terre / sable) au lieu de prendre le plus abondant. Les stocks deviennent la monnaie d'échange réelle, au-delà du sculpt de paysage.
+
+### Axe 6, social (idées en vrac, à préciser)
+
+- [ ] 6.1 **Fiches personnages** : clic sur un colon → panneau détaillé (nom, âge, métier, outils portés, relations, besoins, inventaire, historique). Édition directe de certains champs (métier, priorité).
+- [ ] 6.2 Relations visibles (voir 3.5) : liens entre fiches, arbre généalogique.
+- [ ] 6.3 Journal personnel par colon (bref historique des événements vécus).
+
+### Axe 7, villes et villages (idées en vrac)
+
+- [ ] 7.1 **Fiches de village** : chaque maison regroupe un village, panneau qui liste habitants, stocks locaux, bâtiments rattachés, niveau de satisfaction.
+- [ ] 7.2 Hiérarchie village → hameau → ville selon population et bâtiments.
+- [ ] 7.3 Zones de confort (rayon autour d'un puits, d'une place centrale).
 
 ### Axe 3, gameplay
 
-- [ ] 3.1 Extraction dédiée des filons (outil séparé, remplit stocks)
-- [ ] 3.2 Outils et métiers spécialisés (hache, pelle, houe, faucille, marteau, canne)
+- [x] 3.1 Extraction dédiée des filons (livré session 6 : mine = extraction si filon présent, gating tech, stocks remplis)
+- [ ] 3.2 Outils et métiers spécialisés (partiel livré session 7 : hache en pierre + abattage arbres, gating tech, +wood. À venir : pelle, houe, faucille, marteau, canne)
 - [ ] 3.3 Interface gestion des rôles par colon (cases à cocher, priorités)
 - [ ] 3.4 Besoins vitaux (faim, sommeil, social) + cycle jour/nuit mécanique
 - [ ] 3.5 Relations, couples, reproduction naturelle (remplace spawn par maison)
@@ -59,7 +78,7 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 - [ ] 3.7 Événements et catastrophes (incendies, inondations, éboulements, animaux)
 - [ ] 3.8 Économie et commerce (marchands ambulants, troc)
 
-### Axe 4, visuel et UX
+### Axe 4, visuel et UX (**PRIORITÉ remontée** : le jeu est jugé trop basique par l'utilisateur, les chantiers visuels de cet axe passent devant le reste)
 
 - [ ] 4.1 Signatures Dorfromantik (cel-shading, brume, heure dorée, HDRI eau)
 - [ ] 4.2 Cycle jour/nuit (soleil qui tourne, lanternes qui s'allument)

@@ -23,6 +23,7 @@ export const state = {
   ores: [],
   bushes: [],
   houses: [],
+  manors: [],
   researchHouses: [],
   researchBuildingNextId: 1,
 
@@ -35,6 +36,7 @@ export const state = {
   // ressources
   stocks: {},
   techs: {
+    'axe-stone':     { name: 'Hache en pierre',   cost: 4,  req: null,           age: 'pierre', icon: 'H', tint: '#8a6a4a', unlocked: false },
     'pick-stone':    { name: 'Pioche en pierre',  cost: 5,  req: null,           age: 'pierre', icon: 'P', tint: '#9ca3af', unlocked: false },
     'pick-bronze':   { name: 'Pioche en bronze',  cost: 15, req: 'pick-stone',   age: 'bronze', icon: 'B', tint: '#b87333', unlocked: false },
     'pick-iron':     { name: 'Pioche en fer',     cost: 30, req: 'pick-bronze',  age: 'fer',    icon: 'F', tint: '#c0c5cc', unlocked: false },

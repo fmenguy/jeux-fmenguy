@@ -9,15 +9,15 @@ import { repaintCellSurface } from './terrain.js'
 import {
   addTree, addRock, addOre, addHouse, addBush, addResearchHouse,
   assignResearcherToBuilding, removeTreesIn, removeRocksIn, removeHousesIn,
-  removeResearchHousesIn, removeOresIn, removeBushesIn,
-  isCellOccupied, isMineBlocked
+  removeResearchHousesIn, removeOresIn, removeBushesIn, removeManorsIn,
+  checkManorMerge, isCellOccupied, isMineBlocked
 } from './placements.js'
 import { addJob, addBuildJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell } from './tech.js'
 import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
-import { saveGame, loadGame, hasSave, deleteSave } from './persistence.js'
+import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
 
 // ============================================================================
 // Curseur wireframe
@@ -128,13 +128,13 @@ export function labelOfTool(t) {
   return ({
     nav: 'naviguer',
     mine: 'miner',
-    build: 'placer',
-    forest: 'foret',
-    rock: 'rocher',
-    house: 'maison',
-    research: 'recherche',
-    field: 'champ',
-    bush: 'buisson baies',
+    build: 'placer un bloc',
+    forest: 'planter une forêt',
+    rock: 'poser un rocher',
+    house: 'poser une maison',
+    research: 'poser un laboratoire',
+    field: 'tracer un champ',
+    bush: 'poser un buisson',
     erase: 'effacer'
   })[t] || t
 }
@@ -169,24 +169,94 @@ if (btnReset) btnReset.addEventListener('click', () => {
   resetWorld(refreshHUD)
 })
 
-const btnSave = document.getElementById('btn-save')
-if (btnSave) btnSave.addEventListener('click', () => {
-  const ok = saveGame('auto')
-  btnSave.textContent = ok ? 'Sauve!' : 'Echec'
-  setTimeout(() => { btnSave.textContent = 'Sauver' }, 1200)
-})
+function openSaveMenu() {
+  renderSaveSlots()
+  const m = document.getElementById('save-menu')
+  if (m) m.classList.remove('hidden')
+}
+function closeSaveMenu() {
+  const m = document.getElementById('save-menu')
+  if (m) m.classList.add('hidden')
+}
 
-const btnLoad = document.getElementById('btn-load')
-if (btnLoad) btnLoad.addEventListener('click', () => {
-  if (!hasSave('auto')) {
-    btnLoad.textContent = 'Aucune'
-    setTimeout(() => { btnLoad.textContent = 'Charger' }, 1200)
-    return
+function formatTs(ts) {
+  const d = new Date(ts)
+  const pad = n => String(n).padStart(2, '0')
+  return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+}
+
+function renderSaveSlots() {
+  const container = document.getElementById('save-slots')
+  const autoC = document.getElementById('save-auto')
+  if (!container || !autoC) return
+  container.innerHTML = ''
+  const slots = listSlots()
+  for (const slot of slots) {
+    const row = document.createElement('div')
+    row.className = 'save-row' + (slot.meta ? '' : ' empty')
+    const label = document.createElement('div')
+    label.className = 'slot-label'
+    label.textContent = '#' + slot.index
+    row.appendChild(label)
+    const info = document.createElement('div')
+    info.className = 'slot-info'
+    if (slot.corrupted) info.textContent = 'corrompu'
+    else if (slot.meta) info.textContent = formatTs(slot.meta.savedAt) + '  ·  ' + slot.meta.colonists + ' colons  ·  cycle ' + (slot.meta.cyclesDone || 0)
+    else info.innerHTML = '<em>emplacement libre</em>'
+    row.appendChild(info)
+    const bSave = document.createElement('button')
+    bSave.className = 'btn-save'
+    bSave.textContent = slot.meta ? 'Ecraser' : 'Sauver'
+    bSave.addEventListener('click', () => { saveGame(slot.index); renderSaveSlots() })
+    row.appendChild(bSave)
+    const bLoad = document.createElement('button')
+    bLoad.className = 'btn-load'
+    bLoad.textContent = 'Charger'
+    bLoad.disabled = !slot.meta
+    bLoad.addEventListener('click', () => {
+      if (loadGame(slot.index)) { refreshHUD(); closeSaveMenu() }
+    })
+    row.appendChild(bLoad)
+    const bDel = document.createElement('button')
+    bDel.className = 'btn-del'
+    bDel.textContent = '×'
+    bDel.disabled = !slot.meta
+    bDel.addEventListener('click', () => { if (confirm('Supprimer l emplacement ' + slot.index + ' ?')) { deleteSave(slot.index); renderSaveSlots() } })
+    row.appendChild(bDel)
+    container.appendChild(row)
   }
-  const ok = loadGame('auto')
-  if (ok) refreshHUD()
-  btnLoad.textContent = ok ? 'Charge!' : 'Echec'
-  setTimeout(() => { btnLoad.textContent = 'Charger' }, 1200)
+  // slot auto en bas
+  autoC.innerHTML = ''
+  const autoRow = document.createElement('div')
+  autoRow.className = 'save-row auto' + (hasSave('auto') ? '' : ' empty')
+  const aLabel = document.createElement('div')
+  aLabel.className = 'slot-label'
+  aLabel.textContent = 'Auto'
+  autoRow.appendChild(aLabel)
+  const aInfo = document.createElement('div')
+  aInfo.className = 'slot-info'
+  aInfo.textContent = hasSave('auto') ? 'derniere sauvegarde auto (toutes les 30 s)' : 'pas encore de sauvegarde auto'
+  autoRow.appendChild(aInfo)
+  const aLoad = document.createElement('button')
+  aLoad.className = 'btn-load'
+  aLoad.textContent = 'Charger'
+  aLoad.disabled = !hasSave('auto')
+  aLoad.addEventListener('click', () => { if (loadGame('auto')) { refreshHUD(); closeSaveMenu() } })
+  autoRow.appendChild(aLoad)
+  autoC.appendChild(autoRow)
+}
+
+const btnSave = document.getElementById('btn-save')
+if (btnSave) btnSave.addEventListener('click', openSaveMenu)
+const btnLoad = document.getElementById('btn-load')
+if (btnLoad) btnLoad.addEventListener('click', openSaveMenu)
+const btnSaveClose = document.getElementById('save-menu-close')
+if (btnSaveClose) btnSaveClose.addEventListener('click', closeSaveMenu)
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const m = document.getElementById('save-menu')
+    if (m && !m.classList.contains('hidden')) closeSaveMenu()
+  }
 })
 
 window.addEventListener('keydown', (e) => {
@@ -290,6 +360,13 @@ function applyToolAtCell(cell) {
     const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
     for (const c of cells) {
       if (isMineBlocked(c.x, c.z)) continue
+      const check = canMineCell(c.x, c.z)
+      if (!check.ok) {
+        if (check.reason === 'tech' && check.requiredTech) {
+          state.lastBlockedMineTech = { x: c.x, z: c.z, tech: check.requiredTech, t: performance.now() / 1000 }
+        }
+        continue
+      }
       addJob(c.x, c.z)
     }
     return
@@ -312,7 +389,7 @@ function applyToolAtCell(cell) {
         const k = c.z * GRID + c.x
         if (state.toolState.paintedThisStroke.has('f' + k)) continue
         state.toolState.paintedThisStroke.add('f' + k)
-        if (rng() < 0.6 && !isCellOccupied(c.x, c.z)) addTree(c.x, c.z)
+        if (rng() < 0.6 && !isCellOccupied(c.x, c.z)) addTree(c.x, c.z, { growing: true })
       }
       break
     }
@@ -336,6 +413,8 @@ function applyToolAtCell(cell) {
         if (addHouse(cell.x, cell.z)) {
           state.gameStats.housesPlaced++
           spawnColonsAroundHouse(cell.x, cell.z, 2)
+          const manor = checkManorMerge(cell.x, cell.z)
+          if (manor) spawnColonsAroundHouse(manor.x + 1, manor.z + 1, 2)
         }
       }
       break
@@ -365,6 +444,7 @@ function applyToolAtCell(cell) {
       removeTreesIn(cells)
       removeRocksIn(cells)
       removeHousesIn(cells)
+      removeManorsIn(cells)
       removeResearchHousesIn(cells)
       removeOresIn(cells)
       removeBushesIn(cells)
@@ -388,6 +468,13 @@ function applyToolToStrata(cells) {
   if (t === 'mine') {
     for (const c of cells) {
       if (isMineBlocked(c.x, c.z)) continue
+      const check = canMineCell(c.x, c.z)
+      if (!check.ok) {
+        if (check.reason === 'tech' && check.requiredTech) {
+          state.lastBlockedMineTech = { x: c.x, z: c.z, tech: check.requiredTech, t: performance.now() / 1000 }
+        }
+        continue
+      }
       addJob(c.x, c.z)
     }
     refreshHUD()
@@ -405,6 +492,7 @@ function applyToolToStrata(cells) {
     removeTreesIn(cells)
     removeRocksIn(cells)
     removeHousesIn(cells)
+    removeManorsIn(cells)
     removeResearchHousesIn(cells)
     removeOresIn(cells)
     removeBushesIn(cells)
@@ -422,7 +510,7 @@ function applyToolToStrata(cells) {
   for (const c of cells) {
     switch (t) {
       case 'forest':
-        if (!isCellOccupied(c.x, c.z)) addTree(c.x, c.z)
+        if (!isCellOccupied(c.x, c.z)) addTree(c.x, c.z, { growing: true })
         break
       case 'rock':
         if (!isCellOccupied(c.x, c.z)) addRock(c.x, c.z)
@@ -435,6 +523,8 @@ function applyToolToStrata(cells) {
           if (addHouse(c.x, c.z)) {
             state.gameStats.housesPlaced++
             spawnColonsAroundHouse(c.x, c.z, 2)
+            const manor = checkManorMerge(c.x, c.z)
+            if (manor) spawnColonsAroundHouse(manor.x + 1, manor.z + 1, 2)
           }
         }
         break
@@ -516,16 +606,16 @@ window.addEventListener('pointerup', () => { state.toolState.isPainting = false 
 // ---------------------------------------------------------------------------
 // Clic droit bref : annulation de job
 // ---------------------------------------------------------------------------
-function cancelJobAt(x, z) {
+function cancelJobAt(x, z, skipHUDRefresh) {
   const k = jobKey(x, z)
   if (state.jobs.has(k)) {
     removeJob(x, z, false)
-    refreshHUD()
+    if (!skipHUDRefresh) refreshHUD()
     return true
   }
   if (state.buildJobs.has(k)) {
     removeBuildJob(x, z)
-    refreshHUD()
+    if (!skipHUDRefresh) refreshHUD()
     return true
   }
   return false
@@ -534,7 +624,7 @@ function cancelJobAt(x, z) {
 let rclickStart = null
 dom.addEventListener('pointerdown', (e) => {
   if (e.button !== 2) return
-  rclickStart = { x: e.clientX, y: e.clientY, t: performance.now() }
+  rclickStart = { x: e.clientX, y: e.clientY, t: performance.now(), shift: e.shiftKey }
 })
 dom.addEventListener('pointerup', (e) => {
   if (e.button !== 2) return
@@ -543,11 +633,20 @@ dom.addEventListener('pointerup', (e) => {
   const dx = e.clientX - rclickStart.x
   const dy = e.clientY - rclickStart.y
   const dist2 = dx * dx + dy * dy
+  const wasShift = rclickStart.shift
   rclickStart = null
   if (dt > 200) return
   if (dist2 > 16) return
   const cell = pickCell(e.clientX, e.clientY)
   if (!cell) return
+  // Shift + clic droit bref : annule toute la strate sous le curseur
+  if (wasShift) {
+    const cells = computeStrata(cell.x, cell.z)
+    let cancelled = 0
+    for (const c of cells) if (cancelJobAt(c.x, c.z, true)) cancelled++
+    if (cancelled > 0) refreshHUD()
+    return
+  }
   cancelJobAt(cell.x, cell.z)
 })
 
