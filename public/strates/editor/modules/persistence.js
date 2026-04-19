@@ -9,7 +9,6 @@ import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
 import { resetQuestSig, startNextQuest } from './quests.js'
 import { clearVegetation } from './vegetation.js'
-import { clearFog, buildFog } from './fog.js'
 
 // ============================================================================
 // Persistance localStorage. Slots : 'auto' (ecrase en continu) + 1..5 manuels.
@@ -152,7 +151,6 @@ function clearEverything() {
   for (const id in state.techs) state.techs[id].unlocked = false
   clearAllPlacements()
   clearVegetation()
-  clearFog()
   clearColonists()
   state.contextBubbles.lastCategoryTriggerAt.clear()
   state.contextBubbles.lastLineByCategory.clear()
@@ -239,10 +237,6 @@ function applySnapshot(data) {
     state.season.elapsed = data.season.elapsed || 0
     state.season.cyclesDone = data.season.cyclesDone || 0
   }
-  if (data.visited && data.visited.length) {
-    state.visited = Uint8Array.from(data.visited)
-  }
-  buildFog()
   startNextQuest()
 
   state.lastJobTime = performance.now() / 1000
