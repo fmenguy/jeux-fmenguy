@@ -361,10 +361,13 @@ export function addBush(gx, gz) {
   bushBerryMesh.instanceMatrix.needsUpdate = true
   if (bushBerryMesh.instanceColor) bushBerryMesh.instanceColor.needsUpdate = true
 
+  // maxBerries aleatoire entre 5 et 14 pour que les buissons soient
+  // productifs : la recolte normale vaut largement plus que le minage brut.
+  const maxB = 5 + Math.floor(rng() * 10)
   const bush = {
     x: gx, z: gz,
-    berries: BERRIES_PER_BUSH,
-    maxBerries: BERRIES_PER_BUSH,
+    berries: Math.min(maxB, 3 + Math.floor(rng() * 8)), // part deja partiellement remplie
+    maxBerries: maxB,
     leafIndices,
     berryIndices,
     berryMatrices: berryPositions,
@@ -595,6 +598,26 @@ export function isCellOccupied(x, z) {
   return false
 }
 
+export function isRockOn(x, z) {
+  for (const r of state.rocks) if (r.x === x && r.z === z) return true
+  return false
+}
+
+// Retire le rocher present sur la tuile (tas de 2 a 3 cailloux), renvoie la
+// quantite de pierre recoltee (environ 2 par caillou).
+export function collectRockAt(x, z) {
+  let chunks = 0
+  for (const r of state.rocks) {
+    if (r.x === x && r.z === z) {
+      chunks = (r.indices && r.indices.length) ? r.indices.length : 2
+      break
+    }
+  }
+  if (!chunks) return 0
+  removeRocksIn([{ x, z }])
+  return chunks * 2
+}
+
 export function isHouseOn(x, z) {
   for (const h of state.houses) if (h.x === x && h.z === z) return true
   for (const h of state.researchHouses) if (h.x === x && h.z === z) return true
@@ -609,8 +632,20 @@ export function isBushOn(x, z) {
   return false
 }
 export function isMineBlocked(x, z) {
-  // Les filons ne sont plus bloquants : on "mine" un filon pour l'extraire
-  // (retire le filon, remplit le stock minerai, le voxel sous reste en place).
-  // Seules les maisons et buissons restent bloquants.
-  return isHouseOn(x, z) || isBushOn(x, z)
+  // Plus rien n'est "bloquant" au sens strict : tout peut etre designe, mais
+  // la logique d'execution dans colonist detecte le contenu et agit en
+  // consequence (abat arbre, ramasse rocher, extrait filon, recolte buisson,
+  // sinon mine le voxel). Seules les maisons et laboratoires restent
+  // intouchables car ce sont des constructions que le joueur efface
+  // explicitement avec Effacer.
+  return isHouseOn(x, z)
+}
+
+// Recolte complete d'un buisson quand on mine le voxel dessous : retire le
+// buisson et renvoie 1 a 3 baies bonus. La recolte "normale" via pickHarvest
+// donne beaucoup plus (voir maxBerries sur addBush).
+export function grabBushAt(x, z) {
+  if (!isBushOn(x, z)) return 0
+  removeBushesIn([{ x, z }])
+  return 1 + Math.floor(Math.random() * 3)
 }

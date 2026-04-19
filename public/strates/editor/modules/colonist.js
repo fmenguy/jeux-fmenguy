@@ -10,7 +10,10 @@ import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
 import { topVoxelIndex, colorForLayer, isDeepWater } from './terrain.js'
 import { aStar, findApproach } from './pathfind.js'
 import { jobKey, removeJob } from './jobs.js'
-import { findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn } from './placements.js'
+import {
+  findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn,
+  isRockOn, collectRockAt, isBushOn, grabBushAt
+} from './placements.js'
 import { findNearestBush, refreshBushBerries } from './placements.js'
 import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
@@ -474,38 +477,51 @@ export class Colonist {
       if (this.workTimer >= duration) {
         if (this.targetJob) {
           const { x, z } = this.targetJob
-          // Arbre present : abattage prioritaire. Retire l'arbre, +wood.
+          // Ordre de priorite : arbre > rocher > filon > buisson > voxel.
+          // L'un ou l'autre est traite, jamais les deux en un coup, ce qui
+          // force le joueur a sequencer les ordres (ramasser avant miner).
           if (isTreeOn(x, z) && chopTreeAt(x, z)) {
             state.resources.wood++
             scheduleFlash(x, z)
             removeJob(x, z, true)
             state.gameStats.minesCompleted++
-            this.targetJob = null
-          } else {
-          // Extraction de filon prioritaire : on retire le filon et on
-          // remplit le stock minerai, sans entamer le voxel sous.
-          const oreType = extractOreAt(x, z)
-          if (oreType) {
-            const stockKey = ORE_TO_STOCK[oreType]
-            if (stockKey && state.stocks[stockKey] != null) state.stocks[stockKey]++
+          } else if (isRockOn(x, z)) {
+            const got = collectRockAt(x, z)
+            state.resources.stone += got
+            state.stocks.stone += got
             scheduleFlash(x, z)
             removeJob(x, z, true)
             state.gameStats.minesCompleted++
           } else {
-            const top = state.cellTop[z * GRID + x]
-            if (top > MIN_STRATES) {
-              const i = state.instanceIndex[z * GRID + x][top - 1]
-              state.instanced.setMatrixAt(i, HIDDEN_MATRIX)
-              state.instanced.instanceMatrix.needsUpdate = true
-              state.cellTop[z * GRID + x] = top - 1
+            const oreType = extractOreAt(x, z)
+            if (oreType) {
+              const stockKey = ORE_TO_STOCK[oreType]
+              if (stockKey && state.stocks[stockKey] != null) state.stocks[stockKey]++
               scheduleFlash(x, z)
+              removeJob(x, z, true)
+              state.gameStats.minesCompleted++
+            } else if (isBushOn(x, z)) {
+              const picked = grabBushAt(x, z)
+              state.resources.berries += picked
+              state.gameStats.totalBerriesHarvested += picked
+              scheduleFlash(x, z)
+              removeJob(x, z, true)
+              state.gameStats.minesCompleted++
+            } else {
+              const top = state.cellTop[z * GRID + x]
+              if (top > MIN_STRATES) {
+                const i = state.instanceIndex[z * GRID + x][top - 1]
+                state.instanced.setMatrixAt(i, HIDDEN_MATRIX)
+                state.instanced.instanceMatrix.needsUpdate = true
+                state.cellTop[z * GRID + x] = top - 1
+                scheduleFlash(x, z)
+              }
+              const minedBiome = state.cellBiome[z * GRID + x]
+              incrStockForBiome(minedBiome)
+              removeJob(x, z, true)
+              state.resources.stone++
+              state.gameStats.minesCompleted++
             }
-            const minedBiome = state.cellBiome[z * GRID + x]
-            incrStockForBiome(minedBiome)
-            removeJob(x, z, true)
-            state.resources.stone++
-            state.gameStats.minesCompleted++
-          }
           }
           this.targetJob = null
         }
