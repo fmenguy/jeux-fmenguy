@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Strates, proto 5, barre de placement</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #0b0d12; overflow: hidden; font-family: system-ui, sans-serif; color: #f3ecdd; user-select: none; }
+    #app { position: fixed; inset: 0; }
+    #hud {
+      position: fixed; left: 16px; top: 16px;
+      background: rgba(20, 24, 30, 0.55);
+      padding: 10px 14px; border-radius: 10px;
+      backdrop-filter: blur(6px);
+      font-size: 13px; line-height: 1.5;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+      max-width: 320px;
+    }
+    #hud b { color: #ffd98a; }
+    #hud .stat { color: #cfe6f5; }
+    #loader {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: #0b0d12; color: #c7b98c; font-size: 14px; letter-spacing: 0.1em;
+      z-index: 50;
+    }
+    #loader.hidden { display: none; }
+
+    #actionbar {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(15, 18, 24, 0.78);
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 217, 138, 0.25);
+      border-radius: 14px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      z-index: 20;
+    }
+    .tool {
+      min-width: 64px; padding: 8px 10px;
+      background: rgba(40, 46, 58, 0.7);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      color: #e9e2cf;
+      font-size: 12px; line-height: 1.2;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s, border 0.15s, transform 0.05s;
+    }
+    .tool:hover { background: rgba(60, 70, 88, 0.85); }
+    .tool:active { transform: translateY(1px); }
+    .tool.active {
+      background: rgba(255, 217, 138, 0.22);
+      border-color: #ffd98a;
+      color: #fff5d8;
+      box-shadow: inset 0 0 0 1px rgba(255,217,138,0.4);
+    }
+    .tool .key {
+      display: block; font-size: 10px; opacity: 0.6; margin-top: 2px;
+    }
+    .sep {
+      width: 1px; height: 36px; background: rgba(255,255,255,0.12); margin: 0 4px;
+    }
+    .brush {
+      min-width: 32px; padding: 8px 6px;
+      background: rgba(40, 46, 58, 0.7);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      color: #e9e2cf;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .brush.active {
+      background: rgba(125, 200, 255, 0.22);
+      border-color: #7dc8ff;
+      color: #d8eeff;
+    }
+    .label {
+      font-size: 11px; opacity: 0.6; margin-right: 4px;
+    }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="loader">generation du monde...</div>
+  <div id="app"></div>
+  <div id="hud">
+    <div><b>Strates</b>, proto 5 barre de placement</div>
+    <div>outil actif : <span id="hud-tool" class="stat">naviguer</span></div>
+    <div>arbres <span id="c-trees" class="stat">0</span> | rochers <span id="c-rocks" class="stat">0</span> | maisons <span id="c-houses" class="stat">0</span></div>
+    <div>champs <span id="c-fields" class="stat">0</span> | filons <span id="c-ores" class="stat">0</span></div>
+  </div>
+
+  <div id="actionbar">
+    <button class="tool active" data-tool="nav">Naviguer<span class="key">1</span></button>
+    <button class="tool" data-tool="tree">Arbre<span class="key">2</span></button>
+    <button class="tool" data-tool="forest">Foret<span class="key">3</span></button>
+    <button class="tool" data-tool="rock">Rocher<span class="key">4</span></button>
+    <button class="tool" data-tool="ore">Filon<span class="key">5</span></button>
+    <button class="tool" data-tool="house">Maison<span class="key">6</span></button>
+    <button class="tool" data-tool="field">Champ<span class="key">7</span></button>
+    <button class="tool" data-tool="erase">Effacer<span class="key">8</span></button>
+    <div class="sep"></div>
+    <span class="label">pinceau</span>
+    <button class="brush" data-brush="1">1</button>
+    <button class="brush active" data-brush="3">3</button>
+    <button class="brush" data-brush="5">5</button>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
