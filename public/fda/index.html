@@ -6,41 +6,22 @@
   <link rel="icon" href="assets/fda.ico" type="image/x-icon">
   <title>Forge des Âges</title>
   <link rel="stylesheet" href="css/styles.css" />
-  <link id="mobileStyles" rel="stylesheet" href="css/styles-mobile.css" disabled />
+  <link id="mobileStyles" rel="stylesheet" href="css/styles-mobile.css" />
   <link rel="stylesheet" href="css/theme-refonte.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <!-- Bouton pour ouvrir le bandeau latéral -->
-  <button id="toggleSidebarBtn" class="sidebar-toggle"><i class="fas fa-music"></i></button>
-  <!-- Bandeau latéral pour le contrôle audio -->
-  <div id="audioSidebar">
-    <div id="audioSidebarContent" class="sidebar-content">
-      <div class="audio-controls">
-        <div class="play-pause-buttons">
-          <button id="playMusicBtn" class="audio-control-btn"><i class="fas fa-play"></i></button>
-          <button id="pauseMusicBtn" class="audio-control-btn"><i class="fas fa-pause"></i></button>
-        </div>
-        <div class="volume-control">
-          <input type="range" id="volumeSlider" min="0" max="100" step="1" value="50">
-          <span id="volumePercentage" class="volume-percentage">50%</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Bouton musique : toggle play/pause unique en haut a droite -->
+  <button id="toggleSidebarBtn" class="sidebar-toggle" title="Activer / couper la musique"><i class="fas fa-music"></i></button>
 
   <div style="text-align: center; margin-bottom: 20px;">
     <img src="assets/fda.webp" alt="Forge des Âges Logo" style="width: 180px; height: auto;">
   </div>
 
-  <!-- Bouton pour basculer vers la version mobile -->
-  <div style="text-align: center; margin-bottom: 10px;">
-    <button id="toggleMobileViewBtn">Version Mobile</button>
-  </div>
-
   <!-- Onglets -->
   <div id="tabs">
     <button class="tab-button active" data-tab="gameTab">Jeu</button>
+    <button class="tab-button" data-tab="techTab">Arbre des Âges</button>
     <button class="tab-button" data-tab="mapTab">Carte</button>
   </div>
 
@@ -60,6 +41,22 @@
       <div id="agesList"></div>
       <div id="narrative">
         Ici, tout est sauvage. Récolte des baies pour survivre et attirer des amis.
+      </div>
+
+      <!-- Objectif Actuel : indice courant en mode quete (mis en avant) -->
+      <div id="currentObjective" class="objective-empty">
+        <div class="objective-header">
+          <span class="objective-icon">🎯</span>
+          <span class="objective-title">Objectif</span>
+        </div>
+        <div class="objective-body">
+          <p class="objective-message">Commence par récolter des baies.</p>
+          <div class="objective-progress-wrapper" hidden>
+            <div class="objective-progress-bar"><div class="objective-progress-fill"></div></div>
+            <span class="objective-progress-text"></span>
+          </div>
+          <button id="claimObjectiveBtn" class="objective-claim" hidden>Réclamer l'indice</button>
+        </div>
       </div>
       <div id="explorationDisplay" style="display: none;">
         <span class="icon">🗺️</span> Exploration
@@ -271,6 +268,15 @@
       </div>
     </div>
 
+    <!-- Onglet Arbre des Ages -->
+    <div id="techTab" class="tab-pane">
+      <div id="techTreeWrapper">
+        <h2 class="tech-tree-title">Arbre des Âges</h2>
+        <p class="tech-tree-intro">Chaque âge débloque de nouveaux outils, métiers et bâtiments. Suis la voie pour faire grandir ta civilisation.</p>
+        <div id="techTreeColumns"></div>
+      </div>
+    </div>
+
     <!-- Onglet Carte -->
     <div id="mapTab" class="tab-pane">
       <div id="mapSection">
@@ -301,26 +307,19 @@
     </div>
   </div>
 
-  <!-- Conteneur pour les onglets (bas à droite) -->
-  <div id="hiddenTabs" style="position: fixed; bottom: 10px; right: 10px; opacity: 0.3; transition: opacity 0.3s; display: flex; align-items: center;">
-    <!-- Message à gauche -->
-    <span style="font-size: 12px; color: #ffffff; margin-right: 10px;">Mes autres jeux/tests en cours :</span>
-    <!-- Onglet discret pour Ecosystem -->
-    <a href="ecosim/ecosystem.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #6bb0e9; text-decoration: none;">🐟 Ecosim.</a>
-    <!-- Onglet discret pour TDM -->
-    <a href="zentel/zentel.html" class="tab-button" style="font-size: 12px; padding: 5px; color: #c75858; text-decoration: none; margin-left: 10px;">🛡️ Zentel...</a>
-  </div>
-
-
-
   <footer>
     <div class="footer-left">
       <span>Forge des Âges · Version 2.4 (refonte visuelle)</span><br />
       <a href="docs/changelog-2.3.html" class="changelog-link">Changelog</a>
     </div>
+    <a href="/" id="backToArcade" title="Retour à l'arcade FM">
+      <i class="fas fa-arrow-left"></i>
+      <span>Arcade <strong>FM</strong></span>
+    </a>
   </footer>
 
   <script src="js/forge-main.js" type="module"></script>
+  <script src="js/forge-enhance.js" type="module"></script>
 
   <audio id="backgroundMusic" loop>
     <source src="assets/audio/ambiance_fda.mp3" type="audio/mpeg">
@@ -338,63 +337,37 @@
       });
     });
 
-    // Gestion de la bascule de la vue mobile
+    // Detection auto mobile / desktop : viewport <= 820px ou device tactile sans souris fine.
     const mobileStyles = document.getElementById('mobileStyles');
-    const toggleMobileViewBtn = document.getElementById('toggleMobileViewBtn');
+    const mobileQuery = window.matchMedia('(max-width: 820px), (hover: none) and (pointer: coarse)');
+    const applyMobileMode = () => { mobileStyles.disabled = !mobileQuery.matches; };
+    applyMobileMode();
+    mobileQuery.addEventListener('change', applyMobileMode);
+    // Nettoyage d'un eventuel choix manuel hérité de l'ancien bouton
+    localStorage.removeItem('mobileView');
 
-    // Vérifie l'état initial dans localStorage
-    const isMobileView = localStorage.getItem('mobileView') === 'true';
-    mobileStyles.disabled = !isMobileView;
-    toggleMobileViewBtn.textContent = isMobileView ? 'Version Standard' : 'Version Mobile';
-
-    toggleMobileViewBtn.addEventListener('click', () => {
-      const isCurrentlyMobile = !mobileStyles.disabled;
-      mobileStyles.disabled = isCurrentlyMobile;
-      toggleMobileViewBtn.textContent = isCurrentlyMobile ? 'Version Mobile' : 'Version Standard';
-      localStorage.setItem('mobileView', !isCurrentlyMobile);
-    });
-
-    // Effet de survol pour l'onglet discret
-    const hiddenTabs = document.getElementById('hiddenTabs');
-    hiddenTabs.addEventListener('mouseover', () => { hiddenTabs.style.opacity = '1'; });
-    hiddenTabs.addEventListener('mouseout', () => { hiddenTabs.style.opacity = '0.3'; });
-
-    // Persistance musique : ON/OFF + volume mémorisés entre sessions.
-    // Premier chargement : musique OFF par défaut (autoplay bloqué par les navigateurs).
+    // Musique : un seul bouton en haut a droite, toggle play/pause, etat persiste.
     document.addEventListener('DOMContentLoaded', () => {
       const music = document.getElementById('backgroundMusic');
       const toggleBtn = document.getElementById('toggleSidebarBtn');
-      const volSlider = document.getElementById('volumeSlider');
-      const volPct = document.getElementById('volumePercentage');
       if (!music || !toggleBtn) return;
 
-      const savedVol = parseInt(localStorage.getItem('fda_musicVolume') ?? '50', 10);
+      music.volume = 0.5;
       const wantsMusic = localStorage.getItem('fda_musicEnabled') === 'true';
-      music.volume = savedVol / 100;
-      if (volSlider) volSlider.value = savedVol;
-      if (volPct) volPct.textContent = savedVol + '%';
-
       const setMutedClass = (muted) => toggleBtn.classList.toggle('muted', muted);
       setMutedClass(!wantsMusic);
 
-      // Tenter autoplay si l'utilisateur l'avait activé
       if (wantsMusic) {
-        music.play().then(() => setMutedClass(false))
-          .catch(() => {
-            // autoplay bloqué : démarrer au premier clic utilisateur
-            const startOnce = () => {
-              music.play().then(() => setMutedClass(false)).catch(() => {});
-              document.removeEventListener('click', startOnce);
-            };
-            document.addEventListener('click', startOnce, { once: true });
-          });
+        music.play().then(() => setMutedClass(false)).catch(() => {
+          const startOnce = () => {
+            music.play().then(() => setMutedClass(false)).catch(() => {});
+          };
+          document.addEventListener('click', startOnce, { once: true });
+        });
       }
 
-      // Clic sur le bouton musique : bascule ON/OFF (en plus d'ouvrir la sidebar)
-      toggleBtn.addEventListener('click', (e) => {
-        if (e.shiftKey) return; // shift+clic = juste ouvrir la sidebar sans toggle
-        const playing = !music.paused;
-        if (playing) {
+      toggleBtn.addEventListener('click', () => {
+        if (!music.paused) {
           music.pause();
           localStorage.setItem('fda_musicEnabled', 'false');
           setMutedClass(true);
@@ -405,12 +378,6 @@
           }).catch(() => {});
         }
       });
-
-      if (volSlider) {
-        volSlider.addEventListener('input', (e) => {
-          localStorage.setItem('fda_musicVolume', e.target.value);
-        });
-      }
     });
   </script>
 </body>

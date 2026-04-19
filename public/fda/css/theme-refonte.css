@@ -69,17 +69,7 @@ body > div:first-of-type img:hover {
   transform: scale(1.04) rotate(-1deg);
   filter: drop-shadow(0 0 28px rgba(255, 217, 134, 0.55)) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.7));
 }
-body > div:first-of-type::after {
-  content: "Forge des Âges";
-  display: block;
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
-  font-size: clamp(22px, 3.2vw, 32px);
-  letter-spacing: 0.18em;
-  color: var(--gold-bright);
-  text-shadow: 0 0 14px rgba(255, 217, 134, 0.35), 0 2px 4px rgba(0, 0, 0, 0.8);
-  margin-top: 4px;
-}
+/* Titre retire : deja present dans le logo */
 
 /* ---------- Bouton bascule mobile : discret en haut ---------- */
 #toggleMobileViewBtn {
@@ -184,20 +174,24 @@ body > div:first-of-type::after {
 #narrative {
   font-family: 'IM Fell English', Georgia, serif;
   font-style: italic;
-  font-size: 15px;
-  color: #2a1c0a;
+  font-weight: 600;
+  font-size: 17px;
+  color: #120a02;
   background:
-    linear-gradient(180deg, rgba(255, 240, 200, 0.95), rgba(243, 230, 200, 0.92));
+    linear-gradient(180deg, rgba(255, 235, 180, 0.98), rgba(240, 215, 160, 0.96));
   border: 1px solid var(--gold-deep);
   border-radius: var(--radius-md);
-  padding: 14px 22px;
+  padding: 16px 26px;
   max-width: 640px;
   box-shadow:
     var(--shadow-deep),
-    inset 0 0 30px rgba(138, 96, 24, 0.18),
-    inset 0 0 0 1px rgba(255, 250, 230, 0.6);
+    0 0 24px rgba(230, 185, 88, 0.25),
+    inset 0 0 30px rgba(138, 96, 24, 0.22),
+    inset 0 0 0 1px rgba(255, 250, 230, 0.7);
   position: relative;
-  line-height: 1.6;
+  line-height: 1.55;
+  text-shadow: 0 1px 0 rgba(255, 250, 230, 0.5);
+  letter-spacing: 0.01em;
 }
 #narrative::before, #narrative::after {
   content: "❧";
@@ -616,6 +610,71 @@ footer {
   letter-spacing: 0.05em;
   padding: 14px 22px;
   margin-top: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ---------- Bouton Arcade FM (footer droite) ---------- */
+#backToArcade {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px 9px 14px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--gold-bright);
+  background: linear-gradient(135deg, rgba(38, 26, 16, 0.9), rgba(13, 8, 5, 0.9));
+  border: 1px solid var(--border-mid);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 14px rgba(0, 0, 0, 0.5),
+    0 0 0 0 rgba(230, 185, 88, 0);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+#backToArcade i {
+  font-size: 11px;
+  transition: transform 0.3s ease;
+  color: var(--gold);
+}
+#backToArcade strong {
+  color: var(--ember);
+  text-shadow: 0 0 8px rgba(255, 122, 60, 0.5);
+  margin-left: 2px;
+  font-weight: 700;
+}
+#backToArcade::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 217, 134, 0.18), transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+#backToArcade:hover {
+  border-color: var(--gold);
+  color: var(--gold-bright);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 6px 18px rgba(0, 0, 0, 0.6),
+    0 0 22px rgba(230, 185, 88, 0.4);
+  transform: translateY(-2px);
+}
+#backToArcade:hover i { transform: translateX(-3px); }
+#backToArcade:hover::before { transform: translateX(100%); }
+#backToArcade:active { transform: translateY(0); }
+
+@media (max-width: 600px) {
+  footer { flex-direction: column; gap: 10px; text-align: center; }
+  #backToArcade { padding: 8px 16px; font-size: 11px; }
 }
 .changelog-link {
   color: var(--gold-bright);
@@ -654,6 +713,308 @@ footer {
   .resource { padding: 10px 8px; }
   .resource .icon { font-size: 18px; }
   #hintSection::before { width: 28px; height: 28px; font-size: 14px; }
+}
+
+/* =========================================================
+   OBJECTIF ACTUEL (en haut, mise en avant)
+   ========================================================= */
+#currentObjective {
+  max-width: 640px;
+  margin: 16px auto;
+  background: linear-gradient(135deg, rgba(255, 122, 60, 0.14), rgba(13, 8, 5, 0.85));
+  border: 1px solid rgba(255, 122, 60, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-deep), 0 0 22px rgba(255, 122, 60, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+#currentObjective::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(400px 100px at 50% 0%, rgba(255, 217, 134, 0.18), transparent 70%);
+  pointer-events: none;
+}
+.objective-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.objective-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 8px rgba(255, 122, 60, 0.6));
+  animation: objIconPulse 2s ease-in-out infinite;
+}
+@keyframes objIconPulse {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.12); }
+}
+.objective-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  text-shadow: 0 0 8px rgba(230, 185, 88, 0.4);
+}
+.objective-message {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--parchment);
+  line-height: 1.4;
+}
+.objective-progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+.objective-progress-bar {
+  flex: 1;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.objective-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--ember), var(--gold-bright));
+  box-shadow: 0 0 12px rgba(255, 122, 60, 0.6);
+  transition: width 0.5s ease;
+  border-radius: 999px;
+}
+.objective-progress-text {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--gold-bright);
+  font-weight: 700;
+  min-width: 70px;
+  text-align: right;
+}
+.objective-claim {
+  display: block;
+  margin: 6px auto 0;
+  background: linear-gradient(180deg, var(--ember), #b54422);
+  color: #fff8ee;
+  border: 1px solid #ff9966;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 12px;
+  padding: 8px 22px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 18px rgba(255, 122, 60, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation: claimPulse 1.6s ease-in-out infinite;
+}
+@keyframes claimPulse {
+  0%,100% { box-shadow: 0 0 18px rgba(255, 122, 60, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+  50%     { box-shadow: 0 0 30px rgba(255, 217, 134, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+}
+#currentObjective.objective-ready {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, rgba(230, 185, 88, 0.22), rgba(255, 122, 60, 0.18));
+}
+#currentObjective.objective-flash { animation: objFlash 1s ease; }
+@keyframes objFlash {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 217, 134, 0.8); transform: scale(1); }
+  40%  { box-shadow: 0 0 50px 8px rgba(255, 217, 134, 0.5); transform: scale(1.02); }
+  100% { box-shadow: var(--shadow-deep); transform: scale(1); }
+}
+
+/* =========================================================
+   PASSAGE D'AGE : overlay plein ecran
+   ========================================================= */
+.age-unlock-overlay {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 122, 60, 0.35), rgba(13, 8, 5, 0.92));
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.age-unlock-overlay.show { opacity: 1; }
+.age-unlock-content {
+  text-align: center;
+  transform: scale(0.85);
+  transition: transform 0.6s cubic-bezier(.2, .9, .3, 1.3);
+  padding: 40px 60px;
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(38, 26, 16, 0.95), rgba(13, 8, 5, 0.95));
+  box-shadow: 0 0 80px rgba(255, 217, 134, 0.4), inset 0 0 40px rgba(255, 122, 60, 0.15);
+  animation: ageGlow 2.5s ease-in-out infinite;
+}
+.age-unlock-overlay.show .age-unlock-content { transform: scale(1); }
+@keyframes ageGlow {
+  0%,100% { box-shadow: 0 0 60px rgba(255, 217, 134, 0.3), inset 0 0 30px rgba(255, 122, 60, 0.1); }
+  50%     { box-shadow: 0 0 100px rgba(255, 217, 134, 0.6), inset 0 0 50px rgba(255, 122, 60, 0.25); }
+}
+.age-unlock-label {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--ember);
+  margin-bottom: 16px;
+  text-shadow: 0 0 12px rgba(255, 122, 60, 0.6);
+}
+.age-unlock-name {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--gold-bright);
+  text-shadow: 0 0 20px rgba(255, 217, 134, 0.7), 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+.age-unlock-hint {
+  margin-top: 24px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  opacity: 0.7;
+}
+
+/* =========================================================
+   ARBRE DES AGES (remplace l'ancienne carte cosmetique)
+   ========================================================= */
+#techTreeWrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px;
+}
+.tech-tree-title {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  text-shadow: 0 0 12px rgba(230, 185, 88, 0.4);
+  margin: 0 0 6px;
+}
+.tech-tree-intro {
+  color: var(--parchment-dim);
+  font-style: italic;
+  font-size: 13px;
+  max-width: 640px;
+  margin: 0 auto 24px;
+  line-height: 1.5;
+}
+#techTreeColumns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+.tech-col {
+  background: rgba(13, 8, 5, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  position: relative;
+  text-align: left;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-deep);
+}
+.tech-col.locked { opacity: 0.45; filter: grayscale(0.6); }
+.tech-col.reached { border-color: var(--border-mid); }
+.tech-col.current {
+  border-color: var(--gold);
+  box-shadow: var(--shadow-deep), 0 0 30px rgba(230, 185, 88, 0.35);
+}
+.tech-col.current::before {
+  content: "EN COURS";
+  position: absolute;
+  top: -10px; right: 14px;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  color: var(--ink);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(230, 185, 88, 0.6);
+}
+.tech-col-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 12px;
+}
+.tech-col-num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold-deep));
+  color: var(--ink);
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(230, 185, 88, 0.4);
+}
+.tech-col.locked .tech-col-num {
+  background: linear-gradient(180deg, #4a3f2e, #2b2218);
+  color: rgba(243, 230, 200, 0.4);
+  box-shadow: none;
+}
+.tech-col-age {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+}
+.tech-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tech-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin: 4px 0;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 13px;
+  color: var(--parchment-dim);
+  transition: all 0.25s ease;
+}
+.tech-item.done {
+  background: linear-gradient(90deg, rgba(76, 175, 80, 0.18), rgba(13, 8, 5, 0.4));
+  border-color: rgba(76, 175, 80, 0.4);
+  color: var(--parchment);
+}
+.tech-item.done .ti-check {
+  color: #8be78b;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+}
+.ti-icon { font-size: 18px; flex-shrink: 0; }
+.ti-label { flex: 1; }
+.ti-check { font-family: 'Cinzel', serif; font-size: 14px; }
+
+@media (max-width: 600px) {
+  .objective-message { font-size: 14px; }
+  #techTreeColumns { grid-template-columns: 1fr; }
+  .age-unlock-content { padding: 30px 24px; }
 }
 
 /* ---------- Réduction des animations si l'utilisateur préfère ---------- */

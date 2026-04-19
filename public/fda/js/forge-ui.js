@@ -625,18 +625,16 @@ let cheatModeActive = false;
 let logoClickCount = 0;
 
 // Écouteur pour les clics sur le logo
-const logo = document.querySelector('img[src="assets/logo_fda.webp"]');
+const logo = document.querySelector('img[src="assets/fda.webp"], img[src="assets/logo_fda.webp"]');
 if (logo) {
   logo.addEventListener("click", () => {
     logoClickCount++;
     if (logoClickCount >= 5) {
       cheatModeActive = true;
-      logoClickCount = 0; // Réinitialise le compteur
+      logoClickCount = 0;
       document.getElementById("narrative").textContent = "Cheatcode activé : clique pour +100 ressources !";
     }
   });
-} else {
-  console.warn("L'élément logo n'a pas été trouvé dans le DOM.");
 }
 
 // Écouteur pour les clics quand le cheat est actif
