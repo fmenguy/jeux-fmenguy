@@ -204,6 +204,22 @@ function updateInteractHint() {
 
 // --- INTERACTION (left click / E) ---
 function interact() {
+    // Cas special : porter une orbe + appui E/clic gauche = ranger en inventaire
+    if (STATE.carriedObject && STATE.carriedObject.userData && STATE.carriedObject.userData.type === 'orb') {
+        const obj = STATE.carriedObject;
+        STATE.inventory.orbs[obj.userData.orbId] = true;
+        scene.remove(obj);
+        STATE.carriedObject = null;
+        showHandCarrying(false);
+        hideCarryIndicator();
+        notify(t('orbCollected', obj.userData.label));
+        if (typeof updateOrbDisplay === 'function') updateOrbDisplay();
+        const orbCount = Object.values(STATE.inventory.orbs).filter(v => v).length;
+        if (orbCount >= 4) setTimeout(() => loadRoom('orb_chamber'), 2000);
+        updateHUD();
+        return;
+    }
+
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
 

@@ -461,7 +461,18 @@ function pickUpObject(obj) {
     // Show in hand
     const color = obj.material ? obj.material.color.getHex() : 0x3366cc;
     showHandCarrying(true, color);
-    showCarryIndicator(t('carrying'));
+
+    // Cas special : orbe portee = lumiere dynamique attachee + indicateur different
+    if (obj.userData && obj.userData.type === 'orb') {
+        // Couleur de lumiere : blanche pour orbe blanche, bleutee pour orbe noire (sinon invisible)
+        const lightColor = (obj.userData.orbId && obj.userData.orbId.startsWith('white')) ? 0xffffff : 0x6688ff;
+        const orbLight = new THREE.PointLight(lightColor, 2.2, 12);
+        orbLight.name = '_orbLight';
+        obj.add(orbLight); // attache au mesh : suit le portage
+        showCarryIndicator('E — Ranger l\'orbe  ·  CLIC DROIT — Lâcher');
+    } else {
+        showCarryIndicator(t('carrying'));
+    }
 }
 
 function throwObject() {
