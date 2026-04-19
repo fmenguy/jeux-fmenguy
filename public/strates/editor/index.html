@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Strates, editeur de carte</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #0b0d12; overflow: hidden; font-family: system-ui, sans-serif; color: #f3ecdd; user-select: none; }
+    #app { position: fixed; inset: 0; }
+
+    #hud {
+      position: fixed; left: 16px; top: 16px;
+      background: rgba(20, 24, 30, 0.6);
+      padding: 12px 16px; border-radius: 10px;
+      backdrop-filter: blur(8px);
+      font-size: 13px; line-height: 1.55;
+      pointer-events: none;
+      max-width: 360px;
+      z-index: 10;
+    }
+    #hud b { color: #ffd98a; }
+    #hud .row { display: flex; justify-content: space-between; gap: 18px; }
+    #hud .key { color: #c7b98c; }
+    #hud .val { color: #fff; font-variant-numeric: tabular-nums; }
+    #hud h4 { margin: 8px 0 2px 0; font-size: 12px; color: #ffd98a; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    #help {
+      position: fixed; right: 16px; top: 16px;
+      background: rgba(20, 24, 30, 0.55);
+      padding: 10px 14px; border-radius: 10px;
+      backdrop-filter: blur(6px);
+      font-size: 12px; line-height: 1.5;
+      max-width: 280px;
+      color: #c7b98c;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #help b { color: #ffd98a; }
+
+    #loader {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: #0b0d12; color: #c7b98c; font-size: 14px; letter-spacing: 0.1em;
+      z-index: 100;
+    }
+    #loader.hidden { display: none; }
+
+    #actionbar {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      display: flex; align-items: stretch; gap: 6px;
+      background: rgba(15, 18, 24, 0.82);
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 217, 138, 0.22);
+      border-radius: 14px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      z-index: 20;
+    }
+    .group {
+      display: flex; gap: 4px; padding: 4px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      align-items: stretch;
+    }
+    .group.colons { border-color: rgba(255, 150, 80, 0.35); }
+    .group.placement { border-color: rgba(120, 180, 255, 0.35); }
+    .group.controls { border-color: rgba(255,255,255,0.08); }
+    .group-label {
+      font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      align-self: center; padding: 0 6px;
+    }
+    .group.colons .group-label { color: #ffb070; }
+    .group.placement .group-label { color: #8ac4ff; }
+
+    .tool {
+      min-width: 62px; padding: 6px 8px;
+      background: rgba(40, 46, 58, 0.75);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 7px;
+      color: #e9e2cf;
+      font-size: 12px; line-height: 1.15;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s, border 0.15s, transform 0.05s;
+    }
+    .tool:hover { background: rgba(65, 75, 94, 0.88); }
+    .tool:active { transform: translateY(1px); }
+    .tool.active {
+      background: rgba(255, 217, 138, 0.22);
+      border-color: #ffd98a;
+      color: #fff5d8;
+      box-shadow: inset 0 0 0 1px rgba(255,217,138,0.35);
+    }
+    .group.colons .tool.active {
+      background: rgba(255, 130, 60, 0.25);
+      border-color: #ff9350;
+      color: #ffe8d6;
+    }
+    .group.placement .tool.active {
+      background: rgba(120, 180, 255, 0.22);
+      border-color: #7dc8ff;
+      color: #e6f3ff;
+    }
+    .tool .key { display: block; font-size: 10px; opacity: 0.55; margin-top: 2px; }
+    .tool .sub { display: block; font-size: 10px; color: #ffd98a; margin-top: 1px; }
+
+    .brush {
+      min-width: 30px; padding: 6px 4px;
+      background: rgba(40, 46, 58, 0.7);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 7px;
+      color: #e9e2cf;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .brush.active {
+      background: rgba(125, 200, 255, 0.22);
+      border-color: #7dc8ff;
+      color: #d8eeff;
+    }
+
+    .btn-ctrl {
+      padding: 6px 10px;
+      background: rgba(40, 46, 58, 0.75);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 7px;
+      color: #e9e2cf;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .btn-ctrl:hover { background: rgba(65, 75, 94, 0.9); }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="loader">generation du monde...</div>
+  <div id="app"></div>
+
+  <div id="hud">
+    <div><b>Strates</b>, editeur de carte</div>
+    <div class="row"><span class="key">FPS</span><span class="val" id="fps">0</span></div>
+    <div class="row"><span class="key">Outil</span><span class="val" id="hud-tool">naviguer</span></div>
+    <h4>Colons</h4>
+    <div class="row"><span class="key">Jobs en attente</span><span class="val" id="jobs">0</span></div>
+    <div class="row"><span class="key">IDLE / MOVING / WORKING</span><span class="val"><span id="idle">0</span> / <span id="moving">0</span> / <span id="working">0</span></span></div>
+    <div class="row"><span class="key">Colons qui parlent</span><span class="val" id="talking">0</span></div>
+    <h4>Placement</h4>
+    <div class="row"><span class="key">Arbres / Rochers / Maisons</span><span class="val"><span id="c-trees">0</span> / <span id="c-rocks">0</span> / <span id="c-houses">0</span></span></div>
+    <div class="row"><span class="key">Champs / Filons</span><span class="val"><span id="c-fields">0</span> / <span id="c-ores">0</span></span></div>
+    <div id="c-ores-detail" style="font-size: 11px; color: #c7b98c; margin-top: 2px;"></div>
+  </div>
+
+  <div id="help">
+    <div><b>Naviguer</b>, clic gauche orbite, droit pan, molette zoom</div>
+    <div><b>Designer Miner</b>, peint des colonnes que les colons viennent miner</div>
+    <div><b>Outils bleus</b>, placement direct reserve a l'editeur</div>
+    <div><b>Raccourcis</b>, 1 a 9, R reset, C ajouter colon</div>
+  </div>
+
+  <div id="actionbar">
+    <div class="group colons">
+      <span class="group-label">colons</span>
+      <button class="tool active" data-tool="nav">Naviguer<span class="key">1</span></button>
+      <button class="tool" data-tool="mine">Designer<br>Miner<span class="key">2</span></button>
+      <button class="tool" data-tool="cancel">Annuler<br>job<span class="key">3</span></button>
+    </div>
+    <div class="group placement">
+      <span class="group-label">editeur</span>
+      <button class="tool" data-tool="tree">Arbre<span class="key">4</span></button>
+      <button class="tool" data-tool="forest">Foret<span class="key">5</span></button>
+      <button class="tool" data-tool="rock">Rocher<span class="key">6</span></button>
+      <button class="tool" data-tool="ore">Filon<span class="sub" id="ore-sub">or</span><span class="key">7</span></button>
+      <button class="tool" data-tool="house">Maison<span class="key">8</span></button>
+      <button class="tool" data-tool="field">Champ<span class="key">9</span></button>
+      <button class="tool" data-tool="erase">Effacer</button>
+    </div>
+    <div class="group controls">
+      <span class="group-label">pinceau</span>
+      <button class="brush" data-brush="1">1</button>
+      <button class="brush active" data-brush="3">3</button>
+      <button class="brush" data-brush="5">5</button>
+      <button class="btn-ctrl" id="btn-addcolon" title="Ajouter un colon (C)">+ Colon</button>
+      <button class="btn-ctrl" id="btn-reset" title="Regenerer la carte (R)">Reset</button>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

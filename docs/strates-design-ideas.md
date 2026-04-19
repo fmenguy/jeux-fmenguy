@@ -10,6 +10,27 @@ Le joueur ne terraforme pas directement. Il **désigne des zones de travail** vi
 
 L'outil de sculpt existe comme outil in-game (pioche, pelle), pas comme pouvoir divin.
 
+## Séparation éditeur / jeu (confirmé 2026-04-19)
+
+Deux modes bien distincts, avec deux UI différentes :
+
+### Mode éditeur (outil de construction de cartes)
+- **Tous les outils de placement direct** : poser arbres, rochers, filons, maisons, champs.
+- **Outils de sculpt de terrain** : élever, abaisser, niveler.
+- **Désignation de jobs** (pour tester la boucle colons dans une carte donnée).
+- Sert au mapmaker, aux tests, aux scénarios prémadés.
+- Par défaut pas accessible au joueur dans la version publique (peut-être via un mode "bac à sable" optionnel plus tard).
+
+### Mode jeu (expérience finale)
+- **Aucun outil de placement direct**. Pas de "poser un arbre" ou "poser une maison" depuis la main du joueur.
+- **Aucun outil de sculpt direct**. Pas de "élever le terrain".
+- Le joueur agit **uniquement via des ordres aux colons** : désigner des zones à miner, à défricher, à construire, à cultiver.
+- Les colons exécutent selon leurs outils, compétences, état du terrain et tech dispo.
+- La progression vient du gate tech (âges), pas de l'omnipotence du joueur.
+- L'écosystème évolue seul (arbres qui poussent et meurent, animaux, météo).
+
+Références proches qui ont cette séparation : Timberborn, RimWorld, The Settlers. L'éditeur n'est pas le jeu, c'est l'outil interne de design.
+
 ## Prérequis et contraintes de minage
 
 ### Gravité des colons (implémenté proto4)
