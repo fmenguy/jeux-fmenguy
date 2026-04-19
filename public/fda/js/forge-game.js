@@ -104,7 +104,10 @@ export const seasonNames = ["Printemps", "Été", "Automne", "Hiver"];
 export const seasonIcons = ["🌱", "☀️", "🍂", "❄️"];
 export let currentSeason = 0;
 export let seasonTimer = 0;
-export const seasonDuration = 1800;
+// 1re saison plus courte (300s = 5 min) pour onboarding rapide, puis 1800s (30 min)
+export let seasonDuration = 300;
+export const SEASON_DURATION_NORMAL = 1800;
+export function setSeasonDuration(value) { seasonDuration = value; }
 
 export const seasonModifiers = [
   {
@@ -1052,8 +1055,10 @@ export function gameLoop() {
   if (seasonTimer >= seasonDuration) {
     setSeasonTimer(0);
     setCurrentSeason((currentSeason + 1) % 4);
+    // Apres le 1er changement de saison (Printemps -> Ete), on passe a la duree normale
+    if (seasonDuration < SEASON_DURATION_NORMAL) setSeasonDuration(SEASON_DURATION_NORMAL);
     document.getElementById("narrative").textContent = `La saison change : ${seasonNames[currentSeason]}.`;
-    result.seasonChanged = true; // Indique un changement de saison
+    result.seasonChanged = true;
   }
 
   if (currentHint && !currentHint.condition()) {
