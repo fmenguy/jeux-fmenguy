@@ -29,7 +29,7 @@ export const scene = new THREE.Scene()
 scene.background = new THREE.Color(0xcfe6f5)
 scene.fog = new THREE.FogExp2(0xcfe6f5, 0.014)
 
-export const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 500)
+export const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 800)
 camera.position.set(GRID * 0.9, GRID * 0.7, GRID * 0.9)
 camera.lookAt(GRID / 2, 0, GRID / 2)
 
@@ -38,7 +38,7 @@ controls.target.set(GRID / 2, 2, GRID / 2)
 controls.enableDamping = true
 controls.dampingFactor = 0.08
 controls.minDistance = 18
-controls.maxDistance = 140
+controls.maxDistance = GRID * 3
 controls.maxPolarAngle = Math.PI * 0.48
 controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }
 
