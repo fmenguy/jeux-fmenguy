@@ -128,13 +128,13 @@ export function labelOfTool(t) {
   return ({
     nav: 'naviguer',
     mine: 'miner',
-    build: 'placer',
-    forest: 'foret',
-    rock: 'rocher',
-    house: 'maison',
-    research: 'recherche',
-    field: 'champ',
-    bush: 'buisson baies',
+    build: 'placer un bloc',
+    forest: 'planter une forêt',
+    rock: 'poser un rocher',
+    house: 'poser une maison',
+    research: 'poser un laboratoire',
+    field: 'tracer un champ',
+    bush: 'poser un buisson',
     erase: 'effacer'
   })[t] || t
 }

@@ -69,41 +69,65 @@ export function removeTreesIn(cells) {
 }
 
 // ============================================================================
-// Rochers
+// Rochers : tas de 2 a 3 cailloux ramasses au sol (chaque rocher consomme
+// jusqu'a 3 instances dans l'InstancedMesh, d'ou la capacite x3).
 // ============================================================================
-const rockGeo = new THREE.BoxGeometry(0.7, 1.4, 0.7)
-rockGeo.translate(0, 0.7, 0)
-const rockMatInst = new THREE.MeshStandardMaterial({ color: 0x5a5550, roughness: 0.95, flatShading: true })
-export const rockMesh = new THREE.InstancedMesh(rockGeo, rockMatInst, MAX_ROCKS)
+const ROCK_INSTANCE_CAP = MAX_ROCKS * 3
+const rockGeo = new THREE.BoxGeometry(0.55, 0.45, 0.55)
+rockGeo.translate(0, 0.225, 0)
+const rockMatInst = new THREE.MeshStandardMaterial({ color: 0xa0998e, roughness: 0.95, flatShading: true })
+export const rockMesh = new THREE.InstancedMesh(rockGeo, rockMatInst, ROCK_INSTANCE_CAP)
 rockMesh.castShadow = true
 rockMesh.receiveShadow = true
 rockMesh.count = 0
 rockMesh.frustumCulled = false
-rockMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_ROCKS * 3), 3)
+rockMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(ROCK_INSTANCE_CAP * 3), 3)
 scene.add(rockMesh)
+
+function placeRockChunk(i, cx, cy, cz, sx, sy, sz, rotY, g) {
+  tmpObj.position.set(cx, cy, cz)
+  tmpObj.rotation.set(0, rotY, 0)
+  tmpObj.scale.set(sx, sy, sz)
+  tmpObj.updateMatrix()
+  rockMesh.setMatrixAt(i, tmpObj.matrix)
+  tmpColor.setRGB(g, g * 0.98, g * 0.95)
+  rockMesh.setColorAt(i, tmpColor)
+}
 
 export function addRock(gx, gz) {
   if (state.rocks.length >= MAX_ROCKS) return
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return
   const rng = prng.rng
-  const jx = (rng() - 0.5) * 0.4
-  const jz = (rng() - 0.5) * 0.4
-  const scale = 0.7 + rng() * 0.6
-  const rot = rng() * Math.PI * 2
-  const i = state.rocks.length
-  tmpObj.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
-  tmpObj.rotation.set(0, rot, 0)
-  tmpObj.scale.set(scale, 0.5 + rng() * 0.8, scale)
-  tmpObj.updateMatrix()
-  rockMesh.setMatrixAt(i, tmpObj.matrix)
-  const g = 0.3 + rng() * 0.15
-  tmpColor.setRGB(g, g, g + 0.02)
-  rockMesh.setColorAt(i, tmpColor)
-  rockMesh.count = i + 1
+  const baseX = gx + 0.5
+  const baseZ = gz + 0.5
+  const startIdx = rockMesh.count
+  const chunkCount = 2 + Math.floor(rng() * 2) // 2 ou 3 cailloux
+  const indices = []
+  for (let k = 0; k < chunkCount; k++) {
+    if (rockMesh.count >= ROCK_INSTANCE_CAP) break
+    const i = rockMesh.count
+    // premier caillou au centre, les suivants en satellites
+    const ang = rng() * Math.PI * 2
+    const dist = k === 0 ? 0 : 0.18 + rng() * 0.22
+    const cx = baseX + Math.cos(ang) * dist
+    const cz = baseZ + Math.sin(ang) * dist
+    // tailles variees, base plus grosse, satellites plus petits
+    const baseScale = k === 0 ? (0.85 + rng() * 0.35) : (0.5 + rng() * 0.35)
+    const sx = baseScale
+    const sz = baseScale * (0.85 + rng() * 0.3)
+    const sy = baseScale * (0.55 + rng() * 0.25)
+    const rotY = rng() * Math.PI * 2
+    // gris clair chaleureux, legere variation
+    const g = 0.55 + rng() * 0.15
+    placeRockChunk(i, cx, top, cz, sx, sy, sz, rotY, g)
+    rockMesh.count = i + 1
+    indices.push(i)
+  }
   rockMesh.instanceMatrix.needsUpdate = true
   if (rockMesh.instanceColor) rockMesh.instanceColor.needsUpdate = true
-  state.rocks.push({ x: gx, z: gz })
+  state.rocks.push({ x: gx, z: gz, indices })
+  return startIdx
 }
 
 export function removeRocksIn(cells) {
