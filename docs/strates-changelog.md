@@ -4,6 +4,37 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-19 (session 5) : Saisons, audio lofi, décorations végétales
+
+### Cycle de saisons
+- Nouveau module `seasons.js` : 4 saisons (printemps, été, automne, hiver), 120 s chacune, 8 min par cycle complet.
+- Transition linéaire sur les 20 dernières secondes de chaque saison.
+- Palette de tints multiplicatifs par biome (grass, forest, snow, sand) + champs, appliquée sur les voxels top toutes les 2 s.
+- Printemps : herbe vive, fleurs. Été : vert saturé, champs dorés. Automne : feuillage roux/bronze. Hiver : palette ternie, champs au repos.
+- Sauvegarde de l'état saison dans le snapshot (idx, elapsed, cyclesDone).
+- Pastille HUD en haut centre avec icône emoji et nom de saison.
+
+### Décorations végétales
+- Nouveau module `vegetation.js` : 3 InstancedMesh (brins d'herbe, fleurs, épis de blé).
+- Brins d'herbe : dispersés sur biomes grass (dense) et forest (épars), 2 à 6 brins par tuile concernée.
+- Fleurs : 5 couleurs (rose, jaune, lavande, corail, blanc), clairsemées sur herbe (~7% de densité).
+- Épis de blé : 10 à 18 par tuile `field`, petites barres verticales dorées.
+- `buildVegetation()` reconstruit tout à partir de `cellBiome` / `cellSurface`, appelé après `populateDefaultScene`, après `loadGame` et dans `resetWorld`.
+- `clearVegetation()` vidage propre lors des resets.
+
+### Audio lofi procédural
+- Nouveau module `audio.js`, Web Audio API, aucun fichier externe.
+- Drone bas deux oscillateurs détunés (La1/Mi2), filtre lowpass, vibrato LFO lent.
+- Arpège aléatoire pentatonique, notes 2-5 s espacées, filtre résonant.
+- Noise bandpass 800 Hz très discret pour texture cassette.
+- Bouton HUD flottant `♪` qui toggle mute. État muté par défaut (respect autoplay policies), mémorisé en localStorage.
+- Démarrage au premier geste utilisateur, fondu doux.
+
+### Plus
+- Correction persistance : sauvegarde/restauration de l'état saison (idx, elapsed, cyclesDone).
+
+---
+
 ## 2026-04-19 (session 4) : Modularisation ES6 et persistance localStorage
 
 ### Modularisation (axe technique 1.1)

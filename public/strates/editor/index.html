@@ -215,6 +215,42 @@
       color: #d9b15a; font-style: italic; font-size: 11px;
     }
 
+    /* Bouton audio flottant */
+    #btn-audio {
+      position: fixed; right: 16px; bottom: 150px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(180deg, rgba(138,196,255,0.3), rgba(60,100,180,0.6));
+      border: 1px solid rgba(138,196,255,0.55);
+      color: #e6f3ff; font-size: 18px; font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      z-index: 30;
+      transition: transform 0.15s;
+    }
+    #btn-audio:hover { transform: translateY(-2px); }
+    #btn-audio.on {
+      background: linear-gradient(180deg, rgba(255,217,138,0.4), rgba(168,134,42,0.7));
+      border-color: rgba(255,217,138,0.6);
+      color: #fff5d8;
+    }
+
+    /* Pastille saison */
+    #season-pill {
+      position: fixed; left: 50%; top: 16px; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(15,18,24,0.8);
+      border: 1px solid rgba(255,217,138,0.35);
+      border-radius: 22px;
+      padding: 6px 16px 6px 12px;
+      backdrop-filter: blur(8px);
+      color: #f3ecdd;
+      font-size: 13px; letter-spacing: 0.06em;
+      z-index: 11;
+      text-transform: capitalize;
+    }
+    #season-pill #season-icon { font-size: 16px; }
+
     /* Bouton d'aide flottant */
     #btn-help {
       position: fixed; right: 16px; bottom: 100px;
@@ -315,6 +351,8 @@
   <div id="app"></div>
 
   <button id="btn-help" title="Aide et explications">?</button>
+  <button id="btn-audio" title="Activer la musique">&#9834;</button>
+  <div id="season-pill" title="Saison en cours"><span id="season-icon">&#127804;</span><span id="season-name">printemps</span></div>
 
   <div id="hud">
     <div><b>Strates</b>, éditeur de carte</div>
