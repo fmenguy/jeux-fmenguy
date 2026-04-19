@@ -23,6 +23,7 @@ export const state = {
   ores: [],
   bushes: [],
   houses: [],
+  manors: [],
   researchHouses: [],
   researchBuildingNextId: 1,
 
