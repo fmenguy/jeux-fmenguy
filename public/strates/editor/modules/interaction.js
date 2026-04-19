@@ -9,8 +9,8 @@ import { repaintCellSurface } from './terrain.js'
 import {
   addTree, addRock, addOre, addHouse, addBush, addResearchHouse,
   assignResearcherToBuilding, removeTreesIn, removeRocksIn, removeHousesIn,
-  removeResearchHousesIn, removeOresIn, removeBushesIn,
-  isCellOccupied, isMineBlocked
+  removeResearchHousesIn, removeOresIn, removeBushesIn, removeManorsIn,
+  checkManorMerge, isCellOccupied, isMineBlocked
 } from './placements.js'
 import { addJob, addBuildJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell } from './tech.js'
@@ -413,6 +413,8 @@ function applyToolAtCell(cell) {
         if (addHouse(cell.x, cell.z)) {
           state.gameStats.housesPlaced++
           spawnColonsAroundHouse(cell.x, cell.z, 2)
+          const manor = checkManorMerge(cell.x, cell.z)
+          if (manor) spawnColonsAroundHouse(manor.x + 1, manor.z + 1, 2)
         }
       }
       break
@@ -442,6 +444,7 @@ function applyToolAtCell(cell) {
       removeTreesIn(cells)
       removeRocksIn(cells)
       removeHousesIn(cells)
+      removeManorsIn(cells)
       removeResearchHousesIn(cells)
       removeOresIn(cells)
       removeBushesIn(cells)
@@ -489,6 +492,7 @@ function applyToolToStrata(cells) {
     removeTreesIn(cells)
     removeRocksIn(cells)
     removeHousesIn(cells)
+    removeManorsIn(cells)
     removeResearchHousesIn(cells)
     removeOresIn(cells)
     removeBushesIn(cells)
@@ -519,6 +523,8 @@ function applyToolToStrata(cells) {
           if (addHouse(c.x, c.z)) {
             state.gameStats.housesPlaced++
             spawnColonsAroundHouse(c.x, c.z, 2)
+            const manor = checkManorMerge(c.x, c.z)
+            if (manor) spawnColonsAroundHouse(manor.x + 1, manor.z + 1, 2)
           }
         }
         break

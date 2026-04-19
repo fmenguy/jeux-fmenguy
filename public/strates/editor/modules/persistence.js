@@ -3,7 +3,7 @@ import { state } from './state.js'
 import { rebuildTerrainFromState, repaintCellSurface } from './terrain.js'
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
-  clearAllPlacements, isCellOccupied
+  addManorFromSave, clearAllPlacements, isCellOccupied
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
@@ -102,6 +102,7 @@ function serializeSnapshot() {
       regenTimer: b.regenTimer
     })),
     houses: state.houses.map(h => ({ x: h.x, z: h.z })),
+    manors: state.manors.map(m => ({ x: m.x, z: m.z })),
     researchHouses: state.researchHouses.map(r => ({
       x: r.x, z: r.z, id: r.id,
       assignedColonistId: r.assignedColonistId
@@ -191,6 +192,7 @@ function applySnapshot(data) {
     }
   }
   for (const h of data.houses) if (!isCellOccupied(h.x, h.z)) addHouse(h.x, h.z)
+  for (const m of (data.manors || [])) addManorFromSave(m.x, m.z)
   for (const rh of data.researchHouses) {
     if (isCellOccupied(rh.x, rh.z)) continue
     const entry = addResearchHouse(rh.x, rh.z)
