@@ -19,7 +19,7 @@ import {
 } from './forge-game.js';
 import { drawMap } from './forge-map.js';
 
-// Variables pour stocker l’ordre des sections
+// Variables pour stocker l'ordre des sections
 export let fabricationOrder = [
   "axeSection",
   "bucketSection",
@@ -163,12 +163,12 @@ export function updateDisplay() {
   document.getElementById("mineSection").style.display = discoveredMetals ? "block" : "none";
   const _bReady = (sectionId, canAfford) => {
     const el = document.getElementById(sectionId);
-    if (el) el.classList.toggle(‘ready’, canAfford);
+    if (el) el.classList.toggle('ready', canAfford && el.style.display !== 'none');
   };
 
   const sawmillAfford = wood >= 30 && stone >= 15 && tinkers >= 1;
   const quarryAfford  = wood >= 30 && stone >= 15 && tinkers >= 1;
-  const warehouseAfford = wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === "Âge de l’Agriculture");
+  const warehouseAfford = wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === "Âge de l'Agriculture");
   const wellAfford    = wood >= 10 && stone >= 5;
   const mineAfford    = wood >= 50 && stone >= 20 && tinkers >= 1 && miners >= (mines > 0 ? 25 : 0) && discoveredMetals;
   const workshopAfford = wood >= 20 && stone >= 10 && fibers >= 5 && discoveredFibers;
@@ -193,15 +193,15 @@ export function updateDisplay() {
   document.getElementById("craftWheatFieldBtn").disabled = !wheatAfford;
   document.getElementById("craftMillBtn").disabled     = !millAfford;
 
-  _bReady(‘sawmillSection’,      sawmillAfford);
-  _bReady(‘stoneQuarrySection’,  quarryAfford);
-  _bReady(‘warehouseSection’,    warehouseAfford);
-  _bReady(‘wellSection’,         wellAfford);
-  _bReady(‘mineSection’,         mineAfford);
-  _bReady(‘workshopSection’,     workshopAfford);
-  _bReady(‘herbalistSection’,    herbalistAfford);
-  _bReady(‘wheatFieldSection’,   wheatAfford);
-  _bReady(‘millSection’,         millAfford);
+  _bReady('sawmillSection',      sawmillAfford);
+  _bReady('stoneQuarrySection',  quarryAfford);
+  _bReady('warehouseSection',    warehouseAfford);
+  _bReady('wellSection',         wellAfford);
+  _bReady('mineSection',         mineAfford);
+  _bReady('workshopSection',     workshopAfford);
+  _bReady('herbalistSection',    herbalistAfford);
+  _bReady('wheatFieldSection',   wheatAfford);
+  _bReady('millSection',         millAfford);
 
   document.getElementById("recruitVillagerBtn").disabled = berries < 5;
   const maxChiefs = Math.floor(villagers / 25);
@@ -229,19 +229,19 @@ export function updateDisplay() {
     case "Âge des Métaux":
       techBanner.style.border = "1px solid #cd7f32";
       break;
-    case "Âge de l’Agriculture":
+    case "Âge de l'Agriculture":
       techBanner.style.border = "1px solid #4CAF50";
       break;
     default:
       techBanner.style.border = "1px solid #d4a017";
   }
 
-  if (currentAge !== "Âge de l’Agriculture" && wheatFields > 0) {
+  if (currentAge !== "Âge de l'Agriculture" && wheatFields > 0) {
     document.getElementById("narrative").textContent =
-      "Construis des moulins et recrute des fermiers pour atteindre l’Âge de l’Agriculture !";
+      "Construis des moulins et recrute des fermiers pour atteindre l'Âge de l'Agriculture !";
   }
 
-  if (currentAge === "Âge de l’Agriculture" && flour < 5 && mills > 0) {
+  if (currentAge === "Âge de l'Agriculture" && flour < 5 && mills > 0) {
     document.getElementById("narrative").textContent =
       "Produis plus de farine avec tes moulins pour construire une boulangerie !";
   }
@@ -249,9 +249,9 @@ export function updateDisplay() {
   document.getElementById("fibersSection").style.display = discoveredFibers ? "inline-block" : "none";
   document.getElementById("metalsSection").style.display = discoveredMetals ? "inline-block" : "none";
   document.getElementById("herbsSection").style.display = discoveredHerbs ? "inline-block" : "none";
-  document.getElementById("wheatSection").style.display = currentAge === "Âge de l’Agriculture" ? "inline-block" : "none";
-  document.getElementById("flourSection").style.display = currentAge === "Âge de l’Agriculture" ? "inline-block" : "none";
-  document.getElementById("breadSection").style.display = currentAge === "Âge de l’Agriculture" ? "inline-block" : "none";
+  document.getElementById("wheatSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
+  document.getElementById("flourSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
+  document.getElementById("breadSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
   document.getElementById("chiefSection").style.display = axes >= 25 && villagers >= 25 ? "block" : "none";
   document.getElementById("tinkerSection").style.display = villageFounded ? "block" : "none";
   document.getElementById("pickerSection").style.display = villagers >= 10 ? "block" : "none";
@@ -273,13 +273,13 @@ export function updateDisplay() {
   document.getElementById("millSection").style.display = wheatFields > 0 ? "block" : "none";
   document.getElementById("sawmillSection").style.display = tinkers >= 1 ? "block" : "none";
   document.getElementById("stoneQuarrySection").style.display = tinkers >= 1 ? "block" : "none";
-  document.getElementById("warehouseSection").style.display = discoveredMetals || currentAge === "Âge de l’Agriculture" ? "block" : "none";
+  document.getElementById("warehouseSection").style.display = discoveredMetals || currentAge === "Âge de l'Agriculture" ? "block" : "none";
   document.getElementById("saveGameBtn").disabled = false;
   document.getElementById("loadGameBtn").disabled = false;
   document.getElementById("exportSaveBtn").disabled = false;
   document.getElementById("importSaveBtn").disabled = false;
 
-  // Vérification avant d’appeler updateHintButton
+  // Vérification avant d'appeler updateHintButton
   const hintSection = document.getElementById("hintSection");
   if (hintSection) {
     updateHintButton();
@@ -396,7 +396,7 @@ export function updateHintButton() {
               case "axes":
                 return `${amount} haches`;
               case "eternityShards":
-                return `${amount} éclats d’éternité`;
+                return `${amount} éclats d'éternité`;
               case "flour":
                 return `${amount} farine`;
               case "pickers":
@@ -435,7 +435,7 @@ export function updateHintButton() {
                 case "axes":
                   return `${amount} haches`;
                 case "eternityShards":
-                  return `${amount} éclats d’éternité`;
+                  return `${amount} éclats d'éternité`;
                 case "flour":
                   return `${amount} farine`;
                 default:
@@ -506,7 +506,7 @@ export function buyHint() {
   });
 
   if (canAfford && (!currentHint.canBuy || currentHint.canBuy())) {
-    // Consommation des ressources uniquement si ce n’est pas un coût passif
+    // Consommation des ressources uniquement si ce n'est pas un coût passif
     if (!isPassive) {
       Object.keys(cost).forEach((resource) => {
         switch (resource) {
@@ -586,7 +586,7 @@ export function enableDragAndDrop() {
   const sections = [fabricationSection, batimentsSection];
 
   sections.forEach((section) => {
-    if (!section) return; // Sauter si la section n’existe pas
+    if (!section) return; // Sauter si la section n'existe pas
     const crafts = section.querySelectorAll(".craft");
     crafts.forEach((craft) => {
       craft.addEventListener("dragstart", (e) => {
