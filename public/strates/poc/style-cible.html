@@ -7,66 +7,57 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #9dd4f0; font-family: monospace; overflow: hidden; }
   canvas { display: block; }
-
   #ui {
     position: fixed; top: 16px; left: 16px;
     display: flex; flex-direction: column; gap: 8px; z-index: 10;
   }
   .group {
-    background: rgba(0,0,0,0.48);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.48); border: 1px solid rgba(255,255,255,0.12);
     border-radius: 8px; padding: 8px 12px;
     display: flex; flex-direction: column; gap: 6px;
   }
-  .group-label {
-    font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
-  }
+  .group-label { font-size: 9px; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.4); }
   .btns { display: flex; gap: 4px; }
   button {
     font-family: monospace; font-size: 11px; padding: 5px 10px;
-    border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7);
+    border-radius: 4px; border: 1px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.06); color: rgba(255,255,255,.7);
     cursor: pointer; transition: all .15s;
   }
-  button:hover { background: rgba(255,255,255,0.14); }
+  button:hover { background: rgba(255,255,255,.14); }
   button.active { background: #ffd98a; color: #1a1a1a; border-color: #ffd98a; font-weight: 700; }
-
   #back {
     position: fixed; top: 16px; right: 16px;
     font-family: monospace; font-size: 11px; padding: 6px 14px;
-    border-radius: 4px; border: 1px solid rgba(255,255,255,0.22);
-    background: rgba(0,0,0,0.4); color: rgba(255,255,255,0.6);
+    border-radius: 4px; border: 1px solid rgba(255,255,255,.22);
+    background: rgba(0,0,0,.4); color: rgba(255,255,255,.6);
     text-decoration: none; z-index: 10;
   }
   #back:hover { color: #fff; }
-  #info {
-    position: fixed; bottom: 16px; left: 16px; font-size: 10px;
-    color: rgba(255,255,255,0.45); letter-spacing: .05em;
-  }
+  #info { position: fixed; bottom: 16px; left: 16px; font-size: 10px; color: rgba(255,255,255,.45); }
 </style>
 </head>
 <body>
 
 <div id="ui">
   <div class="group">
-    <span class="group-label">Lumière</span>
+    <span class="group-label">Lumiere</span>
     <div class="btns">
       <button data-group="light" data-val="day" class="active">Jour</button>
-      <button data-group="light" data-val="golden">Dorée</button>
+      <button data-group="light" data-val="golden">Doree</button>
     </div>
   </div>
   <div class="group">
     <span class="group-label">Eau</span>
     <div class="btns">
-      <button data-group="water" data-val="anim" class="active">Animée</button>
+      <button data-group="water" data-val="anim" class="active">Animee</button>
       <button data-group="water" data-val="still">Statique</button>
     </div>
   </div>
 </div>
 
-<a href="index.html" id="back">← POCs</a>
-<div id="info">Style cible · Dorfromantik x Portal Knights x Terra Nil · clic-drag = orbite · molette = zoom</div>
+<a href="index.html" id="back">- POCs</a>
+<div id="info">Style cible - Dorfromantik x Portal Knights x Terra Nil - clic-drag = orbite - molette = zoom</div>
 
 <script type="importmap">
 { "imports": {
@@ -78,7 +69,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
-// ─── Renderer ────────────────────────────────────────────────────────────────
+// Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(innerWidth, innerHeight)
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
@@ -87,13 +78,14 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.outputColorSpace = THREE.SRGBColorSpace
 document.body.appendChild(renderer.domElement)
 
-// ─── Scène / caméra ──────────────────────────────────────────────────────────
+// Scene / camera
 const scene = new THREE.Scene()
 scene.background = new THREE.Color(0x9dd4f0)
 scene.fog = new THREE.Fog(0xb8dff0, 30, 60)
 
 const camera = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 200)
 camera.position.set(13, 17, 15)
+
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
 controls.dampingFactor = 0.05
@@ -102,284 +94,320 @@ controls.maxPolarAngle = Math.PI * 0.47
 controls.minDistance = 5
 controls.maxDistance = 45
 
-// ─── Palette ─────────────────────────────────────────────────────────────────
-const C = {
-  grass:     0x72cc46,
-  grassMid:  0x62bc38,
-  grassDark: 0x4ea828,
-  sand:      0xecda8a,
-  sandDark:  0xd8c472,
-  rock:      0xa09282,
-  rockDark:  0x887870,
-  waterCol:  0x32b8d8,
-  seabed:    0xb89a50,
-  treeA:     0x389820,
-  treeB:     0x52c030,
-  treeC:     0x289018,
-  trunk:     0x8a5428,
-  wallA:     0xf5edd8,
-  wallB:     0xede4c8,
-  roofRed:   0xd03828,
-  roofDark:  0xb02818,
-  roofOrg:   0xe05c20,
-  chimney:   0x9a8272,
-  door:      0x7a4618,
-  winFrame:  0xc8c0a8,
-  winGlass:  0x9ad0f8,
-  stone:     0xbcac9c,
-  stoneDark: 0xa09080,
-  rope:      0xd4b860,
-  banner:    0xe8c030,
-}
-
-// ─── Matériaux ───────────────────────────────────────────────────────────────
-const _mats = {}
-function mat(hex, { shine = 8, flat = false, emissive = null, emissiveI = 0.4, double = false } = {}) {
-  const key = `${hex}_${shine}_${flat}_${emissive}_${emissiveI}_${double}`
-  if (!_mats[key]) {
-    const m = new THREE.MeshPhongMaterial({
-      color: hex, shininess: shine, flatShading: flat,
-      side: double ? THREE.DoubleSide : THREE.FrontSide,
-    })
-    if (emissive != null) { m.emissive.set(emissive); m.emissiveIntensity = emissiveI }
-    _mats[key] = m
-  }
-  return _mats[key]
-}
-
-// ─── Lumières ────────────────────────────────────────────────────────────────
+// Lumieres
 const hemi = new THREE.HemisphereLight(0xb8d8f0, 0x806442, 0.65)
 scene.add(hemi)
 
 const sun = new THREE.DirectionalLight(0xfff8e0, 2.2)
 sun.position.set(8, 18, 6)
 sun.castShadow = true
-sun.shadow.mapSize.setScalar(2048)
+sun.shadow.mapSize.width = 2048
+sun.shadow.mapSize.height = 2048
 sun.shadow.camera.near = 1
 sun.shadow.camera.far = 70
-sun.shadow.camera.left  = sun.shadow.camera.bottom = -18
-sun.shadow.camera.right = sun.shadow.camera.top   =  18
+sun.shadow.camera.left = -18
+sun.shadow.camera.right = 18
+sun.shadow.camera.top = 18
+sun.shadow.camera.bottom = -18
 sun.shadow.bias = -0.0008
 scene.add(sun)
 
-// ─── Eau ─────────────────────────────────────────────────────────────────────
+// Eau animee
 const WSEGS = 44
 const wGeo = new THREE.PlaneGeometry(40, 40, WSEGS, WSEGS)
 const wPos = wGeo.attributes.position
 const wBase = new Float32Array(wPos.count)
 for (let i = 0; i < wPos.count; i++) wBase[i] = wPos.getZ(i)
 
-const water = new THREE.Mesh(wGeo, new THREE.MeshPhongMaterial({
-  color: C.waterCol, shininess: 140, specular: 0xffffff,
-  transparent: true, opacity: 0.86,
-}))
-water.rotation.x = -Math.PI / 2
-water.position.y = 0.74
-water.receiveShadow = true
-scene.add(water)
+const waterMat = new THREE.MeshPhongMaterial({
+  color: 0x32b8d8, shininess: 140, specular: 0xffffff,
+  transparent: true, opacity: 0.86
+})
+const waterMesh = new THREE.Mesh(wGeo, waterMat)
+waterMesh.rotation.x = -Math.PI / 2
+waterMesh.position.y = 0.74
+waterMesh.receiveShadow = true
+scene.add(waterMesh)
 
-scene.add(Object.assign(
-  new THREE.Mesh(new THREE.PlaneGeometry(40, 40), mat(C.seabed)),
-  { rotation: new THREE.Euler(-Math.PI/2, 0, 0), position: new THREE.Vector3(0, 0.02, 0) }
-))
+const seabed = new THREE.Mesh(
+  new THREE.PlaneGeometry(40, 40),
+  new THREE.MeshLambertMaterial({ color: 0xb89a50 })
+)
+seabed.rotation.x = -Math.PI / 2
+seabed.position.y = 0.02
+scene.add(seabed)
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-function mesh(geo, material, { x=0, y=0, z=0, rx=0, ry=0, shadow=true } = {}) {
-  const m = new THREE.Mesh(geo, material)
-  m.position.set(x, y, z)
-  m.rotation.set(rx, ry, 0)
-  if (shadow) { m.castShadow = true; m.receiveShadow = true }
+// Palette
+const P = {
+  grass: 0x72cc46, grassMid: 0x62bc38, grassDark: 0x4ea828,
+  sand: 0xecda8a, sandDark: 0xd8c472,
+  rock: 0xa09282, rockDark: 0x887870,
+  treeA: 0x389820, treeB: 0x52c030, treeC: 0x289018, trunk: 0x8a5428,
+  wallA: 0xf5edd8, wallB: 0xede4c8,
+  roofRed: 0xd03828, roofDark: 0xb02818, roofOrg: 0xe05c20,
+  chimney: 0x9a8272, door: 0x7a4618,
+  winFrame: 0xc8c0a8, winGlass: 0x9ad0f8,
+  stone: 0xbcac9c, stoneDark: 0xa09080,
+  rope: 0xd4b860, banner: 0xe8c030
+}
+
+function phong(color, shine) {
+  return new THREE.MeshPhongMaterial({ color: color, shininess: shine || 8 })
+}
+
+function phongFlat(color, shine) {
+  return new THREE.MeshPhongMaterial({ color: color, shininess: shine || 20, flatShading: true })
+}
+
+function shadow(m) {
+  m.castShadow = true
+  m.receiveShadow = true
   return m
 }
 
-function addToScene(obj) {
-  obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-  scene.add(obj)
-  return obj
-}
+function box(w, h, d) { return new THREE.BoxGeometry(w, h, d) }
+function box1() { return new THREE.BoxGeometry(1, 1, 1) }
+function cyl(rt, rb, h, segs) { return new THREE.CylinderGeometry(rt, rb, h, segs || 6) }
+function cone(r, h, segs) { return new THREE.ConeGeometry(r, h, segs || 4) }
+function sph(r, ws, hs) { return new THREE.SphereGeometry(r, ws || 8, hs || 6) }
 
-function voxel(x, layer, z, color) {
-  const m = mesh(
-    new THREE.BoxGeometry(1, 1, 1), mat(color),
-    { x, y: layer + 0.5, z }
-  )
+// Voxel terrain
+function vox(x, layer, z, color) {
+  const m = shadow(new THREE.Mesh(box1(), phong(color)))
+  m.position.set(x, layer + 0.5, z)
   scene.add(m)
-  return m
 }
 
-// ─── Terrain ─────────────────────────────────────────────────────────────────
-;(function buildTerrain() {
-  // Roche base (layer 0, y: 0-1) - partiellement sous eau
-  for (let x = -5; x <= 5; x++) for (let z = -5; z <= 5; z++) {
-    if (Math.sqrt(x*x + z*z) > 4.9) continue
-    voxel(x, 0, z, Math.sqrt(x*x+z*z) > 3.6 ? C.rock : C.rockDark)
+function buildTerrain() {
+  for (let x = -5; x <= 5; x++) {
+    for (let z = -5; z <= 5; z++) {
+      const d = Math.sqrt(x * x + z * z)
+      if (d > 4.9) continue
+      vox(x, 0, z, d > 3.6 ? P.rock : P.rockDark)
+    }
   }
-
-  // Sable côtier (layer 1, y: 1-2)
-  for (let x = -4; x <= 4; x++) for (let z = -4; z <= 4; z++) {
-    const d = Math.sqrt(x*x + z*z)
-    if (d > 2.9 && d <= 4.2)
-      voxel(x, 1, z, (x+z) % 2 === 0 ? C.sand : C.sandDark)
+  for (let x = -4; x <= 4; x++) {
+    for (let z = -4; z <= 4; z++) {
+      const d = Math.sqrt(x * x + z * z)
+      if (d > 2.9 && d <= 4.2) vox(x, 1, z, (x + z) % 2 === 0 ? P.sand : P.sandDark)
+    }
   }
-
-  // Herbe principale (layer 1)
-  for (let x = -3; x <= 3; x++) for (let z = -3; z <= 3; z++) {
-    if (Math.sqrt(x*x + z*z) > 3.0) continue
-    voxel(x, 1, z, ((x+z) & 1) ? C.grassMid : C.grass)
+  for (let x = -3; x <= 3; x++) {
+    for (let z = -3; z <= 3; z++) {
+      if (Math.sqrt(x * x + z * z) > 3.0) continue
+      vox(x, 1, z, (x + z & 1) ? P.grassMid : P.grass)
+    }
   }
+  var hill = [[-1,-2],[0,-2],[1,-2],[-1,-1],[0,-1],[1,-1]]
+  for (var i = 0; i < hill.length; i++) vox(hill[i][0], 2, hill[i][1], P.grassDark)
+  vox(0, 3, -2, P.rockDark)
+}
 
-  // Colline arrière (layer 2 = y: 2-3)
-  for (const [x,z] of [[-1,-2],[0,-2],[1,-2],[-1,-1],[0,-1],[1,-1]]) {
-    voxel(x, 2, z, C.grassDark)
-  }
-  // Sommet (layer 3)
-  voxel(0, 3, -2, C.rockDark)
-})()
+// Arbre : spheres aplaties empilees
+function addTree(x, y, z, scale, variant) {
+  if (!scale) scale = 1
+  if (!variant) variant = 0
+  var colSets = [
+    [P.treeA, P.treeB, P.treeC],
+    [P.treeB, P.treeC, P.treeA],
+    [P.treeC, P.treeA, P.treeB]
+  ]
+  var cols = colSets[variant % 3]
+  var g = new THREE.Group()
 
-// ─── Arbre (sphères aplaties, style Dorfromantik) ─────────────────────────────
-function addTree(x, y, z, scale = 1, v = 0) {
-  const g = new THREE.Group()
-  const cols = [
-    [C.treeA, C.treeB, C.treeC],
-    [C.treeB, C.treeC, C.treeA],
-    [C.treeC, C.treeA, C.treeB],
-  ][v % 3]
+  var trunk = shadow(new THREE.Mesh(cyl(0.09, 0.14, 0.85, 6), phong(P.trunk)))
+  trunk.position.y = 0.42
+  g.add(trunk)
 
-  g.add(mesh(new THREE.CylinderGeometry(0.09, 0.14, 0.85, 6), mat(C.trunk), { y: 0.42 }))
-  const layers = [
+  var layers = [
     { y: 0.95, r: 0.76, sy: 0.54, c: cols[0] },
     { y: 1.36, r: 0.58, sy: 0.50, c: cols[1] },
-    { y: 1.70, r: 0.38, sy: 0.46, c: cols[2] },
+    { y: 1.70, r: 0.38, sy: 0.46, c: cols[2] }
   ]
-  for (const l of layers) {
-    const s = mesh(new THREE.SphereGeometry(l.r, 8, 6), mat(l.c, { flat: true, shine: 20 }), { y: l.y })
-    s.scale.y = l.sy
-    g.add(s)
+  for (var li = 0; li < layers.length; li++) {
+    var l = layers[li]
+    var sp = shadow(new THREE.Mesh(sph(l.r, 8, 6), phongFlat(l.c, 22)))
+    sp.scale.y = l.sy
+    sp.position.y = l.y
+    g.add(sp)
   }
+
   g.position.set(x, y, z)
   g.scale.setScalar(scale)
-  return addToScene(g)
+  scene.add(g)
+  return g
 }
 
-// ─── Buisson ─────────────────────────────────────────────────────────────────
-function addBush(x, y, z, s = 1) {
-  const g = new THREE.Group()
-  for (const [dx, dz, r] of [[0,0,.40],[.24,.12,.26],[-.22,.16,.24],[.12,-.22,.22]]) {
-    const sp = mesh(new THREE.SphereGeometry(r, 7, 5), mat(C.treeB, { flat: true, shine: 15 }), { y: r * 0.72 })
-    sp.position.x += dx; sp.position.z += dz
+// Buisson
+function addBush(x, y, z, s) {
+  if (!s) s = 1
+  var g = new THREE.Group()
+  var pts = [[0,0,.40],[.24,.12,.26],[-.22,.16,.24],[.12,-.22,.22]]
+  for (var i = 0; i < pts.length; i++) {
+    var p = pts[i]
+    var sp = shadow(new THREE.Mesh(sph(p[2], 7, 5), phongFlat(P.treeB, 15)))
     sp.scale.y = 0.70
+    sp.position.set(p[0], p[2] * 0.72, p[1])
     g.add(sp)
   }
   g.position.set(x, y, z)
   g.scale.setScalar(s)
-  return addToScene(g)
+  scene.add(g)
+  return g
 }
 
-// ─── Maison ──────────────────────────────────────────────────────────────────
-function addHouse(x, y, z, { w=1.7, d=1.45, h=1.22, roof=C.roofRed, wall=C.wallA, ry=0 } = {}) {
-  const g = new THREE.Group()
+// Maison
+function addHouse(x, y, z, w, d, h, roofColor, wallColor, ry) {
+  w = w || 1.7; d = d || 1.45; h = h || 1.22
+  roofColor = roofColor || P.roofRed; wallColor = wallColor || P.wallA; ry = ry || 0
+  var g = new THREE.Group()
 
-  // Murs
-  g.add(mesh(new THREE.BoxGeometry(w, h, d), mat(wall), { y: h * 0.5 }))
+  var walls = shadow(new THREE.Mesh(box(w, h, d), phong(wallColor, 6)))
+  walls.position.y = h * 0.5
+  g.add(walls)
 
-  // Soubassement (pierre)
-  g.add(mesh(new THREE.BoxGeometry(w + 0.06, 0.18, d + 0.06), mat(C.stone), { y: 0.09 }))
+  var base = shadow(new THREE.Mesh(box(w + 0.06, 0.18, d + 0.06), phong(P.stone, 4)))
+  base.position.y = 0.09
+  g.add(base)
 
-  // Toit pyramide (4 pans avec débord)
-  const rr = Math.max(w, d) * 0.76 + 0.14
-  const rh = 0.72
-  const roofM = mesh(new THREE.ConeGeometry(rr, rh, 4), mat(roof, { shine: 4 }), { y: h + rh*0.5 - 0.05, ry: Math.PI/4 })
+  var rr = Math.max(w, d) * 0.76 + 0.14
+  var rh = 0.72
+  var roofM = shadow(new THREE.Mesh(cone(rr, rh, 4), phong(roofColor, 4)))
+  roofM.rotation.y = Math.PI / 4
+  roofM.position.y = h + rh * 0.5 - 0.05
   g.add(roofM)
 
-  // Cheminée
-  const chW = 0.18, chH = 0.52
-  const chX = w * 0.26
-  g.add(mesh(new THREE.BoxGeometry(chW, chH, chW), mat(C.chimney), { x: chX, y: h + chH*0.5 + 0.1 }))
-  g.add(mesh(new THREE.BoxGeometry(chW+0.07, 0.07, chW+0.07), mat(C.stoneDark), { x: chX, y: h + chH + 0.14 }))
+  var chW = 0.18, chH = 0.52, chX = w * 0.26
+  var chim = shadow(new THREE.Mesh(box(chW, chH, chW), phong(P.chimney, 4)))
+  chim.position.set(chX, h + chH * 0.5 + 0.1, 0)
+  g.add(chim)
+  var chimTop = shadow(new THREE.Mesh(box(chW + 0.07, 0.07, chW + 0.07), phong(P.stoneDark, 4)))
+  chimTop.position.set(chX, h + chH + 0.14, 0)
+  g.add(chimTop)
 
-  // Porte
-  const dW = 0.30, dH = 0.54
-  g.add(mesh(new THREE.BoxGeometry(dW, dH, 0.06), mat(C.door, { shine: 18 }), { y: dH*0.5, z: d*0.5+0.01 }))
+  var dr = shadow(new THREE.Mesh(box(0.30, 0.54, 0.06), phong(P.door, 18)))
+  dr.position.set(0, 0.27, d * 0.5 + 0.01)
+  g.add(dr)
 
-  // Fenêtres façade (2)
-  for (const wx of [-w*0.28, w*0.28]) {
-    g.add(mesh(new THREE.BoxGeometry(0.34, 0.30, 0.06), mat(C.winFrame), { x: wx, y: h*0.56, z: d*0.5+0.01 }))
-    g.add(mesh(new THREE.BoxGeometry(0.23, 0.20, 0.06), mat(C.winGlass, { shine: 90, emissive: 0x2a4a8a, emissiveI: 0.18 }), { x: wx, y: h*0.56, z: d*0.5+0.04 }))
+  var winXs = [-w * 0.28, w * 0.28]
+  for (var wi = 0; wi < winXs.length; wi++) {
+    var wx = winXs[wi]
+    var fr = shadow(new THREE.Mesh(box(0.34, 0.30, 0.06), phong(P.winFrame, 6)))
+    fr.position.set(wx, h * 0.56, d * 0.5 + 0.01)
+    g.add(fr)
+    var gl = shadow(new THREE.Mesh(box(0.23, 0.20, 0.06), phong(P.winGlass, 90)))
+    gl.position.set(wx, h * 0.56, d * 0.5 + 0.04)
+    g.add(gl)
   }
-  // Fenêtres côtés (1 par côté)
-  for (const sx of [-1, 1]) {
-    g.add(mesh(new THREE.BoxGeometry(0.06, 0.30, 0.34), mat(C.winFrame), { x: sx*(w*0.5+0.01), y: h*0.56 }))
-    g.add(mesh(new THREE.BoxGeometry(0.06, 0.20, 0.23), mat(C.winGlass, { shine: 90, emissive: 0x2a4a8a, emissiveI: 0.18 }), { x: sx*(w*0.5+0.04), y: h*0.56 }))
+
+  var sides = [-1, 1]
+  for (var si = 0; si < sides.length; si++) {
+    var sx = sides[si]
+    var sfr = shadow(new THREE.Mesh(box(0.06, 0.30, 0.34), phong(P.winFrame, 6)))
+    sfr.position.set(sx * (w * 0.5 + 0.01), h * 0.56, 0)
+    g.add(sfr)
+    var sgl = shadow(new THREE.Mesh(box(0.06, 0.20, 0.23), phong(P.winGlass, 90)))
+    sgl.position.set(sx * (w * 0.5 + 0.04), h * 0.56, 0)
+    g.add(sgl)
   }
 
   g.rotation.y = ry
   g.position.set(x, y, z)
-  return addToScene(g)
+  scene.add(g)
+  return g
 }
 
-// ─── Puits ───────────────────────────────────────────────────────────────────
+// Puits
 function addWell(x, y, z) {
-  const g = new THREE.Group()
-  g.add(mesh(new THREE.CylinderGeometry(0.42, 0.44, 0.52, 10), mat(C.stone), { y: 0.26 }))
-  g.add(mesh(new THREE.CylinderGeometry(0.30, 0.32, 0.52, 10), mat(0x1a3a5a, { shine: 80, emissive: 0x204060, emissiveI: 0.3 }), { y: 0.28 }))
-  for (const px of [-0.30, 0.30]) {
-    g.add(mesh(new THREE.BoxGeometry(0.10, 0.72, 0.10), mat(C.stoneDark), { x: px, y: 0.88 }))
+  var g = new THREE.Group()
+
+  var base = shadow(new THREE.Mesh(cyl(0.42, 0.44, 0.52, 10), phong(P.stone, 6)))
+  base.position.y = 0.26
+  g.add(base)
+
+  var waterInner = shadow(new THREE.Mesh(cyl(0.30, 0.32, 0.30, 10), phong(0x1a3a5a, 80)))
+  waterInner.position.y = 0.15
+  g.add(waterInner)
+
+  var pillars = [-0.30, 0.30]
+  for (var pi = 0; pi < pillars.length; pi++) {
+    var pil = shadow(new THREE.Mesh(box(0.10, 0.72, 0.10), phong(P.stoneDark, 4)))
+    pil.position.set(pillars[pi], 0.88, 0)
+    g.add(pil)
   }
-  g.add(mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.65, 6), mat(C.rope), { y: 0.94, rx: Math.PI/2 }))
-  const wrGeo = new THREE.ConeGeometry(0.52, 0.42, 4)
-  g.add(mesh(wrGeo, mat(C.roofOrg, { shine: 4 }), { y: 1.46, ry: Math.PI/4 }))
+
+  var crossbar = shadow(new THREE.Mesh(cyl(0.04, 0.04, 0.72, 6), phong(P.rope, 8)))
+  crossbar.rotation.z = Math.PI / 2
+  crossbar.position.y = 0.88
+  g.add(crossbar)
+
+  var wellRoof = shadow(new THREE.Mesh(cone(0.52, 0.42, 4), phong(P.roofOrg, 4)))
+  wellRoof.rotation.y = Math.PI / 4
+  wellRoof.position.y = 1.46
+  g.add(wellRoof)
+
   g.position.set(x, y, z)
-  return addToScene(g)
+  scene.add(g)
+  return g
 }
 
-// ─── Tour de garde ───────────────────────────────────────────────────────────
+// Tour
 function addTower(x, y, z) {
-  const g = new THREE.Group()
+  var g = new THREE.Group()
 
-  // Corps
-  g.add(mesh(new THREE.BoxGeometry(1.2, 3.8, 1.2), mat(C.stone), { y: 1.9 }))
-  // Ceinture médiane
-  g.add(mesh(new THREE.BoxGeometry(1.32, 0.14, 1.32), mat(C.stoneDark), { y: 2.0 }))
+  var body = shadow(new THREE.Mesh(box(1.2, 3.8, 1.2), phong(P.stone, 4)))
+  body.position.y = 1.9
+  g.add(body)
 
-  // Créneaux (4 coins + 4 milieux)
-  for (const [cx, cz] of [[0.28,0.28],[-0.28,0.28],[0.28,-0.28],[-0.28,-0.28],[0,0.40],[0,-0.40],[0.40,0],[-0.40,0]]) {
-    g.add(mesh(new THREE.BoxGeometry(0.30, 0.38, 0.30), mat(C.stoneDark), { x: cx, y: 4.0, z: cz }))
+  var belt = shadow(new THREE.Mesh(box(1.34, 0.14, 1.34), phong(P.stoneDark, 4)))
+  belt.position.y = 2.0
+  g.add(belt)
+
+  var crenels = [[0.28,0.28],[-0.28,0.28],[0.28,-0.28],[-0.28,-0.28],[0,0.40],[0,-0.40],[0.40,0],[-0.40,0]]
+  for (var ci = 0; ci < crenels.length; ci++) {
+    var cr = shadow(new THREE.Mesh(box(0.30, 0.38, 0.30), phong(P.stoneDark, 4)))
+    cr.position.set(crenels[ci][0], 4.0, crenels[ci][1])
+    g.add(cr)
   }
 
-  // Porte arquée (simplifiée)
-  g.add(mesh(new THREE.BoxGeometry(0.40, 0.65, 0.07), mat(C.door), { y: 0.32, z: 0.62 }))
+  var door = shadow(new THREE.Mesh(box(0.40, 0.65, 0.07), phong(P.door, 12)))
+  door.position.set(0, 0.32, 0.62)
+  g.add(door)
 
-  // Meurtrières
-  for (const fh of [1.1, 2.2]) {
-    g.add(mesh(new THREE.BoxGeometry(0.13, 0.34, 0.07), mat(C.winGlass, { shine: 60, emissive: 0x1a3a6a, emissiveI: 0.3 }), { y: fh, z: 0.62 }))
+  var slits = [1.1, 2.2]
+  for (var sli = 0; sli < slits.length; sli++) {
+    var slit = shadow(new THREE.Mesh(box(0.13, 0.34, 0.07), phong(P.winGlass, 60)))
+    slit.position.set(0, slits[sli], 0.62)
+    g.add(slit)
   }
 
-  // Toit pointu
-  g.add(mesh(new THREE.ConeGeometry(0.95, 1.4, 4), mat(C.roofDark, { shine: 4 }), { y: 4.5, ry: Math.PI/4 }))
+  var towerRoof = shadow(new THREE.Mesh(cone(0.95, 1.4, 4), phong(P.roofDark, 4)))
+  towerRoof.rotation.y = Math.PI / 4
+  towerRoof.position.y = 4.5
+  g.add(towerRoof)
 
-  // Bannière
-  const ban = mesh(new THREE.PlaneGeometry(0.32, 0.48), mat(C.banner, { double: true }), { x: 0.2, y: 5.4, z: 0.1 })
-  ban.rotation.y = 0.4
-  g.add(ban)
+  var bannerGeo = new THREE.PlaneGeometry(0.32, 0.48)
+  var banner = new THREE.Mesh(bannerGeo, new THREE.MeshPhongMaterial({ color: P.banner, side: THREE.DoubleSide }))
+  banner.position.set(0.22, 5.4, 0.1)
+  banner.rotation.y = 0.4
+  g.add(banner)
 
   g.position.set(x, y, z)
-  return addToScene(g)
+  scene.add(g)
+  return g
 }
 
-// ─── Peuplement ──────────────────────────────────────────────────────────────
-// Maisons sur l'herbe (y=2 = surface de la strate herbe)
-addHouse( 1.3, 2,  1.1, { roofColor: C.roofRed, ry: -0.25 })
-addHouse(-1.5, 2,  0.8, { w: 1.5, d: 1.2, roof: C.roofOrg, wall: C.wallB, ry: 0.18 })
-addHouse( 1.6, 2, -0.4, { w: 1.45, d: 1.3, roof: C.roofDark, ry: Math.PI*0.55 })
-addHouse(-0.4, 2,  2.1, { w: 1.3, d: 1.1, h: 1.05, roof: C.roofRed, ry: -0.7 })
+// Construction de la scene
+buildTerrain()
 
-// Tour sur la colline (surface colline = layer 3, y=4)
+addHouse( 1.3, 2,  1.1, 1.7, 1.45, 1.22, P.roofRed, P.wallA, -0.25)
+addHouse(-1.5, 2,  0.8, 1.5, 1.20, 1.15, P.roofOrg, P.wallB,  0.18)
+addHouse( 1.6, 2, -0.4, 1.45, 1.3, 1.22, P.roofDark, P.wallA, Math.PI * 0.55)
+addHouse(-0.4, 2,  2.1, 1.3, 1.1,  1.05, P.roofRed, P.wallB, -0.7)
+
 addTower(0, 4, -2)
-
-// Puits centre village
 addWell(0.1, 2, 0.15)
 
-// Arbres (sur herbe y=2, sur sable y=2 aussi, sur colline y=3)
 addTree(-3.1, 2,  0.5, 1.10, 0)
 addTree(-2.8, 2, -1.1, 0.92, 1)
 addTree(-2.4, 2,  1.9, 1.06, 2)
@@ -391,15 +419,14 @@ addTree(-0.5, 2,  3.1, 0.82, 2)
 addTree(-1.5, 3, -2.5, 0.76, 1)
 addTree( 1.0, 3, -2.8, 0.68, 0)
 
-// Buissons
 addBush( 0.6, 2,  2.8, 0.90)
 addBush(-2.1, 2,  0.3, 0.80)
 addBush( 2.3, 2, -1.5, 0.75)
 addBush( 0.8, 2, -2.5, 0.82)
 addBush(-0.8, 2, -1.8, 0.70)
 
-// ─── Lumière ─────────────────────────────────────────────────────────────────
-const state = { light: 'day', water: 'anim' }
+// Etat et interactions
+var state = { light: 'day', water: 'anim' }
 
 function applyLight() {
   if (state.light === 'day') {
@@ -418,45 +445,42 @@ function applyLight() {
 }
 applyLight()
 
-// ─── Animation eau ───────────────────────────────────────────────────────────
-function tickWater(t) {
-  if (state.water !== 'anim') return
-  for (let i = 0; i < wPos.count; i++) {
-    const x = wPos.getX(i), y = wPos.getY(i)
-    wPos.setZ(i, wBase[i] + Math.sin(x * 1.1 + t * 1.7) * 0.042 + Math.sin(y * 0.85 + t * 1.35) * 0.034)
-  }
-  wPos.needsUpdate = true
-  wGeo.computeVertexNormals()
-}
-
-// ─── Boucle ──────────────────────────────────────────────────────────────────
-let t = 0
+var t = 0
 function animate() {
   requestAnimationFrame(animate)
   t += 0.01
   controls.update()
-  tickWater(t)
+  if (state.water === 'anim') {
+    for (var i = 0; i < wPos.count; i++) {
+      var wx = wPos.getX(i)
+      var wy = wPos.getY(i)
+      wPos.setZ(i, wBase[i] + Math.sin(wx * 1.1 + t * 1.7) * 0.042 + Math.sin(wy * 0.85 + t * 1.35) * 0.034)
+    }
+    wPos.needsUpdate = true
+    wGeo.computeVertexNormals()
+  }
   renderer.render(scene, camera)
 }
 animate()
 
-// ─── Resize ──────────────────────────────────────────────────────────────────
-window.addEventListener('resize', () => {
+window.addEventListener('resize', function() {
   camera.aspect = innerWidth / innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(innerWidth, innerHeight)
 })
 
-// ─── UI ──────────────────────────────────────────────────────────────────────
-document.querySelectorAll('button[data-group]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const { group, val } = btn.dataset
+var btns = document.querySelectorAll('button[data-group]')
+for (var bi = 0; bi < btns.length; bi++) {
+  btns[bi].addEventListener('click', function(e) {
+    var group = e.target.dataset.group
+    var val = e.target.dataset.val
     state[group] = val
-    document.querySelectorAll(`button[data-group="${group}"]`).forEach(b => b.classList.remove('active'))
-    btn.classList.add('active')
+    var grpBtns = document.querySelectorAll('button[data-group="' + group + '"]')
+    for (var gi = 0; gi < grpBtns.length; gi++) grpBtns[gi].classList.remove('active')
+    e.target.classList.add('active')
     if (group === 'light') applyLight()
   })
-})
+}
 </script>
 </body>
 </html>
