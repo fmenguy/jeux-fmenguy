@@ -1,26 +1,37 @@
-// Panneau arbre des technologies - vue scrollable ages x branches
+// Viewer multi-arbres : Tech, Batiments, (sous-arbres a venir)
+// Navigation entre arbres avec animation slide vertical style "strate"
 import { state } from './state.js'
 import { unlockTech } from './tech.js'
-import { TECH_TREE_DATA } from './gamedata.js'
+import { TECH_TREE_DATA, BUILDINGS_DATA } from './gamedata.js'
 import { refreshTechsPanel } from './hud.js'
 
 let panel = null
+let currentTree = 'tech'
+
+const AGES_LABELS = ['Pierre','Bronze','Fer','Industriel','Moderne','Atomique','Espace']
+
+// ─── Ouverture / Fermeture ───────────────────────────────────────────────────
 
 export function initTechTreeUI() {
   panel = document.getElementById('tt-panel')
   if (!panel) return
-
   document.getElementById('tt-close-btn').addEventListener('click', closeTechTree)
   document.getElementById('tt-backdrop').addEventListener('click', closeTechTree)
+
+  // Tabs
+  document.querySelectorAll('.tt-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      switchTree(tab.dataset.tree)
+    })
+  })
 }
 
 export function openTechTree() {
   if (!panel) return
   panel.classList.add('open')
   document.getElementById('tt-backdrop').classList.add('open')
-  const ptsEl = document.getElementById('tt-pts')
-  if (ptsEl) ptsEl.textContent = state.researchPoints + ' pts de recherche disponibles'
-  renderTree()
+  updatePtsLabel()
+  renderCurrent()
 }
 
 export function closeTechTree() {
@@ -35,144 +46,222 @@ export function toggleTechTree() {
   else openTechTree()
 }
 
+function updatePtsLabel() {
+  const el = document.getElementById('tt-pts')
+  if (el) el.textContent = state.researchPoints + ' pts de recherche'
+}
+
+// ─── Navigation entre arbres ─────────────────────────────────────────────────
+
+function switchTree(treeId) {
+  if (treeId === currentTree) return
+
+  const scroll = document.getElementById('tt-scroll')
+  const incoming = treeId === 'tech' ? 'up' : 'down'
+
+  // Active tab
+  document.querySelectorAll('.tt-tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.tree === treeId)
+  })
+
+  // Animation strate : slide out puis slide in
+  scroll.classList.add('tt-slide-out-' + (incoming === 'down' ? 'up' : 'down'))
+
+  setTimeout(function() {
+    scroll.classList.remove('tt-slide-out-up', 'tt-slide-out-down')
+    currentTree = treeId
+    renderCurrent()
+    scroll.classList.add('tt-slide-in-' + incoming)
+    setTimeout(function() {
+      scroll.classList.remove('tt-slide-in-up', 'tt-slide-in-down')
+    }, 280)
+  }, 200)
+}
+
+function renderCurrent() {
+  if (currentTree === 'tech') renderTechTree()
+  else if (currentTree === 'buildings') renderBuildingsTree()
+}
+
+// ─── Arbre Tech ──────────────────────────────────────────────────────────────
+
 function getTechStatus(tech) {
   if (tech.future) return 'future'
   const t = state.techs[tech.id]
   if (!t) return 'future'
   if (t.unlocked) return 'done'
-  const reqsMet = (tech.requires || []).every(r => state.techs[r] && state.techs[r].unlocked)
+  const reqsMet = (tech.requires || []).every(function(r) {
+    return state.techs[r] && state.techs[r].unlocked
+  })
   if (!reqsMet) return 'locked'
-  if (state.researchPoints >= tech.cost) return 'ready'
-  return 'available'
+  return state.researchPoints >= tech.cost ? 'ready' : 'available'
 }
 
-function renderTree() {
+function renderTechTree() {
   const data = TECH_TREE_DATA
-  if (!data || !panel) return
-
+  if (!data) return
   const grid = document.getElementById('tt-grid')
   grid.innerHTML = ''
+  grid.className = 'tt-tech-grid'
 
-  const ages = data.ages
-  const branches = data.branches
-  const techs = data.techs
-
-  // Grouper les techs par age+branche
   const cells = {}
-  techs.forEach(t => {
+  data.techs.forEach(function(t) {
     const key = t.age + '_' + t.branch
     if (!cells[key]) cells[key] = []
     cells[key].push(t)
   })
 
-  // En-tetes ages
+  // Header ages
   const headerRow = document.createElement('div')
   headerRow.className = 'tt-header-row'
-
-  const cornerCell = document.createElement('div')
-  cornerCell.className = 'tt-corner'
-  cornerCell.textContent = 'Branches / Ages'
-  headerRow.appendChild(cornerCell)
-
-  ages.forEach(age => {
-    const ageHead = document.createElement('div')
-    ageHead.className = 'tt-age-head'
-    ageHead.style.borderBottomColor = age.color
-    ageHead.innerHTML = '<span class="tt-age-num">Age ' + age.num + '</span><span class="tt-age-name">' + age.label + '</span>'
-    headerRow.appendChild(ageHead)
+  headerRow.appendChild(makeEl('div', 'tt-corner', 'Branches'))
+  data.ages.forEach(function(age) {
+    const h = makeEl('div', 'tt-age-head')
+    h.style.borderBottomColor = age.color
+    h.innerHTML = '<span class="tt-age-num">Age ' + age.num + '</span><span class="tt-age-name">' + age.label + '</span>'
+    headerRow.appendChild(h)
   })
   grid.appendChild(headerRow)
 
-  // Lignes de branches
-  branches.forEach(branch => {
-    const row = document.createElement('div')
-    row.className = 'tt-branch-row'
+  // Branch rows
+  data.branches.forEach(function(branch) {
+    const row = makeEl('div', 'tt-branch-row')
+    const lbl = makeEl('div', 'tt-branch-label', branch.label)
+    lbl.style.borderLeftColor = branch.color
+    row.appendChild(lbl)
 
-    const branchLabel = document.createElement('div')
-    branchLabel.className = 'tt-branch-label'
-    branchLabel.style.borderLeftColor = branch.color
-    branchLabel.textContent = branch.label
-    row.appendChild(branchLabel)
-
-    ages.forEach(age => {
-      const cell = document.createElement('div')
-      cell.className = 'tt-cell'
-
+    data.ages.forEach(function(age) {
+      const cell = makeEl('div', 'tt-cell')
       const cellTechs = cells[age.num + '_' + branch.id] || []
-      cellTechs.forEach(tech => {
-        const status = getTechStatus(tech)
-        const card = buildCard(tech, status)
-        cell.appendChild(card)
+      cellTechs.forEach(function(tech) {
+        cell.appendChild(buildTechCard(tech, getTechStatus(tech)))
       })
-
       row.appendChild(cell)
     })
-
     grid.appendChild(row)
   })
 }
 
-function buildCard(tech, status) {
-  const card = document.createElement('div')
-  card.className = 'tt-card tt-card--' + status
+function buildTechCard(tech, status) {
+  const card = makeEl('div', 'tt-card tt-card--' + status)
   card.dataset.id = tech.id
 
-  const iconEl = document.createElement('div')
-  iconEl.className = 'tt-card-icon'
-  iconEl.style.background = tech.color
-  iconEl.textContent = tech.icon
-  card.appendChild(iconEl)
+  const icon = makeEl('div', 'tt-card-icon', tech.icon)
+  icon.style.background = tech.color
+  card.appendChild(icon)
 
-  const body = document.createElement('div')
-  body.className = 'tt-card-body'
-
-  const nameEl = document.createElement('div')
-  nameEl.className = 'tt-card-name'
-  nameEl.textContent = tech.name
-  body.appendChild(nameEl)
+  const body = makeEl('div', 'tt-card-body')
+  body.appendChild(makeEl('div', 'tt-card-name', tech.name))
 
   if (tech.requires && tech.requires.length > 0) {
-    const reqEl = document.createElement('div')
-    reqEl.className = 'tt-card-req'
-    const TECH_TREE_DATA_local = TECH_TREE_DATA
-    const reqNames = tech.requires.map(rid => {
-      const rt = TECH_TREE_DATA_local.techs.find(t => t.id === rid)
+    const reqNames = tech.requires.map(function(rid) {
+      const rt = TECH_TREE_DATA.techs.find(function(t) { return t.id === rid })
       return rt ? rt.name : rid
     })
-    reqEl.textContent = 'Req: ' + reqNames.join(', ')
-    body.appendChild(reqEl)
+    body.appendChild(makeEl('div', 'tt-card-req', 'Req: ' + reqNames.join(', ')))
   }
 
-  const footer = document.createElement('div')
-  footer.className = 'tt-card-footer'
-
+  const footer = makeEl('div', 'tt-card-footer')
   if (status === 'done') {
-    footer.innerHTML = '<span class="tt-badge tt-badge--done">Debloque</span>'
+    footer.appendChild(makeEl('span', 'tt-badge tt-badge--done', 'Debloque'))
   } else if (status === 'future') {
-    footer.innerHTML = '<span class="tt-badge tt-badge--future">A venir</span>'
+    footer.appendChild(makeEl('span', 'tt-badge tt-badge--future', 'A venir'))
   } else {
-    const costEl = document.createElement('span')
-    costEl.className = 'tt-card-cost'
-    costEl.textContent = tech.cost + ' pts'
-    footer.appendChild(costEl)
-
+    footer.appendChild(makeEl('span', 'tt-card-cost', tech.cost + ' pts'))
     if (status === 'ready') {
-      const btn = document.createElement('button')
-      btn.className = 'tt-unlock-btn'
-      btn.textContent = 'Debloquer'
+      const btn = makeEl('button', 'tt-unlock-btn', 'Debloquer')
       btn.addEventListener('click', function(e) {
         e.stopPropagation()
-        unlockTech(tech.id, function() {
-          refreshTechsPanel()
-          renderTree()
-        })
+        unlockTech(tech.id, function() { refreshTechsPanel(); renderTechTree() })
       })
       footer.appendChild(btn)
     }
   }
-
   body.appendChild(footer)
   card.appendChild(body)
+  return card
+}
+
+// ─── Arbre Batiments ─────────────────────────────────────────────────────────
+
+function renderBuildingsTree() {
+  const data = BUILDINGS_DATA
+  if (!data) return
+  const grid = document.getElementById('tt-grid')
+  grid.innerHTML = ''
+  grid.className = 'tt-buildings-grid'
+
+  // En-tete ages horizontaux
+  const header = makeEl('div', 'tt-bld-header')
+  header.appendChild(makeEl('div', 'tt-bld-chain-label', ''))
+  AGES_LABELS.forEach(function(lbl, i) {
+    const h = makeEl('div', 'tt-bld-age-col')
+    h.innerHTML = '<span class="tt-age-num">Age ' + (i+1) + '</span><span class="tt-age-name">' + lbl + '</span>'
+    header.appendChild(h)
+  })
+  grid.appendChild(header)
+
+  // Une ligne par chaine
+  data.chains.forEach(function(chain) {
+    const row = makeEl('div', 'tt-bld-row')
+
+    // Label chaine
+    const lbl = makeEl('div', 'tt-bld-chain-label')
+    const dot = makeEl('span', 'tt-bld-dot', chain.icon)
+    dot.style.background = chain.color
+    lbl.appendChild(dot)
+    lbl.appendChild(makeEl('span', '', chain.name))
+    row.appendChild(lbl)
+
+    // Cellules par age (1-7)
+    const byAge = {}
+    chain.levels.forEach(function(lvl) { byAge[lvl.age] = lvl })
+
+    for (var age = 1; age <= 7; age++) {
+      const cell = makeEl('div', 'tt-bld-cell')
+      const lvl = byAge[age]
+      if (lvl) {
+        cell.appendChild(buildBldCard(lvl, chain))
+        if (lvl.fusionReq) {
+          const arrow = makeEl('div', 'tt-bld-arrow', '4x ')
+          arrow.title = 'Fusionner ' + lvl.fusionReq + ' ' + lvl.name + ' pour obtenir le niveau suivant'
+          cell.appendChild(arrow)
+        }
+      }
+      row.appendChild(cell)
+    }
+    grid.appendChild(row)
+  })
+}
+
+function buildBldCard(lvl, chain) {
+  const card = makeEl('div', 'tt-bld-card')
+
+  const top = makeEl('div', 'tt-bld-card-top')
+  const icon = makeEl('span', 'tt-bld-card-icon', chain.icon)
+  icon.style.background = chain.color
+  top.appendChild(icon)
+  top.appendChild(makeEl('span', 'tt-bld-card-name', lvl.name))
+  card.appendChild(top)
+
+  card.appendChild(makeEl('div', 'tt-bld-card-desc', lvl.desc))
+
+  if (lvl.pop)  card.appendChild(makeEl('div', 'tt-bld-card-stat', 'Pop +' + lvl.pop))
+  if (lvl.pts)  card.appendChild(makeEl('div', 'tt-bld-card-stat', 'Rech. +' + lvl.pts + '/tick'))
+  if (lvl.food) card.appendChild(makeEl('div', 'tt-bld-card-stat', 'Nourrit ' + lvl.food))
+
+  if (lvl.fusionReq) {
+    card.appendChild(makeEl('div', 'tt-bld-card-fusion', lvl.fusionReq + 'x fusion'))
+  }
 
   return card
+}
+
+// ─── Utilitaire DOM ──────────────────────────────────────────────────────────
+
+function makeEl(tag, cls, text) {
+  const el = document.createElement(tag)
+  if (cls) el.className = cls
+  if (text != null) el.textContent = text
+  return el
 }
