@@ -338,8 +338,8 @@ function applyLight() {
   const presets = {
     day:    { sun: 0xfff5e0, sunI: 1.8, amb: 0xffffff, ambI: .6, sky: 0xcfe6f5, fill: 0xb0c8e8, fillG: 0x8a7060 },
     golden: { sun: 0xff9944, sunI: 2.2, amb: 0xffcc88, ambI: .5, sky: 0xf0a060, fill: 0xffb880, fillG: 0x604020 },
-    dusk:   { sun: 0xcc5533, sunI: 1.2, amb: 0x884422, ambI: .4, sky: 0x704060, fill: 0xaa7060, fillG: 0x302010 },
-    night:  { sun: 0x2244aa, sunI: .4,  amb: 0x112244, ambI: .2, sky: 0x0a1020, fill: 0x334466, fillG: 0x100818 },
+    dusk:   { sun: 0xdd6644, sunI: 1.4, amb: 0xaa6655, ambI: .8, sky: 0x5a3055, fill: 0xcc8870, fillG: 0x402010 },
+    night:  { sun: 0x4466cc, sunI: 1.0, amb: 0x3355aa, ambI: .7, sky: 0x0d1530, fill: 0x445588, fillG: 0x10183a },
   }
   const p = presets[state.light]
   sunLight.color.set(p.sun)
@@ -362,9 +362,17 @@ function applyFog() {
 }
 
 function applyOutline() {
-  const thickness = { none: 0, thin: 1.0, thick: 2.5 }
-  outlinePass.edgeStrength = state.outline === 'none' ? 0 : 3.0
-  outlinePass.edgeThickness = thickness[state.outline]
+  if (state.outline === 'none') {
+    outlinePass.enabled = false
+  } else if (state.outline === 'thin') {
+    outlinePass.enabled = true
+    outlinePass.edgeStrength = 2.5
+    outlinePass.edgeThickness = 1.0
+  } else {
+    outlinePass.enabled = true
+    outlinePass.edgeStrength = 6.0
+    outlinePass.edgeThickness = 4.0
+  }
 }
 
 function rebuildScene() {
