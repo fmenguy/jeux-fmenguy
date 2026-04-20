@@ -198,8 +198,10 @@ export const TECH_BUBBLE_COOLDOWN = 60
 // ============================================================================
 export const CAMERA_KEY_FORWARD = new Set(['z', 'Z', 'w', 'W'])
 export const CAMERA_KEY_BACKWARD = new Set(['s', 'S'])
-export const CAMERA_KEY_LEFT = new Set(['q', 'Q', 'a', 'A'])
+export const CAMERA_KEY_LEFT = new Set(['q', 'Q'])
 export const CAMERA_KEY_RIGHT = new Set(['d', 'D'])
+export const CAMERA_KEY_ROTATE_LEFT  = new Set(['a', 'A'])
+export const CAMERA_KEY_ROTATE_RIGHT = new Set(['e', 'E'])
 
 // ============================================================================
 // Quetes (definitions statiques, check() injecte par quests.js)
