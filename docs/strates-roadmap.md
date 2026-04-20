@@ -35,7 +35,8 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 
 - [x] **1.1 Modularisation ES6** (livré 2026-04-19 session 4)
 - [x] **1.2 Persistance localStorage** (livré 2026-04-19 session 4)
-- [ ] 1.3 Pathfinding en cache : corridor map, flood fill de régions, A\* restreint
+- [x] **1.5 Data-driven configs JSON** (livré 2026-04-20 session 9 : speech.json, colonists.json, quests.json, module gamedata.js)
+- [ ] 1.3 Pathfinding en cache (à faire quand la perf devient visible, ~150+ colons) : corridor map, flood fill de régions, A\* restreint
 - [ ] 1.4 Worker thread pour génération monde
 - [ ] 1.5 Data-driven configs (biomes, techs, quêtes, pools de phrases en JSON)
 - [ ] 1.6 Tests Vitest sur fonctions pures
