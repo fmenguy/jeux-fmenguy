@@ -1,10 +1,26 @@
-/* theme-refonte-v2.css — section Batiments uniquement (ressources deja gerees par theme-refonte.css) */
+/* theme-refonte-v2.css — Fabrication, Batiments, Main-d'oeuvre, Reliques */
+
+/* ---------- Palette ---------- */
+:root {
+  --v2-gold:         #c9a84c;
+  --v2-gold-bright:  #ffd986;
+  --v2-gold-deep:    #8a6018;
+  --v2-ember:        #ff7a3c;
+  --v2-parchment:    #f5e6c8;
+  --v2-parchment-dim:#c9b68a;
+  --v2-ink:          #140a02;
+  --v2-plaque-hi:    #3a2816;
+  --v2-plaque-mid:   #251810;
+  --v2-plaque-lo:    #180f07;
+}
 
 /* =====================================================================
-   BÂTIMENTS — carte système de slot
+   CADRE DE SECTION — Fabrication, Batiments, Main-d'oeuvre
    ===================================================================== */
-#buildingsSection {
-  max-width: 380px !important;
+#buildingsSection,
+#fabricationSection,
+#workerSection,
+#relicSection {
   padding: 20px !important;
   background: linear-gradient(180deg, rgba(42, 29, 16, 0.6), rgba(20, 13, 6, 0.85)) !important;
   border: 1px solid rgba(201, 168, 76, 0.38) !important;
@@ -17,8 +33,10 @@
     inset 0 0 60px rgba(0, 0, 0, 0.4) !important;
   position: relative;
 }
-#buildingsSection::before,
-#buildingsSection::after {
+#buildingsSection::before, #buildingsSection::after,
+#fabricationSection::before, #fabricationSection::after,
+#workerSection::before, #workerSection::after,
+#relicSection::before, #relicSection::after {
   content: "";
   position: absolute;
   width: 8px; height: 8px;
@@ -27,10 +45,15 @@
   box-shadow: 0 0 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(0,0,0,0.5);
   pointer-events: none;
 }
-#buildingsSection::before { top: 10px; left: 10px; }
-#buildingsSection::after  { bottom: 10px; right: 10px; }
+#buildingsSection::before, #fabricationSection::before,
+#workerSection::before,    #relicSection::before { top: 10px; left: 10px; }
+#buildingsSection::after,  #fabricationSection::after,
+#workerSection::after,     #relicSection::after  { bottom: 10px; right: 10px; }
 
-#buildingsSection h2 {
+#buildingsSection h2,
+#fabricationSection h2,
+#workerSection h2,
+#relicSection h2 {
   font-family: 'Cinzel', serif;
   font-size: 13px;
   font-weight: 700;
@@ -43,9 +66,13 @@
   text-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
 }
 
-/* Chaque bâtiment est un .craft dans buildingsSection :
-   on le transforme en "slot" horizontal : sceau + textes + bouton. */
-#buildingsSection .craft {
+/* =====================================================================
+   PLAQUES — .craft, .worker, .relic
+   ===================================================================== */
+#buildingsSection .craft,
+#fabricationSection .craft,
+#workerSection .worker,
+#relicSection .relic {
   position: relative;
   display: grid !important;
   grid-template-columns: 48px 1fr auto;
@@ -67,7 +94,10 @@
     0 4px 10px rgba(0, 0, 0, 0.45) !important;
   transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
-#buildingsSection .craft::before {
+#buildingsSection .craft::before,
+#fabricationSection .craft::before,
+#workerSection .worker::before,
+#relicSection .relic::before {
   content: "";
   position: absolute;
   top: 0; left: 10%; right: 10%;
@@ -75,7 +105,10 @@
   background: linear-gradient(90deg, transparent, rgba(255, 217, 134, 0.4), transparent);
   pointer-events: none;
 }
-#buildingsSection .craft:hover {
+#buildingsSection .craft:hover,
+#fabricationSection .craft:hover,
+#workerSection .worker:hover,
+#relicSection .relic:hover {
   transform: translateY(-2px);
   border-color: var(--v2-gold) !important;
   box-shadow:
@@ -85,21 +118,38 @@
     0 0 20px rgba(201, 168, 76, 0.2) !important;
 }
 
-/* Ligne 1 du <p> : icône + nom + compteur */
-#buildingsSection .craft p {
+/* <p> ligne 1 : icone + nom + compteur */
+#buildingsSection .craft p,
+#fabricationSection .craft p,
+#workerSection .worker p,
+#relicSection .relic p {
   grid-column: 1 / 3;
   grid-row: 1;
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 0 !important;
-  color: var(--v2-parchment);
-  font-size: 0 !important;
+  font-family: 'Cinzel', serif;
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--v2-parchment) !important;
 }
-#buildingsSection .craft p > * { font-size: initial; }
+#buildingsSection .craft p > *,
+#fabricationSection .craft p > *,
+#workerSection .worker p > *,
+#relicSection .relic p > * {
+  font-family: 'Cinzel', serif;
+  font-size: 12px !important;
+  letter-spacing: 0.18em;
+}
 
-/* Sceau de bâtiment */
-#buildingsSection .craft .icon {
+/* Sceau (icone) */
+#buildingsSection .craft .icon,
+#fabricationSection .craft .icon,
+#workerSection .worker .icon,
+#relicSection .relic .icon {
   width: 40px; height: 40px;
   flex: 0 0 40px;
   border-radius: 50%;
@@ -107,8 +157,7 @@
   align-items: center;
   justify-content: center;
   font-size: 20px !important;
-  background:
-    radial-gradient(circle at 30% 25%, #4a3320 0%, #1b1108 70%, #0d0805 100%);
+  background: radial-gradient(circle at 30% 25%, #4a3320 0%, #1b1108 70%, #0d0805 100%);
   border: 1px solid var(--v2-gold-deep);
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.6),
@@ -117,26 +166,11 @@
   filter: none !important;
 }
 
-/* Nom du bâtiment : le texte brut entre icon et span#xxx.
-   On le stylise via la règle p en flex, inline textNodes gardent leur apparence.
-   On typographie en injectant :: helpers. */
-#buildingsSection .craft p {
-  font-family: 'Cinzel', serif;
-  font-size: 12px !important;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--v2-parchment) !important;
-}
-#buildingsSection .craft p > * {
-  font-family: 'Cinzel', serif;
-  font-size: 12px !important;
-  letter-spacing: 0.18em;
-}
-#buildingsSection .craft p .icon { font-family: inherit; }
-
-/* Compteur du bâtiment : badge à droite */
-#buildingsSection .craft p > span[id] {
+/* Badge compteur */
+#buildingsSection .craft p > span[id],
+#fabricationSection .craft p > span[id],
+#workerSection .worker p > span[id],
+#relicSection .relic p > span[id] {
   margin-left: auto;
   font-family: 'Cinzel', serif !important;
   font-size: 13px !important;
@@ -152,8 +186,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Bouton Construire : ligne dédiée sous le <p> */
-#buildingsSection .craft button {
+/* Bouton pleine largeur */
+#buildingsSection .craft button,
+#fabricationSection .craft button,
+#workerSection .worker button,
+#relicSection .relic button {
   grid-column: 1 / 4;
   grid-row: 2;
   margin: 6px 0 0 !important;
@@ -176,7 +213,10 @@
   transition: all .18s ease;
   width: 100%;
 }
-#buildingsSection .craft button:hover:not(:disabled) {
+#buildingsSection .craft button:hover:not(:disabled),
+#fabricationSection .craft button:hover:not(:disabled),
+#workerSection .worker button:hover:not(:disabled),
+#relicSection .relic button:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
   box-shadow:
@@ -184,8 +224,15 @@
     0 0 18px rgba(201, 168, 76, 0.55),
     0 5px 10px rgba(0, 0, 0, 0.55) !important;
 }
-#buildingsSection .craft button:active:not(:disabled) { transform: translateY(0); filter: brightness(0.95); }
-#buildingsSection .craft button:disabled {
+#buildingsSection .craft button:active:not(:disabled),
+#fabricationSection .craft button:active:not(:disabled),
+#workerSection .worker button:active:not(:disabled),
+#relicSection .relic button:active:not(:disabled) { transform: translateY(0); filter: brightness(0.95); }
+
+#buildingsSection .craft button:disabled,
+#fabricationSection .craft button:disabled,
+#workerSection .worker button:disabled,
+#relicSection .relic button:disabled {
   background: linear-gradient(180deg, #4a3f2e, #2b2218) !important;
   color: rgba(245, 230, 200, 0.45) !important;
   border-color: rgba(201, 168, 76, 0.15) !important;
@@ -194,8 +241,11 @@
   cursor: not-allowed;
 }
 
-/* Tooltip bâtiment */
-#buildingsSection .craft .tooltip {
+/* Tooltip italique */
+#buildingsSection .craft .tooltip,
+#fabricationSection .craft .tooltip,
+#workerSection .worker .tooltip,
+#relicSection .relic .tooltip {
   grid-column: 1 / 4;
   grid-row: 3;
   margin: 4px 0 0 !important;
@@ -208,10 +258,12 @@
 }
 
 /* =====================================================================
-   État "prêt à construire" : bouton actif + bordure braise
-   (facultatif — à activer via JS si tu veux : craft.classList.add('ready'))
+   Etat "pret a construire/recruter"
    ===================================================================== */
-#buildingsSection .craft.ready {
+#buildingsSection .craft.ready,
+#fabricationSection .craft.ready,
+#workerSection .worker.ready,
+#relicSection .relic.ready {
   border-color: rgba(255, 122, 60, 0.7) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 217, 134, 0.2),
@@ -226,6 +278,26 @@
 }
 
 /* =====================================================================
+   Main-d'oeuvre : sceau ember pour differencier les humains
+   ===================================================================== */
+#workerSection .worker .icon {
+  border-color: rgba(255, 122, 60, 0.55);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 217, 134, 0.2),
+    inset 0 -5px 8px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(255, 122, 60, 0.22);
+}
+#workerSection .worker:hover .icon {
+  border-color: var(--v2-ember);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 217, 134, 0.25),
+    inset 0 -5px 8px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(255, 122, 60, 0.4);
+}
+
+/* =====================================================================
    Responsive
    ===================================================================== */
 @media (max-width: 900px) {
@@ -233,7 +305,5 @@
 }
 @media (max-width: 560px) {
   #resources { grid-template-columns: repeat(2, 1fr); padding: 16px 12px; }
-  .resource p > span[id] { font-size: 24px !important; }
-  .resource .icon { width: 48px; height: 48px; font-size: 22px !important; }
-  #buildingsSection { max-width: 100% !important; }
+  #buildingsSection, #fabricationSection, #workerSection, #relicSection { max-width: 100% !important; }
 }
