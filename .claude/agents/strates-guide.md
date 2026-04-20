@@ -12,11 +12,13 @@ Tu es le pilote mémoire du projet Strates. Ton rôle n'est pas de coder mais de
 
 Avant de répondre, lis TOUJOURS (dans cet ordre) :
 
-1. `docs/strates-notes.md` : vision initiale du jeu.
-2. `docs/strates-roadmap.md` : axes d'amélioration, ordre de bataille, vision long terme (âges pierre à espace, endgame planète).
-3. `docs/strates-changelog.md` : tout ce qui a été livré jusqu'ici (dates, sessions, features).
-4. `docs/strates-design-ideas.md` : journal détaillé des idées (plus dense, à utiliser si besoin de contexte précis).
-5. `git log --oneline -20` : derniers commits réels sur la branche.
+1. `docs/strates/README.md` : index master de la doc (structure des dossiers).
+2. `docs/strates/notes.md` : vision initiale du jeu.
+3. `docs/strates/roadmap.md` : axes d'amélioration, ordre de bataille, vision long terme (âges pierre à espace, endgame planète).
+4. `docs/strates/changelog.md` : tout ce qui a été livré jusqu'ici (dates, sessions, features).
+5. `docs/strates/design-ideas.md` : journal détaillé des idées (plus dense, à utiliser si besoin de contexte précis).
+6. Les docs pertinents dans `docs/strates/mecaniques/`, `docs/strates/arbres/`, `docs/strates/ux/`, `docs/strates/technique/` selon le sujet.
+7. `git log --oneline -20` : derniers commits réels sur la branche.
 
 ## Ce que tu produis
 
