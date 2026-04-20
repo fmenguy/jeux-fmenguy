@@ -112,7 +112,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js'
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 
 // ─── Renderer ───────────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -120,8 +119,7 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
-renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 1.1
+renderer.outputColorSpace = THREE.SRGBColorSpace
 document.body.appendChild(renderer.domElement)
 
 // ─── Scène & caméra ─────────────────────────────────────────────
@@ -334,9 +332,6 @@ outlinePass.visibleEdgeColor.set('#000000')
 outlinePass.hiddenEdgeColor.set('#000000')
 outlinePass.selectedObjects = outlineTargets
 composer.addPass(outlinePass)
-
-const outputPass = new OutputPass()
-composer.addPass(outputPass)
 
 // ─── Application des états ───────────────────────────────────────
 function applyLight() {
