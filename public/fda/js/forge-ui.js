@@ -161,22 +161,47 @@ export function updateDisplay() {
   }
 
   document.getElementById("mineSection").style.display = discoveredMetals ? "block" : "none";
-  document.getElementById("craftSawmillBtn").disabled = !(wood >= 30 && stone >= 15 && tinkers >= 1);
-  document.getElementById("craftStoneQuarryBtn").disabled = !(wood >= 30 && stone >= 15 && tinkers >= 1);
-  document.getElementById("craftWarehouseBtn").disabled = !(wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === "Âge de l’Agriculture"));
-  document.getElementById("craftAxeBtn").disabled = !(wood >= 5 && stone >= 2);
+  const _bReady = (sectionId, canAfford) => {
+    const el = document.getElementById(sectionId);
+    if (el) el.classList.toggle(‘ready’, canAfford);
+  };
+
+  const sawmillAfford = wood >= 30 && stone >= 15 && tinkers >= 1;
+  const quarryAfford  = wood >= 30 && stone >= 15 && tinkers >= 1;
+  const warehouseAfford = wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === "Âge de l’Agriculture");
+  const wellAfford    = wood >= 10 && stone >= 5;
+  const mineAfford    = wood >= 50 && stone >= 20 && tinkers >= 1 && miners >= (mines > 0 ? 25 : 0) && discoveredMetals;
+  const workshopAfford = wood >= 20 && stone >= 10 && fibers >= 5 && discoveredFibers;
+  const herbalistAfford = wood >= 15 && stone >= 5 && herbs >= 5 && discoveredHerbs;
+  const wheatAfford   = wood >= 20 && stone >= 10 && herbs >= 5 && discoveredHerbs;
+  const millAfford    = wood >= 50 && stone >= 20 && metals >= 5 && wheatFields > 0;
+
+  document.getElementById("craftSawmillBtn").disabled     = !sawmillAfford;
+  document.getElementById("craftStoneQuarryBtn").disabled = !quarryAfford;
+  document.getElementById("craftWarehouseBtn").disabled   = !warehouseAfford;
+  document.getElementById("craftAxeBtn").disabled  = !(wood >= 5 && stone >= 2);
   document.getElementById("craftBucketBtn").disabled = !(wood >= 5 && stone >= 2);
-  document.getElementById("craftWellBtn").disabled = !(wood >= 10 && stone >= 5);
+  document.getElementById("craftWellBtn").disabled  = !wellAfford;
   document.getElementById("craftPickaxeBtn").disabled = !(wood >= 10 && stone >= 5);
-  document.getElementById("craftBowBtn").disabled = !(wood >= 10 && stone >= 5);
-  document.getElementById("craftCoatBtn").disabled = !(fibers >= (workshops > 0 ? 8 : 10) && wood >= (workshops > 0 ? 4 : 5) && coats < villagers && discoveredFibers);
+  document.getElementById("craftBowBtn").disabled   = !(wood >= 10 && stone >= 5);
+  document.getElementById("craftCoatBtn").disabled  = !(fibers >= (workshops > 0 ? 8 : 10) && wood >= (workshops > 0 ? 4 : 5) && coats < villagers && discoveredFibers);
   document.getElementById("craftMetalAxeBtn").disabled = !(metals >= 5 && wood >= 5 && discoveredMetals);
-  document.getElementById("craftRemedyBtn").disabled = !(herbs >= (herbalists > 0 ? 4 : 5) && water >= (herbalists > 0 ? 4 : 5) && remedies < villagers && discoveredHerbs);
-  document.getElementById("craftMineBtn").disabled = !(wood >= 50 && stone >= 20 && tinkers >= 1 && miners >= (mines > 0 ? 25 : 0) && discoveredMetals);
-  document.getElementById("craftWorkshopBtn").disabled = !(wood >= 20 && stone >= 10 && fibers >= 5 && discoveredFibers);
-  document.getElementById("craftHerbalistBtn").disabled = !(wood >= 15 && stone >= 5 && herbs >= 5 && discoveredHerbs);
-  document.getElementById("craftWheatFieldBtn").disabled = !(wood >= 20 && stone >= 10 && herbs >= 5 && discoveredHerbs);
-  document.getElementById("craftMillBtn").disabled = !(wood >= 50 && stone >= 20 && metals >= 5 && wheatFields > 0);
+  document.getElementById("craftRemedyBtn").disabled   = !(herbs >= (herbalists > 0 ? 4 : 5) && water >= (herbalists > 0 ? 4 : 5) && remedies < villagers && discoveredHerbs);
+  document.getElementById("craftMineBtn").disabled     = !mineAfford;
+  document.getElementById("craftWorkshopBtn").disabled = !workshopAfford;
+  document.getElementById("craftHerbalistBtn").disabled = !herbalistAfford;
+  document.getElementById("craftWheatFieldBtn").disabled = !wheatAfford;
+  document.getElementById("craftMillBtn").disabled     = !millAfford;
+
+  _bReady(‘sawmillSection’,      sawmillAfford);
+  _bReady(‘stoneQuarrySection’,  quarryAfford);
+  _bReady(‘warehouseSection’,    warehouseAfford);
+  _bReady(‘wellSection’,         wellAfford);
+  _bReady(‘mineSection’,         mineAfford);
+  _bReady(‘workshopSection’,     workshopAfford);
+  _bReady(‘herbalistSection’,    herbalistAfford);
+  _bReady(‘wheatFieldSection’,   wheatAfford);
+  _bReady(‘millSection’,         millAfford);
 
   document.getElementById("recruitVillagerBtn").disabled = berries < 5;
   const maxChiefs = Math.floor(villagers / 25);
