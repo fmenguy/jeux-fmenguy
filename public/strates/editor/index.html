@@ -545,7 +545,10 @@
   </div>
 
   <div id="techs" style="position: fixed; right: 16px; top: 320px; width: 280px; background: rgba(15,18,24,0.82); border: 1px solid rgba(120,180,255,0.4); border-radius: 12px; padding: 12px 14px; backdrop-filter: blur(8px); color: #f3ecdd; font-size: 12px; line-height: 1.4; box-shadow: 0 6px 22px rgba(0,0,0,0.4); z-index: 11;">
-    <h3 style="margin: 0 0 8px 0; font-size: 11px; color: #8ac4ff; letter-spacing: 0.14em; font-weight: 700; text-transform: uppercase;">Tech</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <h3 style="margin:0;font-size:11px;color:#8ac4ff;letter-spacing:.14em;font-weight:700;text-transform:uppercase;">Tech</h3>
+      <button id="btn-techtree" title="Arbre des technologies (T)" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(138,196,255,0.4);background:rgba(138,196,255,0.12);color:#8ac4ff;cursor:pointer;">Arbre T</button>
+    </div>
     <div id="techs-body"></div>
   </div>
   <style>
@@ -767,6 +770,144 @@
       <button class="btn-ctrl" id="btn-save" title="Sauvegarder la partie">Sauver</button>
       <button class="btn-ctrl" id="btn-load" title="Charger la derniere sauvegarde">Charger</button>
       <button class="btn-ctrl" id="btn-reset" title="Nouvelle partie (R)">Nouvelle</button>
+    </div>
+  </div>
+
+  <!-- Arbre des technologies -->
+  <style>
+    #tt-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72); z-index: 80;
+    }
+    #tt-panel {
+      display: none; position: fixed; inset: 0;
+      z-index: 81; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    #tt-panel.open, #tt-backdrop.open { display: flex; }
+    #tt-panel.open { pointer-events: auto; }
+    #tt-inner {
+      width: 94vw; max-width: 1300px;
+      height: 88vh;
+      background: linear-gradient(180deg, rgba(12,16,22,0.98), rgba(8,12,18,0.99));
+      border: 1px solid rgba(138,196,255,0.3);
+      border-radius: 14px;
+      display: flex; flex-direction: column;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+      overflow: hidden;
+    }
+    #tt-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px 10px;
+      border-bottom: 1px solid rgba(138,196,255,0.15);
+      flex-shrink: 0;
+    }
+    #tt-topbar h2 {
+      font-size: 13px; font-weight: 700; letter-spacing: .18em;
+      text-transform: uppercase; color: #8ac4ff; margin: 0;
+    }
+    #tt-pts { font-size: 11px; color: #ffd98a; }
+    #tt-close-btn {
+      font-size: 12px; padding: 4px 12px; border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6);
+      cursor: pointer;
+    }
+    #tt-close-btn:hover { color: #fff; background: rgba(255,255,255,0.12); }
+    #tt-scroll {
+      flex: 1; overflow: auto;
+      padding: 16px 20px;
+    }
+    .tt-header-row, .tt-branch-row {
+      display: grid;
+      grid-template-columns: 110px repeat(7, minmax(160px, 1fr));
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .tt-corner {
+      font-size: 9px; color: rgba(255,255,255,0.25);
+      letter-spacing: .1em; text-transform: uppercase;
+      display: flex; align-items: flex-end; padding-bottom: 4px;
+    }
+    .tt-age-head {
+      text-align: center; padding: 6px 4px;
+      border-bottom: 2px solid #8ac4ff;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .tt-age-num { font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: .1em; }
+    .tt-age-name { font-size: 12px; font-weight: 700; color: #e0d8c8; letter-spacing: .08em; }
+    .tt-branch-row {
+      margin-bottom: 8px;
+    }
+    .tt-branch-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.5);
+      border-left: 3px solid rgba(138,196,255,0.4);
+      padding-left: 8px;
+      display: flex; align-items: flex-start; padding-top: 6px;
+    }
+    .tt-cell {
+      display: flex; flex-direction: column; gap: 4px;
+      min-height: 72px;
+    }
+    .tt-card {
+      display: flex; gap: 7px; align-items: flex-start;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 7px; padding: 6px 8px;
+      transition: border-color .15s, background .15s;
+    }
+    .tt-card--locked { opacity: 0.45; }
+    .tt-card--available { opacity: 0.75; }
+    .tt-card--ready {
+      border-color: rgba(255,217,138,0.5);
+      background: rgba(255,217,138,0.06);
+    }
+    .tt-card--ready:hover { background: rgba(255,217,138,0.12); cursor: default; }
+    .tt-card--done {
+      border-color: rgba(100,220,100,0.4);
+      background: rgba(100,220,100,0.05);
+    }
+    .tt-card--future { opacity: 0.25; }
+    .tt-card-icon {
+      width: 24px; height: 24px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .tt-card-body { flex: 1; min-width: 0; }
+    .tt-card-name { font-size: 11px; font-weight: 600; color: #e8e0d0; line-height: 1.3; }
+    .tt-card-req { font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 2px; line-height: 1.3; }
+    .tt-card-footer { margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+    .tt-card-cost { font-size: 10px; color: #c7b98c; }
+    .tt-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 700; letter-spacing: .05em; }
+    .tt-badge--done { background: rgba(100,220,100,0.2); color: #64dc64; }
+    .tt-badge--future { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); }
+    .tt-unlock-btn {
+      font-size: 10px; padding: 3px 8px; border-radius: 4px;
+      border: 1px solid rgba(255,217,138,0.5);
+      background: rgba(255,217,138,0.14); color: #ffd98a;
+      cursor: pointer; font-family: monospace;
+    }
+    .tt-unlock-btn:hover { background: rgba(255,217,138,0.25); }
+    .tt-age-divider {
+      grid-column: 1 / -1;
+      height: 1px; background: rgba(255,255,255,0.06);
+      margin: 4px 0;
+    }
+  </style>
+
+  <div id="tt-backdrop"></div>
+  <div id="tt-panel">
+    <div id="tt-inner">
+      <div id="tt-topbar">
+        <h2>Arbre des technologies</h2>
+        <span id="tt-pts">0 pts de recherche</span>
+        <button id="tt-close-btn">Fermer (Esc)</button>
+      </div>
+      <div id="tt-scroll">
+        <div id="tt-grid"></div>
+      </div>
     </div>
   </div>
 

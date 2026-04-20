@@ -21,6 +21,8 @@ import { tickSeasons, currentSeason, forceSeasonRepaint } from './modules/season
 import { buildVegetation, tickVegetationSeasons } from './modules/vegetation.js'
 import { initAudio, tickAudio } from './modules/audio.js'
 import { tickWeather } from './modules/weather.js'
+import { initTechTreeUI, toggleTechTree, closeTechTree } from './modules/techtree-ui.js'
+import { TECH_TREE_DATA } from './modules/gamedata.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -30,6 +32,15 @@ import './modules/stocks.js'
 
 await loadGameData()
 initQuestDefs()
+
+// Injecter les techs du JSON dans state.techs (sans ecraser les existantes)
+if (TECH_TREE_DATA && TECH_TREE_DATA.techs) {
+  for (const t of TECH_TREE_DATA.techs) {
+    if (!state.techs[t.id]) {
+      state.techs[t.id] = { name: t.name, cost: t.cost, req: t.requires[0] || null, age: t.age, icon: t.icon, tint: t.color, unlocked: false }
+    }
+  }
+}
 
 buildTerrain()
 const isNewGame = (() => { try { const v = localStorage.getItem('strates-new-game'); localStorage.removeItem('strates-new-game'); return !!v } catch(e) { return false } })()
@@ -48,6 +59,17 @@ refreshHUD()
 startNextQuest()
 startAutoSave(30)
 initAudio()
+initTechTreeUI()
+
+// Bouton "Arbre T" dans le mini-panel tech
+const btnTT = document.getElementById('btn-techtree')
+if (btnTT) btnTT.addEventListener('click', toggleTechTree)
+
+// Touche T
+window.addEventListener('keydown', function(e) {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return
+  if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggleTechTree() }
+})
 
 state.lastJobTime = performance.now() / 1000
 

@@ -1,0 +1,187 @@
+{
+  "ages": [
+    { "id": "pierre",     "num": 1, "label": "Pierre",     "color": "#8a7060" },
+    { "id": "bronze",     "num": 2, "label": "Bronze",     "color": "#b87333" },
+    { "id": "fer",        "num": 3, "label": "Fer",         "color": "#8090a0" },
+    { "id": "industriel", "num": 4, "label": "Industriel", "color": "#607080" },
+    { "id": "moderne",    "num": 5, "label": "Moderne",    "color": "#5080a0" },
+    { "id": "atomique",   "num": 6, "label": "Atomique",   "color": "#608060" },
+    { "id": "espace",     "num": 7, "label": "Espace",     "color": "#304060" }
+  ],
+  "branches": [
+    { "id": "outils",        "label": "Outils",        "color": "#8a6a4a" },
+    { "id": "agriculture",   "label": "Agriculture",   "color": "#4a8a3a" },
+    { "id": "construction",  "label": "Construction",  "color": "#6a6a9a" },
+    { "id": "militaire",     "label": "Militaire",     "color": "#8a3a3a" },
+    { "id": "savoir",        "label": "Savoir",        "color": "#4a6a8a" },
+    { "id": "age",           "label": "Passage d'age", "color": "#9a7a3a" }
+  ],
+  "techs": [
+    {
+      "id": "axe-stone", "name": "Hache en pierre", "desc": "Permet l'abattage d'arbres",
+      "age": 1, "branch": "outils", "icon": "H", "color": "#8a6a4a",
+      "cost": 4, "requires": []
+    },
+    {
+      "id": "pick-stone", "name": "Pioche en pierre", "desc": "Permet le minage de roche et de neige",
+      "age": 1, "branch": "outils", "icon": "P", "color": "#9ca3af",
+      "cost": 5, "requires": []
+    },
+    {
+      "id": "field-basic", "name": "Premier champ", "desc": "Culture de baies et racines comestibles",
+      "age": 1, "branch": "agriculture", "icon": "C", "color": "#4a8a3a",
+      "cost": 3, "requires": []
+    },
+    {
+      "id": "campfire", "name": "Foyer", "desc": "Point de rassemblement, chaleur et cuisson basique",
+      "age": 1, "branch": "construction", "icon": "F", "color": "#c06020",
+      "cost": 2, "requires": []
+    },
+    {
+      "id": "shelter", "name": "Abri de fortune", "desc": "Premier abri contre les intemperies",
+      "age": 1, "branch": "construction", "icon": "A", "color": "#8a7060",
+      "cost": 4, "requires": ["campfire"]
+    },
+    {
+      "id": "club", "name": "Massue", "desc": "Arme primitive, dissuasion basique",
+      "age": 1, "branch": "militaire", "icon": "M", "color": "#8a5040",
+      "cost": 4, "requires": []
+    },
+    {
+      "id": "fire-mastery", "name": "Maitrise du feu", "desc": "Ceramique, forge primitive, signaux",
+      "age": 1, "branch": "savoir", "icon": "S", "color": "#e06030",
+      "cost": 2, "requires": []
+    },
+    {
+      "id": "oral-tradition", "name": "Tradition orale", "desc": "Transmission du savoir entre generations",
+      "age": 1, "branch": "savoir", "icon": "T", "color": "#4a6a8a",
+      "cost": 4, "requires": ["fire-mastery"]
+    },
+    {
+      "id": "pick-bronze", "name": "Pioche en bronze", "desc": "Permet le minage de cuivre et charbon",
+      "age": 2, "branch": "outils", "icon": "B", "color": "#b87333",
+      "cost": 15, "requires": ["pick-stone"]
+    },
+    {
+      "id": "shovel-bronze", "name": "Pelle en bronze", "desc": "Terrassement et drainage efficaces",
+      "age": 2, "branch": "outils", "icon": "E", "color": "#c08040",
+      "cost": 10, "requires": ["pick-stone"]
+    },
+    {
+      "id": "field-wheat", "name": "Champ de ble", "desc": "Culture cereale, base de l'alimentation stable",
+      "age": 2, "branch": "agriculture", "icon": "B", "color": "#c0a030",
+      "cost": 12, "requires": ["field-basic"]
+    },
+    {
+      "id": "granary", "name": "Grenier", "desc": "Stockage des recoltes, survie des periodes creuses",
+      "age": 2, "branch": "agriculture", "icon": "G", "color": "#8a6020",
+      "cost": 14, "requires": ["field-wheat"]
+    },
+    {
+      "id": "forge", "name": "Forge", "desc": "Travail du metal, base de tous les outils en bronze",
+      "age": 2, "branch": "construction", "icon": "F", "color": "#804030",
+      "cost": 14, "requires": ["shelter"]
+    },
+    {
+      "id": "road-stone", "name": "Route pavee", "desc": "Deplacements plus rapides, commerce facilite",
+      "age": 2, "branch": "construction", "icon": "R", "color": "#707880",
+      "cost": 10, "requires": ["shelter"]
+    },
+    {
+      "id": "sword-bronze", "name": "Epee en bronze", "desc": "Armement defensif et offensif",
+      "age": 2, "branch": "militaire", "icon": "E", "color": "#b08030",
+      "cost": 16, "requires": ["forge", "club"]
+    },
+    {
+      "id": "palisade", "name": "Palissade", "desc": "Premiere fortification en bois",
+      "age": 2, "branch": "militaire", "icon": "P", "color": "#6a5030",
+      "cost": 11, "requires": ["club"]
+    },
+    {
+      "id": "writing", "name": "Ecriture", "desc": "Consignation des connaissances, lois et contrats",
+      "age": 2, "branch": "savoir", "icon": "E", "color": "#5080b0",
+      "cost": 10, "requires": ["oral-tradition"]
+    },
+    {
+      "id": "age-bronze", "name": "Maitrise du bronze", "desc": "Passage a l'age du bronze - debloquer forge, ecriture et pioche de bronze",
+      "age": 2, "branch": "age", "icon": "B", "color": "#b87333",
+      "cost": 20, "requires": ["forge", "writing", "pick-bronze"],
+      "isAgePassage": true
+    },
+    {
+      "id": "pick-iron", "name": "Pioche en fer", "desc": "Permet le minage de fer et d'argent",
+      "age": 3, "branch": "outils", "icon": "F", "color": "#c0c5cc",
+      "cost": 30, "requires": ["pick-bronze"]
+    },
+    {
+      "id": "pick-gold", "name": "Pioche en or", "desc": "Permet le minage d'or et d'amethyste",
+      "age": 3, "branch": "outils", "icon": "O", "color": "#f2c94c",
+      "cost": 60, "requires": ["pick-iron"]
+    },
+    {
+      "id": "hoe-iron", "name": "Houe en fer", "desc": "Travail de la terre profond, meilleurs rendements",
+      "age": 3, "branch": "outils", "icon": "H", "color": "#909898",
+      "cost": 18, "requires": ["shovel-bronze"]
+    },
+    {
+      "id": "irrigation", "name": "Irrigation", "desc": "Canaux d'eau, rendements doublés en eté",
+      "age": 3, "branch": "agriculture", "icon": "I", "color": "#3090b0",
+      "cost": 22, "requires": ["granary", "hoe-iron"]
+    },
+    {
+      "id": "mill", "name": "Moulin", "desc": "Farine, pain, base d'une colonie prospere",
+      "age": 3, "branch": "agriculture", "icon": "M", "color": "#c8a040",
+      "cost": 28, "requires": ["field-wheat"]
+    },
+    {
+      "id": "castle", "name": "Chateau fort", "desc": "Protection maximale, siege du pouvoir",
+      "age": 3, "branch": "construction", "icon": "C", "color": "#a09080",
+      "cost": 40, "requires": ["forge"]
+    },
+    {
+      "id": "crossbow", "name": "Arbalete", "desc": "Armement a distance, avantage tactique majeur",
+      "age": 3, "branch": "militaire", "icon": "A", "color": "#906050",
+      "cost": 30, "requires": ["sword-bronze"]
+    },
+    {
+      "id": "watchtower", "name": "Tour de guet", "desc": "Vision etendue, detectiond'attaques a distance",
+      "age": 3, "branch": "militaire", "icon": "T", "color": "#807060",
+      "cost": 25, "requires": ["palisade"]
+    },
+    {
+      "id": "library", "name": "Bibliotheque", "desc": "Accumulation du savoir, acceleration de la recherche",
+      "age": 3, "branch": "savoir", "icon": "B", "color": "#4060a0",
+      "cost": 28, "requires": ["writing"]
+    },
+    {
+      "id": "age-iron", "name": "Maitrise du fer", "desc": "Passage a l'age du fer - debloquer chateau, bibliotheque et pioche de fer",
+      "age": 3, "branch": "age", "icon": "F", "color": "#8090a0",
+      "cost": 50, "requires": ["castle", "library", "pick-iron"],
+      "isAgePassage": true
+    },
+    {
+      "id": "steam-engine", "name": "Machine a vapeur", "desc": "Revolution industrielle en cours...",
+      "age": 4, "branch": "outils", "icon": "V", "color": "#506070",
+      "cost": 80, "requires": ["age-iron"],
+      "future": true
+    },
+    {
+      "id": "electricity", "name": "Electricite", "desc": "L'ere moderne approche...",
+      "age": 5, "branch": "savoir", "icon": "E", "color": "#4070a0",
+      "cost": 120, "requires": ["steam-engine"],
+      "future": true
+    },
+    {
+      "id": "nuclear", "name": "Energie nucleaire", "desc": "Le pouvoir de l'atome...",
+      "age": 6, "branch": "savoir", "icon": "N", "color": "#406040",
+      "cost": 200, "requires": ["electricity"],
+      "future": true
+    },
+    {
+      "id": "rocket", "name": "Fusee orbitale", "desc": "Les etoiles nous attendent...",
+      "age": 7, "branch": "construction", "icon": "R", "color": "#203050",
+      "cost": 300, "requires": ["nuclear"],
+      "future": true
+    }
+  ]
+}
