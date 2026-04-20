@@ -171,6 +171,15 @@ Panneau #quests (haut droite, bordure dorée). 3 quêtes initiales actives au d�
 
 ## Tech tree XXL et passage d'âges
 
+### Distinction avec la fusion de bâtiments
+
+Ces deux systèmes sont **indépendants et complémentaires** :
+
+- **Fusion de bâtiments** : mécanique visuelle et logistique. 4 huttes → 1 longhouse. Le joueur voit sa colonie grandir physiquement. Pas de points de recherche, pas de choix stratégique, juste de la planification urbaine.
+- **Tech tree** : mécanique de progression et de déblocage. Le joueur dépense des points de recherche pour ouvrir des capacités nouvelles (outils, recettes, bâtiments disponibles, compétences colons). C'est le **cœur du jeu** : sans débloquer de tech, la colonie stagne. Sans faire progresser la tech tree, on ne change pas d'âge.
+
+La tech tree commande ce qui est possible. La fusion de bâtiments exploite ce qui est possible pour le matérialiser dans la carte.
+
 ### Ambition
 
 Arbre de recherche gigantesque, inspiré **Total War Warhammer** (High Elves: une grille 8 colonnes × 6 rangs) et **Craft the World** (arbre qui part dans toutes les directions, lié à l'époque). Pas 4 techs linéaires comme actuellement, plutôt **60 à 90 techs** réparties sur 7 âges et 6 branches thématiques, avec prérequis croisés qui obligent à faire des choix.
