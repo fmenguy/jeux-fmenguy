@@ -17,13 +17,16 @@ export let FEMALE_NAMES = []
 
 export let QUEST_DEFS_BASE = []
 
+export let TECH_TREE_DATA = null
+
 export async function loadGameData() {
   const base = new URL('./../data/', import.meta.url).href
 
-  const [speech, colonists, quests] = await Promise.all([
+  const [speech, colonists, quests, techtree] = await Promise.all([
     fetch(base + 'speech.json').then(r => r.json()),
     fetch(base + 'colonists.json').then(r => r.json()),
     fetch(base + 'quests.json').then(r => r.json()),
+    fetch(base + 'techtree.json').then(r => r.json()),
   ])
 
   SPEECH_LINES              = speech.lines
@@ -38,4 +41,5 @@ export async function loadGameData() {
   FEMALE_NAMES = colonists.femaleNames
 
   QUEST_DEFS_BASE = quests.quests
+  TECH_TREE_DATA  = techtree
 }
