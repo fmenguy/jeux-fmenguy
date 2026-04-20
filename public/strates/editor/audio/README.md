@@ -29,4 +29,4 @@ Les saisons changent toutes les 2 minutes (8 min par cycle complet). Le lecteur 
 
 ## Attribution
 
-Si la licence l'exige, créditer les auteurs dans `docs/strates-credits.md` (à créer).
+Si la licence l'exige, créditer les auteurs dans `docs/strates/credits.md` (à créer).
