@@ -404,6 +404,108 @@ Ordre de résolution pour trouver la réplique à afficher :
 - Axe 3.2 (métiers) : les répliques de métier arrivent naturellement avec l'attribution des rôles.
 - Axe 3.4 (besoins vitaux) : la faim, la fatigue et la soif sont des déclencheurs prioritaires, les répliques renforcent l'urgence sans tooltip.
 
+## Fusion de bâtiments
+
+### Principe (validé proto, commit `8ac021c`)
+
+Quatre bâtiments identiques adjacents en carré 2x2 fusionnent automatiquement en un bâtiment de niveau supérieur. Le bâtiment résultant est plus grand visuellement, débloque plus de colons et de fonctions. La mécanique s'applique à terme à toutes les catégories de bâtiments.
+
+- **Déclencheur** : détection automatique à la pose d'un nouveau bâtiment (scan des 4 voisins immédiats pour trouver un carré 2x2 complet de même type).
+- **Résultat** : les 4 tuiles sont libérées, un bâtiment fusionné 2x2 prend leur place.
+- **Récursif** : 4 manoirs adjacents fusionnent en un château, etc.
+- **Colons** : lors d'une fusion, les colons précédemment liés au bâtiment restent et rejoignent le nouveau. Le nouveau bâtiment logera plus de monde.
+- **Page de progression** : une interface dédiée (à concevoir) affiche les chaînes de fusion possibles par type, les bâtiments débloqués et ceux à venir. Style livre ou codex, accessible depuis le menu principal.
+
+### Chaînes de fusion par type
+
+#### Habitation (spawn et logement)
+| Niveau | Nom | Taille | Colons max | Âge requis |
+|---|---|---|---|---|
+| 1 | Hutte | 1x1 | 1 | Pierre |
+| 2 | Longhouse | 2x2 | 4 | Pierre (4 huttes) |
+| 3 | Maison | 2x2 | 6 | Bronze (4 longhouses) |
+| 4 | Manoir | 2x2 | 12 | Fer (4 maisons) |
+| 5 | Château | 2x2 | 30 | Industriel (4 manoirs) |
+| 6 | Palais | 2x2 | 80 | Atomique (4 châteaux) |
+
+#### Recherche (production de points)
+| Niveau | Nom | Taille | Pts/s | Âge requis |
+|---|---|---|---|---|
+| 1 | Hutte du sage | 1x1 | 0.33 | Pierre |
+| 2 | Scriptorium | 2x2 | 1.5 | Bronze (4 huttes) |
+| 3 | Bibliothèque | 2x2 | 4 | Fer (4 scriptoriums) |
+| 4 | Université | 2x2 | 12 | Industriel (4 bibliothèques) |
+| 5 | Institut | 2x2 | 40 | Atomique (4 universités) |
+
+#### Production alimentaire
+| Niveau | Nom | Taille | Âge requis |
+|---|---|---|---|
+| 1 | Buisson cultivé | 1x1 | Pierre |
+| 2 | Potager | 2x2 | Pierre (4 buissons) |
+| 3 | Champ de blé | 2x2 | Bronze (4 potagers) |
+| 4 | Ferme | 2x2 | Fer (4 champs + moulin) |
+| 5 | Exploitation agricole | 2x2 | Industriel (4 fermes) |
+
+#### Transformation / industrie (bâtiments uniques, pas de fusion)
+| Nom | Âge | Rôle |
+|---|---|---|
+| Forge | Bronze | Raffinage cuivre, bronze, alliages |
+| Scierie | Bronze | Transformation bois en planches |
+| Moulin | Fer | Transformation blé en farine |
+| Four à pain | Fer | Transformation farine en pain |
+| Fonderie | Industriel | Fonte fer, acier |
+| Usine | Industriel | Production de masse |
+| Réacteur | Atomique | Énergie, débloque automatismes |
+| Silo | tout âge | Stockage ressources (quantité x4) |
+
+#### Bâtiments spéciaux (monument d'âge, unique par partie)
+| Nom | Âge | Rôle |
+|---|---|---|
+| Cairn de pierre | Pierre | Monument, débloque passage âge du bronze |
+| Marché | Bronze | Commerce, spawn marchands ambulants |
+| Cathédrale | Fer | Moral colons +20%, passage âge industriel |
+| Gare | Industriel | Transport rapide colons entre zones |
+| Tour de contrôle | Espace | Passage endgame, lancement fusée |
+
+---
+
+## Catalogue des métiers
+
+Un colon peut exercer plusieurs métiers (RimWorld style), priorisés dans un panneau de gestion. Les métiers se débloquent via la tech tree ou sont disponibles dès le départ.
+
+### Métiers disponibles dès l'âge de pierre
+| Métier | Outil requis | Tâches |
+|---|---|---|
+| Cueilleur | Aucun | Récolte baies, plantes, fibres |
+| Maçon | Aucun | Construction et déconstruction de bâtiments |
+| Chercheur | Aucun | Assigné à une hutte du sage, génère des points |
+
+### Débloqués par tech
+
+| Métier | Tech requise | Tâches |
+|---|---|---|
+| Mineur | Pioche en pierre | Minage rocher, extraction filons |
+| Bûcheron | Hache en pierre | Abattage arbres, collecte bois |
+| Terrassier | Pelle (à venir) | Sculpt terrain, nivellement |
+| Agriculteur | Houe (à venir) | Cultive champs, récolte blé |
+| Forgeron | Forge (bronze) | Raffinage minerais, fabrication outils |
+| Médecin | Herboristerie (bronze) | Soigne blessures, ralentit maladie |
+| Chasseur | Arc en bois (fer) | Chasse cerfs, sangliers |
+| Pêcheur | Canne (bronze) | Pêche poisson en bord d'eau |
+| Marchand | Marché (bronze) | Gère les échanges avec marchands ambulants |
+| Bricoleur | Tech bricolage (fer) | Construit escaliers voxel, accès verticalité |
+| Garde | Palissade (fer) | Protège colonie contre animaux/événements |
+| Ingénieur | Université (industriel) | Construit machines, automatismes |
+| Pilote | Tour de contrôle (espace) | Pilote fusée, exploration orbitale |
+
+### Règles de priorité
+- Un colon exerce ses métiers dans l'ordre de priorité défini par le joueur (liste drag and drop).
+- Si aucun job de son métier n'est disponible, il erre (IDLE) ou aide un autre colon.
+- Un colon peut être assigné à un bâtiment fixe (chercheur, forgeron), auquel cas il ne part plus en tâche nomade sauf en mode "urgence".
+- La compétence s'améliore avec l'expérience : un mineur chevronné (100 blocs minés) est 20% plus rapide.
+
+---
+
 ## Statut
 
 Phase : éditeur consolidé (voir [strates-changelog.md](strates-changelog.md) pour l'historique détaillé).
