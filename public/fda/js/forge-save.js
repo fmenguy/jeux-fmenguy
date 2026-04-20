@@ -1,8 +1,8 @@
 import { fabricationOrder, buildingsOrder, updateSeasonDisplay, updateExplorationDisplay, enhancedUpdateDisplay } from './forge-ui.js';
 
 import {
-  berries, wood, stone, water, maxWater, meat, fibers, metals, herbs, wheat, flour, bread, maxFibers, maxMetals, maxHerbs, maxWheat, maxFlour, maxBread, axes, buckets, wells, pickaxes, bows, coats, metalAxes, remedies, mines, workshops, herbalists, wheatFields, mills, sawmills, stoneQuarries, villagers, chief, tinkers, researchers, pickers, hunters, explorers, miners, farmers, villageFounded, techUnlocked, eternityShards, currentSeason, seasonTimer, deathTimer, explorationTimer, explorationActive, discoveredFibers, discoveredMetals, discoveredHerbs, currentAge, purchasedHints, warehouses, maxWoodStorage, maxStoneStorage, maxWaterStorage, maxMetalsStorage, maxHerbsStorage, maxWheatStorage, maxFlourStorage, bakeries, unlockedAges, dynamicHints, villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, isMusicPlaying,
-  setBerries, setWood, setStone, setWater, setMaxWater, setMeat, setFibers, setMetals, setHerbs, setWheat, setFlour, setBread, setMaxFibers, setMaxMetals, setMaxHerbs, setMaxWheat, setMaxFlour, setMaxBread, setAxes, setBuckets, setWells, setPickaxes, setBows, setCoats, setMetalAxes, setRemedies, setMines, setWorkshops, setSawmills, setStoneQuarries, setHerbalists, setWheatFields, setMills, setVillagers, setChief, setTinkers, setResearchers, setPickers, setHunters, setExplorers, setMiners, setFarmers, setVillages, setVillageFounded, setTechUnlocked, setEternityShards, setCurrentSeason, setSeasonTimer, setDeathTimer, setExplorationTimer, setExplorationActive, setDiscoveredFibers, setDiscoveredMetals, setDiscoveredHerbs, setCurrentAge, setPurchasedHints, setWarehouses, setMaxWoodStorage, setMaxStoneStorage, setMaxWaterStorage, setMaxMetalsStorage, setMaxHerbsStorage, setMaxWheatStorage, setMaxFlourStorage, setBakeries, setUnlockedAges, setCurrentHint, setVillagesData, setMaxPopulationPerVillage, setMaxBuildingsPerVillage, setIsMusicPlaying
+  berries, wood, stone, water, maxWater, meat, fibers, metals, herbs, wheat, flour, bread, maxFibers, maxMetals, maxHerbs, maxWheat, maxFlour, maxBread, axes, buckets, wells, pickaxes, bows, coats, metalAxes, remedies, mines, workshops, herbalists, wheatFields, mills, sawmills, stoneQuarries, villagers, chief, tinkers, researchers, pickers, hunters, explorers, miners, farmers, villageFounded, techUnlocked, eternityShards, currentSeason, seasonTimer, deathTimer, explorationTimer, explorationActive, discoveredFibers, discoveredMetals, discoveredHerbs, currentAge, purchasedHints, warehouses, maxWoodStorage, maxStoneStorage, maxWaterStorage, maxMetalsStorage, maxHerbsStorage, maxWheatStorage, maxFlourStorage, bakeries, unlockedAges, dynamicHints, villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, isMusicPlaying, winterCount,
+  setBerries, setWood, setStone, setWater, setMaxWater, setMeat, setFibers, setMetals, setHerbs, setWheat, setFlour, setBread, setMaxFibers, setMaxMetals, setMaxHerbs, setMaxWheat, setMaxFlour, setMaxBread, setAxes, setBuckets, setWells, setPickaxes, setBows, setCoats, setMetalAxes, setRemedies, setMines, setWorkshops, setSawmills, setStoneQuarries, setHerbalists, setWheatFields, setMills, setVillagers, setChief, setTinkers, setResearchers, setPickers, setHunters, setExplorers, setMiners, setFarmers, setVillages, setVillageFounded, setTechUnlocked, setEternityShards, setCurrentSeason, setSeasonTimer, setDeathTimer, setExplorationTimer, setExplorationActive, setDiscoveredFibers, setDiscoveredMetals, setDiscoveredHerbs, setCurrentAge, setPurchasedHints, setWarehouses, setMaxWoodStorage, setMaxStoneStorage, setMaxWaterStorage, setMaxMetalsStorage, setMaxHerbsStorage, setMaxWheatStorage, setMaxFlourStorage, setBakeries, setUnlockedAges, setCurrentHint, setVillagesData, setMaxPopulationPerVillage, setMaxBuildingsPerVillage, setIsMusicPlaying, setWinterCount
 } from './forge-game.js';
 
 export function saveGame(slot) {
@@ -62,6 +62,7 @@ export function saveGame(slot) {
     discoveredFibers,
     discoveredMetals,
     discoveredHerbs,
+    winterCount,
     currentAge,
     purchasedHints,
     warehouses,
@@ -144,6 +145,7 @@ export function loadGame(slot) {
     setDiscoveredFibers(saveData.discoveredFibers || false);
     setDiscoveredMetals(saveData.discoveredMetals || false);
     setDiscoveredHerbs(saveData.discoveredHerbs || false);
+    setWinterCount(saveData.winterCount || 0);
     setCurrentAge(saveData.currentAge || "Âge de Pierre");
     setPurchasedHints(saveData.purchasedHints || []);
     setWarehouses(saveData.warehouses || 0);
@@ -232,29 +234,6 @@ export function loadGame(slot) {
       if (hint) purchasedHintsList.innerHTML += `<li>${hint.message}</li>`;
     });
 
-    document.getElementById("chiefSection").style.display = axes >= 25 && villagers >= 25 ? "block" : "none";
-    document.getElementById("tinkerSection").style.display = villageFounded ? "block" : "none";
-    document.getElementById("pickerSection").style.display = villagers >= 10 ? "block" : "none";
-    document.getElementById("hunterSection").style.display = villagers >= 20 ? "block" : "none";
-    document.getElementById("researcherSection").style.display = researchers > 0 ? "block" : "none";
-    document.getElementById("explorerSection").style.display = villageFounded ? "block" : "none";
-    document.getElementById("minerSection").style.display = mines > 0 ? "block" : "none";
-    document.getElementById("farmerSection").style.display = wheatFields > 0 ? "block" : "none";
-    document.getElementById("villageSection").style.display = chief >= 1 ? "block" : "none";
-    document.getElementById("wellSection").style.display = tinkers >= 1 ? "block" : "none";
-    document.getElementById("pickaxeSection").style.display = tinkers >= 1 ? "block" : "none";
-    document.getElementById("bowSection").style.display = tinkers >= 1 ? "block" : "none";
-    document.getElementById("coatSection").style.display = tinkers >= 1 && discoveredFibers ? "block" : "none";
-    document.getElementById("metalAxeSection").style.display = tinkers >= 1 && discoveredMetals ? "block" : "none";
-    document.getElementById("remedySection").style.display = tinkers >= 1 && discoveredHerbs ? "block" : "none";
-    document.getElementById("mineSection").style.display = discoveredMetals ? "block" : "none";
-    document.getElementById("workshopSection").style.display = discoveredFibers ? "block" : "none";
-    document.getElementById("herbalistSection").style.display = discoveredHerbs ? "block" : "none";
-    document.getElementById("wheatFieldSection").style.display = discoveredHerbs ? "block" : "none";
-    document.getElementById("millSection").style.display = wheatFields > 0 ? "block" : "none";
-    document.getElementById("breadSection").style.display = currentAge === "Âge de l’Agriculture" ? "inline-block" : "none";
-    document.getElementById("bakerySection").style.display = currentAge === "Âge de l’Agriculture" ? "block" : "none";
-    document.getElementById("relicSection").style.display = villageFounded ? "block" : "none";
     alert("Jeu chargé !");
   }
 }
@@ -315,6 +294,7 @@ export function exportSave(slot) {
     discoveredFibers,
     discoveredMetals,
     discoveredHerbs,
+    winterCount,
     currentAge,
     purchasedHints,
     warehouses,
@@ -396,6 +376,7 @@ export function importSavePrompt() {
     setDiscoveredFibers(saveData.discoveredFibers || false);
     setDiscoveredMetals(saveData.discoveredMetals || false);
     setDiscoveredHerbs(saveData.discoveredHerbs || false);
+    setWinterCount(saveData.winterCount || 0);
     setCurrentAge(saveData.currentAge || "Âge de Pierre");
     setPurchasedHints(saveData.purchasedHints || []);
     setWarehouses(saveData.warehouses || 0);
@@ -495,29 +476,6 @@ export function importSavePrompt() {
       if (hint) purchasedHintsList.innerHTML += `<li>${hint.message}</li>`;
     });
 
-    document.getElementById("chiefSection").style.display = axes >= 25 && villagers >= 25 ? "block" : "none";
-    document.getElementById("tinkerSection").style.display = villageFounded ? "block" : "none";
-    document.getElementById("pickerSection").style.display = villagers >= 10 ? "block" : "none";
-    document.getElementById("hunterSection").style.display = villagers >= 20 ? "block" : "none";
-    document.getElementById("researcherSection").style.display = researchers > 0 ? "block" : "none";
-    document.getElementById("explorerSection").style.display = villageFounded ? "block" : "none";
-    document.getElementById("minerSection").style.display = mines > 0 ? "block" : "none";
-    document.getElementById("farmerSection").style.display = wheatFields > 0 ? "block" : "none";
-    document.getElementById("villageSection").style.display = chief >= 1 ? "block" : "none";
-    document.getElementById("wellSection").style.display = tinkers >= 1 ? "block" : "none";
-    document.getElementById("pickaxeSection").style.display = tinkers >= 1 ? "block" : "none";
-    document.getElementById("bowSection").style.display = tinkers >= 1 ? "block" : "none";
-    document.getElementById("coatSection").style.display = tinkers >= 1 && discoveredFibers ? "block" : "none";
-    document.getElementById("metalAxeSection").style.display = tinkers >= 1 && discoveredMetals ? "block" : "none";
-    document.getElementById("remedySection").style.display = tinkers >= 1 && discoveredHerbs ? "block" : "none";
-    document.getElementById("mineSection").style.display = discoveredMetals ? "block" : "none";
-    document.getElementById("workshopSection").style.display = discoveredFibers ? "block" : "none";
-    document.getElementById("herbalistSection").style.display = discoveredHerbs ? "block" : "none";
-    document.getElementById("wheatFieldSection").style.display = discoveredHerbs ? "block" : "none";
-    document.getElementById("millSection").style.display = wheatFields > 0 ? "block" : "none";
-    document.getElementById("breadSection").style.display = currentAge === "Âge de l’Agriculture" ? "inline-block" : "none";
-    document.getElementById("bakerySection").style.display = currentAge === "Âge de l’Agriculture" ? "block" : "none";
-    document.getElementById("relicSection").style.display = villageFounded ? "block" : "none";
     alert("Sauvegarde importée !");
   }
 }

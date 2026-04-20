@@ -87,6 +87,7 @@ export let explorationTimer = 0,
 export let discoveredFibers = false,
   discoveredMetals = false,
   discoveredHerbs = false;
+export let winterCount = 0;
 export let warehouses = 0; // Nombre d’entrepôts
 export let maxWoodStorage = 1000; // Stockage supplémentaire pour le bois
 export let maxStoneStorage = 1000; // Stockage pour la pierre
@@ -326,7 +327,7 @@ export function craftAxe() {
     setStone(stone - 2);
     setAxes(axes + 1);
     if (axes >= 25 && villagers >= 25) {
-      document.getElementById("chiefSection").style.display = "block";
+      document.getElementById("chiefSection").style.display = "grid";
     }
     document.getElementById("narrative").textContent = "Tu as une hache ! Elle coupe le bois plus vite.";
   } else {
@@ -466,7 +467,7 @@ export function craftHerbalist() {
     setHerbalists(herbalists + 1);
     syncVillageBuildings();
     setMaxHerbs(200);
-    document.getElementById("wheatFieldSection").style.display = "block";
+    document.getElementById("wheatFieldSection").style.display = "grid";
     document.getElementById("narrative").textContent = "Une herboristerie est construite ! Les remèdes s’améliorent.";
   } else {
     return { error: "Il te faut 15 bois, 5 pierre, 5 herbes et les herbes découvertes !" };
@@ -590,13 +591,13 @@ export function recruitVillager() {
       document.getElementById("narrative").textContent = "Un villageois arrive ! Il va t’aider.";
     }
     if (villagers >= 10) {
-      document.getElementById("pickerSection").style.display = "block";
+      document.getElementById("pickerSection").style.display = "grid";
     }
     if (villagers >= 20) {
-      document.getElementById("hunterSection").style.display = "block";
+      document.getElementById("hunterSection").style.display = "grid";
     }
     if (villagers >= 25 && axes >= 25) {
-      document.getElementById("chiefSection").style.display = "block";
+      document.getElementById("chiefSection").style.display = "grid";
     }
   } else {
     return { error: "Il te faut 5 baies pour attirer un villageois !" };
@@ -607,7 +608,7 @@ export function appointChief() {
   const maxChiefs = Math.floor(villagers / 25);
   if (axes >= 25 && villagers >= 25 && chief < maxChiefs) {
     setChief(chief + 1);
-    document.getElementById("villageSection").style.display = "block";
+    document.getElementById("villageSection").style.display = "grid";
     document.getElementById("narrative").textContent = "Tu as un nouveau chef ! Il guide une partie de ton peuple.";
   } else {
     let reasons = [];
@@ -623,12 +624,12 @@ export function recruitTinker() {
     setWood(wood - 100);
     setStone(stone - 100);
     setTinkers(tinkers + 1);
-    document.getElementById("wellSection").style.display = "block";
-    document.getElementById("pickaxeSection").style.display = "block";
-    document.getElementById("bowSection").style.display = "block";
-    document.getElementById("coatSection").style.display = "block";
-    document.getElementById("metalAxeSection").style.display = "block";
-    document.getElementById("remedySection").style.display = "block";
+    document.getElementById("wellSection").style.display = "grid";
+    document.getElementById("pickaxeSection").style.display = "grid";
+    document.getElementById("bowSection").style.display = "grid";
+    document.getElementById("coatSection").style.display = "grid";
+    document.getElementById("metalAxeSection").style.display = "grid";
+    document.getElementById("remedySection").style.display = "grid";
     setTechUnlocked(true);
     document.getElementById("narrative").textContent = "Un bricoleur arrive ! L’Automne s’installe.";
     setCurrentSeason(2);
@@ -641,7 +642,7 @@ export function recruitResearcher() {
   if (tinkers >= 10) {
     setTinkers(tinkers - 10);
     setResearchers(researchers + 1);
-    document.getElementById("researcherSection").style.display = "block";
+    document.getElementById("researcherSection").style.display = "grid";
     document.getElementById("narrative").textContent = "Un chercheur rejoint ton village ! De nouvelles technologies arrivent.";
   } else {
     return { error: "Il te faut 10 bricoleurs pour recruter un chercheur !" };
@@ -751,8 +752,8 @@ export function foundVillage() {
   villagesData[newVillageIndex].population.explorers = explorersToMove;
 
   setVillageFounded(true);
-  document.getElementById("tinkerSection").style.display = "block";
-  document.getElementById("relicSection").style.display = "block";
+  document.getElementById("tinkerSection").style.display = "grid";
+  document.getElementById("relicSection").style.display = "grid";
   setCurrentSeason(1);
 
   const totalPopulation = getTotalPopulation();
@@ -764,6 +765,7 @@ export function foundVillage() {
 }
 
 export function assignBuildingsToVillages() {
+  if (villagesData.length === 0) return;
   const limitedBuildingTypes = [
     { type: "mine", count: mines },
     { type: "workshop", count: workshops },
@@ -908,6 +910,12 @@ export function gameLoop() {
   }
   setBerries(berries + pickers * 0.5 * adjustedSeasonModifiers[currentSeason].berries * harvestBonus);
   setMeat(meat + hunters * 0.2 * adjustedSeasonModifiers[currentSeason].meat * harvestBonus);
+  if (!discoveredFibers && pickers >= 1) {
+    setDiscoveredFibers(true);
+    document.getElementById("fibersSection").style.display = "inline-block";
+    document.getElementById("narrative").textContent = "Ton cueilleur a remarqué des plantes fibreuses ! Tu peux maintenant fabriquer des manteaux pour l'hiver.";
+    document.querySelector("#pickerSection .tooltip").textContent = "Un cueilleur ramasse des baies et des fibres pour toi.";
+  }
   if (discoveredFibers) {
     let fiberGain = pickers * 0.2 * adjustedSeasonModifiers[currentSeason].fibers * harvestBonus;
     setFibers(Math.min(fibers + fiberGain, maxFibers));
@@ -951,19 +959,19 @@ export function gameLoop() {
         setDiscoveredFibers(true);
         setFibers(0);
         document.getElementById("fibersSection").style.display = "inline-block";
-        document.getElementById("workshopSection").style.display = "block";
+        document.getElementById("workshopSection").style.display = "grid";
         document.getElementById("narrative").textContent = "Les explorateurs ont découvert les fibres !";
         document.querySelector("#pickerSection .tooltip").textContent = "Un cueilleur ramasse des baies et des fibres pour toi.";
       } else if (!discoveredMetals) {
         setDiscoveredMetals(true);
         document.getElementById("metalsSection").style.display = "inline-block";
-        document.getElementById("mineSection").style.display = "block";
+        document.getElementById("mineSection").style.display = "grid";
         document.getElementById("narrative").textContent = "Les explorateurs ont découvert les métaux !";
         updateAge("Âge des Métaux");
       } else if (!discoveredHerbs) {
         setDiscoveredHerbs(true);
         document.getElementById("herbsSection").style.display = "inline-block";
-        document.getElementById("herbalistSection").style.display = "block";
+        document.getElementById("herbalistSection").style.display = "grid";
         document.getElementById("narrative").textContent = "Les explorateurs ont découvert les herbes !";
       }
       if (previousAge !== currentAge) {
@@ -973,7 +981,7 @@ export function gameLoop() {
   }
 
   if (villagers > 0) {
-    let baseFoodConsumption = 0.1 * foodConsumptionReduction;
+    let baseFoodConsumption = 0.07 * foodConsumptionReduction;
     let baseWaterConsumption =
       (currentSeason === 3
         ? coats >= villagers
@@ -1084,15 +1092,17 @@ export function gameLoop() {
   }
 
   // Mort par le froid : pendant l'hiver, si pas assez de manteaux, des villageois meurent.
-  // Frequence : 1 mort par tranche de 30 ticks (30s) si coats < villagers.
+  // 1er hiver : 1 mort toutes les 60s (plus clement). Hivers suivants : 1 mort toutes les 30s.
+  const coldTickLimit = winterCount === 0 ? 60 : 30;
   if (currentSeason === 3 && villagers > coats) {
     if (typeof gameLoop._coldTick !== 'number') gameLoop._coldTick = 0;
     gameLoop._coldTick++;
-    if (gameLoop._coldTick >= 30) {
+    if (gameLoop._coldTick >= coldTickLimit) {
       gameLoop._coldTick = 0;
       setVillagers(Math.max(0, villagers - 1));
+      const warning = winterCount === 0 ? "C'est ton premier hiver, sois prudent les prochains seront plus durs." : `Fabrique vite des manteaux pour les survivants.`;
       result.alert = `Un villageois est mort de froid ! Il manque ${villagers - 1 - coats} manteau(x).`;
-      document.getElementById("narrative").textContent = "L'hiver est rude... Fabrique vite des manteaux pour les survivants.";
+      document.getElementById("narrative").textContent = `L'hiver est rude... ${warning}`;
     }
   } else {
     gameLoop._coldTick = 0;
@@ -1101,7 +1111,9 @@ export function gameLoop() {
   setSeasonTimer(seasonTimer + 1);
   if (seasonTimer >= seasonDuration) {
     setSeasonTimer(0);
+    const prevSeason = currentSeason;
     setCurrentSeason((currentSeason + 1) % 4);
+    if (prevSeason === 3) setWinterCount(winterCount + 1);
     // Apres le 1er changement de saison (Printemps -> Ete), on passe a la duree normale
     if (seasonDuration < SEASON_DURATION_NORMAL) setSeasonDuration(SEASON_DURATION_NORMAL);
     document.getElementById("narrative").textContent = `La saison change : ${seasonNames[currentSeason]}.`;
@@ -1198,6 +1210,7 @@ export function setSeasonTimer(value) { seasonTimer = value; }
 export function setDeathTimer(value) { deathTimer = value; }
 export function setExplorationTimer(value) { explorationTimer = value; }
 export function setDiscoveredFibers(value) { discoveredFibers = value; }
+export function setWinterCount(value) { winterCount = value; }
 export function setDiscoveredMetals(value) { discoveredMetals = value; }
 export function setDiscoveredHerbs(value) { discoveredHerbs = value; }
 export function setCurrentAge(value) { currentAge = value; }
