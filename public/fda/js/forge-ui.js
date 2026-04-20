@@ -160,7 +160,7 @@ export function updateDisplay() {
     document.getElementById("totalPopulation").textContent = getTotalPopulation();
   }
 
-  document.getElementById("mineSection").style.display = discoveredMetals ? "block" : "none";
+  document.getElementById("mineSection").style.display = discoveredMetals ? "grid" : "none";
   const _bReady = (sectionId, canAfford) => {
     const el = document.getElementById(sectionId);
     if (el) el.classList.toggle('ready', canAfford && el.style.display !== 'none');
@@ -210,7 +210,7 @@ export function updateDisplay() {
   document.getElementById("recruitPickerBtn").disabled = !(berries >= 10 && wood >= 5);
   document.getElementById("recruitHunterBtn").disabled = !(wood >= 10 && meat >= 5);
   document.getElementById("recruitResearcherBtn").disabled = !(tinkers >= 10);
-  document.getElementById("sendExplorersBtn").disabled = !(berries >= 50 && wood >= 20 && villagers >= 10 && (!discoveredFibers || !discoveredMetals || !discoveredHerbs)) || explorationActive;
+  document.getElementById("sendExplorersBtn").disabled = !(berries >= 50 && wood >= 20 && villagers >= 10 && sawmills >= 1 && stoneQuarries >= 1 && (!discoveredFibers || !discoveredMetals || !discoveredHerbs)) || explorationActive;
   document.getElementById("recruitMinerBtn").disabled = !(wood >= 10 && metals >= 5 && mines > 0);
   document.getElementById("recruitFarmerBtn").disabled = !(berries >= 10 && wood >= 5 && wheatFields > 0);
   document.getElementById("foundVillageBtn").disabled = !(villagers >= (villages + 1) * 50 && chief >= villages + 1 && villages < 10);
@@ -252,28 +252,38 @@ export function updateDisplay() {
   document.getElementById("wheatSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
   document.getElementById("flourSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
   document.getElementById("breadSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
-  document.getElementById("chiefSection").style.display = axes >= 25 && villagers >= 25 ? "block" : "none";
-  document.getElementById("tinkerSection").style.display = villageFounded ? "block" : "none";
-  document.getElementById("pickerSection").style.display = villagers >= 10 ? "block" : "none";
-  document.getElementById("hunterSection").style.display = villagers >= 20 ? "block" : "none";
-  document.getElementById("researcherSection").style.display = researchers > 0 ? "block" : "none";
-  document.getElementById("explorerSection").style.display = villageFounded ? "block" : "none";
-  document.getElementById("farmerSection").style.display = wheatFields > 0 ? "block" : "none";
-  document.getElementById("villageSection").style.display = chief >= 1 ? "block" : "none";
-  document.getElementById("pickaxeSection").style.display = tinkers >= 1 ? "block" : "none";
-  document.getElementById("bowSection").style.display = tinkers >= 1 ? "block" : "none";
-  document.getElementById("coatSection").style.display = tinkers >= 1 && discoveredFibers ? "block" : "none";
-  document.getElementById("metalAxeSection").style.display = tinkers >= 1 && discoveredMetals ? "block" : "none";
-  document.getElementById("remedySection").style.display = tinkers >= 1 && discoveredHerbs ? "block" : "none";
-  document.getElementById("relicSection").style.display = villageFounded ? "block" : "none";
-  document.getElementById("wellSection").style.display = tinkers >= 1 ? "block" : "none";
-  document.getElementById("workshopSection").style.display = discoveredFibers ? "block" : "none";
-  document.getElementById("herbalistSection").style.display = discoveredHerbs ? "block" : "none";
-  document.getElementById("wheatFieldSection").style.display = discoveredHerbs ? "block" : "none";
-  document.getElementById("millSection").style.display = wheatFields > 0 ? "block" : "none";
-  document.getElementById("sawmillSection").style.display = tinkers >= 1 ? "block" : "none";
-  document.getElementById("stoneQuarrySection").style.display = tinkers >= 1 ? "block" : "none";
-  document.getElementById("warehouseSection").style.display = discoveredMetals || currentAge === "Âge de l'Agriculture" ? "block" : "none";
+  document.getElementById("chiefSection").style.display = axes >= 25 && villagers >= 25 ? "grid" : "none";
+  document.getElementById("tinkerSection").style.display = villageFounded ? "grid" : "none";
+  document.getElementById("pickerSection").style.display = villagers >= 10 ? "grid" : "none";
+  document.getElementById("hunterSection").style.display = villagers >= 20 ? "grid" : "none";
+  document.getElementById("researcherSection").style.display = researchers > 0 ? "grid" : "none";
+  document.getElementById("explorerSection").style.display = villageFounded && sawmills >= 1 && stoneQuarries >= 1 ? "grid" : "none";
+  document.getElementById("farmerSection").style.display = wheatFields > 0 ? "grid" : "none";
+  document.getElementById("villageSection").style.display = chief >= 1 ? "grid" : "none";
+  document.getElementById("pickaxeSection").style.display = sawmills >= 1 ? "grid" : "none";
+  document.getElementById("bowSection").style.display = sawmills >= 1 ? "grid" : "none";
+  document.getElementById("coatSection").style.display = discoveredFibers ? "grid" : "none";
+  document.getElementById("metalAxeSection").style.display = discoveredMetals ? "grid" : "none";
+  document.getElementById("remedySection").style.display = discoveredHerbs ? "grid" : "none";
+  document.getElementById("relicSection").style.display = villageFounded ? "grid" : "none";
+  document.getElementById("wellSection").style.display = tinkers >= 1 ? "grid" : "none";
+  document.getElementById("workshopSection").style.display = discoveredFibers ? "grid" : "none";
+  document.getElementById("herbalistSection").style.display = discoveredHerbs ? "grid" : "none";
+  document.getElementById("wheatFieldSection").style.display = discoveredHerbs ? "grid" : "none";
+  document.getElementById("millSection").style.display = wheatFields > 0 ? "grid" : "none";
+  document.getElementById("sawmillSection").style.display = tinkers >= 1 ? "grid" : "none";
+  document.getElementById("stoneQuarrySection").style.display = tinkers >= 1 ? "grid" : "none";
+  document.getElementById("warehouseSection").style.display = discoveredMetals || currentAge === "Âge de l'Agriculture" ? "grid" : "none";
+
+  const shardList = document.getElementById("shardEffectsList");
+  if (shardList) {
+    shardList.style.display = eternityShards >= 1 ? "flex" : "none";
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById("shardEffect" + i);
+      if (el) el.style.display = eternityShards >= i ? "flex" : "none";
+    }
+  }
+
   document.getElementById("saveGameBtn").disabled = false;
   document.getElementById("loadGameBtn").disabled = false;
   document.getElementById("exportSaveBtn").disabled = false;
@@ -673,6 +683,13 @@ export function updateResourcesDisplay() {
   document.getElementById("wheat").textContent = Math.floor(wheat);
   document.getElementById("flour").textContent = Math.floor(flour);
   document.getElementById("bread").textContent = Math.floor(bread);
+  document.getElementById("villagers").textContent = villagers;
+  document.getElementById("chief").textContent = chief;
+  document.getElementById("pickers").textContent = pickers;
+  document.getElementById("hunters").textContent = hunters;
+  document.getElementById("miners").textContent = miners;
+  document.getElementById("farmers").textContent = farmers;
+  document.getElementById("coats").textContent = villagers > 0 ? coats + ' / ' + villagers : coats;
 }
 
 // Variable pour gérer le mode triche
