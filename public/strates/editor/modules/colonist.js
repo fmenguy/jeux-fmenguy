@@ -3,7 +3,7 @@ import {
   GRID, MIN_STRATES, MAX_STRATES, WATER_LEVEL, SHALLOW_WATER_LEVEL,
   COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
   MALE_NAMES, FEMALE_NAMES, GENDER_SYMBOLS, GENDER_COLORS,
-  CHIEF_COLOR, SPEECH_LINES, SPEECH_LINES_INSISTENT, COL, ORE_TO_STOCK
+  CHIEF_COLOR, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME, COL, ORE_TO_STOCK
 } from './constants.js'
 import { state } from './state.js'
 import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
@@ -390,7 +390,10 @@ export class Colonist {
         if (this.speechTimer <= 0 && activeSpeakers() < 2) {
           const noJobSince = performance.now() / 1000 - state.lastJobTime
           const insistent = (state.jobs.size === 0 && noJobSince > 15) && Math.random() < 0.6
-          const pool = insistent ? SPEECH_LINES_INSISTENT : SPEECH_LINES
+          const charLines = SPEECH_LINES_BY_NAME[this.name]
+          const pool = insistent ? SPEECH_LINES_INSISTENT
+            : (charLines && Math.random() < 0.6) ? charLines
+            : SPEECH_LINES
           let line, guard = 0
           do { line = pool[Math.floor(Math.random() * pool.length)]; guard++ }
           while (line === this.lastLine && guard < 5)
