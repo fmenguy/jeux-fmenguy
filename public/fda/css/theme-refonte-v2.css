@@ -1,0 +1,475 @@
+/* theme-refonte-v2.css — Fabrication, Batiments, Main-d'oeuvre, Reliques */
+
+/* ---------- Palette ---------- */
+:root {
+  --v2-gold:         #c9a84c;
+  --v2-gold-bright:  #ffd986;
+  --v2-gold-deep:    #8a6018;
+  --v2-ember:        #ff7a3c;
+  --v2-parchment:    #f5e6c8;
+  --v2-parchment-dim:#c9b68a;
+  --v2-ink:          #140a02;
+  --v2-plaque-hi:    #3a2816;
+  --v2-plaque-mid:   #251810;
+  --v2-plaque-lo:    #180f07;
+}
+
+/* =====================================================================
+   CADRE DE SECTION — Fabrication, Batiments, Main-d'oeuvre
+   ===================================================================== */
+#buildingsSection,
+#fabricationSection,
+#workerSection,
+#relicSection {
+  padding: 20px !important;
+  background: linear-gradient(180deg, rgba(42, 29, 16, 0.6), rgba(20, 13, 6, 0.85)) !important;
+  border: 1px solid rgba(201, 168, 76, 0.38) !important;
+  border-radius: 14px !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 217, 134, 0.06),
+    inset 0 0 60px rgba(0, 0, 0, 0.4) !important;
+  position: relative;
+}
+#buildingsSection::before, #buildingsSection::after,
+#fabricationSection::before, #fabricationSection::after,
+#workerSection::before, #workerSection::after,
+#relicSection::before, #relicSection::after {
+  content: "";
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--v2-gold-bright), var(--v2-gold-deep) 55%, var(--v2-ink) 100%);
+  box-shadow: 0 0 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+#buildingsSection::before, #fabricationSection::before,
+#workerSection::before,    #relicSection::before { top: 10px; left: 10px; }
+#buildingsSection::after,  #fabricationSection::after,
+#workerSection::after,     #relicSection::after  { bottom: 10px; right: 10px; }
+
+#buildingsSection h2,
+#fabricationSection h2,
+#workerSection h2,
+#relicSection h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--v2-gold-bright);
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(201, 168, 76, 0.28);
+  text-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+}
+
+/* =====================================================================
+   PLAQUES — .craft, .worker, .relic
+   ===================================================================== */
+#buildingsSection .craft,
+#fabricationSection .craft,
+#workerSection .worker,
+#relicSection .relic {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 12px 14px !important;
+  margin: 10px 0 !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 217, 134, 0.08), transparent 70%),
+    linear-gradient(180deg, var(--v2-plaque-hi) 0%, var(--v2-plaque-mid) 55%, var(--v2-plaque-lo) 100%) !important;
+  border: 1px solid var(--v2-gold-deep) !important;
+  border-radius: 10px !important;
+  cursor: default !important;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 134, 0.14),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+    0 4px 10px rgba(0, 0, 0, 0.45) !important;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+#buildingsSection .craft::before,
+#fabricationSection .craft::before,
+#workerSection .worker::before,
+#relicSection .relic::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 217, 134, 0.4), transparent);
+  pointer-events: none;
+}
+#buildingsSection .craft:hover,
+#fabricationSection .craft:hover,
+#workerSection .worker:hover,
+#relicSection .relic:hover {
+  transform: translateY(-2px);
+  border-color: var(--v2-gold) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 134, 0.22),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+    0 8px 18px rgba(0, 0, 0, 0.55),
+    0 0 20px rgba(201, 168, 76, 0.2) !important;
+}
+
+/* <p> ligne 1 : icone + nom + compteur */
+#buildingsSection .craft p,
+#fabricationSection .craft p,
+#workerSection .worker p,
+#relicSection .relic p {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 !important;
+  font-family: 'Cinzel', serif;
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--v2-parchment) !important;
+}
+#buildingsSection .craft p > *,
+#fabricationSection .craft p > *,
+#workerSection .worker p > *,
+#relicSection .relic p > * {
+  font-family: 'Cinzel', serif;
+  font-size: 12px !important;
+  letter-spacing: 0.18em;
+}
+
+/* Sceau (icone) */
+#buildingsSection .craft .icon,
+#fabricationSection .craft .icon,
+#workerSection .worker .icon,
+#relicSection .relic .icon {
+  width: 40px; height: 40px;
+  flex: 0 0 40px;
+  border-radius: 50%;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px !important;
+  background: radial-gradient(circle at 30% 25%, #4a3320 0%, #1b1108 70%, #0d0805 100%);
+  border: 1px solid var(--v2-gold-deep);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 217, 134, 0.2),
+    inset 0 -5px 8px rgba(0, 0, 0, 0.5);
+  filter: none !important;
+}
+
+/* Badge compteur */
+#buildingsSection .craft p > span[id],
+#fabricationSection .craft p > span[id],
+#workerSection .worker p > span[id],
+#relicSection .relic p > span[id] {
+  margin-left: auto;
+  font-family: 'Cinzel', serif !important;
+  font-size: 13px !important;
+  letter-spacing: 0.05em !important;
+  color: var(--v2-ink) !important;
+  background: linear-gradient(180deg, var(--v2-gold-bright), var(--v2-gold));
+  border: 1px solid var(--v2-gold-deep);
+  padding: 2px 9px;
+  border-radius: 999px;
+  min-width: 28px;
+  text-align: center;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bouton pleine largeur */
+#buildingsSection .craft button,
+#fabricationSection .craft button,
+#workerSection .worker button,
+#relicSection .relic button {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  margin: 6px 0 0 !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase;
+  color: var(--v2-ink) !important;
+  background: linear-gradient(180deg, #ffd986 0%, #c9a84c 45%, #8a6018 100%) !important;
+  border: 1px solid var(--v2-gold-deep) !important;
+  border-radius: 6px !important;
+  padding: 9px 12px !important;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 3px 6px rgba(0, 0, 0, 0.5) !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  transition: all .18s ease;
+  width: 100%;
+}
+#buildingsSection .craft button:hover:not(:disabled),
+#fabricationSection .craft button:hover:not(:disabled),
+#workerSection .worker button:hover:not(:disabled),
+#relicSection .relic button:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 0 18px rgba(201, 168, 76, 0.55),
+    0 5px 10px rgba(0, 0, 0, 0.55) !important;
+}
+#buildingsSection .craft button:active:not(:disabled),
+#fabricationSection .craft button:active:not(:disabled),
+#workerSection .worker button:active:not(:disabled),
+#relicSection .relic button:active:not(:disabled) { transform: translateY(0); filter: brightness(0.95); }
+
+#buildingsSection .craft button:disabled,
+#fabricationSection .craft button:disabled,
+#workerSection .worker button:disabled,
+#relicSection .relic button:disabled {
+  background: linear-gradient(180deg, #4a3f2e, #2b2218) !important;
+  color: rgba(245, 230, 200, 0.45) !important;
+  border-color: rgba(201, 168, 76, 0.15) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  text-shadow: none !important;
+  cursor: not-allowed;
+}
+
+/* Tooltip italique */
+#buildingsSection .craft .tooltip,
+#fabricationSection .craft .tooltip,
+#workerSection .worker .tooltip,
+#relicSection .relic .tooltip {
+  grid-column: 1 / 4;
+  grid-row: 3;
+  margin: 4px 0 0 !important;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--v2-parchment-dim);
+  opacity: 0.82;
+}
+
+/* =====================================================================
+   Etat "pret a construire/recruter"
+   ===================================================================== */
+#buildingsSection .craft.ready,
+#fabricationSection .craft.ready,
+#workerSection .worker.ready,
+#relicSection .relic.ready {
+  border-color: rgba(255, 122, 60, 0.7) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 134, 0.2),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+    0 4px 10px rgba(0, 0, 0, 0.45),
+    0 0 18px rgba(255, 122, 60, 0.28) !important;
+  animation: v2ReadyPulse 2.4s ease-in-out infinite;
+}
+@keyframes v2ReadyPulse {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,217,134,0.2), inset 0 -2px 0 rgba(0,0,0,0.55), 0 4px 10px rgba(0,0,0,0.45), 0 0 16px rgba(255,122,60,0.22); }
+  50%      { box-shadow: inset 0 1px 0 rgba(255,217,134,0.2), inset 0 -2px 0 rgba(0,0,0,0.55), 0 4px 10px rgba(0,0,0,0.45), 0 0 28px rgba(255,122,60,0.42); }
+}
+
+/* =====================================================================
+   Main-d'oeuvre : sceau ember pour differencier les humains
+   ===================================================================== */
+#workerSection .worker .icon {
+  border-color: rgba(255, 122, 60, 0.55);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 217, 134, 0.2),
+    inset 0 -5px 8px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(255, 122, 60, 0.22);
+}
+#workerSection .worker:hover .icon {
+  border-color: var(--v2-ember);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 217, 134, 0.25),
+    inset 0 -5px 8px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(255, 122, 60, 0.4);
+}
+
+/* =====================================================================
+   Narrative (hint au-dessus des ressources)
+   ===================================================================== */
+.res-narrative {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--v2-parchment-dim);
+  text-align: center;
+  padding: 0 8px 12px;
+  opacity: 0.85;
+  min-height: 1.4em;
+}
+
+/* =====================================================================
+   Objectif panel (entre ressources et batiments)
+   ===================================================================== */
+#currentObjective.objective-panel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 860px;
+  margin: 14px auto 10px;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(42,29,16,0.7), rgba(20,13,6,0.9));
+  border: 1px solid rgba(201,168,76,0.35);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,217,134,0.07);
+  position: relative;
+}
+
+#currentObjective.objective-panel .objective-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--v2-gold-deep);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#currentObjective.objective-panel .objective-message {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--v2-parchment);
+  margin: 0;
+  flex: 1;
+}
+
+#currentObjective.objective-panel .objective-progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#currentObjective.objective-panel .objective-progress-bar {
+  width: 140px;
+  height: 6px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(201,168,76,0.15);
+}
+#currentObjective.objective-panel .objective-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--v2-gold-deep), var(--v2-gold-bright));
+  border-radius: 3px;
+  transition: width .4s ease;
+}
+#currentObjective.objective-panel .objective-progress-text {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--v2-gold-bright);
+  white-space: nowrap;
+}
+
+#currentObjective.objective-panel .objective-claim {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v2-ink);
+  background: linear-gradient(180deg, var(--v2-gold-bright) 0%, var(--v2-gold) 50%, var(--v2-gold-deep) 100%);
+  border: 1px solid var(--v2-gold-deep);
+  border-radius: 7px;
+  padding: 7px 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 3px 8px rgba(0,0,0,0.4);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  transition: all .18s ease;
+}
+#currentObjective.objective-panel .objective-claim:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* États dynamiques du panel objectif */
+#currentObjective.objective-ready {
+  border-color: rgba(201,168,76,0.7);
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.5),
+    0 0 12px rgba(201,168,76,0.25),
+    inset 0 1px 0 rgba(255,217,134,0.12);
+}
+#currentObjective.objective-empty {
+  opacity: 0.6;
+}
+#currentObjective.objective-flash {
+  animation: objFlash .6s ease-out;
+}
+@keyframes objFlash {
+  0%   { box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 0 rgba(201,168,76,0); }
+  40%  { box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 22px rgba(201,168,76,0.55); }
+  100% { box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 4px rgba(201,168,76,0.15); }
+}
+
+/* =====================================================================
+   Effets des eclats
+   ===================================================================== */
+#shardEffectsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.shard-effect {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, rgba(58, 40, 22, 0.7), rgba(24, 15, 7, 0.85));
+  border: 1px solid rgba(201, 168, 76, 0.28);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 217, 134, 0.08);
+  animation: shardReveal .5s ease;
+}
+@keyframes shardReveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.shard-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.shard-name {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--v2-gold-bright);
+  flex-shrink: 0;
+  min-width: 130px;
+}
+.shard-desc {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--v2-parchment-dim);
+  opacity: 0.85;
+}
+
+/* =====================================================================
+   Responsive
+   ===================================================================== */
+@media (max-width: 900px) {
+  #resources { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 560px) {
+  #resources { grid-template-columns: repeat(2, 1fr); padding: 16px 12px; }
+  #buildingsSection, #fabricationSection, #workerSection, #relicSection { max-width: 100% !important; }
+}
