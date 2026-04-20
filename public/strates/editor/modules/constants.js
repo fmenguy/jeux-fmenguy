@@ -134,14 +134,88 @@ export const SPEECH_LINES = [
   "Quelqu'un a vu le chef ?",
   "Ca pousse bien par ici.",
   "J'aime bien cet endroit.",
-  "Faudrait creuser la, non ?",
   "Je prends racine la.",
   "Joli panorama.",
   "Mes pieds me font mal.",
   "On va camper ici ?",
   "Un peu de musique, non ?",
-  "J'ai oublie mon chapeau."
+  "J'ai oublie mon chapeau.",
+  "C'est loin, le prochain age ?",
+  "On devrait construire quelque chose.",
+  "J'ai reve qu'on avait une forge.",
+  "C'est quand le repas ?",
+  "Y'a quelqu'un qui sait faire du pain ?",
+  "Je cherche une bonne raison de bouger.",
+  "Le sol est dur par ici.",
+  "Toi tu travailles ou tu flanes ?",
+  "T'as vu comme le soleil est bas ?"
 ]
+
+export const SPEECH_LINES_BY_NAME = {
+  'François': [
+    "Claude m'aide beaucoup en ce moment.",
+    "Encore plein d'idees en tete.",
+    "C'est quand que je reprends l'escalade ?",
+    "Je bosse sur FDA en ce moment.",
+    "Je bosse sur Strates en ce moment.",
+    "Je suis en train de faire des images.",
+    "J'ecris une histoire.",
+    "Attends je reviens, je cuisine.",
+    "J'ai plein d'idees mais pas assez de quota.",
+    "Il faudrait que je dorme plus tot.",
+    "Bon, encore une derniere modif.",
+  ],
+  'Frédéric': [
+    "Tu as mis ta carte a jour ?",
+    "T'as pousse sur main ?",
+    "Je check ca demain.",
+    "Attends, faut que je relise le ticket.",
+    "C'est en prod ?",
+  ],
+  'Belkacem': [
+    "Pause cafe ?",
+    "T'as mange ce midi ?",
+    "Reunion dans 5 minutes.",
+    "Je suis en tele-travail aujourd'hui.",
+    "Le wifi tient pas ici.",
+  ],
+  'Antoine': [
+    "Bref.",
+    "Non mais attends.",
+    "Chu en train de reflechir.",
+    "C'est quoi le plan ?",
+  ],
+  'Vincent': [
+    "J'ai une idee, mais je sais pas si c'est bon.",
+    "On teste et on voit.",
+    "C'est pas si complique en fait.",
+  ],
+  'Gerard': [
+    "De mon temps on faisait ca differemment.",
+    "J'ai vu pire.",
+    "Ca marche, non ?",
+  ],
+  'Lou': [
+    "J'ai un mauvais feeling.",
+    "Ca va aller, je pense.",
+    "Quelqu'un a un plan B ?",
+  ],
+  'Sophie': [
+    "On pourrait aussi essayer autrement.",
+    "Moi j'aurais fait ca a gauche.",
+    "C'est propre comme endroit.",
+  ],
+  'Pauline': [
+    "Je note ca quelque part.",
+    "On fait une retrospective ?",
+    "Bonne ambiance quand meme.",
+  ],
+  'Lucie': [
+    "Je suis fatiguee mais ca va.",
+    "On arrete a quelle heure ?",
+    "Quelqu'un a du the ?",
+  ],
+}
 export const SPEECH_LINES_INSISTENT = [
   "Tu dors ou quoi ?",
   "Allez, du boulot !",
