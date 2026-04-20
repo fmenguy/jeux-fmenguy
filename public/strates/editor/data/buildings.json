@@ -1,0 +1,78 @@
+{
+  "chains": [
+    {
+      "id": "habitation",
+      "name": "Habitation",
+      "desc": "Logement des colons, augmente la capacite de population",
+      "color": "#7a6aaa",
+      "icon": "H",
+      "levels": [
+        { "id": "cabin",    "name": "Cabane",             "age": 1, "fusionReq": 4, "pop": 2,  "desc": "Premier abri basique" },
+        { "id": "house",    "name": "Maison",              "age": 2, "fusionReq": 4, "pop": 5,  "desc": "Confort modeste, famille stable" },
+        { "id": "manor",    "name": "Manoir",              "age": 3, "fusionReq": 4, "pop": 12, "desc": "Demeure aisee, prestige local" },
+        { "id": "castle-res","name": "Chateau",            "age": 4, "fusionReq": 4, "pop": 28, "desc": "Siege seigneurial, centre administratif" },
+        { "id": "palace",   "name": "Palais",              "age": 6, "fusionReq": 4, "pop": 60, "desc": "Chef-d'oeuvre architectural, capitale" },
+        { "id": "arcology", "name": "Arcologie",           "age": 7, "fusionReq": null, "pop": 200, "desc": "Cite verticale autonome, endgame" }
+      ]
+    },
+    {
+      "id": "recherche",
+      "name": "Recherche",
+      "desc": "Production de points de recherche, decouverte de nouvelles technologies",
+      "color": "#4a8aaa",
+      "icon": "R",
+      "levels": [
+        { "id": "lab",       "name": "Laboratoire",        "age": 1, "fusionReq": 4, "pts": 1,  "desc": "Atelier de reflexion primitif" },
+        { "id": "big-lab",   "name": "Grand Laboratoire",  "age": 2, "fusionReq": 4, "pts": 4,  "desc": "Cooperation entre chercheurs" },
+        { "id": "academy",   "name": "Academie",           "age": 3, "fusionReq": 4, "pts": 12, "desc": "Transmission du savoir systematique" },
+        { "id": "university","name": "Universite",         "age": 4, "fusionReq": 4, "pts": 30, "desc": "Recherche fondamentale avancee" },
+        { "id": "institute", "name": "Institut",           "age": 6, "fusionReq": 4, "pts": 80, "desc": "Centre de recherche mondial" },
+        { "id": "space-lab", "name": "Laboratoire orbital","age": 7, "fusionReq": null,"pts": 250,"desc": "Recherche en apesanteur, percees majeures" }
+      ]
+    },
+    {
+      "id": "alimentation",
+      "name": "Alimentation",
+      "desc": "Nourrir les colons, rendements agricoles et stocks",
+      "color": "#4a8a3a",
+      "icon": "A",
+      "levels": [
+        { "id": "field",      "name": "Champ",             "age": 1, "fusionReq": 4, "food": 2,  "desc": "Culture rudimentaire de baies" },
+        { "id": "farm",       "name": "Ferme",             "age": 2, "fusionReq": 4, "food": 6,  "desc": "Elevage et cereales" },
+        { "id": "estate",     "name": "Domaine agricole",  "age": 3, "fusionReq": 4, "food": 16, "desc": "Production diversifiee, excedents" },
+        { "id": "plantation", "name": "Plantation",        "age": 4, "fusionReq": 4, "food": 40, "desc": "Exploitation industrielle des terres" },
+        { "id": "agroindustry","name":"Agroindustrie",     "age": 5, "fusionReq": 4, "food": 100,"desc": "Rendements maximaux, reserves nationales" },
+        { "id": "hydroponics","name": "Serre hydronique",  "age": 7, "fusionReq": null,"food": 400,"desc": "Culture hors-sol, alimentation de la colonie spatiale" }
+      ]
+    },
+    {
+      "id": "production",
+      "name": "Production",
+      "desc": "Extraction et transformation des ressources, outillage",
+      "color": "#8a6030",
+      "icon": "P",
+      "levels": [
+        { "id": "hearth",    "name": "Foyer",              "age": 1, "fusionReq": 4, "desc": "Premier traitement du minerai" },
+        { "id": "forge-b",   "name": "Forge",              "age": 2, "fusionReq": 4, "desc": "Travail du metal, outils en bronze" },
+        { "id": "foundry",   "name": "Fonderie",           "age": 3, "fusionReq": 4, "desc": "Hauts-fourneaux, acier et fonte" },
+        { "id": "factory",   "name": "Usine",              "age": 4, "fusionReq": 4, "desc": "Production en serie, revolution industrielle" },
+        { "id": "complex",   "name": "Complexe industriel","age": 5, "fusionReq": 4, "desc": "Automatisation, rendements extremes" },
+        { "id": "manufact",  "name": "Manufacture auto.",  "age": 7, "fusionReq": null, "desc": "Robots, impression 3D, production spatiale" }
+      ]
+    },
+    {
+      "id": "monuments",
+      "name": "Monuments",
+      "desc": "Prestige, moral des colons, deblocage de capacites uniques",
+      "color": "#9a7a3a",
+      "icon": "M",
+      "levels": [
+        { "id": "totem",     "name": "Totem",              "age": 1, "fusionReq": null, "desc": "Symbole tribal, moral +1" },
+        { "id": "statue",    "name": "Statue",             "age": 2, "fusionReq": null, "desc": "Commemoration d'un heros" },
+        { "id": "temple",    "name": "Temple",             "age": 3, "fusionReq": null, "desc": "Lieu de culte, cohesion sociale" },
+        { "id": "monument",  "name": "Monument national",  "age": 5, "fusionReq": null, "desc": "Identite de la civilisation" },
+        { "id": "gateway",   "name": "Portail orbital",    "age": 7, "fusionReq": null, "desc": "Point de depart vers les etoiles. Declenche l'endgame." }
+      ]
+    }
+  ]
+}
