@@ -403,6 +403,29 @@
       background: rgba(204,68,68,0.15); border-color: #cc4444; color: #ff8888;
     }
     .save-row button[disabled] { opacity: 0.3; cursor: not-allowed; }
+
+    /* Mini-map */
+    #minimap-wrap {
+      position: fixed; right: 16px; bottom: 80px;
+      background: rgba(12, 15, 20, 0.82);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 6px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+      z-index: 11;
+    }
+    #minimap {
+      display: block; width: 160px; height: 160px;
+      border-radius: 6px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    #minimap-label {
+      font-size: 9px; text-align: center; letter-spacing: 0.1em;
+      color: rgba(200,190,170,0.5); text-transform: uppercase;
+      margin-top: 4px;
+    }
   </style>
   <script type="importmap">
   {
@@ -419,7 +442,7 @@
 
   <button id="btn-help" title="Aide et explications">?</button>
   <button id="btn-audio" title="Activer la musique">&#9834;</button>
-  <div id="season-pill" title="Saison en cours"><span id="season-icon">&#127804;</span><span id="season-name">printemps</span></div>
+  <div id="season-pill" title="Saison en cours"><span id="season-icon">&#127804;</span><span id="season-name">printemps</span><span id="weather-label" style="font-size:11px;opacity:0.75;margin-left:6px;"></span></div>
 
   <div id="hud">
     <div><b>Strates</b>, éditeur de carte</div>
@@ -609,6 +632,11 @@
       <div class="save-slots" id="save-slots"></div>
       <div class="save-auto" id="save-auto"></div>
     </div>
+  </div>
+
+  <div id="minimap-wrap">
+    <canvas id="minimap" width="96" height="96"></canvas>
+    <div id="minimap-label">carte</div>
   </div>
 
   <div id="actionbar">

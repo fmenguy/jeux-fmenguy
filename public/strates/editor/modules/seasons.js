@@ -11,8 +11,8 @@ import { topVoxelIndex, colorForLayer, surfaceColor } from './terrain.js'
 // Transition lineaire entre saisons sur les 20 dernieres secondes.
 // ============================================================================
 
-const SEASON_DURATION = 360 // secondes par saison (6 min = 24 min par cycle complet)
-const TRANSITION = 30       // secondes de lerp vers la saison suivante
+const SEASON_DURATION = 600 // secondes par saison (10 min = 40 min par cycle complet)
+const TRANSITION = 40       // secondes de lerp vers la saison suivante
 
 export const SEASONS = [
   {
