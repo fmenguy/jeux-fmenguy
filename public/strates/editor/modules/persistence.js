@@ -116,7 +116,8 @@ function serializeSnapshot() {
       x: c.x, z: c.z,
       tx: c.tx, tz: c.tz, ty: c.ty,
       state: (c.state === 'WORKING' || c.state === 'MOVING') ? 'IDLE' : c.state,
-      researchBuildingId: c.researchBuildingId
+      researchBuildingId: c.researchBuildingId,
+      favorite: !!c.favorite
     })),
     spawn: state.spawn ? { x: state.spawn.x, z: state.spawn.z } : null,
     jobs: Array.from(state.jobs.keys()),
