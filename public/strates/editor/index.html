@@ -404,16 +404,65 @@
     }
     .save-row button[disabled] { opacity: 0.3; cursor: not-allowed; }
 
-    /* Mini-map */
+    /* Menu pause */
+    #pause-menu {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.62); z-index: 70;
+    }
+    #pause-menu.hidden { display: none; }
+    .pause-modal {
+      width: 300px;
+      background: linear-gradient(180deg, rgba(20,24,30,0.97), rgba(15,18,24,0.99));
+      border: 1px solid rgba(255,217,138,0.45);
+      border-radius: 14px; overflow: hidden;
+      color: #f3ecdd;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+    }
+    .pause-header {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid rgba(255,217,138,0.18);
+      background: rgba(255,217,138,0.04);
+    }
+    .pause-header h3 {
+      margin: 0; color: #ffd98a;
+      letter-spacing: .14em; text-transform: uppercase;
+      font-size: 13px; font-weight: 700;
+    }
+    .pause-header p {
+      margin: 4px 0 0; color: #c7b98c;
+      font-size: 11px; font-family: monospace;
+    }
+    .pause-actions {
+      display: flex; flex-direction: column; gap: 0;
+      padding: 10px 14px 16px;
+    }
+    .pause-btn {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 8px;
+      background: transparent; border: none;
+      color: #f3ecdd; font-size: 14px; font-weight: 500;
+      cursor: pointer; width: 100%; text-align: left;
+      transition: background .15s, color .15s;
+      text-decoration: none;
+      font-family: inherit;
+    }
+    .pause-btn:hover { background: rgba(255,255,255,0.07); }
+    .pause-btn .pb-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+      background: rgba(255,255,255,0.06);
+    }
+    .pause-btn.primary .pb-icon { background: rgba(255,217,138,0.15); }
+    .pause-btn.primary { color: #ffd98a; }
+    .pause-btn.primary:hover { background: rgba(255,217,138,0.08); }
+    .pause-btn.danger { color: #ff9999; }
+    .pause-btn.danger:hover { background: rgba(255,80,80,0.08); }
+    .pause-sep { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0; }
+
+    /* Mini-map (désactivée)
     #minimap-wrap {
       position: fixed; right: 16px; bottom: 80px;
-      background: rgba(12, 15, 20, 0.82);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      padding: 6px;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
-      z-index: 11;
     }
     #minimap {
       display: block; width: 160px; height: 160px;
@@ -426,6 +475,7 @@
       color: rgba(200,190,170,0.5); text-transform: uppercase;
       margin-top: 4px;
     }
+    */
   </style>
   <script type="importmap">
   {
@@ -623,6 +673,27 @@
     Appuyez sur <b>?</b> pour l'aide
   </div>
 
+  <div id="pause-menu" class="hidden">
+    <div class="pause-modal">
+      <div class="pause-header">
+        <h3>Pause</h3>
+        <p id="pause-save-hint"></p>
+      </div>
+      <div class="pause-actions">
+        <button class="pause-btn primary" id="pause-resume">
+          <span class="pb-icon">&#9654;</span> Continuer
+        </button>
+        <div class="pause-sep"></div>
+        <button class="pause-btn" id="pause-saves">
+          <span class="pb-icon">&#128190;</span> Sauvegardes
+        </button>
+        <a class="pause-btn danger" href="../index.html">
+          <span class="pb-icon">&#8617;</span> Retour à l'accueil
+        </a>
+      </div>
+    </div>
+  </div>
+
   <div id="save-menu" class="hidden">
     <div class="save-modal">
       <div class="save-header">
@@ -634,10 +705,6 @@
     </div>
   </div>
 
-  <div id="minimap-wrap">
-    <canvas id="minimap" width="96" height="96"></canvas>
-    <div id="minimap-label">carte</div>
-  </div>
 
   <div id="actionbar">
     <div class="group colons">
