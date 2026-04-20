@@ -11,8 +11,8 @@ import { topVoxelIndex, colorForLayer, surfaceColor } from './terrain.js'
 // Transition lineaire entre saisons sur les 20 dernieres secondes.
 // ============================================================================
 
-const SEASON_DURATION = 120 // secondes par saison
-const TRANSITION = 20       // secondes de lerp vers la saison suivante
+const SEASON_DURATION = 360 // secondes par saison (6 min = 24 min par cycle complet)
+const TRANSITION = 30       // secondes de lerp vers la saison suivante
 
 export const SEASONS = [
   {
@@ -70,9 +70,10 @@ export const SEASONS = [
 // Etat global saison (dans state pour etre sauvegarde)
 if (state.season == null) {
   state.season = {
-    idx: 0,         // index saison courante
-    elapsed: 0,     // secondes ecoulees dans la saison courante
-    cyclesDone: 0   // compteur d'annees (pour stat)
+    idx: 0,              // index saison courante
+    elapsed: 0,          // secondes ecoulees dans la saison courante
+    cyclesDone: 0,       // compteur d'annees (pour stat)
+    justChangedSeason: null  // id de la nouvelle saison, lu par speech.js puis remis a null
   }
 }
 
@@ -201,6 +202,7 @@ export function tickSeasons(dt) {
     s.elapsed -= SEASON_DURATION
     s.idx = (s.idx + 1) % SEASONS.length
     if (s.idx === 0) s.cyclesDone++
+    s.justChangedSeason = SEASONS[s.idx].id
     repaintAccum = REPAINT_INTERVAL // force repaint immediat
   }
   repaintAccum += dt

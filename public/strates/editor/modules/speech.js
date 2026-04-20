@@ -1,6 +1,7 @@
 import {
   GRID, CONTEXT_COOLDOWN, FIELD_NO_RESEARCH_DELAY_MAX,
-  SPEECH_CONTEXT_FIELD_NO_RESEARCH, SPEECH_CONTEXT_EMPTY_LAB
+  SPEECH_CONTEXT_FIELD_NO_RESEARCH, SPEECH_CONTEXT_EMPTY_LAB,
+  SPEECH_CONTEXT_SEASON
 } from './constants.js'
 import { state } from './state.js'
 
@@ -54,6 +55,22 @@ export function activeSpeakers() {
 }
 
 export function tryTriggerContextBubble(nowSec) {
+  // Changement de saison : un colon réagit dans les secondes qui suivent
+  if (state.season && state.season.justChangedSeason) {
+    const seasonId = state.season.justChangedSeason
+    state.season.justChangedSeason = null
+    const pool = SPEECH_CONTEXT_SEASON[seasonId]
+    if (pool && activeSpeakers() < 2) {
+      const candidates = state.colonists.filter(c =>
+        c.speechTimer <= 0 && (c.state === 'IDLE' || c.state === 'MOVING')
+      )
+      if (candidates.length > 0) {
+        const speaker = candidates[Math.floor(Math.random() * candidates.length)]
+        speaker.say(pickContextLine(pool, 'season-' + seasonId))
+      }
+    }
+  }
+
   const fieldCount = countFields()
   const hasResearch = state.researchHouses.length > 0
   const hasAssignedResearcher = state.researchHouses.some(r => r.assignedColonistId != null)
