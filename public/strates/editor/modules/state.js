@@ -44,6 +44,9 @@ export const state = {
   },
   researchPoints: 0,
   researchTickAccum: 0,
+  nightPoints: 0,
+  isNight: false,
+  observatories: [],
   resources: { berries: 0, wood: 0, stone: 0 },
   gameStats: { housesPlaced: 0, minesCompleted: 0, totalBerriesHarvested: 0 },
 

@@ -301,6 +301,37 @@ export class Colonist {
     return true
   }
 
+  // Feu de camp social : la nuit, les colons IDLE sont attires vers le foyer
+  // (maison ou manoir) le plus proche. Boost moral tant qu'ils y sont.
+  pickCampfire() {
+    let best = null, bestD = Infinity
+    const sources = []
+    for (const h of state.houses) sources.push({ x: h.x, z: h.z })
+    for (const m of state.manors) sources.push({ x: m.x + 1, z: m.z + 1 })
+    if (!sources.length) return false
+    for (const s of sources) {
+      const d = Math.abs(s.x - this.x) + Math.abs(s.z - this.z)
+      if (d > 12) continue
+      if (d < bestD) { bestD = d; best = s }
+    }
+    if (!best) return false
+    if (bestD <= 2) {
+      // Deja aupres du foyer, moral +1 (stocke sur c.moralNight).
+      this.moralNight = Math.min(10, (this.moralNight || 0) + 1)
+      return false
+    }
+    // Probabilite d'initier le deplacement, pour ne pas spammer les calculs.
+    if (Math.random() > 0.25) return false
+    const approach = findApproach(this.x, this.z, best.x, best.z)
+    if (!approach) return false
+    this.path = approach.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = true
+    this.updateTrail()
+    return true
+  }
+
   updateTrail() {
     if (!this.path) { this.lineGeo.setFromPoints([]); return }
     const pts = []
@@ -376,7 +407,11 @@ export class Colonist {
       }
       if (state.jobs.size > 0) { if (this.pickJob()) return }
       if (state.buildJobs.size > 0) { if (this.pickBuildJob()) return }
-      if (this.pickHarvest()) return
+      // Activite exclusive jour : cueillette de baies (agriculture). La nuit
+      // les colons affectes a un buisson reviennent au repos.
+      if (!state.isNight && this.pickHarvest()) return
+      // Nuit : attirance vers le foyer le plus proche (feu de camp social).
+      if (state.isNight && this.pickCampfire()) return
       this.wanderPause -= dt
       this.lookTimer -= dt
       if (this.lookTimer <= 0) {

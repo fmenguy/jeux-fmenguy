@@ -4,6 +4,18 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-20 (session 10) : MVP cycle jour/nuit (axe 4.2)
+
+- Nouveau module `modules/daynight.js` : toggle manuel via touche **N** ou icône HUD soleil/lune, transition d'ambiance lissée (~1.5s) sur la couleur de fond, fog, directional light (intensité 2.4 le jour, 0.35 la nuit, teinte lunaire bleutée), hemisphere light et uniforms du Sky.
+- Nouvelle ressource `state.nightPoints` (int) et `state.isNight` (bool), sérialisées dans les sauvegardes.
+- Nouveau placement "Promontoire d'observation" (touche **P**, bouton dans la barre Construire) : tour simple en pierre et bois avec une étoile dorée au sommet. Quand un colon IDLE y stationne la nuit, +1 point nocturne toutes les 5 secondes.
+- HUD : pastille soleil/lune (clic pour basculer) à côté de la pastille saison, nouvelle ligne "Points nocturnes" dans le panneau Ressources.
+- Colons : la nuit, attirance vers le foyer le plus proche (feu de camp social) depuis l'état IDLE, moral nocturne cumulé tant qu'ils sont proches d'une maison ou d'un manoir. La cueillette de baies (`pickHarvest`) est désactivée la nuit (activité exclusive jour).
+- Nouvelle chaîne de bâtiments "Astronomie" dans `data/buildings.json` : Promontoire, Observatoire, Grand télescope, Radio-télescope.
+- Overlay d'aide (touche H) et guide texte mis à jour avec les touches **N** (jour/nuit) et **P** (promontoire).
+
+---
+
 ## 2026-04-20 (session 9) : Data-driven configs JSON (axe 1.5)
 
 - Nouveau dossier `data/` avec trois fichiers JSON : `speech.json` (phrases, dialogues, bulles contextuelles), `colonists.json` (prénoms M/F), `quests.json` (définitions des quêtes).

@@ -10,7 +10,8 @@ import {
   addTree, addRock, addOre, addHouse, addBush, addResearchHouse,
   assignResearcherToBuilding, removeTreesIn, removeRocksIn, removeHousesIn,
   removeResearchHousesIn, removeOresIn, removeBushesIn, removeManorsIn,
-  checkManorMerge, isCellOccupied, isMineBlocked
+  checkManorMerge, isCellOccupied, isMineBlocked,
+  addObservatory, removeObservatoriesIn
 } from './placements.js'
 import { addJob, addBuildJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell } from './tech.js'
@@ -136,6 +137,7 @@ export function labelOfTool(t) {
     research: 'poser un laboratoire',
     field: 'tracer un champ',
     bush: 'poser un buisson',
+    observatory: 'poser un promontoire',
     erase: 'effacer'
   })[t] || t
 }
@@ -295,6 +297,7 @@ window.addEventListener('keydown', (e) => {
   const map = {
     '1': 'nav', '2': 'mine', '3': 'build',
     '7': 'house', '0': 'research', '8': 'field',
+    'p': 'observatory', 'P': 'observatory',
     ...(window.STRATES_MODE === 'sandbox' ? { '4': 'forest', '5': 'rock', '6': 'ore', '9': 'bush' } : {})
   }
   if (map[e.key]) setTool(map[e.key])
@@ -459,6 +462,9 @@ function applyToolAtCell(cell) {
     case 'bush':
       if (!isCellOccupied(cell.x, cell.z) && toolAllowedOnCell('bush', cell.x, cell.z)) addBush(cell.x, cell.z)
       break
+    case 'observatory':
+      if (!isCellOccupied(cell.x, cell.z)) addObservatory(cell.x, cell.z)
+      break
     case 'field': {
       const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
       for (const c of cells) {
@@ -480,6 +486,7 @@ function applyToolAtCell(cell) {
       removeResearchHousesIn(cells)
       removeOresIn(cells)
       removeBushesIn(cells)
+      removeObservatoriesIn(cells)
       removeAllJobsIn(cells)
       for (const c of cells) {
         const k = c.z * GRID + c.x
@@ -569,6 +576,9 @@ function applyToolToStrata(cells) {
       case 'bush':
         if (!isCellOccupied(c.x, c.z) && toolAllowedOnCell('bush', c.x, c.z)) addBush(c.x, c.z)
         break
+      case 'observatory':
+        if (!isCellOccupied(c.x, c.z)) addObservatory(c.x, c.z)
+        break
       case 'field': {
         if (!toolAllowedOnCell('field', c.x, c.z)) break
         const k = c.z * GRID + c.x
@@ -647,7 +657,7 @@ dom.addEventListener('pointermove', (e) => {
   }
   if (!state.toolState.isPainting) return
   if (state.toolState.tool === 'nav') return
-  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush') return
+  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory') return
   const cell = pickCell(e.clientX, e.clientY)
   if (cell) applyToolAtCell(cell)
 })
