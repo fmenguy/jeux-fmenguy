@@ -12,7 +12,7 @@
     { "id": "outils",        "label": "Outils",        "color": "#8a6a4a" },
     { "id": "agriculture",   "label": "Agriculture",   "color": "#4a8a3a" },
     { "id": "construction",  "label": "Construction",  "color": "#6a6a9a" },
-    { "id": "militaire",     "label": "Militaire",     "color": "#8a3a3a" },
+    { "id": "exploration",   "label": "Exploration",   "color": "#4a7a6a" },
     { "id": "savoir",        "label": "Savoir",        "color": "#4a6a8a" },
     { "id": "age",           "label": "Passage d'age", "color": "#9a7a3a" }
   ],
@@ -43,8 +43,8 @@
       "cost": 4, "requires": ["campfire"]
     },
     {
-      "id": "club", "name": "Massue", "desc": "Arme primitive, dissuasion basique",
-      "age": 1, "branch": "militaire", "icon": "M", "color": "#8a5040",
+      "id": "scout", "name": "Eclaireur", "desc": "Etend le rayon de vision de la colonie",
+      "age": 1, "branch": "exploration", "icon": "E", "color": "#4a7a6a",
       "cost": 4, "requires": []
     },
     {
@@ -88,14 +88,14 @@
       "cost": 10, "requires": ["shelter"]
     },
     {
-      "id": "sword-bronze", "name": "Epee en bronze", "desc": "Armement defensif et offensif",
-      "age": 2, "branch": "militaire", "icon": "E", "color": "#b08030",
-      "cost": 16, "requires": ["forge", "club"]
+      "id": "trade-routes", "name": "Routes commerciales", "desc": "Echanges avec d'autres colonies, synergies de ressources",
+      "age": 2, "branch": "exploration", "icon": "C", "color": "#6a9a5a",
+      "cost": 12, "requires": ["road-stone", "scout"]
     },
     {
-      "id": "palisade", "name": "Palissade", "desc": "Premiere fortification en bois",
-      "age": 2, "branch": "militaire", "icon": "P", "color": "#6a5030",
-      "cost": 11, "requires": ["club"]
+      "id": "cartography", "name": "Cartographie", "desc": "Cartes des territoires, planification des expeditions",
+      "age": 2, "branch": "exploration", "icon": "K", "color": "#4a8a7a",
+      "cost": 10, "requires": ["scout"]
     },
     {
       "id": "writing", "name": "Ecriture", "desc": "Consignation des connaissances, lois et contrats",
@@ -105,7 +105,7 @@
     {
       "id": "age-bronze", "name": "Maitrise du bronze", "desc": "Passage a l'age du bronze - debloquer forge, ecriture et pioche de bronze",
       "age": 2, "branch": "age", "icon": "B", "color": "#b87333",
-      "cost": 20, "requires": ["forge", "writing", "pick-bronze"],
+      "cost": 20, "requires": ["forge", "writing", "pick-bronze", "trade-routes"],
       "isAgePassage": true
     },
     {
@@ -139,14 +139,14 @@
       "cost": 40, "requires": ["forge"]
     },
     {
-      "id": "crossbow", "name": "Arbalete", "desc": "Armement a distance, avantage tactique majeur",
-      "age": 3, "branch": "militaire", "icon": "A", "color": "#906050",
-      "cost": 30, "requires": ["sword-bronze"]
+      "id": "lookout", "name": "Tour de vigie", "desc": "Vision etendue sur les territoires voisins",
+      "age": 3, "branch": "exploration", "icon": "V", "color": "#5a8a7a",
+      "cost": 22, "requires": ["cartography"]
     },
     {
-      "id": "watchtower", "name": "Tour de guet", "desc": "Vision etendue, detectiond'attaques a distance",
-      "age": 3, "branch": "militaire", "icon": "T", "color": "#807060",
-      "cost": 25, "requires": ["palisade"]
+      "id": "expedition", "name": "Grande expedition", "desc": "Decouverte de nouveaux biomes et ressources rares",
+      "age": 3, "branch": "exploration", "icon": "X", "color": "#3a7a6a",
+      "cost": 28, "requires": ["lookout"]
     },
     {
       "id": "library", "name": "Bibliotheque", "desc": "Accumulation du savoir, acceleration de la recherche",
