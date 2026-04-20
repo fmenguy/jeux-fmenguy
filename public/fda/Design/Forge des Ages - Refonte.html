@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Forge des Âges — Refonte ressources & bâtiments</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* =====================================================================
+   FORGE DES ÂGES — Proposition de refonte
+   Ressources & Bâtiments : plaques forgées, pas de glassmorphism.
+   ===================================================================== */
+:root {
+  --bg: #1a1208;
+  --bg-deep: #0d0805;
+  --bg-panel: #22170c;
+  --bg-plaque: #2a1d10;
+  --bg-plaque-lo: #1c130a;
+  --gold: #c9a84c;
+  --gold-bright: #ffd986;
+  --gold-deep: #8a6018;
+  --gold-dark: #5a3e10;
+  --ember: #ff7a3c;
+  --parchment: #f5e6c8;
+  --parchment-dim: #c9b68a;
+  --ink: #140a02;
+  --border-soft: rgba(201, 168, 76, 0.18);
+  --border-mid: rgba(201, 168, 76, 0.38);
+  --border-strong: rgba(201, 168, 76, 0.72);
+  --shadow-deep: 0 18px 40px rgba(0, 0, 0, 0.6);
+  --shadow-inset: inset 0 1px 0 rgba(255, 217, 134, 0.08),
+                  inset 0 -2px 0 rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-deep);
+  color: var(--parchment);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(255, 122, 60, 0.10), transparent 60%),
+    radial-gradient(900px 700px at 100% 100%, rgba(201, 168, 76, 0.06), transparent 60%),
+    linear-gradient(180deg, #0d0805 0%, #1a120a 55%, #0d0805 100%);
+  background-attachment: fixed;
+  padding: 40px 24px 60px;
+}
+
+/* Subtle noise overlay like the game */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.75  0 0 0 0 0.45  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+body > * { position: relative; z-index: 1; }
+
+/* ---------- Header / context ---------- */
+.page-head {
+  max-width: 1120px;
+  margin: 0 auto 28px;
+  text-align: center;
+}
+.kicker {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: var(--ember);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.page-head h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  letter-spacing: 0.18em;
+  color: var(--gold-bright);
+  margin: 0 0 10px;
+  text-shadow: 0 0 18px rgba(201, 168, 76, 0.35);
+}
+.page-head p {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--parchment-dim);
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* ---------- Section title (divider) ---------- */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  max-width: 1120px;
+  margin: 40px auto 18px;
+}
+.section-label .rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-mid), transparent);
+}
+.section-label h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0;
+  text-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-label h2::before,
+.section-label h2::after {
+  content: "◆";
+  color: var(--gold-deep);
+  font-size: 8px;
+}
+
+/* =====================================================================
+   RESSOURCES
+   ===================================================================== */
+.resources-frame {
+  max-width: 1120px;
+  margin: 0 auto;
+  background:
+    linear-gradient(180deg, rgba(42, 29, 16, 0.6), rgba(20, 13, 6, 0.85));
+  border: 1px solid var(--border-mid);
+  border-radius: 14px;
+  padding: 22px 20px 18px;
+  box-shadow:
+    var(--shadow-deep),
+    inset 0 1px 0 rgba(255, 217, 134, 0.06),
+    inset 0 0 60px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+/* Corner bolts */
+.resources-frame::before,
+.resources-frame::after,
+.resources-frame > .bolt-tr,
+.resources-frame > .bolt-br {
+  content: "";
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--gold-bright), var(--gold-deep) 55%, var(--ink) 100%);
+  box-shadow: 0 0 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(0,0,0,0.5);
+}
+.resources-frame::before { top: 10px; left: 10px; }
+.resources-frame::after { bottom: 10px; left: 10px; }
+.resources-frame > .bolt-tr { top: 10px; right: 10px; }
+.resources-frame > .bolt-br { bottom: 10px; right: 10px; }
+
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+/* Plaque */
+.res {
+  position: relative;
+  background:
+    linear-gradient(180deg, #3a2816 0%, #251810 55%, #180f07 100%);
+  border: 1px solid var(--gold-deep);
+  border-radius: 10px;
+  padding: 16px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 134, 0.14),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+    0 6px 18px rgba(0, 0, 0, 0.55);
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  overflow: hidden;
+}
+.res::after { /* subtle top highlight */
+  content: "";
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 217, 134, 0.45), transparent);
+  pointer-events: none;
+}
+.res:hover {
+  border-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 134, 0.22),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+    0 10px 24px rgba(0, 0, 0, 0.65),
+    0 0 22px rgba(201, 168, 76, 0.25);
+}
+
+/* Seal (icon) */
+.res-seal {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  line-height: 1;
+  background:
+    radial-gradient(circle at 30% 25%, #4a3320 0%, #1b1108 70%, #0d0805 100%);
+  border: 1px solid var(--gold-deep);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 217, 134, 0.25),
+    inset 0 -8px 12px rgba(0, 0, 0, 0.5),
+    0 0 14px rgba(201, 168, 76, 0.18);
+  position: relative;
+  margin-bottom: 12px;
+}
+.res-seal::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1px dashed rgba(201, 168, 76, 0.35);
+  pointer-events: none;
+}
+.res:hover .res-seal {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 217, 134, 0.35),
+    inset 0 -8px 12px rgba(0, 0, 0, 0.5),
+    0 0 22px rgba(255, 122, 60, 0.35);
+}
+
+.res-name {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  margin: 0 0 4px;
+}
+
+.res-count {
+  font-family: 'Cinzel', serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--gold-bright);
+  line-height: 1;
+  margin: 0 0 12px;
+  text-shadow:
+    0 0 12px rgba(255, 217, 134, 0.4),
+    0 2px 0 rgba(0, 0, 0, 0.6);
+  font-variant-numeric: tabular-nums;
+  transition: color .2s ease;
+}
+.res.has-stock .res-count { color: var(--gold-bright); }
+
+/* Rate meter - tiny subtle visual below the count */
+.res-rate {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: var(--parchment-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin: -8px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.res-rate .dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: #5bbb66;
+  box-shadow: 0 0 6px #5bbb66;
+  animation: pulseDot 1.8s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Harvest button — forged bar */
+.res-btn {
+  width: 100%;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background:
+    linear-gradient(180deg, #ffd986 0%, #c9a84c 45%, #8a6018 100%);
+  border: 1px solid var(--gold-deep);
+  border-radius: 6px;
+  padding: 10px 0;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 3px 6px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: all .18s ease;
+  position: relative;
+  overflow: hidden;
+}
+.res-btn::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: -100%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  transition: left .5s ease;
+}
+.res-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 0 18px rgba(201, 168, 76, 0.55),
+    0 5px 10px rgba(0, 0, 0, 0.55);
+}
+.res-btn:hover::before { left: 120%; }
+.res-btn:active { transform: translateY(0); filter: brightness(0.95); }
+
+.res-tooltip {
+  margin-top: 10px;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--parchment-dim);
+  opacity: 0.8;
+  min-height: 2.8em;
+  padding: 0 2px;
+}
+
+/* Keep resource card color semantics subtle */
+.res[data-res="baies"]  .res-seal { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,217,134,0.25), inset 0 -8px 12px rgba(0,0,0,0.5), 0 0 14px rgba(230, 80, 120, 0.2); }
+.res[data-res="bois"]   .res-seal { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,217,134,0.25), inset 0 -8px 12px rgba(0,0,0,0.5), 0 0 14px rgba(120, 200, 120, 0.18); }
+.res[data-res="pierre"] .res-seal { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,217,134,0.25), inset 0 -8px 12px rgba(0,0,0,0.5), 0 0 14px rgba(200, 200, 220, 0.18); }
+.res[data-res="eau"]    .res-seal { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,217,134,0.25), inset 0 -8px 12px rgba(0,0,0,0.5), 0 0 14px rgba(80, 160, 220, 0.25); }
+.res[data-res="viande"] .res-seal { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,217,134,0.25), inset 0 -8px 12px rgba(0,0,0,0.5), 0 0 14px rgba(255, 122, 60, 0.28); }
+
+/* Click feedback - count pop */
+.res-count.pop { animation: countPop .35s ease; }
+@keyframes countPop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.18); color: #fff6cf; text-shadow: 0 0 18px rgba(255, 217, 134, 0.8); }
+  100% { transform: scale(1); }
+}
+
+/* =====================================================================
+   BATIMENTS
+   ===================================================================== */
+.build-frame {
+  max-width: 1120px;
+  margin: 0 auto;
+  background:
+    linear-gradient(180deg, rgba(42, 29, 16, 0.6), rgba(20, 13, 6, 0.85));
+  border: 1px solid var(--border-mid);
+  border-radius: 14px;
+  padding: 24px;
+  position: relative;
+  box-shadow:
+    var(--shadow-deep),
+    inset 0 1px 0 rgba(255, 217, 134, 0.06),
+    inset 0 0 60px rgba(0, 0, 0, 0.4);
+}
+.build-frame::before,
+.build-frame::after,
+.build-frame > .bolt-tr,
+.build-frame > .bolt-br {
+  content: "";
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--gold-bright), var(--gold-deep) 55%, var(--ink) 100%);
+  box-shadow: 0 0 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(0,0,0,0.5);
+}
+.build-frame::before { top: 10px; left: 10px; }
+.build-frame::after { bottom: 10px; left: 10px; }
+.build-frame > .bolt-tr { top: 10px; right: 10px; }
+.build-frame > .bolt-br { bottom: 10px; right: 10px; }
+
+.build-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--border-soft);
+}
+.build-head .title {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  text-shadow: 0 0 10px rgba(201, 168, 76, 0.35);
+}
+.build-head .count {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--parchment-dim);
+  text-transform: uppercase;
+}
+.build-head .count b {
+  color: var(--gold-bright);
+  font-weight: 700;
+  margin: 0 4px;
+}
+
+.build-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+
+/* Base slot */
+.slot {
+  position: relative;
+  aspect-ratio: 1 / 1.08;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 10px 12px;
+  text-align: center;
+  transition: all .25s ease;
+  overflow: hidden;
+}
+
+/* Empty foundation slot */
+.slot.empty {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(201, 168, 76, 0.04) 0 6px,
+      transparent 6px 12px
+    ),
+    linear-gradient(180deg, rgba(26, 18, 10, 0.7), rgba(13, 8, 5, 0.7));
+  border: 1px dashed rgba(201, 168, 76, 0.28);
+  color: var(--parchment-dim);
+}
+.slot.empty::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed rgba(201, 168, 76, 0.14);
+  border-radius: 7px;
+  pointer-events: none;
+}
+.slot.empty .slot-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px dashed rgba(201, 168, 76, 0.35);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(201, 168, 76, 0.5);
+  font-size: 22px;
+  font-family: 'Cinzel', serif;
+  margin-top: 4px;
+}
+.slot.empty .slot-name {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245, 230, 200, 0.45);
+}
+.slot.empty .slot-cost {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(245, 230, 200, 0.4);
+  font-family: 'Inter', sans-serif;
+}
+.slot.empty:hover {
+  border-color: rgba(201, 168, 76, 0.55);
+  background:
+    repeating-linear-gradient(45deg, rgba(201, 168, 76, 0.08) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, rgba(38, 26, 16, 0.75), rgba(20, 13, 6, 0.75));
+  color: var(--gold-bright);
+}
+.slot.empty:hover .slot-icon {
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+
+/* Ready-to-build slot (can afford) */
+.slot.ready {
+  border-color: rgba(255, 122, 60, 0.55);
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 122, 60, 0.07) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, rgba(40, 22, 12, 0.75), rgba(25, 12, 6, 0.75));
+  box-shadow: 0 0 0 1px rgba(255, 122, 60, 0.18), 0 0 18px rgba(255, 122, 60, 0.18);
+  animation: readyPulse 2.4s ease-in-out infinite;
+}
+@keyframes readyPulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(255, 122, 60, 0.18), 0 0 18px rgba(255, 122, 60, 0.18); }
+  50%      { box-shadow: 0 0 0 1px rgba(255, 122, 60, 0.4), 0 0 28px rgba(255, 122, 60, 0.32); }
+}
+.slot.ready .slot-icon {
+  color: var(--ember);
+  border-color: var(--ember);
+  border-style: solid;
+  box-shadow: 0 0 12px rgba(255, 122, 60, 0.3);
+}
+.slot.ready .slot-name { color: var(--ember); }
+.slot.ready .slot-cost { color: var(--parchment); }
+
+/* Built slot */
+.slot.built {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 217, 134, 0.18), transparent 60%),
+    linear-gradient(180deg, #3a2816 0%, #241810 55%, #160d06 100%);
+  border: 1px solid var(--gold);
+  color: var(--parchment);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 134, 0.2),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+    0 6px 18px rgba(0, 0, 0, 0.55),
+    0 0 22px rgba(201, 168, 76, 0.15);
+}
+.slot.built::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 15%; right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 217, 134, 0.5), transparent);
+}
+.slot.built .slot-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, #4a3320 0%, #1b1108 70%, #0d0805 100%);
+  border: 1px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 134, 0.25),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.5),
+    0 0 14px rgba(201, 168, 76, 0.22);
+}
+.slot.built .slot-name {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  margin-bottom: 2px;
+}
+.slot.built .slot-yield {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--parchment-dim);
+  font-family: 'Inter', sans-serif;
+}
+.slot.built .slot-level {
+  position: absolute;
+  top: 8px; right: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  border: 1px solid var(--gold-deep);
+  padding: 2px 7px;
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.4);
+  font-weight: 700;
+}
+
+/* Legend under buildings */
+.build-legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-soft);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--parchment-dim);
+  text-transform: uppercase;
+}
+.build-legend .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.build-legend .sw {
+  width: 10px; height: 10px; border-radius: 2px;
+  border: 1px solid;
+}
+.build-legend .sw.empty { background: transparent; border-style: dashed; border-color: rgba(201,168,76,0.35); }
+.build-legend .sw.ready { background: rgba(255,122,60,0.18); border-color: var(--ember); }
+.build-legend .sw.built { background: linear-gradient(180deg,#3a2816,#160d06); border-color: var(--gold); }
+
+/* Comparison before / after note */
+.note {
+  max-width: 1120px;
+  margin: 36px auto 0;
+  padding: 18px 22px;
+  background:
+    linear-gradient(180deg, rgba(245, 230, 200, 0.97), rgba(236, 215, 170, 0.94));
+  color: #14090a;
+  border: 1px solid var(--gold-deep);
+  border-radius: 10px;
+  box-shadow: var(--shadow-deep), inset 0 0 30px rgba(138, 96, 24, 0.22);
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.note b { color: #5a3e10; font-style: normal; letter-spacing: 0.06em; }
+.note ul { margin: 8px 0 0; padding-left: 20px; }
+.note li { margin: 3px 0; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .resources-grid { grid-template-columns: repeat(3, 1fr); }
+  .build-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 560px) {
+  .resources-grid { grid-template-columns: repeat(2, 1fr); }
+  .build-grid { grid-template-columns: repeat(3, 1fr); }
+  .res-count { font-size: 26px; }
+  body { padding: 24px 12px 40px; }
+  .page-head h1 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <div class="kicker">Proposition · Refonte</div>
+  <h1>RESSOURCES &amp; BÂTIMENTS</h1>
+  <p>Remplacement du glassmorphism par des plaques forgées : séparation claire icône / compte / action, lisibilité renforcée, et emplacements de bâtiments en grille pour donner le sentiment d'un village qui se construit.</p>
+</header>
+
+<!-- ================= RESSOURCES ================= -->
+<div class="section-label">
+  <div class="rule"></div>
+  <h2>Ressources</h2>
+  <div class="rule"></div>
+</div>
+
+<section class="resources-frame">
+  <span class="bolt-tr"></span><span class="bolt-br"></span>
+
+  <div class="resources-grid">
+    <!-- Baies -->
+    <article class="res has-stock" data-res="baies">
+      <div class="res-seal">🍒</div>
+      <div class="res-name">Baies</div>
+      <div class="res-count" id="c-baies">24</div>
+      <div class="res-rate"><span class="dot"></span>+3 / cueillette</div>
+      <button class="res-btn" onclick="harvest('baies')">Récolter</button>
+      <div class="res-tooltip">Les baies te donnent à manger et attirent des gens.</div>
+    </article>
+
+    <!-- Bois -->
+    <article class="res has-stock" data-res="bois">
+      <div class="res-seal">🌲</div>
+      <div class="res-name">Bois</div>
+      <div class="res-count" id="c-bois">12</div>
+      <div class="res-rate"><span class="dot"></span>+2 / coupe</div>
+      <button class="res-btn" onclick="harvest('bois')">Récolter</button>
+      <div class="res-tooltip">Le bois sert à bâtir outils et abris.</div>
+    </article>
+
+    <!-- Pierre -->
+    <article class="res" data-res="pierre">
+      <div class="res-seal">🪨</div>
+      <div class="res-name">Pierre</div>
+      <div class="res-count" id="c-pierre">0</div>
+      <div class="res-rate" style="opacity:.35"><span class="dot" style="background:#7a6e4e;box-shadow:none;animation:none"></span>inerte</div>
+      <button class="res-btn" onclick="harvest('pierre')">Récolter</button>
+      <div class="res-tooltip">La pierre taillée soutient les plus grands ouvrages.</div>
+    </article>
+
+    <!-- Eau -->
+    <article class="res has-stock" data-res="eau">
+      <div class="res-seal">💧</div>
+      <div class="res-name">Eau</div>
+      <div class="res-count" id="c-eau">8</div>
+      <div class="res-rate"><span class="dot"></span>+1 / puisée</div>
+      <button class="res-btn" onclick="harvest('eau')">Récolter</button>
+      <div class="res-tooltip">L'eau abreuve ton peuple et nourrit les champs.</div>
+    </article>
+
+    <!-- Viande -->
+    <article class="res" data-res="viande">
+      <div class="res-seal">🍖</div>
+      <div class="res-name">Viande</div>
+      <div class="res-count" id="c-viande">0</div>
+      <div class="res-rate" style="opacity:.35"><span class="dot" style="background:#7a6e4e;box-shadow:none;animation:none"></span>sans chasseur</div>
+      <button class="res-btn" onclick="harvest('viande')">Récolter</button>
+      <div class="res-tooltip">La viande est plus nourrissante que les baies.</div>
+    </article>
+  </div>
+</section>
+
+<!-- ================= BÂTIMENTS ================= -->
+<div class="section-label">
+  <div class="rule"></div>
+  <h2>Bâtiments</h2>
+  <div class="rule"></div>
+</div>
+
+<section class="build-frame">
+  <span class="bolt-tr"></span><span class="bolt-br"></span>
+
+  <div class="build-head">
+    <div class="title">Constructions du village</div>
+    <div class="count"><b>2</b>/<b>12</b> édifices bâtis</div>
+  </div>
+
+  <div class="build-grid">
+
+    <!-- Built: Puits -->
+    <div class="slot built">
+      <span class="slot-level">N.1</span>
+      <div class="slot-icon">💧</div>
+      <div>
+        <div class="slot-name">Puits</div>
+        <div class="slot-yield">+1 eau / 6 s</div>
+      </div>
+    </div>
+
+    <!-- Built: Hutte -->
+    <div class="slot built">
+      <span class="slot-level">N.2</span>
+      <div class="slot-icon">🛖</div>
+      <div>
+        <div class="slot-name">Hutte</div>
+        <div class="slot-yield">abrite 4 villageois</div>
+      </div>
+    </div>
+
+    <!-- Ready to build: Cabane -->
+    <div class="slot empty ready">
+      <div class="slot-icon">🪵</div>
+      <div>
+        <div class="slot-name">Cabane de bûcheron</div>
+        <div class="slot-cost">8 Bois · 2 Pierre</div>
+      </div>
+    </div>
+
+    <!-- Empty slots (locked by resources) -->
+    <div class="slot empty">
+      <div class="slot-icon">🔥</div>
+      <div>
+        <div class="slot-name">Foyer</div>
+        <div class="slot-cost">4 Bois · 4 Pierre</div>
+      </div>
+    </div>
+
+    <div class="slot empty">
+      <div class="slot-icon">🌾</div>
+      <div>
+        <div class="slot-name">Champ</div>
+        <div class="slot-cost">12 Bois · 8 Eau</div>
+      </div>
+    </div>
+
+    <div class="slot empty">
+      <div class="slot-icon">⛏️</div>
+      <div>
+        <div class="slot-name">Carrière</div>
+        <div class="slot-cost">10 Bois · 10 Pierre</div>
+      </div>
+    </div>
+
+    <div class="slot empty">
+      <div class="slot-icon">🏹</div>
+      <div>
+        <div class="slot-name">Hutte de chasse</div>
+        <div class="slot-cost">6 Bois · 2 Pierre</div>
+      </div>
+    </div>
+
+    <div class="slot empty">
+      <div class="slot-icon">+</div>
+      <div>
+        <div class="slot-name">Emplacement libre</div>
+        <div class="slot-cost">Âge de Pierre</div>
+      </div>
+    </div>
+
+    <div class="slot empty">
+      <div class="slot-icon">+</div>
+      <div>
+        <div class="slot-name">Emplacement libre</div>
+        <div class="slot-cost">Âge de Pierre</div>
+      </div>
+    </div>
+
+    <div class="slot empty" style="opacity:.55">
+      <div class="slot-icon" style="color:rgba(201,168,76,.25);border-style:solid">🔒</div>
+      <div>
+        <div class="slot-name">Verrou</div>
+        <div class="slot-cost">Âge des Métaux</div>
+      </div>
+    </div>
+
+    <div class="slot empty" style="opacity:.55">
+      <div class="slot-icon" style="color:rgba(201,168,76,.25);border-style:solid">🔒</div>
+      <div>
+        <div class="slot-name">Verrou</div>
+        <div class="slot-cost">Âge des Métaux</div>
+      </div>
+    </div>
+
+    <div class="slot empty" style="opacity:.55">
+      <div class="slot-icon" style="color:rgba(201,168,76,.25);border-style:solid">🔒</div>
+      <div>
+        <div class="slot-name">Verrou</div>
+        <div class="slot-cost">Âge des Métaux</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="build-legend">
+    <span class="chip"><span class="sw built"></span> Bâti</span>
+    <span class="chip"><span class="sw ready"></span> Prêt à construire</span>
+    <span class="chip"><span class="sw empty"></span> Emplacement libre</span>
+  </div>
+</section>
+
+<!-- Design note -->
+<div class="note">
+  <b>NOTES DE CONCEPTION —</b>
+  <ul>
+    <li>Plaques solides (pas de flou) : meilleur contraste + ressemblance à un tableau de bord forgé.</li>
+    <li>Le <i>sceau</i> circulaire derrière l'emoji donne un point focal, même avec les icônes par défaut.</li>
+    <li>Le compte est en <i>Cinzel</i> large : lisible d'un coup d'œil pendant le jeu idle.</li>
+    <li>Les bâtiments passent en <b>grille d'emplacements</b> : l'état vide devient une invitation visuelle.</li>
+    <li>3 états : <b>bâti</b> (doré), <b>prêt</b> (orange pulsant, ressources suffisantes), <b>libre</b> (hachures).</li>
+  </ul>
+</div>
+
+<script>
+  // Simple harvest interaction to show the count-pop animation
+  function harvest(res) {
+    const el = document.getElementById('c-' + res);
+    if (!el) return;
+    const cur = parseInt(el.textContent, 10) || 0;
+    const gains = { baies:3, bois:2, pierre:1, eau:1, viande:2 };
+    el.textContent = cur + (gains[res] || 1);
+    el.classList.remove('pop');
+    void el.offsetWidth;
+    el.classList.add('pop');
+    el.closest('.res').classList.add('has-stock');
+  }
+</script>
+</body>
+</html>
