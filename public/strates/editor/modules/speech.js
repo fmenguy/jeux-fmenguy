@@ -1,8 +1,9 @@
 import {
-  GRID, CONTEXT_COOLDOWN, FIELD_NO_RESEARCH_DELAY_MAX,
-  SPEECH_CONTEXT_FIELD_NO_RESEARCH, SPEECH_CONTEXT_EMPTY_LAB,
-  SPEECH_CONTEXT_SEASON
+  GRID, CONTEXT_COOLDOWN, FIELD_NO_RESEARCH_DELAY_MAX
 } from './constants.js'
+import {
+  SPEECH_CONTEXT_FIELD_NO_RESEARCH, SPEECH_CONTEXT_EMPTY_LAB, SPEECH_CONTEXT_SEASON
+} from './gamedata.js'
 import { state } from './state.js'
 
 // ============================================================================
