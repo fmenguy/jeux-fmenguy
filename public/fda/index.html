@@ -68,53 +68,97 @@
       </div>
       <div id="alert" style="display: none"></div>
 
-      <div id="resources">
-        <div class="resource">
-          <p><span class="icon">🍇</span> Baies: <span id="berries">0</span></p>
-          <button onclick="gatherBerries()">Récolter</button><span class="tooltip">Les baies te donnent à manger et attirent des gens.</span>
+      <section class="resources-frame">
+        <span class="bolt-tr"></span><span class="bolt-br"></span>
+        <div class="resources-grid" id="resources">
+
+          <article class="res" data-res="baies">
+            <div class="res-seal">🍇</div>
+            <div class="res-name">Baies</div>
+            <div class="res-count" id="berries">0</div>
+            <button class="res-btn" onclick="gatherBerries()">Récolter</button>
+            <div class="res-bulk">
+              <button onclick="for(let i=0;i<5;i++) gatherBerries()">+5</button>
+              <button onclick="for(let i=0;i<50;i++) gatherBerries()">+50</button>
+            </div>
+            <div class="res-tooltip">Les baies te donnent à manger et attirent des gens.</div>
+          </article>
+
+          <article class="res" data-res="bois">
+            <div class="res-seal">🌲</div>
+            <div class="res-name">Bois</div>
+            <div class="res-count" id="wood">0</div>
+            <button class="res-btn" onclick="gatherWood()">Récolter</button>
+          </article>
+
+          <article class="res" data-res="pierre">
+            <div class="res-seal">⛰️</div>
+            <div class="res-name">Pierre</div>
+            <div class="res-count" id="stone">0</div>
+            <button class="res-btn" onclick="gatherStone()">Récolter</button>
+          </article>
+
+          <article class="res" data-res="eau">
+            <div class="res-seal">💧</div>
+            <div class="res-name">Eau</div>
+            <div class="res-count" id="water">0</div>
+            <button class="res-btn" onclick="gatherWater()">Récolter</button>
+          </article>
+
+          <article class="res" data-res="viande">
+            <div class="res-seal">🍖</div>
+            <div class="res-name">Viande</div>
+            <div class="res-count" id="meat">0</div>
+            <button class="res-btn" onclick="gatherMeat()">Récolter</button>
+          </article>
+
+          <article class="res" id="fibersSection" data-res="fibres" style="display:none">
+            <div class="res-seal">🌾</div>
+            <div class="res-name">Fibres</div>
+            <div class="res-count" id="fibers">0</div>
+            <button class="res-btn" onclick="gatherFibers()">Récolter</button>
+            <div class="res-tooltip">Les fibres servent à faire des vêtements ou cordes.</div>
+          </article>
+
+          <article class="res" id="metalsSection" data-res="metaux" style="display:none">
+            <div class="res-seal">⚒️</div>
+            <div class="res-name">Métaux</div>
+            <div class="res-count" id="metals">0</div>
+            <div class="res-max">/ <span id="maxMetalsLimit">100</span></div>
+            <button id="gatherMetalsBtn" class="res-btn" onclick="gatherMetals()" disabled>Récolter</button>
+            <div class="res-tooltip">Les métaux améliorent les outils (mine requise).</div>
+          </article>
+
+          <article class="res" id="herbsSection" data-res="herbes" style="display:none">
+            <div class="res-seal">🌿</div>
+            <div class="res-name">Herbes</div>
+            <div class="res-count" id="herbs">0</div>
+            <div class="res-tooltip">Les herbes soignent ou teignent (cueilleurs).</div>
+          </article>
+
+          <article class="res" id="wheatSection" data-res="ble" style="display:none">
+            <div class="res-seal">🌾</div>
+            <div class="res-name">Blé</div>
+            <div class="res-count" id="wheat">0</div>
+            <div class="res-tooltip">Le blé est cultivé par les fermiers.</div>
+          </article>
+
+          <article class="res" id="flourSection" data-res="farine" style="display:none">
+            <div class="res-seal">🥐</div>
+            <div class="res-name">Farine</div>
+            <div class="res-count" id="flour">0</div>
+            <div class="res-tooltip">La farine est produite par le moulin.</div>
+          </article>
+
+          <article class="res" id="breadSection" data-res="pain" style="display:none">
+            <div class="res-seal">🍞</div>
+            <div class="res-name">Pain</div>
+            <div class="res-count" id="bread">0</div>
+            <div class="res-tooltip">Le pain nourrit mieux que les baies.</div>
+          </article>
+
         </div>
-        <div class="resource">
-          <p><span class="icon">🌲</span> Bois: <span id="wood">0</span></p>
-          <button onclick="gatherWood()">Récolter</button>
-        </div>
-        <div class="resource">
-          <p><span class="icon">⛰️</span> Pierre: <span id="stone">0</span></p>
-          <button onclick="gatherStone()">Récolter</button>
-        </div>
-        <div class="resource">
-          <p><span class="icon">💧</span> Eau: <span id="water">0</span></p>
-          <button onclick="gatherWater()">Récolter</button>
-        </div>
-        <div class="resource">
-          <p><span class="icon">🍖</span> Viande: <span id="meat">0</span></p>
-          <button onclick="gatherMeat()">Récolter</button>
-        </div>
-        <div class="resource" id="fibersSection" style="display: none">
-          <p><span class="icon">🌾</span> Fibres: <span id="fibers">0</span></p>
-          <button onclick="gatherFibers()">Récolter</button><span class="tooltip">Les fibres servent à faire des vêtements ou cordes.</span>
-        </div>
-        <div class="resource" id="metalsSection" style="display: none">
-          <p><span class="icon">⚒️</span> Métaux: <span id="metals">0</span> / <span id="maxMetalsLimit">100</span></p>
-          <button id="gatherMetalsBtn" onclick="gatherMetals()" disabled>Récolter</button>
-          <span class="tooltip">Les métaux améliorent les outils (mine requise).</span>
-        </div>
-        <div class="resource" id="herbsSection" style="display: none">
-          <p><span class="icon">🌿</span> Herbes: <span id="herbs">0</span></p>
-          <span class="tooltip">Les herbes soignent ou teignent (cueilleurs).</span>
-        </div>
-        <div class="resource" id="wheatSection" style="display: none">
-          <p><span class="icon">🌾</span> Blé: <span id="wheat">0</span></p>
-          <span class="tooltip">Le blé est cultivé par les fermiers.</span>
-        </div>
-        <div class="resource" id="flourSection" style="display: none">
-          <p><span class="icon">🥐</span> Farine: <span id="flour">0</span></p>
-          <span class="tooltip">La farine est produite par le moulin.</span>
-        </div>
-        <div class="resource" id="breadSection" style="display: none">
-          <p><span class="icon">🍞</span> Pain: <span id="bread">0</span></p>
-          <span class="tooltip">Le pain nourrit mieux que les baies.</span>
-        </div>
-      </div>
+      </section>
 
       <div id="villagesDisplay" style="display: none;">
         <h2>Villages</h2>
@@ -294,8 +338,8 @@
     </a>
   </footer>
 
-  <script src="js/forge-main.js?v=52" type="module"></script>
-  <script src="js/forge-enhance.js?v=52" type="module"></script>
+  <script src="js/forge-main.js?v=53" type="module"></script>
+  <script src="js/forge-enhance.js?v=53" type="module"></script>
 
   <audio id="backgroundMusic" loop>
     <source src="assets/audio/ambiance_fda.mp3" type="audio/mpeg">
