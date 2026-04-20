@@ -5,6 +5,21 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
 ---
 
+## [2026-04-20]
+
+### Ajouté
+- **Strates** : page d'accueil landing (design Claude, ambiance Dorfromantik cosy)
+
+### Modifié
+- **FDA** : refonte design v2, cartes ressources en plaques forgées, actions bulk +5/+50
+- **FDA** : design bâtiments forgés avec classe `.ready` pulsante
+- **FDA** : fix guillemets JS, nettoyage `v2.css` (bloc `.resource` supprimé)
+- **FDA** : panneaux Fabrication, Main-d'oeuvre et Reliques intégrés au design v2, mise en avant des ember workers
+- **FDA** : manteau affiche la progression X/Y (manteaux / villageois)
+- **FDA** : progression débloquée, UI objectif refonte, bot console, corrections critiques
+
+---
+
 ## [2026-04-17]
 
 ### Modifié
