@@ -118,7 +118,7 @@ function updateObjective() {
     // Affichage du PROGRES vers la condition de deblocage
     box.classList.add('objective-progress');
     box.classList.remove('objective-ready');
-    objMsg().textContent = '🎯 ' + meta.goal;
+    objMsg().textContent = meta.goal;
     objProgWrap().hidden = false;
     const shown = Math.min(curVal, targetVal);
     const pct = Math.min(100, Math.round((shown / targetVal) * 100));
@@ -129,7 +129,7 @@ function updateObjective() {
     // Condition remplie : l'indice est PRET a etre revele
     box.classList.add('objective-ready');
     box.classList.remove('objective-progress');
-    objMsg().textContent = '✨ Indice débloqué : clique pour le révéler.';
+    objMsg().textContent = 'Indice débloqué !';
     objProgWrap().hidden = true;
     claimBtn().hidden = false;
     // Auto-flash si nouveau
@@ -334,13 +334,7 @@ function renderTechTree() {
 // Bulle d'aide sur le claim (message transparent sur le petit lag)
 // ============================================================
 function injectClaimHelpBubble() {
-  const box = document.getElementById('currentObjective');
-  if (!box || document.getElementById('claimHelpBubble')) return;
-  const bubble = document.createElement('div');
-  bubble.id = 'claimHelpBubble';
-  bubble.className = 'claim-help-bubble';
-  bubble.innerHTML = `ℹ N'hésite pas à cliquer plusieurs fois sur <b>Réclamer</b> si ça ne répond pas du 1er coup (petit bug en cours de résolution).`;
-  box.appendChild(bubble);
+  // supprime : le bug est resolu
 }
 
 // ============================================================
