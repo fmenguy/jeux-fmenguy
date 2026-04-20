@@ -12,8 +12,7 @@ import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests } from './modules/quests.js'
 import { updateCameraPan } from './modules/camera-pan.js'
 import {
-  refreshHUD, refreshStocksLine, refreshTechsPanel, updateDynHUD, tickFps, hudRefs,
-  updateMinimap
+  refreshHUD, refreshStocksLine, refreshTechsPanel, updateDynHUD, tickFps, hudRefs
 } from './modules/hud.js'
 import { setTool, setBrush } from './modules/interaction.js'
 import { hasSave, loadGame, startAutoSave } from './modules/persistence.js'
@@ -31,7 +30,11 @@ import './modules/stocks.js'
 startNextQuest()
 
 buildTerrain()
-if (hasSave('auto') && loadGame('auto')) {
+const isNewGame = (() => { try { const v = localStorage.getItem('strates-new-game'); localStorage.removeItem('strates-new-game'); return !!v } catch(e) { return false } })()
+const pendingSlot = (() => { try { const v = localStorage.getItem('strates-pending-load'); localStorage.removeItem('strates-pending-load'); return v } catch(e) { return null } })()
+if (!isNewGame && pendingSlot && hasSave(pendingSlot) && loadGame(pendingSlot)) {
+  forceSeasonRepaint()
+} else if (!isNewGame && hasSave('auto') && loadGame('auto')) {
   forceSeasonRepaint()
 } else {
   populateDefaultScene()
@@ -148,11 +151,6 @@ function tick(nowMs) {
   updateDynHUD()
   tickFps()
 
-  // mini-map toutes les 2s
-  if (!tick._lastMinimap || t - tick._lastMinimap >= 2.0) {
-    tick._lastMinimap = t
-    updateMinimap()
-  }
 
   requestAnimationFrame(tick)
 }

@@ -252,10 +252,41 @@ const btnLoad = document.getElementById('btn-load')
 if (btnLoad) btnLoad.addEventListener('click', openSaveMenu)
 const btnSaveClose = document.getElementById('save-menu-close')
 if (btnSaveClose) btnSaveClose.addEventListener('click', closeSaveMenu)
+
+// Menu pause
+function openPauseMenu() {
+  const pm = document.getElementById('pause-menu')
+  if (!pm) return
+  const hint = document.getElementById('pause-save-hint')
+  if (hint) {
+    try {
+      const raw = localStorage.getItem('strates-save-auto')
+      if (raw) {
+        const d = new Date(JSON.parse(raw).savedAt)
+        hint.textContent = 'auto-save ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      }
+    } catch(e) {}
+  }
+  pm.classList.remove('hidden')
+}
+function closePauseMenu() {
+  const pm = document.getElementById('pause-menu')
+  if (pm) pm.classList.add('hidden')
+}
+const btnPauseResume = document.getElementById('pause-resume')
+if (btnPauseResume) btnPauseResume.addEventListener('click', closePauseMenu)
+const btnPauseSaves = document.getElementById('pause-saves')
+if (btnPauseSaves) btnPauseSaves.addEventListener('click', () => { closePauseMenu(); openSaveMenu() })
+const pauseMenu = document.getElementById('pause-menu')
+if (pauseMenu) pauseMenu.addEventListener('click', (e) => { if (e.target === pauseMenu) closePauseMenu() })
+
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    const m = document.getElementById('save-menu')
-    if (m && !m.classList.contains('hidden')) closeSaveMenu()
+    const sm = document.getElementById('save-menu')
+    const pm = document.getElementById('pause-menu')
+    if (sm && !sm.classList.contains('hidden')) { closeSaveMenu(); return }
+    if (pm && !pm.classList.contains('hidden')) { closePauseMenu(); return }
+    openPauseMenu()
   }
 })
 
