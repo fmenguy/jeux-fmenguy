@@ -224,6 +224,45 @@ export const SPEECH_LINES_INSISTENT = [
   "Tu nous as oublies ?",
   "Donne nous quelque chose a faire."
 ]
+export const SPEECH_CONTEXT_SEASON = {
+  spring: [
+    "Ca sent bon le printemps !",
+    "Regardez, les fleurs reviennent.",
+    "Enfin le soleil !",
+    "C'est le moment de planter.",
+    "L'hiver est fini, ouf.",
+    "Ca pousse bien en ce moment.",
+    "J'adore cette periode de l'annee.",
+  ],
+  summer: [
+    "Il fait chaud aujourd'hui...",
+    "J'aurais bien besoin d'eau.",
+    "L'ete deja, comme c'est passe vite.",
+    "Ca pousse bien avec ce soleil.",
+    "Plein soleil, parfait pour bosser.",
+    "Je fonds dans mes habits.",
+    "L'ombre des arbres ca fait du bien.",
+  ],
+  autumn: [
+    "Les feuilles changent de couleur.",
+    "Ca sent l'automne.",
+    "Faudrait stocker pour l'hiver.",
+    "Le vent se leve.",
+    "J'espere qu'on a assez de reserves.",
+    "L'air est frais ce matin.",
+    "Joli, toutes ces couleurs.",
+  ],
+  winter: [
+    "Brrr, il fait froid.",
+    "Ma cape ne suffit plus.",
+    "On se les gele ici !",
+    "Je vois mon souffle.",
+    "L'hiver sera long, j'espere qu'on a du stock.",
+    "Je reste pas dehors longtemps.",
+    "Au moins c'est calme.",
+  ]
+}
+
 export const SPEECH_CONTEXT_FIELD_NO_RESEARCH = [
   "Il me faut une houe pour cultiver.",
   "Comment on fait pour manger du pain sans outil ?",
