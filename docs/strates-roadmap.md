@@ -42,35 +42,36 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 
 ### Axe 2, structure du jeu
 
-- [ ] 2.1 Séparation claire éditeur vs jeu (nouvelle page `play/`)
-- [ ] 2.2 Écran d'accueil `/strates/` (Nouvelle partie, Charger, Éditeur, Crédits)
-- [ ] 2.3 Scénarios prédéfinis (îlot calme, archipel venté, vallée montagneuse)
-- [ ] 2.4 Système d'âges et passage, de l'âge de pierre à l'âge de l'espace (voir vision **Tech tree XXL** dans `strates-design-ideas.md` : 7 âges + 6 branches thématiques + 60 à 90 techs en graphe, inspiré Total War Warhammer et Craft the World, passage d'âge à la FDA par conditions cumulatives)
-- [ ] 2.5 Mode campagne / mode sandbox / endgame cyclique (changement de planète)
-- [ ] 2.6 **Map plus grande + fog of war** (style Age of Empires) : révélation progressive par vision des colons et bâtiments (rayon ~8-12 tuiles), cellules explorées restent visibles en version figée
-- [ ] 2.7 **Verticalité Minecraft** : hauteurs jusqu'à 10 blocs (montagnes) + minage jusqu'à 4 blocs sous la surface. Neige permanente sur les sommets. Danger de chute (voir besoins 3.4).
-- [ ] 2.8 **Animaux** (axe à part entière) : cerfs, sangliers passifs, loups agressifs, chasse. Plus tard : élevage (poules, moutons, vaches).
-- [ ] 2.9 **Pêche et maritime** : tech ports de pêche (bronze), bateaux de pêche, bateaux maritimes (fer, exploration/commerce). Nouvelle ressource poisson.
-- [ ] 2.10 **Sons d'ambiance** : bruit de pas doux dans la neige (crack léger), vent dans les feuillages, clapotis d'eau, chant d'oiseaux au printemps
-- [ ] 2.11 **Séparation éditeur / mode jeu + Godmod** : les outils éditeur actuels (forêt, rocher, filon, maison, champ, baies) impactent réellement la partie, mais seraient réservés à un panneau "Godmod" / mode créatif séparé. En mode jeu, le joueur ne peut que désigner des ordres aux colons.
-- [ ] 2.12 **Stocks utiles à la construction** : en mode jeu, poser une maison ou un bâtiment consomme X pierre + Y bois + Z terre au lieu d'être gratuit. L'outil Placer (blocs) propose un choix de matériau (pierre / terre / sable) au lieu de prendre le plus abondant. Les stocks deviennent la monnaie d'échange réelle, au-delà du sculpt de paysage.
-
-### Axe 6, social (idées en vrac, à préciser)
-
-- [ ] 6.1 **Fiches personnages** : clic sur un colon → panneau détaillé (nom, âge, métier, outils portés, relations, besoins, inventaire, historique). Édition directe de certains champs (métier, priorité).
-- [ ] 6.2 Relations visibles (voir 3.5) : liens entre fiches, arbre généalogique.
-- [ ] 6.3 Journal personnel par colon (bref historique des événements vécus).
-
-### Axe 7, villes et villages (idées en vrac)
-
-- [ ] 7.1 **Fiches de village** : chaque maison regroupe un village, panneau qui liste habitants, stocks locaux, bâtiments rattachés, niveau de satisfaction.
-- [ ] 7.2 Hiérarchie village → hameau → ville selon population et bâtiments.
-- [ ] 7.3 Zones de confort (rayon autour d'un puits, d'une place centrale).
+- [x] **2.1 Écran d'accueil `/strates/`** (livré 2026-04-18 `98ff8f1`, enrichi 2026-04-20)
+  - [x] Landing page thématique (île voxel CSS, pitch, frise des âges)
+  - [x] Menu Nouvelle partie / Charger / Éditeur / Crédits
+  - [x] Section "Mécaniques" (4 cartes : colons, saisons, ressources, recherche)
+  - [x] Section "Moments de jeu" (vignettes CSS animées : hiver, minage, recherche)
+  - [x] Section "Origine FDA" avec logo et lien vers Forge des Âges
+  - [x] Bulles rotatives avec vraies phrases du jeu
+  - [x] Panneau "Charger une partie" depuis l'accueil (lit localStorage, slots 1-5 + auto)
+  - [x] "Continuer" vs "Nouvelle partie" contextuel selon sauvegardes existantes
+  - [x] Vraie nouvelle partie (flag `strates-new-game`, ignore saves existantes)
+- [ ] 2.2 Scénarios prédéfinis (îlot calme, archipel venté, vallée montagneuse)
+- [ ] 2.3 Système d'âges et passage, de l'âge de pierre à l'âge de l'espace (voir vision **Tech tree XXL** dans `strates-design-ideas.md` : 7 âges + 6 branches thématiques + 60 à 90 techs en graphe, inspiré Total War Warhammer et Craft the World, passage d'âge à la FDA par conditions cumulatives)
+- [ ] 2.4 Mode campagne / mode sandbox / endgame cyclique (changement de planète)
+- [x] **2.5 Map plus grande** (GRID 96x96, livré `88612ab` + `c42038e`)
+- [ ] 2.6 **Fog of war** (style Age of Empires) : révélation progressive par vision des colons et bâtiments (rayon ~8-12 tuiles), cellules explorées restent visibles en version figée — MVP livré `7480879`/`91119a7`, désactivé temporairement `83f0b9f`
+- [x] **2.7 Verticalité** : hauteurs jusqu'à 10 blocs (MAX\_STRATES 10, livré `88612ab`)
+  - [ ] Minage jusqu'à 4 blocs sous la surface, neige permanente sur les sommets, danger de chute
+- [ ] 2.8 **Animaux** : cerfs, sangliers passifs, loups agressifs, chasse. Plus tard : élevage.
+- [ ] 2.9 **Pêche et maritime** : ports de pêche (bronze), bateaux, ressource poisson.
+- [ ] 2.10 **Sons d'ambiance** : bruit de pas, vent, clapotis, chant d'oiseaux au printemps
+- [ ] 2.11 **Séparation éditeur / mode jeu + Godmod** : outils éditeur réservés à un panneau "Godmod" séparé ; en mode jeu, le joueur ne peut que désigner des ordres aux colons
+  - [x] Menu pause (Échap) : Continuer, Sauvegardes, Retour à l'accueil (livré 2026-04-20)
+  - [ ] Deux modes distincts dans l'URL (`?mode=sandbox` vs partie normale)
+- [ ] 2.12 **Stocks utiles à la construction** : poser une maison consomme pierre + bois + terre ; l'outil Placer propose un choix de matériau
 
 ### Axe 3, gameplay
 
-- [x] 3.1 Extraction dédiée des filons (livré session 6 : mine = extraction si filon présent, gating tech, stocks remplis)
-- [ ] 3.2 Outils et métiers spécialisés (partiel livré session 7 : hache en pierre + abattage arbres, gating tech, +wood. À venir : pelle, houe, faucille, marteau, canne)
+- [x] **3.1 Extraction dédiée des filons** (livré `5eefc98` : mine = extraction si filon présent, gating tech, stocks remplis)
+- [x] **3.2 Outils et métiers spécialisés** (partiel livré `e26d48d` : hache en pierre + abattage arbres, gating tech, +wood)
+  - [ ] Pelle, houe, faucille, marteau, canne à pêche
 - [ ] 3.3 Interface gestion des rôles par colon (cases à cocher, priorités)
 - [ ] 3.4 Besoins vitaux (faim, sommeil, social) + cycle jour/nuit mécanique
 - [ ] 3.5 Relations, couples, reproduction naturelle (remplace spawn par maison)
@@ -82,22 +83,42 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 
 - [ ] 4.1 Signatures Dorfromantik (cel-shading, brume, heure dorée, HDRI eau)
 - [ ] 4.2 Cycle jour/nuit (soleil qui tourne, lanternes qui s'allument)
-- [ ] 4.3 Saisons (palette, neige, fleurs, rendements agricoles)
+- [x] **4.3 Saisons** (livré `106a1c1` + `9d12db8` + `04bd4ed` : palette herbe/forêt, neige hivernale, pluie printanière, dialogues saisonniers, durée 600s)
+  - [ ] Fleurs visuelles au printemps, rendements agricoles saisonniers
 - [ ] 4.4 Particules (poussière minage, copeaux, fumée, feuilles)
-- [ ] 4.5 Audio adaptatif par biome (crossfade, sons d'actions, fanfares tech)
-- [ ] 4.6 UX HUD : panneau contrôles type Clair Obscur (pictos clavier élégants), mini-map, overlay vue de dessus, info-bulle voxel, timeline jour/saison/âge
+- [x] **4.5 Audio adaptatif par saison** (partiel : livré `ec9cbea`/`5ed7d97` : playlist MP3 par saison, crossfade, toggle mute)
+  - [ ] Sons d'actions (minage, abattage), fanfares tech, sons d'ambiance biome
+- [x] **4.6 UX HUD** (partiel)
+  - [x] Rotation caméra azimut A/E (livré `95e0b97`)
+  - [x] Menu pause Échap avec navigation retour accueil (livré 2026-04-20)
+  - [ ] Panneau contrôles type Clair Obscur (pictos clavier élégants)
+  - [ ] Mini-map (ajoutée `04bd4ed`, retirée 2026-04-20 car non fonctionnelle)
+  - [ ] Overlay vue de dessus, info-bulle voxel, timeline jour/saison/âge
 - [ ] 4.7 Feedback clic (ripple, highlight, outline entité)
-- [ ] 4.8 Animations entités (arbres qui poussent, champs qui mûrissent, buissons qui fleurissent)
+- [x] **4.8 Animations entités** (livré `8c9026f` : arbres qui poussent, champs qui mûrissent, buissons qui fleurissent)
 
 ### Axe 5, évolution et long terme
 
 - [ ] 5.1 Démo jouable en ligne (landing soignée, tutoriel guidé, lien de partage)
 - [ ] 5.2 Mode créatif et partage de cartes (export/import JSON, galerie)
 - [ ] 5.3 Modding léger (JSON custom techs/biomes/quêtes)
-- [ ] 5.4 Convergence avec FDA (même lore, portail `/jeux/`)
+- [x] **5.4 Convergence avec FDA** (livré 2026-04-20 : section "Origine FDA" sur la landing avec logo et lien)
 - [ ] 5.5 Ciblage plateforme (web pur vs Electron/Tauri pour Steam)
 - [ ] 5.6 Feedback joueur (bouton discret, mailto ou Typeform)
 - [ ] 5.7 Roadmap publique (`/strates/roadmap/` extraite du changelog)
+
+### Axe 6, social (idées en vrac, à préciser)
+
+- [x] **6.0 Colons nommés et genrés avec dialogues personnalisés** (livré `334a75c` : François chef avec couronne, Fred, Belkacem, etc., phrases spécifiques par personnage + dialogues saisonniers)
+- [ ] 6.1 **Fiches personnages** : clic sur un colon → panneau détaillé (nom, âge, métier, outils portés, relations, besoins, inventaire, historique). Édition directe de certains champs (métier, priorité).
+- [ ] 6.2 Relations visibles : liens entre fiches, arbre généalogique.
+- [ ] 6.3 Journal personnel par colon (bref historique des événements vécus).
+
+### Axe 7, villes et villages (idées en vrac)
+
+- [ ] 7.1 **Fiches de village** : chaque maison regroupe un village, panneau qui liste habitants, stocks locaux, bâtiments rattachés, niveau de satisfaction.
+- [ ] 7.2 Hiérarchie village → hameau → ville selon population et bâtiments.
+- [ ] 7.3 Zones de confort (rayon autour d'un puits, d'une place centrale).
 
 ---
 
@@ -107,18 +128,18 @@ Sans s'enfermer dans un ordre strict, cette séquence maximise la valeur visible
 
 **Court terme (quelques sessions)**
 1. Axe 4 visuel : signatures Dorfromantik, cycle jour/nuit, particules minage, premiers sons. La claque visuelle justifie le temps investi, motive la suite.
-2. Axe 3.1 extraction filons : débloque la progression tech au-delà de la pioche pierre.
-3. Axe 3.2 outils diversifiés : hache, pelle, houe. Permet les quêtes intéressantes.
+2. Axe 2.11 séparation éditeur/jeu : le mode "ordre-only" est l'âme du pitch, le Godmod reste pour le sandbox.
+3. Axe 3.2 outils diversifiés : pelle, houe, faucille. Permet les quêtes intéressantes.
 
 **Moyen terme (demi-douzaine de sessions)**
-4. Axe 2.4 système d'âges concret : passage pierre → bronze avec animation.
+4. Axe 2.3 système d'âges concret : passage pierre → bronze avec animation.
 5. Axe 3.4 besoins vitaux + 3.5 relations + reproduction : colonie qui vit toute seule.
-6. Axe 2.2 écran d'accueil + 2.3 scénarios prédéfinis : expérience de jeu construite.
+6. Axe 2.6 fog of war réactivé et poli : révélation progressive par vision des colons.
 
 **Long terme (vision)**
 7. Axe 3.7 événements + catastrophes : drama et enjeux.
-8. Axe 2.4 âges industriel, moderne, atomique, espace : contenu.
-9. Axe 2.5 endgame changement de planète : boucle finale, premier vrai cycle jouable.
+8. Axe 2.3 âges industriel, moderne, atomique, espace : contenu.
+9. Axe 2.4 endgame changement de planète : boucle finale, premier vrai cycle jouable.
 10. Axe 5.1 démo publique : rendre jouable par d'autres.
 
 ## Fil directeur

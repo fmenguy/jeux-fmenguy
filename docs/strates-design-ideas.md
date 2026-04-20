@@ -365,6 +365,45 @@ Pour l'instant les colons ne meurent pas (v alpha). À terme, ils auront :
 - **Autres tribus / voisins** neutres ou hostiles (diplomatie, commerce, guerre, à voir selon ambition).
 - **Conditions de fin** optionnelles (atteindre âge X, population Y, monument) ou sandbox pur avec scoring.
 
+## Dialogues contextuels
+
+Les bulles de dialogue des colons peuvent aller bien plus loin que de simples phrases aléatoires si elles réagissent au contexte précis du jeu.
+
+### Déclencheurs événementiels
+
+Chaque événement notable du jeu peut déclencher un pool de répliques ciblées :
+
+- **Pluie** : répliques différentes selon le métier (le fermier est content, la bûcheronne agacée).
+- **Récolte** : satisfaction ou commentaire sur l'abondance / la pénurie.
+- **Changement de saison** : répliques d'ambiance ou d'anticipation.
+- **Construction d'un bâtiment** : fierté, curiosité, scepticisme selon le colon.
+- **Découverte d'un filon** : excitation, convoitise, prudence.
+- **Faim** : plainte croissante jusqu'à ce que le joueur intervienne (lié à l'axe 3.4 besoins vitaux).
+
+Le système existant `SPEECH_CONTEXT_FIELD_NO_RESEARCH` montre déjà le patron à étendre : un déclencheur, une condition, un pool de phrases, un cooldown.
+
+### Filtres de répliques
+
+Pour que chaque colon s'exprime de façon cohérente avec son identité, les pools de phrases peuvent être filtrés en cascade :
+
+- **Par métier/rôle** : le fermier dit "Trop bien pour mes champs !" sous la pluie, la bûcheronne dit "Mon bois va être trempé.", le chercheur ne sort pas du labo.
+- **Par genre** : certaines répliques réservées aux F ou M. Exemple : "Oh non, ma robe va être trempée." pour une colonne féminine sous la pluie. Même événement, ton différent.
+- **Par nom** : comme le système `SPEECH_LINES_BY_NAME` déjà en place, des répliques propres à un colon particulier (ex : François le chef peut avoir des répliques de commandement).
+
+### Priorité de sélection
+
+Ordre de résolution pour trouver la réplique à afficher :
+1. Ligne spécifique au nom du colon (priorité max).
+2. Ligne filtrée par métier + genre.
+3. Ligne filtrée par métier seul.
+4. Ligne filtrée par genre seul.
+5. Ligne générique de l'événement (fallback).
+
+### Liens avec la roadmap
+
+- Axe 3.2 (métiers) : les répliques de métier arrivent naturellement avec l'attribution des rôles.
+- Axe 3.4 (besoins vitaux) : la faim, la fatigue et la soif sont des déclencheurs prioritaires, les répliques renforcent l'urgence sans tooltip.
+
 ## Statut
 
 Phase : éditeur consolidé (voir [strates-changelog.md](strates-changelog.md) pour l'historique détaillé).

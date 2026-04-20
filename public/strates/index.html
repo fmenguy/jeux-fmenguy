@@ -719,6 +719,367 @@
     color: var(--paper);
   }
 
+  /* ===================== Panneau de chargement (overlay) ===================== */
+  .load-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .load-overlay.open { display: flex; }
+
+  .load-panel {
+    background: var(--paper);
+    border: 1px solid var(--paper-3);
+    border-radius: 4px;
+    width: min(540px, 94vw);
+    padding: 32px 36px 28px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.22), 0 2px 8px rgba(0,0,0,.08);
+    position: relative;
+  }
+  .load-panel h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 26px;
+    margin: 0 0 24px;
+    letter-spacing: -.01em;
+    color: var(--ink);
+  }
+  .load-close {
+    position: absolute;
+    top: 18px; right: 20px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--ink-3);
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 2px;
+    transition: color .15s;
+  }
+  .load-close:hover { color: var(--ink); }
+
+  .slot-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .slot-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--paper-3);
+    border-radius: 2px;
+    background: var(--paper-2);
+    transition: background .15s;
+  }
+  .slot-row.has-data { background: var(--paper-2); }
+  .slot-row.is-auto { border-color: var(--accent); }
+
+  .slot-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--ink-3);
+    flex-shrink: 0;
+    width: 32px;
+  }
+  .slot-row.is-auto .slot-num { color: var(--accent); font-weight: 600; }
+
+  .slot-meta {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .slot-meta em { font-style: italic; color: var(--ink-3); font-size: 12px; }
+  .slot-meta strong { color: var(--ink); font-weight: 500; }
+
+  .slot-load-btn {
+    font-family: var(--serif);
+    font-size: 14px;
+    padding: 7px 18px;
+    background: transparent;
+    border: 1px solid var(--ink-2);
+    border-radius: 2px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .slot-load-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .slot-load-btn:disabled { opacity: .35; cursor: default; pointer-events: none; }
+  .slot-row.is-auto .slot-load-btn { border-color: var(--accent); color: var(--accent); }
+  .slot-row.is-auto .slot-load-btn:hover { background: var(--accent); color: var(--paper); }
+
+  html[data-theme="dark"] .load-panel { background: #26221c; border-color: #352f26; }
+  html[data-theme="dark"] .load-panel h2 { color: #ede3cc; }
+  html[data-theme="dark"] .slot-row { background: #1d1a15; border-color: #352f26; }
+  html[data-theme="dark"] .slot-row.is-auto { border-color: #d4b870; }
+  html[data-theme="dark"] .slot-num { color: #7f7562; }
+  html[data-theme="dark"] .slot-row.is-auto .slot-num { color: #d4b870; }
+  html[data-theme="dark"] .slot-meta { color: #b9ad91; }
+  html[data-theme="dark"] .slot-meta em { color: #7f7562; }
+  html[data-theme="dark"] .slot-meta strong { color: #ede3cc; }
+  html[data-theme="dark"] .slot-load-btn { border-color: #7f7562; color: #ede3cc; }
+  html[data-theme="dark"] .slot-load-btn:hover { background: #ede3cc; color: #1d1a15; border-color: #ede3cc; }
+  html[data-theme="dark"] .slot-row.is-auto .slot-load-btn { border-color: #d4b870; color: #d4b870; }
+  html[data-theme="dark"] .slot-row.is-auto .slot-load-btn:hover { background: #d4b870; color: #1d1a15; }
+  html[data-theme="dark"] .load-close { color: #7f7562; }
+  html[data-theme="dark"] .load-close:hover { color: #ede3cc; }
+
+  /* ===================== Genèse FDA ===================== */
+  .genese {
+    max-width: 1100px;
+    margin: 0 auto 64px;
+  }
+  .genese-inner {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    background: var(--paper-2);
+    border: 1px solid var(--paper-3);
+    border-radius: 3px;
+    padding: 24px 28px;
+  }
+  @media (max-width: 600px) {
+    .genese-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
+  }
+  .genese-logo-link {
+    flex-shrink: 0;
+    display: block;
+    transition: opacity .18s;
+  }
+  .genese-logo-link:hover { opacity: .85; }
+  .genese-logo {
+    width: 80px; height: 80px;
+    border-radius: 6px;
+    object-fit: cover;
+    display: block;
+  }
+  .genese-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 8px;
+  }
+  .genese-body {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    margin: 0;
+  }
+  .genese-body a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .genese-body a:hover { color: var(--ink); }
+
+  html[data-theme="dark"] .genese-inner { background: #26221c; border-color: #352f26; }
+  html[data-theme="dark"] .genese-body { color: #b9ad91; }
+  html[data-theme="dark"] .genese-body a { color: #d4b870; }
+
+  /* ===================== Mécaniques (feature cards) ===================== */
+  .mecas {
+    max-width: 1100px;
+    margin: 0 auto 64px;
+  }
+  .mecas-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 10px;
+  }
+  .mecas-head h3 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: -.005em;
+  }
+  .mecas-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 900px) { .mecas-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .mecas-grid { grid-template-columns: 1fr; } }
+
+  .meca-card {
+    background: var(--paper-2);
+    border: 1px solid var(--paper-3);
+    border-radius: 3px;
+    padding: 20px 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform .18s, background .18s;
+  }
+  .meca-card:hover { transform: translateY(-2px); background: var(--paper-3); }
+  .meca-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .meca-icon.colonist { background: #c9442c22; }
+  .meca-icon.season   { background: #7cc06a22; }
+  .meca-icon.ore      { background: #a69e8a22; }
+  .meca-icon.research { background: #3c7fb822; }
+  .meca-card .meca-title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .meca-card .meca-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .meca-card .meca-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: auto;
+  }
+
+  /* ===================== Vignettes / shots ===================== */
+  .vignette-scene {
+    position: relative;
+    width: 100%; height: 100%;
+    overflow: hidden;
+  }
+  /* scène hiver */
+  .vign-winter .vign-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, #b8cfe0 0%, #d4e4ef 55%, #e8f0f4 100%);
+  }
+  .vign-winter .snowflake {
+    position: absolute;
+    width: 4px; height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    opacity: .8;
+    animation: snowfall linear infinite;
+  }
+  @keyframes snowfall {
+    from { transform: translateY(-10px) translateX(0); opacity: .9; }
+    to   { transform: translateY(calc(100% + 10px)) translateX(12px); opacity: .3; }
+  }
+  .vign-winter .vign-ground {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 38%;
+    background: linear-gradient(to bottom, #e8f3f8 0%, #d4eaf2 100%);
+    border-top: 2px solid #c8dfe8;
+  }
+  .vign-winter .vign-tree {
+    position: absolute; bottom: 35%; left: 22%;
+    width: 16px;
+  }
+  .vign-winter .vign-tree .trunk { position: absolute; left: 50%; bottom: 0; width: 4px; height: 12px; background: #7a5a36; transform: translateX(-50%); }
+  .vign-winter .vign-tree .crown { position: absolute; left: 50%; bottom: 10px; width: 22px; height: 26px; background: #c8dde6; border-radius: 40% 40% 50% 50%; transform: translateX(-50%); box-shadow: inset -3px -4px 0 #aec8d4; }
+  .vign-winter .vign-colonist { position: absolute; bottom: 36%; left: 45%; }
+  .vign-winter .vign-colonist .body { width: 6px; height: 10px; background: #7a3a2c; border-radius: 1px; }
+  .vign-winter .vign-colonist .head { width: 8px; height: 8px; background: #ead3b0; border-radius: 50%; margin: 0 -1px; }
+  .vign-winter .vign-bubble {
+    position: absolute; bottom: 58%; left: 38%;
+    font-family: var(--serif); font-style: italic; font-size: 11px;
+    background: white; color: #2a2620;
+    padding: 4px 8px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    white-space: nowrap;
+  }
+
+  /* scène minage */
+  .vign-mine .vign-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #3e3a30 0%, #26221c 60%, #1a1710 100%);
+  }
+  .vign-mine .vign-ore {
+    position: absolute; top: 28%; left: 50%; transform: translateX(-50%);
+    width: 54px; height: 54px;
+    background: linear-gradient(135deg, #7fb3c8 0%, #5a8fa0 60%, #3d6a78 100%);
+    border-radius: 4px;
+    box-shadow: inset -4px -4px 0 #2d5060, 2px 4px 8px rgba(0,0,0,.5);
+  }
+  .vign-mine .vign-ore::after {
+    content: "";
+    position: absolute; top: 12px; left: 12px;
+    width: 14px; height: 14px;
+    background: #b0e0ee;
+    border-radius: 2px;
+    opacity: .6;
+  }
+  .vign-mine .vign-spark {
+    position: absolute; top: 24%; left: 58%;
+    width: 6px; height: 6px;
+    background: #ffd86a;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #ffd86a, 0 0 16px #ff9a2a;
+    animation: spark .8s ease-in-out infinite alternate;
+  }
+  @keyframes spark { from { opacity: .3; transform: scale(.7); } to { opacity: 1; transform: scale(1.3); } }
+  .vign-mine .vign-ground {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 35%;
+    background: linear-gradient(to bottom, #4a4438 0%, #2a2620 100%);
+    border-top: 2px solid #5a5244;
+  }
+  .vign-mine .vign-colonist { position: absolute; bottom: 33%; left: 38%; }
+  .vign-mine .vign-colonist .body { width: 6px; height: 10px; background: #c9442c; border-radius: 1px; }
+  .vign-mine .vign-colonist .head { width: 8px; height: 8px; background: #ead3b0; border-radius: 50%; margin: 0 -1px; }
+  .vign-mine .vign-pick {
+    position: absolute; bottom: 42%; left: 43%;
+    width: 18px; height: 3px;
+    background: #a0785c;
+    border-radius: 2px;
+    transform: rotate(-35deg);
+  }
+  .vign-mine .vign-label {
+    position: absolute; top: 12px; right: 12px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+    text-transform: uppercase; color: #7fb3c8;
+  }
+
+  /* scène tech */
+  .vign-tech .vign-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--sky) 0%, var(--sky-2) 100%);
+  }
+  .vign-tech .vign-ground {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 32%;
+    background: linear-gradient(to bottom, var(--grass) 0%, var(--grass-3) 100%);
+    border-top: 2px solid var(--grass-3);
+  }
+  .vign-tech .vign-lab {
+    position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%);
+    width: 44px; height: 38px;
+  }
+  .vign-tech .vign-lab .wall { position: absolute; left: 4px; bottom: 0; width: 36px; height: 20px; background: #d9c9a6; box-shadow: inset -4px 0 0 #b8a684; }
+  .vign-tech .vign-lab .roof { position: absolute; left: 0; bottom: 18px; width: 44px; height: 18px; background: #3c7fb8; clip-path: polygon(0 100%, 50% 0, 100% 100%); }
+  .vign-tech .vign-lab .win  { position: absolute; left: 8px; bottom: 4px; width: 10px; height: 10px; background: #a8d4f0; box-shadow: inset 1px 1px 0 rgba(255,255,255,.5); }
+  .vign-tech .vign-dots {
+    position: absolute; bottom: 62%; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px;
+  }
+  .vign-tech .vign-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    animation: dotPop .6s ease-in-out infinite alternate;
+  }
+  .vign-tech .vign-dot:nth-child(1) { background: #c9442c; animation-delay: 0s; }
+  .vign-tech .vign-dot:nth-child(2) { background: #d4b870; animation-delay: .2s; }
+  .vign-tech .vign-dot:nth-child(3) { background: #7fb3c8; animation-delay: .4s; }
+  @keyframes dotPop { from { transform: translateY(0); opacity: .5; } to { transform: translateY(-4px); opacity: 1; } }
+
   /* ===================== Print / accessibility ===================== */
   @media (prefers-reduced-motion: reduce) {
     .mist, .bubble { animation: none; }
@@ -764,6 +1125,12 @@
   html[data-theme="dark"] .age:hover { background: #352f26; }
   html[data-theme="dark"] .shot { background: #26221c; border-color: #352f26; }
   html[data-theme="dark"] .shot .label { background: #1d1a15; }
+  html[data-theme="dark"] .meca-card { background: #26221c; border-color: #352f26; }
+  html[data-theme="dark"] .meca-card:hover { background: #352f26; }
+  html[data-theme="dark"] .meca-card .meca-title { color: #ede3cc; }
+  html[data-theme="dark"] .meca-card .meca-body { color: #b9ad91; }
+  html[data-theme="dark"] .meca-card .meca-tag { color: #7f7562; }
+  html[data-theme="dark"] .mecas-head h3 { color: #ede3cc; }
   html[data-theme="dark"] .tweaks-panel { background: #26221c; border-color: #352f26; }
   html[data-theme="dark"] .tweaks-panel h4 { color: #ede3cc; border-bottom-color: #3a3227; }
   html[data-theme="dark"] .tweak-row .control { background: #1d1a15; }
@@ -799,8 +1166,8 @@
     </p>
 
     <ul class="menu">
-      <li class="primary"><a href="./editor/index.html">Nouvelle partie <span class="num">01</span></a></li>
-      <li><a href="./editor/index.html#load" data-action="load">Charger une partie <span class="num">02</span></a></li>
+      <li class="primary" id="menu-new-item"><a id="menu-new-link" href="./editor/index.html">Nouvelle partie <span class="num">01</span></a></li>
+      <li><a href="#" data-action="load">Charger une partie <span class="num">02</span></a></li>
       <li><a href="./editor/index.html">Éditeur, mapmaker <span class="num">03</span></a></li>
       <li class="muted"><a href="#credits">Crédits <span class="num">04</span></a></li>
       <li class="muted"><a href="/">← Hub Arcade FM <span class="num">00</span></a></li>
@@ -857,7 +1224,7 @@
 <main class="below">
 
   <section class="pitch">
-    <h2>Un jeu <em>lent</em>,<br/>qui regarde pousser.</h2>
+    <h2>Un jeu <em>lent</em>,<br/>qu'on regarde pousser.</h2>
     <div>
       <p>
         Une poignée de colons débarque sur une île. Ils ont des noms, un genre, et bientôt des amis, des amours, des rancunes. Ils cueillent des baies parce qu'il n'y a rien d'autre à faire. Le joueur, lui, ne touche pas au terrain. Il désigne, patiemment, un rocher à miner, un arbre à abattre, un champ à tracer.
@@ -865,6 +1232,76 @@
       <p>
         Et puis un jour une hutte bleue s'élève, quelqu'un s'y installe, et les premières idées arrivent. Pioche en bronze. Four à pain. Un second village. Une route. Un aqueduc. Une fusée, beaucoup plus tard, et une autre planète à peupler.
       </p>
+    </div>
+  </section>
+
+  <section class="mecas">
+    <div class="mecas-head">
+      <h3>Mécaniques</h3>
+      <span class="meta" style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;">Age de pierre, prototype</span>
+    </div>
+    <div class="mecas-grid">
+
+      <div class="meca-card">
+        <div class="meca-icon colonist">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="7" r="5" fill="#ead3b0" stroke="#c9a080" stroke-width="1.2"/>
+            <rect x="5" y="12" width="12" height="8" rx="2" fill="#c9442c"/>
+            <circle cx="16" cy="5" r="3.5" fill="#d4b870" stroke="#a88030" stroke-width="1"/>
+            <path d="M14 5 L16 3 L18 5" stroke="#a88030" stroke-width="1" fill="none"/>
+          </svg>
+        </div>
+        <span class="meca-title">Colons nommés</span>
+        <p class="meca-body">Chaque colon a un prénom, un genre, une allure. Ils se déplacent, parlent, s'ennuient. François porte une couronne.</p>
+        <span class="meca-tag">François, Fred, Belkacem...</span>
+      </div>
+
+      <div class="meca-card">
+        <div class="meca-icon season">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="4.5" fill="#f0c878" stroke="#d4a040" stroke-width="1.2"/>
+            <line x1="11" y1="2" x2="11" y2="5" stroke="#d4a040" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="11" y1="17" x2="11" y2="20" stroke="#7fb3c8" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="2" y1="11" x2="5" y2="11" stroke="#7cc06a" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="17" y1="11" x2="20" y2="11" stroke="#d4a040" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="5.5" cy="5.5" r="1.2" fill="#7cc06a"/>
+            <circle cx="16.5" cy="5.5" r="1.2" fill="#f0c878"/>
+            <circle cx="5.5" cy="16.5" r="1.2" fill="#7fb3c8"/>
+            <circle cx="16.5" cy="16.5" r="1.2" fill="#d4a040"/>
+          </svg>
+        </div>
+        <span class="meca-title">Quatre saisons</span>
+        <p class="meca-body">Printemps, été, automne, hiver. La palette change, la neige tombe. Les colons réagissent aux saisons par des dialogues contextuels.</p>
+        <span class="meca-tag">météo animée, pluie, neige</span>
+      </div>
+
+      <div class="meca-card">
+        <div class="meca-icon ore">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="3" y="7" width="12" height="12" rx="2" fill="#a69e8a" stroke="#6a6256" stroke-width="1.2" transform="rotate(-10 9 13)"/>
+            <rect x="10" y="4" width="9" height="9" rx="1.5" fill="#d4b870" stroke="#a88030" stroke-width="1" transform="rotate(8 14.5 8.5)"/>
+            <rect x="5" y="9" width="6" height="6" rx="1" fill="#7fb3c8" stroke="#4a7a90" stroke-width="1" transform="rotate(-5 8 12)"/>
+          </svg>
+        </div>
+        <span class="meca-title">Ressources et filons</span>
+        <p class="meca-body">Cuivre, fer, charbon, argent, or, améthyste. Miner progresse strate par strate. Les filons débloquent les outils du prochain âge.</p>
+        <span class="meca-tag">hache, pioche pierre, bronze, fer, or</span>
+      </div>
+
+      <div class="meca-card">
+        <div class="meca-icon research">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="5" y="12" width="12" height="8" rx="1.5" fill="#d9c9a6" stroke="#b8a684" stroke-width="1"/>
+            <path d="M4 12 L11 5 L18 12" fill="#3c7fb8" stroke="#2a5f8a" stroke-width="1"/>
+            <rect x="8" y="14" width="4" height="5" rx="1" fill="#a8d4f0"/>
+            <circle cx="15" cy="8" r="2" fill="#ffd86a" stroke="#d4a040" stroke-width="1"/>
+          </svg>
+        </div>
+        <span class="meca-title">Recherche</span>
+        <p class="meca-body">La hutte bleue génère des points de recherche. Affecter un colon accélère le progrès. Le tech tree s'ouvre graduellement.</p>
+        <span class="meca-tag">points de recherche, tech tree</span>
+      </div>
+
     </div>
   </section>
 
@@ -877,7 +1314,7 @@
       <div class="age reached">
         <span class="no">I</span>
         <span class="name">Pierre</span>
-        <span class="hint">Baies, pioche, premières huttes.</span>
+        <span class="hint">Baies, hache, pioche, hutte bleue, mini-map, 4 saisons.</span>
         <span class="chip"></span>
       </div>
       <div class="age">
@@ -925,23 +1362,90 @@
     </div>
   </section>
 
+  <section class="genese">
+    <div class="genese-inner">
+      <a href="https://jeux.fmenguy.fr/fda/" target="_blank" rel="noopener" class="genese-logo-link">
+        <img src="../fda/assets/fda.webp" alt="Forge des Âges" class="genese-logo" />
+      </a>
+      <div class="genese-text">
+        <p class="genese-eyebrow">Origine du concept</p>
+        <p class="genese-body">
+          Strates est né de <a href="https://jeux.fmenguy.fr/fda/" target="_blank" rel="noopener"><strong>Forge des Âges</strong></a>, un jeu de navigateur 2D conçu en 2024. Même progression par âges, mêmes saisons, même tech tree. Mais sans monde voxel, sans colons visibles, sans carte à explorer. Strates est la version 3D, incarnée, de cette même idée.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <section class="shots">
     <div class="shots-head">
-      <h3>Dans l'éditeur</h3>
+      <h3>Moments de jeu</h3>
       <span class="meta">Proto 2026-04, alpha</span>
     </div>
     <div class="shots-grid">
-      <div class="shot big"><span class="label">// screenshot, vue éditeur, colons au travail</span></div>
-      <div class="shot"><span class="label">// gif, minage d'une strate</span></div>
-      <div class="shot"><span class="label">// screenshot, panneau tech</span></div>
+
+      <div class="shot big">
+        <div class="vignette-scene vign-winter">
+          <div class="vign-bg"></div>
+          <div class="snowflake" style="left:15%;animation-duration:3.2s;animation-delay:0s"></div>
+          <div class="snowflake" style="left:28%;animation-duration:4.1s;animation-delay:.7s"></div>
+          <div class="snowflake" style="left:42%;animation-duration:3.7s;animation-delay:1.4s"></div>
+          <div class="snowflake" style="left:55%;animation-duration:4.8s;animation-delay:.3s"></div>
+          <div class="snowflake" style="left:68%;animation-duration:3.4s;animation-delay:1.9s"></div>
+          <div class="snowflake" style="left:80%;animation-duration:4.3s;animation-delay:.9s"></div>
+          <div class="snowflake" style="left:90%;animation-duration:3.9s;animation-delay:2.2s"></div>
+          <div class="vign-ground"></div>
+          <div class="vign-tree" style="left:18%;bottom:33%"><div class="trunk"></div><div class="crown"></div></div>
+          <div class="vign-tree" style="left:72%;bottom:33%;transform:scale(.8)"><div class="trunk"></div><div class="crown"></div></div>
+          <div class="vign-colonist" style="left:44%;bottom:34%"><div class="head" style="width:8px;height:8px;background:#ead3b0;border-radius:50%;margin:0 -1px"></div><div class="body" style="width:6px;height:10px;background:#7a3a2c;border-radius:1px"></div></div>
+          <div class="vign-bubble" style="left:38%;bottom:56%">Brrr, il fait froid.</div>
+        </div>
+        <span class="label" style="position:absolute;bottom:12px;right:12px">Premier hiver</span>
+      </div>
+
+      <div class="shot">
+        <div class="vignette-scene vign-mine">
+          <div class="vign-bg"></div>
+          <div class="vign-ore"></div>
+          <div class="vign-spark"></div>
+          <div class="vign-ground"></div>
+          <div class="vign-colonist" style="left:36%;bottom:34%"><div class="head" style="width:8px;height:8px;background:#ead3b0;border-radius:50%;margin:0 -1px"></div><div class="body" style="width:6px;height:10px;background:#c9442c;border-radius:1px"></div></div>
+          <div class="vign-pick"></div>
+          <span class="vign-label">Cuivre</span>
+        </div>
+        <span class="label" style="position:absolute;bottom:12px;left:12px">Minage d'un filon</span>
+      </div>
+
+      <div class="shot">
+        <div class="vignette-scene vign-tech">
+          <div class="vign-bg"></div>
+          <div class="vign-ground"></div>
+          <div class="vign-lab"><div class="wall"></div><div class="roof"></div><div class="win"></div></div>
+          <div class="vign-dots">
+            <div class="vign-dot"></div>
+            <div class="vign-dot"></div>
+            <div class="vign-dot"></div>
+          </div>
+        </div>
+        <span class="label" style="position:absolute;bottom:12px;left:12px">Recherche active</span>
+      </div>
+
     </div>
   </section>
 
   <footer class="below-foot" id="credits">
     <span>Strates, François Menguy, 2026</span>
-    <span><a href="/">Arcade FM</a> <a href="https://fda.fmenguy.fr" rel="noopener">FDA (2D)</a> CC BY-NC 4.0</span>
+    <span><a href="/">Arcade FM</a> <a href="https://jeux.fmenguy.fr/fda/" target="_blank" rel="noopener">Forge des Âges (2D)</a> CC BY-NC 4.0</span>
   </footer>
 </main>
+
+<!-- ================= Panneau de chargement ================= -->
+<div class="load-overlay" id="loadOverlay" role="dialog" aria-modal="true" aria-label="Charger une partie">
+  <div class="load-panel">
+    <button class="load-close" id="loadClose" aria-label="Fermer">&#x2715;</button>
+    <h2>Charger une partie</h2>
+    <div class="slot-list" id="slotList"></div>
+  </div>
+</div>
 
 <!-- ================= Tweaks panel ================= -->
 <aside class="tweaks-panel" id="tweaks">
@@ -1001,6 +1505,165 @@
 
   applyState();
 
+  // ---------- Menu principal : Nouvelle partie vs Continuer ----------
+  (function() {
+    function hasSaves() {
+      try {
+        for (let i = 1; i <= 5; i++) { if (localStorage.getItem('strates-save-' + i)) return true; }
+        return !!localStorage.getItem('strates-save-auto');
+      } catch(e) { return false; }
+    }
+    const link = document.getElementById('menu-new-link');
+    if (!link) return;
+    if (hasSaves()) {
+      link.textContent = '';
+      link.appendChild(document.createTextNode('Continuer '));
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = '01';
+      link.appendChild(num);
+      // Ajoute une entrée "Nouvelle partie" sous Continuer
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#';
+      a.innerHTML = 'Nouvelle partie <span class="num">01b</span>';
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!confirm('Commencer une nouvelle partie ? La sauvegarde automatique sera écrasée.')) return;
+        try { localStorage.setItem('strates-new-game', '1'); } catch(err) {}
+        window.location.href = './editor/index.html';
+      });
+      li.appendChild(a);
+      document.getElementById('menu-new-item').insertAdjacentElement('afterend', li);
+    }
+  })();
+
+  // ---------- Panneau de chargement ----------
+  (function() {
+    const overlay = document.getElementById('loadOverlay');
+    const slotList = document.getElementById('slotList');
+    const closeBtn = document.getElementById('loadClose');
+    const loadLink = document.querySelector('[data-action="load"]');
+
+    function formatDate(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+           + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function readSlot(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        return {
+          savedAt: data.savedAt || null,
+          colonists: (data.colonists || []).length,
+          cyclesDone: data.season ? (data.season.cyclesDone || 0) : 0
+        };
+      } catch(e) { return null; }
+    }
+
+    function buildSlotList() {
+      slotList.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        const meta = readSlot('strates-save-' + i);
+        const row = document.createElement('div');
+        row.className = 'slot-row' + (meta ? ' has-data' : '');
+        const numEl = document.createElement('span');
+        numEl.className = 'slot-num';
+        numEl.textContent = '#' + i;
+        const metaEl = document.createElement('span');
+        metaEl.className = 'slot-meta';
+        if (meta) {
+          metaEl.innerHTML = '<strong>' + formatDate(meta.savedAt) + '</strong>'
+            + '  &middot;  ' + meta.colonists + ' colon' + (meta.colonists > 1 ? 's' : '')
+            + '  &middot;  cycle&nbsp;' + meta.cyclesDone;
+        } else {
+          metaEl.innerHTML = '<em>emplacement libre</em>';
+        }
+        const btn = document.createElement('button');
+        btn.className = 'slot-load-btn';
+        btn.textContent = 'Charger';
+        btn.disabled = !meta;
+        btn.addEventListener('click', () => {
+          try { localStorage.setItem('strates-pending-load', String(i)); } catch(e) {}
+          window.location.href = './editor/index.html';
+        });
+        row.appendChild(numEl);
+        row.appendChild(metaEl);
+        row.appendChild(btn);
+        slotList.appendChild(row);
+      }
+      // Slot auto
+      const autoMeta = readSlot('strates-save-auto');
+      if (autoMeta) {
+        const row = document.createElement('div');
+        row.className = 'slot-row is-auto';
+        const numEl = document.createElement('span');
+        numEl.className = 'slot-num';
+        numEl.textContent = 'Auto';
+        const metaEl = document.createElement('span');
+        metaEl.className = 'slot-meta';
+        metaEl.innerHTML = 'Sauvegarde auto &middot; ' + formatDate(autoMeta.savedAt)
+          + ' &middot; ' + autoMeta.colonists + ' colon' + (autoMeta.colonists > 1 ? 's' : '');
+        const btn = document.createElement('button');
+        btn.className = 'slot-load-btn';
+        btn.textContent = 'Charger';
+        btn.addEventListener('click', () => {
+          try { localStorage.setItem('strates-pending-load', 'auto'); } catch(e) {}
+          window.location.href = './editor/index.html';
+        });
+        row.appendChild(numEl);
+        row.appendChild(metaEl);
+        row.appendChild(btn);
+        slotList.appendChild(row);
+      }
+    }
+
+    function openPanel() {
+      buildSlotList();
+      overlay.classList.add('open');
+    }
+    function closePanel() { overlay.classList.remove('open'); }
+
+    if (loadLink) {
+      loadLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        openPanel();
+      });
+    }
+    closeBtn.addEventListener('click', closePanel);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closePanel(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanel(); });
+  })();
+
+  // ---------- Bulles rotatives (vraies phrases du jeu) ----------
+  const BUBBLE_LINES = [
+    "Joli panorama.",
+    "Qu'est-ce qu'on fait ?",
+    "On pourrait construire quelque chose.",
+    "C'est loin, le prochain âge ?",
+    "J'ai rêvé qu'on avait une forge.",
+    "Regarde, un oiseau.",
+    "Tu crois qu'il va pleuvoir ?",
+    "J'aime bien cet endroit.",
+    "Y'a quelqu'un qui sait faire du pain ?",
+    "T'as vu comme le soleil est bas ?",
+  ];
+  let bubbleIdx = 0;
+  const bubbleEl = document.querySelector('.bubble');
+  if (bubbleEl) {
+    setInterval(() => {
+      bubbleIdx = (bubbleIdx + 1) % BUBBLE_LINES.length;
+      bubbleEl.textContent = BUBBLE_LINES[bubbleIdx];
+      bubbleEl.style.animation = 'none';
+      void bubbleEl.offsetWidth;
+      bubbleEl.style.animation = '';
+    }, 7000);
+  }
+
   // ---------- Edit mode wiring ----------
   window.addEventListener("message", (e) => {
     const d = e.data || {};
@@ -1019,13 +1682,6 @@
     else if (hint) hint.textContent = "aucune sauvegarde";
   } catch (e) {}
 
-  // ---------- "Charger" : stub propre ----------
-  const loadLink = document.querySelector('[data-action="load"]');
-  if (loadLink) {
-    loadLink.addEventListener("click", (e) => {
-      // On laisse le lien filer vers editor/#load, le jeu s'occupe d'ouvrir la modale.
-    });
-  }
 })();
 </script>
 
