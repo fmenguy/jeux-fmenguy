@@ -23,6 +23,7 @@ import { initAudio, tickAudio } from './modules/audio.js'
 import { tickWeather } from './modules/weather.js'
 import { initTechTreeUI, toggleTechTree, closeTechTree } from './modules/techtree-ui.js'
 import { initCharSheet } from './modules/charsheet-ui.js'
+import { initHelpOverlay } from './modules/help-overlay.js'
 import { TECH_TREE_DATA } from './modules/gamedata.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
@@ -62,6 +63,7 @@ startAutoSave(30)
 initAudio()
 initTechTreeUI()
 initCharSheet()
+initHelpOverlay()
 
 // Bouton "Arbre T" dans le mini-panel tech
 const btnTT = document.getElementById('btn-techtree')
