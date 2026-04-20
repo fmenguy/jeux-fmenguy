@@ -4,6 +4,38 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-20 (session 9) : Data-driven configs JSON (axe 1.5)
+
+- Nouveau dossier `data/` avec trois fichiers JSON : `speech.json` (phrases, dialogues, bulles contextuelles), `colonists.json` (prénoms M/F), `quests.json` (définitions des quêtes).
+- Nouveau module `gamedata.js` : charge les trois fichiers en `Promise.all` au démarrage, exports en live bindings ES6.
+- `constants.js` allégé de ~200 lignes : ne contient plus que des constantes numériques et `THREE.Color`.
+- `colonist.js`, `speech.js`, `tech.js`, `quests.js` importent depuis `gamedata.js` au lieu de `constants.js`.
+- `quests.js` : `QUEST_DEFS` devient un `let` initialisé par `initQuestDefs()` après chargement des données.
+- `main.js` : `await loadGameData()` + `initQuestDefs()` avant `buildTerrain()`.
+- Ajouter une phrase ou une quête ne nécessite plus de toucher au code JS.
+
+---
+
+## 2026-04-20 (session 8) : Landing enrichie, menu pause, navigation accueil
+
+### Landing page (`/strates/index.html`)
+- Section "Mécaniques" (4 cartes : colons nommés, saisons, ressources, recherche) avec icônes SVG.
+- Section "Moments de jeu" (3 vignettes CSS animées : premier hiver avec flocons, minage d'un filon avec étincelle, recherche active avec labo).
+- Section "Origine FDA" : logo Forge des Âges, texte de filiation, lien vers `jeux.fmenguy.fr/fda/`.
+- Bulles rotatives dans la scène héros : cycle toutes les 7 s sur les vraies phrases du jeu.
+- Panneau "Charger une partie" depuis l'accueil : lit le localStorage, affiche les 5 slots manuels + slot auto avec métadonnées (date, nb colons, cycle). Bouton "Charger" grisé si slot vide.
+- Menu contextuel "Continuer / Nouvelle partie" : si une sauvegarde existe, le bouton 01 devient "Continuer" et un bouton "Nouvelle partie" apparaît. La vraie nouvelle partie passe un flag `strates-new-game` et ignore les saves existantes.
+
+### Jeu (`editor/`)
+- Menu pause (Échap) dans le style du jeu : Continuer, Sauvegardes, Retour à l'accueil.
+- `main.js` : lecture de `strates-pending-load` (charger un slot spécifique) et `strates-new-game` (ignorer les saves) au démarrage.
+- Mini-map retirée (non fonctionnelle, à réintroduire plus tard).
+
+### Roadmap
+- Axe 1.5 coché, axes 2.1 et 5.4 cochés, cases détaillées mises à jour.
+
+---
+
 ## 2026-04-19 (session 7) : Abattage d'arbres et hache en pierre (axe 3.2 MVP)
 
 ### Nouvelle tech
