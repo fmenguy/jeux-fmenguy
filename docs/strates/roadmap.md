@@ -90,7 +90,7 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 ### Axe 4, visuel et UX (**PRIORITÉ remontée** : le jeu est jugé trop basique par l'utilisateur, les chantiers visuels de cet axe passent devant le reste)
 
 - [ ] 4.1 Signatures Dorfromantik (cel-shading, brume, heure dorée, HDRI eau)
-- [ ] 4.2 Cycle jour/nuit (soleil qui tourne, lanternes qui s'allument)
+- [~] 4.2 Cycle jour/nuit (MVP C livré 2026-04-20 : toggle manuel touche N et icône HUD, transition d'ambiance 1.5s, points nocturnes via promontoire, feu de camp social la nuit, cueillette désactivée la nuit, persistance). Reste : cycle auto, lanternes qui s'allument, gardes de nuit, observatoire avancé, chasse nocturne.
 - [x] **4.3 Saisons** (livré `106a1c1` + `9d12db8` + `04bd4ed` : palette herbe/forêt, neige hivernale, pluie printanière, dialogues saisonniers, durée 600s)
   - [ ] Fleurs visuelles au printemps, rendements agricoles saisonniers
 - [ ] 4.4 Particules (poussière minage, copeaux, fumée, feuilles)

@@ -681,6 +681,13 @@ export function clearAllPlacements() {
   }
   state.manors.length = 0
   clearAllResearchHouses()
+  if (state.observatories && state.observatories.length) {
+    for (const o of state.observatories) {
+      scene.remove(o.group)
+      o.group.traverse(node => { if (node.material) node.material.dispose(); if (node.geometry) node.geometry.dispose() })
+    }
+    state.observatories.length = 0
+  }
 }
 
 // ============================================================================
@@ -693,7 +700,76 @@ export function isCellOccupied(x, z) {
   for (const m of state.manors) if ((x === m.x || x === m.x+1) && (z === m.z || z === m.z+1)) return true
   for (const h of state.researchHouses) if (h.x === x && h.z === z) return true
   for (const b of state.bushes) if (b.x === x && b.z === z) return true
+  if (state.observatories) {
+    for (const o of state.observatories) if (o.x === x && o.z === z) return true
+  }
   if (state.cellOre[z * GRID + x]) return true
+  return false
+}
+
+// ============================================================================
+// Promontoires d'observation (astronomie MVP C)
+// Simple tour : socle en pierre + plateforme, pour qu'un colon monte dessus la
+// nuit et genere des points nocturnes.
+// ============================================================================
+function makeObservatory() {
+  const g = new THREE.Group()
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x8d8377, roughness: 0.92, flatShading: true })
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.9, flatShading: true })
+  const starMat = new THREE.MeshStandardMaterial({ color: 0xf4e8b0, roughness: 0.35, emissive: 0x8a6a10, emissiveIntensity: 0.55, flatShading: true })
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.9, 0.85), stoneMat)
+  base.position.y = 0.45
+  base.castShadow = true; base.receiveShadow = true
+  g.add(base)
+  const mid = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.55, 0.6), stoneMat)
+  mid.position.y = 1.18
+  mid.castShadow = true
+  g.add(mid)
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.12, 0.95), woodMat)
+  deck.position.y = 1.52
+  deck.castShadow = true; deck.receiveShadow = true
+  g.add(deck)
+  for (const ox of [-0.4, 0.4]) {
+    for (const oz of [-0.4, 0.4]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.08), woodMat)
+      rail.position.set(ox, 1.78, oz)
+      rail.castShadow = true
+      g.add(rail)
+    }
+  }
+  const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), starMat)
+  star.position.y = 2.1
+  g.add(star)
+  return g
+}
+
+export function addObservatory(gx, gz) {
+  const top = state.cellTop[gz * GRID + gx]
+  if (top <= SHALLOW_WATER_LEVEL) return null
+  const g = makeObservatory()
+  g.position.set(gx + 0.5, top, gz + 0.5)
+  scene.add(g)
+  const entry = { x: gx, z: gz, group: g }
+  state.observatories.push(entry)
+  return entry
+}
+
+export function removeObservatoriesIn(cells) {
+  if (!state.observatories || !state.observatories.length) return
+  const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
+  for (let i = state.observatories.length - 1; i >= 0; i--) {
+    const o = state.observatories[i]
+    if (cellSet.has(o.z * GRID + o.x)) {
+      scene.remove(o.group)
+      o.group.traverse(node => { if (node.material) node.material.dispose(); if (node.geometry) node.geometry.dispose() })
+      state.observatories.splice(i, 1)
+    }
+  }
+}
+
+export function isObservatoryOn(x, z) {
+  if (!state.observatories) return false
+  for (const o of state.observatories) if (o.x === x && o.z === z) return true
   return false
 }
 

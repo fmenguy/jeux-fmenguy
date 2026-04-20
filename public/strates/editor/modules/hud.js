@@ -34,6 +34,7 @@ const colonsListEl = document.getElementById('colons-list')
 const colonsHeaderEl = document.getElementById('colons-header')
 const stocksLineEl = document.getElementById('stocks-line')
 const rPointsEl = document.getElementById('r-points')
+const rNightPointsEl = document.getElementById('r-nightpoints')
 const techsBodyEl = document.getElementById('techs-body')
 
 if (colonsHeaderEl) {
@@ -123,6 +124,7 @@ export function refreshHUD() {
   if (rBerriesEl) rBerriesEl.textContent = state.resources.berries
   if (rWoodEl) rWoodEl.textContent = state.resources.wood
   if (rStoneEl) rStoneEl.textContent = state.resources.stone
+  if (rNightPointsEl) rNightPointsEl.textContent = state.nightPoints
   refreshStocksLine()
   refreshTechsPanel()
 }
@@ -201,7 +203,7 @@ export function tickFps() {
 
 // referentiels pour tick()
 export const hudRefs = {
-  rBerriesEl, rWoodEl, rStoneEl, cBushesEl, rPointsEl
+  rBerriesEl, rWoodEl, rStoneEl, cBushesEl, rPointsEl, rNightPointsEl
 }
 
 // ============================================================================
