@@ -9,13 +9,14 @@ import { populateDefaultScene } from './modules/worldgen.js'
 import { refreshBushBerries, countActiveResearchers, tickTreeGrowth } from './modules/placements.js'
 import { tryBlockedTechBubble } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
-import { startNextQuest, updateQuests, renderQuests } from './modules/quests.js'
+import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
 import { updateCameraPan } from './modules/camera-pan.js'
 import {
   refreshHUD, refreshStocksLine, refreshTechsPanel, updateDynHUD, tickFps, hudRefs
 } from './modules/hud.js'
 import { setTool, setBrush } from './modules/interaction.js'
 import { hasSave, loadGame, startAutoSave } from './modules/persistence.js'
+import { loadGameData } from './modules/gamedata.js'
 import { tickSeasons, currentSeason, forceSeasonRepaint } from './modules/seasons.js'
 import { buildVegetation, tickVegetationSeasons } from './modules/vegetation.js'
 import { initAudio, tickAudio } from './modules/audio.js'
@@ -27,7 +28,8 @@ import './modules/stocks.js'
 // Boucle principale
 // ============================================================================
 
-startNextQuest()
+await loadGameData()
+initQuestDefs()
 
 buildTerrain()
 const isNewGame = (() => { try { const v = localStorage.getItem('strates-new-game'); localStorage.removeItem('strates-new-game'); return !!v } catch(e) { return false } })()
@@ -43,6 +45,7 @@ buildVegetation()
 setTool('nav')
 setBrush(1)
 refreshHUD()
+startNextQuest()
 startAutoSave(30)
 initAudio()
 

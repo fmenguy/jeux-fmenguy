@@ -1,5 +1,5 @@
-import { QUEST_DEFS_BASE } from './constants.js'
 import { state } from './state.js'
+import { QUEST_DEFS_BASE } from './gamedata.js'
 
 // ============================================================================
 // Quetes : definitions avec check() dynamique sur state
@@ -16,7 +16,10 @@ function resolveCheck(checkKey) {
   }
 }
 
-export const QUEST_DEFS = QUEST_DEFS_BASE.map(q => ({ ...q, check: resolveCheck(q.checkKey) }))
+export let QUEST_DEFS = []
+export function initQuestDefs() {
+  QUEST_DEFS = QUEST_DEFS_BASE.map(q => ({ ...q, check: resolveCheck(q.checkKey) }))
+}
 
 export function startNextQuest() {
   if (state.questIndex >= QUEST_DEFS.length) {
