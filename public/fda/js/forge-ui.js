@@ -116,7 +116,7 @@ export function updateDisplay() {
   document.getElementById("wells").textContent = wells;
   document.getElementById("pickaxes").textContent = pickaxes;
   document.getElementById("bows").textContent = bows;
-  document.getElementById("coats").textContent = coats;
+  document.getElementById("coats").textContent = villagers > 0 ? coats + ' / ' + villagers : coats;
   document.getElementById("metalAxes").textContent = metalAxes;
   document.getElementById("remedies").textContent = remedies;
   document.getElementById("mines").textContent = mines;
