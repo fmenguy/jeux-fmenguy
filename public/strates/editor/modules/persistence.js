@@ -3,7 +3,7 @@ import { state } from './state.js'
 import { rebuildTerrainFromState, repaintCellSurface } from './terrain.js'
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
-  addManorFromSave, clearAllPlacements, isCellOccupied
+  addManorFromSave, clearAllPlacements, isCellOccupied, addObservatory
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
@@ -128,6 +128,9 @@ function serializeSnapshot() {
     ),
     researchPoints: state.researchPoints,
     researchTickAccum: state.researchTickAccum,
+    nightPoints: state.nightPoints || 0,
+    isNight: !!state.isNight,
+    observatories: (state.observatories || []).map(o => ({ x: o.x, z: o.z })),
     resources: { ...state.resources },
     gameStats: { ...state.gameStats },
     questIndex: state.questIndex,
@@ -150,6 +153,8 @@ function clearEverything() {
   for (const k of STOCK_KEYS) state.stocks[k] = 0
   state.researchPoints = 0
   state.researchTickAccum = 0
+  state.nightPoints = 0
+  state.isNight = false
   for (const id in state.techs) state.techs[id].unlocked = false
   clearAllPlacements()
   clearVegetation()
@@ -229,6 +234,13 @@ function applySnapshot(data) {
   }
   state.researchPoints = data.researchPoints || 0
   state.researchTickAccum = data.researchTickAccum || 0
+  state.nightPoints = data.nightPoints || 0
+  state.isNight = !!data.isNight
+  if (Array.isArray(data.observatories)) {
+    for (const o of data.observatories) {
+      if (!isCellOccupied(o.x, o.z)) addObservatory(o.x, o.z)
+    }
+  }
   if (data.resources) Object.assign(state.resources, data.resources)
   if (data.gameStats) Object.assign(state.gameStats, data.gameStats)
 

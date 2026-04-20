@@ -61,6 +61,19 @@
       ]
     },
     {
+      "id": "astronomie",
+      "name": "Astronomie",
+      "desc": "Observation nocturne, production de points nocturnes, techs spatiales et temporelles",
+      "color": "#4a5a9a",
+      "icon": "N",
+      "levels": [
+        { "id": "observatory-mound", "name": "Promontoire",        "age": 1, "fusionReq": null, "pts": 1,  "desc": "Tour rudimentaire pour scruter les etoiles, genere des points nocturnes la nuit" },
+        { "id": "observatory",       "name": "Observatoire",       "age": 3, "fusionReq": null, "pts": 4,  "desc": "Batiment dedie avec lunettes et cartographie celeste" },
+        { "id": "telescope",         "name": "Grand telescope",    "age": 5, "fusionReq": null, "pts": 15, "desc": "Observation profonde, detection d'evenements cosmiques" },
+        { "id": "radio-array",       "name": "Radio-telescope",    "age": 6, "fusionReq": null, "pts": 45, "desc": "Ecoute des signaux, navigation interplanetaire" }
+      ]
+    },
+    {
       "id": "monuments",
       "name": "Monuments",
       "desc": "Prestige, moral des colons, deblocage de capacites uniques",

@@ -24,6 +24,7 @@ import { tickWeather } from './modules/weather.js'
 import { initTechTreeUI, toggleTechTree, closeTechTree } from './modules/techtree-ui.js'
 import { initCharSheet } from './modules/charsheet-ui.js'
 import { initHelpOverlay } from './modules/help-overlay.js'
+import { initDayNight, bindDayNightUI, tickDayNight, refreshNightPointsHUD } from './modules/daynight.js'
 import { TECH_TREE_DATA } from './modules/gamedata.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
@@ -64,6 +65,9 @@ initAudio()
 initTechTreeUI()
 initCharSheet()
 initHelpOverlay()
+initDayNight()
+bindDayNightUI()
+refreshNightPointsHUD()
 
 // Bouton "Arbre T" dans le mini-panel tech
 const btnTT = document.getElementById('btn-techtree')
@@ -140,6 +144,7 @@ function tick(nowMs) {
     }
   }
 
+  tickDayNight(dt)
   tickSeasons(dt)
   tickVegetationSeasons(dt)
   tickTreeGrowth(dt)

@@ -1,6 +1,6 @@
 # Cycle jour/nuit
 
-**Statut : validé (2026-04-20), MVP à implémenter**
+**Statut : validé, MVP livré (2026-04-20)**
 
 ## Principe
 

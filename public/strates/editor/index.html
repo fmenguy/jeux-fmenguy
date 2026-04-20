@@ -251,6 +251,28 @@
     }
     #season-pill #season-icon { font-size: 16px; }
 
+    /* Pastille jour/nuit */
+    #daynight-pill {
+      position: fixed; left: calc(50% + 140px); top: 16px;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      background: rgba(255, 220, 140, 0.82);
+      color: #2a2210;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.35);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      font-size: 18px; font-weight: 700;
+      cursor: pointer; user-select: none;
+      z-index: 11;
+      transition: background 0.35s, color 0.35s, box-shadow 0.35s;
+    }
+    #daynight-pill:hover { transform: scale(1.06); }
+    #daynight-pill.night {
+      background: rgba(30, 40, 90, 0.85);
+      color: #eaf2ff;
+      box-shadow: 0 4px 16px rgba(90, 130, 220, 0.35);
+    }
+
     /* Bouton d'aide flottant */
     #btn-help {
       position: fixed; right: 16px; bottom: 100px;
@@ -522,6 +544,7 @@
   <button id="btn-help" title="Aide et explications">?</button>
   <button id="btn-audio" title="Activer la musique">&#9834;</button>
   <div id="season-pill" title="Saison en cours"><span id="season-icon">&#127804;</span><span id="season-name">printemps</span><span id="weather-label" style="font-size:11px;opacity:0.75;margin-left:6px;"></span></div>
+  <div id="daynight-pill" title="Basculer jour / nuit (N)"><span id="daynight-icon">&#9728;</span></div>
 
   <div id="hud">
     <div><b>Strates</b><span id="hud-mode-label">, éditeur de carte</span></div>
@@ -542,6 +565,7 @@
     <div class="row" title="Ressources cumulées depuis les récoltes"><span class="key">Baies / Bois / Pierre</span><span class="val"><span id="r-berries">0</span> / <span id="r-wood">0</span> / <span id="r-stone">0</span></span></div>
     <div id="stocks-line" style="font-size: 11px; color: #c7b98c; margin-top: 2px;" title="Ressources prêtes à être posées par les colons (outil Placer)">Stocks : vide</div>
     <div class="row" style="margin-top: 4px;" title="Points produits par les chercheurs au laboratoire, utilisés pour débloquer les technologies"><span class="key">Points de recherche</span><span class="val"><span id="r-points">0</span> pts</span></div>
+    <div class="row" title="Points produits par les colons en observation nocturne depuis un promontoire"><span class="key">Points nocturnes</span><span class="val">&#127769; <span id="r-nightpoints">0</span> pts</span></div>
   </div>
 
   <div id="techs" style="position: fixed; right: 16px; top: 320px; width: 280px; background: rgba(15,18,24,0.82); border: 1px solid rgba(120,180,255,0.4); border-radius: 12px; padding: 12px 14px; backdrop-filter: blur(8px); color: #f3ecdd; font-size: 12px; line-height: 1.4; box-shadow: 0 6px 22px rgba(0,0,0,0.4); z-index: 11;">
@@ -694,7 +718,8 @@
         <h4>Raccourcis clavier</h4>
         <ul>
           <li><b>1</b> Naviguer &nbsp;·&nbsp; <b>2</b> Miner &nbsp;·&nbsp; <b>3</b> Placer</li>
-          <li><b>7</b> Maison &nbsp;·&nbsp; <b>8</b> Champ &nbsp;·&nbsp; <b>0</b> Recherche</li>
+          <li><b>7</b> Maison &nbsp;·&nbsp; <b>8</b> Champ &nbsp;·&nbsp; <b>0</b> Recherche &nbsp;·&nbsp; <b>P</b> Promontoire</li>
+          <li><b>N</b> : basculer jour / nuit</li>
           <li><b>A / E</b> : rotation azimut caméra</li>
           <li><b>R</b> : nouvelle partie (confirmation demandée)</li>
           <li><b>Échap</b> : menu pause</li>
@@ -753,6 +778,7 @@
       <button class="tool" data-tool="house">Maison<span class="key">7</span></button>
       <button class="tool" data-tool="research">Recherche<span class="key">0</span></button>
       <button class="tool" data-tool="field">Champ<span class="key">8</span></button>
+      <button class="tool" data-tool="observatory" title="Promontoire d'observation, genere des points nocturnes la nuit">Promontoire<span class="key">P</span></button>
     </div>
     <div class="group godmod">
       <span class="group-label">godmod</span>
@@ -1477,6 +1503,14 @@
           <div class="ho-row">
             <div class="ho-keys"><span class="kbd">0</span></div>
             <div class="ho-label">Maison de recherche</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">P</span></div>
+            <div class="ho-label">Promontoire d'observation (astronomie)</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">N</span></div>
+            <div class="ho-label">Basculer jour / nuit</div>
           </div>
         </div>
 
