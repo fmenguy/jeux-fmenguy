@@ -1,6 +1,7 @@
 import {
   ORE_KEYS, ORE_TYPES, STOCK_KEYS, STOCK_LABELS,
-  GENDER_SYMBOLS, CHIEF_STAR, CHIEF_COLOR
+  GENDER_SYMBOLS, CHIEF_STAR, CHIEF_COLOR,
+  GRID, WATER_LEVEL, SHALLOW_WATER_LEVEL
 } from './constants.js'
 import { state } from './state.js'
 import { countActiveResearchers } from './placements.js'
@@ -201,4 +202,69 @@ export function tickFps() {
 // referentiels pour tick()
 export const hudRefs = {
   rBerriesEl, rWoodEl, rStoneEl, cBushesEl, rPointsEl
+}
+
+// ============================================================================
+// Mini-map
+// ============================================================================
+
+const BIOME_RGBA = {
+  grass:  [124, 192, 106],
+  forest: [ 63, 122,  58],
+  snow:   [228, 236, 240],
+  sand:   [232, 207, 142],
+  rock:   [168, 161, 150],
+}
+const DEEP_WATER   = [74,  143, 212]
+const SHAL_WATER   = [130, 185, 220]
+const FIELD_RGBA   = [217, 183,  85]
+
+const minimapEl = document.getElementById('minimap')
+
+export function updateMinimap() {
+  if (!minimapEl || !state.cellBiome || !state.cellTop) return
+  const ctx = minimapEl.getContext('2d')
+  const W = minimapEl.width   // 96
+  const H = minimapEl.height  // 96
+  const imgData = ctx.createImageData(W, H)
+  const d = imgData.data
+
+  for (let z = 0; z < GRID; z++) {
+    for (let x = 0; x < GRID; x++) {
+      const ci = z * GRID + x
+      const pi = (z * W + x) * 4
+      const top = state.cellTop[ci]
+      let rgb
+      if (top <= WATER_LEVEL) {
+        rgb = DEEP_WATER
+      } else if (top <= SHALLOW_WATER_LEVEL) {
+        rgb = SHAL_WATER
+      } else {
+        const surf = state.cellSurface ? state.cellSurface[ci] : null
+        if (surf === 'field') {
+          rgb = FIELD_RGBA
+        } else {
+          rgb = BIOME_RGBA[state.cellBiome[ci]] || BIOME_RGBA.grass
+        }
+      }
+      d[pi] = rgb[0]; d[pi+1] = rgb[1]; d[pi+2] = rgb[2]; d[pi+3] = 255
+    }
+  }
+  ctx.putImageData(imgData, 0, 0)
+
+  // Batiments
+  ctx.fillStyle = 'rgba(60,35,10,0.85)'
+  for (const h of state.houses) {
+    ctx.fillRect(h.x - 1, h.z - 1, 2, 2)
+  }
+  ctx.fillStyle = 'rgba(40,20,5,0.9)'
+  for (const m of state.manors) {
+    ctx.fillRect(m.x, m.z, 3, 3)
+  }
+
+  // Colons
+  for (const c of state.colonists) {
+    ctx.fillStyle = c.gender === 'M' ? '#4a7fc0' : '#d06b8e'
+    ctx.fillRect(Math.round(c.x) - 1, Math.round(c.z) - 1, 2, 2)
+  }
 }
