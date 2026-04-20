@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link id="mobileStyles" rel="stylesheet" href="css/styles-mobile.css" />
   <link rel="stylesheet" href="css/theme-refonte.css" />
-  <link rel="stylesheet" href="css/theme-refonte-v2.css?v=54" />
+  <link rel="stylesheet" href="css/theme-refonte-v2.css?v=58" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -42,25 +42,6 @@
         <span id="currentAgeDisplay"></span>
       </div>
       <div id="agesList"></div>
-      <div id="narrative">
-        Ici, tout est sauvage, {pseudo}. Récolte des baies pour survivre et attirer des amis. Consulte l'onglet <strong>Sagesses</strong> à tout moment pour retrouver les indices déjà révélés.
-      </div>
-
-      <!-- Objectif Actuel : indice courant en mode quete (mis en avant) -->
-      <div id="currentObjective" class="objective-empty">
-        <div class="objective-header">
-          <span class="objective-icon">🎯</span>
-          <span class="objective-title">Objectif</span>
-        </div>
-        <div class="objective-body">
-          <p class="objective-message">Commence par récolter des baies.</p>
-          <div class="objective-progress-wrapper" hidden>
-            <div class="objective-progress-bar"><div class="objective-progress-fill"></div></div>
-            <span class="objective-progress-text"></span>
-          </div>
-          <button id="claimObjectiveBtn" class="objective-claim" hidden>Réclamer l'indice</button>
-        </div>
-      </div>
       <div id="explorationDisplay" style="display: none;">
         <span class="icon">🗺️</span> Exploration
         <div class="progress-bar">
@@ -71,6 +52,7 @@
 
       <section class="resources-frame">
         <span class="bolt-tr"></span><span class="bolt-br"></span>
+        <div id="narrative" class="res-narrative">Récolte des baies pour survivre et attirer des amis.</div>
         <div class="resources-grid" id="resources">
 
           <article class="res" data-res="baies">
@@ -161,6 +143,17 @@
         </div>
       </section>
 
+      <!-- Objectif compact entre ressources et sections -->
+      <div id="currentObjective" class="objective-panel">
+        <span class="objective-label">Objectif</span>
+        <p class="objective-message">Commence par récolter des baies.</p>
+        <div class="objective-progress-wrapper" hidden>
+          <div class="objective-progress-bar"><div class="objective-progress-fill"></div></div>
+          <span class="objective-progress-text"></span>
+        </div>
+        <button id="claimObjectiveBtn" class="objective-claim" hidden>Révéler</button>
+      </div>
+
       <div id="villagesDisplay" style="display: none;">
         <h2>Villages</h2>
         <ul id="villagesList"></ul>
@@ -184,11 +177,11 @@
           </div>
           <div class="craft" id="pickaxeSection" style="display: none">
             <p><span class="icon">⛏️</span> Pioche: <span id="pickaxes">0</span></p>
-            <button id="craftPickaxeBtn" onclick="craftPickaxe()">Fabriquer (10 Bois, 5 Pierre)</button><span class="tooltip">Une pioche récolte plus de pierre.</span>
+            <button id="craftPickaxeBtn" onclick="craftPickaxe()">Fabriquer (10 Bois, 5 Pierre)</button><span class="tooltip">Une pioche récolte plus de pierre. Débloqué après la première scierie.</span>
           </div>
           <div class="craft" id="bowSection" style="display: none">
             <p><span class="icon">🏹</span> Arc: <span id="bows">0</span></p>
-            <button id="craftBowBtn" onclick="craftBow()">Fabriquer (10 Bois, 5 Pierre)</button><span class="tooltip">Un arc récolte plus de viande.</span>
+            <button id="craftBowBtn" onclick="craftBow()">Fabriquer (10 Bois, 5 Pierre)</button><span class="tooltip">Un arc récolte plus de viande. Débloqué après la première scierie.</span>
           </div>
           <div class="craft" id="coatSection" style="display: none">
             <p><span class="icon">🧥</span> Manteau: <span id="coats">0</span></p>
@@ -272,7 +265,7 @@
           </div>
           <div class="worker" id="explorerSection" style="display: none">
             <p><span class="icon">🗺️</span> Explorateurs: <span id="explorers">0</span></p>
-            <button id="sendExplorersBtn" onclick="sendExplorers()">Envoyer (50 Baies, 20 Bois, 10 Villageois)</button><span class="tooltip">Les explorateurs découvrent de nouvelles ressources.</span>
+            <button id="sendExplorersBtn" onclick="sendExplorers()">Envoyer (50 Baies, 20 Bois, 10 Villageois)</button><span class="tooltip">Les explorateurs découvrent de nouvelles ressources. Requiert 1 scierie et 1 carrière.</span>
           </div>
           <div class="worker" id="minerSection" style="display: none">
             <p><span class="icon">⛏️</span> Mineur: <span id="miners">0</span></p>
@@ -292,7 +285,34 @@
           <h2>Reliques</h2>
           <div class="relic">
             <p><span class="icon">✨</span> Éclat d'Éternité: <span id="eternityShards">0</span></p>
-            <button id="seekShardBtn" onclick="seekShard()">Chercher (200 Bois, 100 Pierre, 50 Eau)</button><span class="tooltip">Un éclat spécial cache un secret.</span>
+            <button id="seekShardBtn" onclick="seekShard()">Chercher (200 Bois, 100 Pierre, 50 Eau)</button><span class="tooltip">Chaque éclat débloque un pouvoir ancien.</span>
+          </div>
+          <div id="shardEffectsList" style="display:none; margin-top: 12px;">
+            <div class="shard-effect" id="shardEffect1" style="display:none">
+              <span class="shard-icon">🌾</span>
+              <span class="shard-name">Don de la Terre</span>
+              <span class="shard-desc">+20% de récolte sur toutes les ressources</span>
+            </div>
+            <div class="shard-effect" id="shardEffect2" style="display:none">
+              <span class="shard-icon">💧</span>
+              <span class="shard-name">Souffle de Vie</span>
+              <span class="shard-desc">-25% de consommation d'eau</span>
+            </div>
+            <div class="shard-effect" id="shardEffect3" style="display:none">
+              <span class="shard-icon">🍖</span>
+              <span class="shard-name">Force des Anciens</span>
+              <span class="shard-desc">-20% de consommation de nourriture</span>
+            </div>
+            <div class="shard-effect" id="shardEffect4" style="display:none">
+              <span class="shard-icon">🌀</span>
+              <span class="shard-name">Équilibre Saisonnal</span>
+              <span class="shard-desc">-50% de pénalités saisonnières</span>
+            </div>
+            <div class="shard-effect" id="shardEffect5" style="display:none">
+              <span class="shard-icon">♾️</span>
+              <span class="shard-name">Harmonie Éternelle</span>
+              <span class="shard-desc">Plus personne ne meurt de pénurie</span>
+            </div>
           </div>
         </div>
       </div>
@@ -339,8 +359,9 @@
     </a>
   </footer>
 
-  <script src="js/forge-main.js?v=53" type="module"></script>
-  <script src="js/forge-enhance.js?v=53" type="module"></script>
+  <script src="js/forge-main.js?v=55" type="module"></script>
+  <script src="js/forge-enhance.js?v=55" type="module"></script>
+  <script src="js/forge-bot.js?v=55"></script>
 
   <audio id="backgroundMusic" loop>
     <source src="assets/audio/ambiance_fda.mp3" type="audio/mpeg">

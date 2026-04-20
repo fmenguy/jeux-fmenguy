@@ -414,6 +414,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeAudioEventListeners();
   initializeSaveEventListeners(); // Ajoute les écouteurs pour les boutons de sauvegarde une seule fois
 
+  // Demarrer la musique au premier clic (contournement autoplay navigateur)
+  document.addEventListener('click', () => {
+    const music = document.getElementById("backgroundMusic");
+    if (music && music.paused) {
+      music.play().then(() => setIsMusicPlaying(true)).catch(() => {});
+    }
+  }, { once: true });
+
   // Initialisation de currentHint
   const availableHint = dynamicHints.find(
     (hint) => hint.condition() && !purchasedHints.includes(hint.id)
