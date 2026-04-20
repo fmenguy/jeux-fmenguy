@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import {
-  CAMERA_KEY_FORWARD, CAMERA_KEY_BACKWARD, CAMERA_KEY_LEFT, CAMERA_KEY_RIGHT
+  CAMERA_KEY_FORWARD, CAMERA_KEY_BACKWARD, CAMERA_KEY_LEFT, CAMERA_KEY_RIGHT,
+  CAMERA_KEY_ROTATE_LEFT, CAMERA_KEY_ROTATE_RIGHT
 } from './constants.js'
 import { state } from './state.js'
 import { camera, controls } from './scene.js'
@@ -29,16 +30,29 @@ window.addEventListener('blur', () => { state.cameraKeys.clear() })
 const camTmpForward = new THREE.Vector3()
 const camTmpRight = new THREE.Vector3()
 const camTmpMove = new THREE.Vector3()
+const camTmpOffset = new THREE.Vector3()
+const camRotAxis = new THREE.Vector3(0, 1, 0)
+const ROT_SPEED = 1.2 // rad/s
 
 export function updateCameraPan(dt) {
   if (isEditableTarget(document.activeElement)) return
-  let fwd = 0, side = 0
+  let fwd = 0, side = 0, rot = 0
   for (const k of state.cameraKeys) {
     if (CAMERA_KEY_FORWARD.has(k)) fwd += 1
     else if (CAMERA_KEY_BACKWARD.has(k)) fwd -= 1
     else if (CAMERA_KEY_LEFT.has(k)) side -= 1
     else if (CAMERA_KEY_RIGHT.has(k)) side += 1
+    else if (CAMERA_KEY_ROTATE_LEFT.has(k)) rot -= 1
+    else if (CAMERA_KEY_ROTATE_RIGHT.has(k)) rot += 1
   }
+
+  if (rot !== 0) {
+    camTmpOffset.subVectors(camera.position, controls.target)
+    camTmpOffset.applyAxisAngle(camRotAxis, rot * ROT_SPEED * dt)
+    camera.position.copy(controls.target).add(camTmpOffset)
+    controls.update()
+  }
+
   if (fwd === 0 && side === 0) return
 
   camTmpForward.subVectors(controls.target, camera.position)
