@@ -158,5 +158,15 @@ function tick(nowMs) {
   requestAnimationFrame(tick)
 }
 
+// Initialise les labels de mode
+;(function() {
+  const isSandbox = window.STRATES_MODE === 'sandbox'
+  const badge = document.getElementById('mode-badge')
+  const modeLabel = document.getElementById('hud-mode-label')
+  if (badge)     badge.textContent     = isSandbox ? 'Godmod / Sandbox' : 'Mode jeu'
+  if (modeLabel) modeLabel.textContent = isSandbox ? ', éditeur de carte' : ''
+  document.title = isSandbox ? 'Strates, éditeur' : 'Strates'
+})()
+
 loader.classList.add('hidden')
 tick()
