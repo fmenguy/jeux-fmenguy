@@ -476,6 +476,25 @@
       margin-top: 4px;
     }
     */
+
+    /* Mode jeu : masque les outils godmod */
+    body[data-mode="game"] .group.godmod { display: none; }
+    body[data-mode="game"] .godmod-ctrl  { display: none; }
+    body[data-mode="game"] .godmod-label { display: none; }
+
+    /* Badge mode */
+    #mode-badge {
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+      font-family: monospace; font-size: 10px; letter-spacing: .12em;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+      pointer-events: none; z-index: 50;
+      background: rgba(255,217,138,0.12); border: 1px solid rgba(255,217,138,0.3);
+      color: rgba(255,217,138,0.7);
+    }
+    body[data-mode="game"] #mode-badge {
+      background: rgba(136,204,68,0.12); border-color: rgba(136,204,68,0.3);
+      color: rgba(136,204,68,0.8);
+    }
   </style>
   <script type="importmap">
   {
@@ -487,6 +506,16 @@
   </script>
 </head>
 <body>
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search)
+      const mode = params.get('mode') === 'sandbox' ? 'sandbox' : 'game'
+      document.body.dataset.mode = mode
+      window.STRATES_MODE = mode
+    })()
+  </script>
+
+  <div id="mode-badge"></div>
   <div id="loader">génération du monde...</div>
   <div id="app"></div>
 
@@ -495,7 +524,7 @@
   <div id="season-pill" title="Saison en cours"><span id="season-icon">&#127804;</span><span id="season-name">printemps</span><span id="weather-label" style="font-size:11px;opacity:0.75;margin-left:6px;"></span></div>
 
   <div id="hud">
-    <div><b>Strates</b>, éditeur de carte</div>
+    <div><b>Strates</b><span id="hud-mode-label">, éditeur de carte</span></div>
     <div class="row" title="Images par seconde"><span class="key">FPS</span><span class="val" id="fps">0</span></div>
     <div class="row" title="Outil actuellement sélectionné"><span class="key">Outil</span><span class="val" id="hud-tool">naviguer</span></div>
     <h4 id="colons-header" title="Clic pour replier la liste"><span class="caret">&#9660;</span> Colons : <span id="c-count">0</span></h4>
@@ -708,27 +737,30 @@
 
   <div id="actionbar">
     <div class="group colons">
-      <span class="group-label">colons</span>
+      <span class="group-label">ordres</span>
       <button class="tool active" data-tool="nav">Naviguer<span class="key">1</span></button>
       <button class="tool" data-tool="mine">Miner<span class="key">2</span></button>
       <button class="tool" data-tool="build">Placer<span class="key">3</span></button>
     </div>
-    <div class="group placement">
-      <span class="group-label">éditeur</span>
-      <button class="tool" data-tool="forest">Forêt<span class="key">4</span></button>
-      <button class="tool" data-tool="rock">Rocher<span class="key">5</span></button>
-      <button class="tool" data-tool="ore">Filon<span class="sub" id="ore-sub">or</span><span class="key">6</span></button>
+    <div class="group construire">
+      <span class="group-label">construire</span>
       <button class="tool" data-tool="house">Maison<span class="key">7</span></button>
       <button class="tool" data-tool="research">Recherche<span class="key">0</span></button>
       <button class="tool" data-tool="field">Champ<span class="key">8</span></button>
+    </div>
+    <div class="group godmod">
+      <span class="group-label">godmod</span>
+      <button class="tool" data-tool="forest">Forêt<span class="key">4</span></button>
+      <button class="tool" data-tool="rock">Rocher<span class="key">5</span></button>
+      <button class="tool" data-tool="ore">Filon<span class="sub" id="ore-sub">or</span><span class="key">6</span></button>
       <button class="tool" data-tool="bush">Baies<span class="key">9</span></button>
       <button class="tool" data-tool="erase">Effacer</button>
     </div>
     <div class="group controls">
-      <span class="group-label">pinceau</span>
-      <button class="brush active" data-brush="1">1</button>
-      <button class="brush" data-brush="3">3</button>
-      <button class="brush" data-brush="5">5</button>
+      <span class="group-label godmod-label">pinceau</span>
+      <button class="brush active godmod-ctrl" data-brush="1">1</button>
+      <button class="brush godmod-ctrl" data-brush="3">3</button>
+      <button class="brush godmod-ctrl" data-brush="5">5</button>
       <button class="btn-ctrl" id="btn-save" title="Sauvegarder la partie">Sauver</button>
       <button class="btn-ctrl" id="btn-load" title="Charger la derniere sauvegarde">Charger</button>
       <button class="btn-ctrl" id="btn-reset" title="Nouvelle partie (R)">Nouvelle</button>
