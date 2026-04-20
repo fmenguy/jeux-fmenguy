@@ -84,6 +84,7 @@ export class Colonist {
     this.lastLine = null
     this.researchBuildingId = null
     this.lastContextLine = null
+    this.favorite = false
     if (opts && opts.restore) {
       const r = opts.restore
       this.gender = r.gender || 'M'
@@ -91,6 +92,7 @@ export class Colonist {
       state.usedNames.add(this.name)
       this.isChief = !!r.isChief
       this.researchBuildingId = r.researchBuildingId != null ? r.researchBuildingId : null
+      this.favorite = !!r.favorite
       if (typeof r.ty === 'number') this.ty = r.ty
       if (r.state) this.state = r.state
     } else if (opts && opts.forceName) {
