@@ -1188,6 +1188,358 @@
     </div>
   </div>
 
+  <!-- ====================================================================== -->
+  <!-- Overlay d'aide controles (touche H), style "banger"                    -->
+  <!-- ====================================================================== -->
+  <style>
+    #help-backdrop {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, rgba(12,14,20,0.55), rgba(6,8,12,0.85));
+      backdrop-filter: blur(10px) saturate(1.1);
+      -webkit-backdrop-filter: blur(10px) saturate(1.1);
+      z-index: 90;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    #help-backdrop.open { opacity: 1; pointer-events: auto; }
+
+    #help-overlay {
+      position: fixed; inset: 0;
+      z-index: 91;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    #help-overlay.open { opacity: 1; }
+    #help-overlay.open .ho-frame { transform: translateY(0) scale(1); pointer-events: auto; }
+
+    .ho-frame {
+      position: relative;
+      width: min(1080px, 94vw);
+      max-height: 88vh;
+      background: linear-gradient(180deg, rgba(28,32,42,0.96), rgba(14,17,24,0.98));
+      border: 1px solid rgba(255,217,138,0.35);
+      border-radius: 18px;
+      box-shadow:
+        0 40px 80px rgba(0,0,0,0.7),
+        0 0 0 1px rgba(255,217,138,0.08) inset,
+        0 0 60px rgba(255,196,96,0.08) inset;
+      overflow: hidden;
+      transform: translateY(12px) scale(0.98);
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex; flex-direction: column;
+      color: #f3ecdd;
+      pointer-events: none;
+    }
+    .ho-frame::before {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(1200px 400px at 50% -10%, rgba(255,196,96,0.12), transparent 60%),
+        radial-gradient(800px 300px at 100% 120%, rgba(120,180,255,0.08), transparent 60%);
+      pointer-events: none;
+    }
+    .ho-corner {
+      position: absolute; width: 22px; height: 22px;
+      border: 2px solid rgba(255,217,138,0.55);
+      pointer-events: none;
+    }
+    .ho-corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; border-top-left-radius: 6px; }
+    .ho-corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; border-top-right-radius: 6px; }
+    .ho-corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; border-bottom-left-radius: 6px; }
+    .ho-corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; border-bottom-right-radius: 6px; }
+
+    .ho-header {
+      position: relative;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 32px 18px 32px;
+      border-bottom: 1px solid rgba(255,217,138,0.18);
+      background: linear-gradient(180deg, rgba(255,217,138,0.06), transparent);
+    }
+    .ho-title-group { display: flex; flex-direction: column; gap: 4px; }
+    .ho-eyebrow {
+      font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
+      color: rgba(255,217,138,0.75);
+      font-weight: 600;
+    }
+    .ho-title {
+      margin: 0;
+      font-size: 26px; font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #fff5d8;
+      text-transform: uppercase;
+      text-shadow: 0 2px 14px rgba(255,196,96,0.25);
+    }
+    .ho-hint {
+      font-size: 11px; color: rgba(243,236,221,0.55);
+      margin-top: 6px;
+      letter-spacing: 0.08em;
+    }
+    .ho-hint .kbd-inline {
+      display: inline-block;
+      padding: 1px 7px;
+      margin: 0 2px;
+      font-family: ui-monospace, monospace;
+      font-size: 10px;
+      border-radius: 4px;
+      background: rgba(255,217,138,0.12);
+      border: 1px solid rgba(255,217,138,0.3);
+      color: #ffd98a;
+    }
+    #help-overlay-close {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,217,138,0.25);
+      color: #ffd98a;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      font-size: 20px; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.18s ease;
+    }
+    #help-overlay-close:hover {
+      background: rgba(255,217,138,0.14);
+      border-color: rgba(255,217,138,0.6);
+      color: #fff5d8;
+      transform: rotate(90deg);
+    }
+
+    .ho-body {
+      padding: 22px 32px 28px 32px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px 28px;
+      position: relative;
+    }
+    .ho-body::-webkit-scrollbar { width: 8px; }
+    .ho-body::-webkit-scrollbar-thumb { background: rgba(255,217,138,0.25); border-radius: 4px; }
+
+    .ho-section { display: flex; flex-direction: column; gap: 10px; }
+    .ho-section-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.28em; text-transform: uppercase;
+      color: #ffd98a;
+    }
+    .ho-section-title::before {
+      content: ""; display: inline-block;
+      width: 8px; height: 8px;
+      background: #ffd98a;
+      transform: rotate(45deg);
+      box-shadow: 0 0 10px rgba(255,217,138,0.6);
+    }
+    .ho-section-title::after {
+      content: ""; flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(255,217,138,0.35), transparent);
+    }
+
+    .ho-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.015);
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .ho-row:hover {
+      background: rgba(255,217,138,0.05);
+      border-color: rgba(255,217,138,0.18);
+    }
+    .ho-keys {
+      display: flex; align-items: center; gap: 4px;
+      flex-shrink: 0; min-width: 130px;
+    }
+    .ho-plus {
+      color: rgba(255,217,138,0.6);
+      font-size: 12px; font-weight: 700;
+      margin: 0 2px;
+    }
+    .ho-label { font-size: 13px; color: #e6ddc4; letter-spacing: 0.02em; }
+
+    /* Touche stylisee facon clavier physique */
+    .kbd {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 30px; height: 30px;
+      padding: 0 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px; font-weight: 700;
+      color: #1a1d24;
+      background: linear-gradient(180deg, #f5ead0 0%, #d9c896 55%, #b8a670 100%);
+      border: 1px solid #5a4e30;
+      border-radius: 6px;
+      box-shadow:
+        0 1px 0 0 #fff8e0 inset,
+        0 -2px 0 0 rgba(90,78,48,0.55) inset,
+        0 2px 0 0 rgba(0,0,0,0.6),
+        0 4px 8px rgba(0,0,0,0.45);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      letter-spacing: 0.02em;
+    }
+    .kbd.wide { min-width: 54px; }
+    .kbd.xwide { min-width: 90px; font-size: 11px; }
+    .kbd.mouse {
+      min-width: 36px; height: 36px; border-radius: 12px 12px 16px 16px;
+      background: linear-gradient(180deg, #2a2f3a 0%, #1b1f28 100%);
+      color: #ffd98a; border-color: #0a0d13;
+      font-size: 11px; letter-spacing: 0.05em;
+      box-shadow:
+        0 1px 0 0 rgba(255,217,138,0.15) inset,
+        0 2px 0 0 rgba(0,0,0,0.55),
+        0 4px 10px rgba(0,0,0,0.55);
+    }
+    .kbd.dir { font-size: 14px; }
+
+    @media (max-width: 780px) {
+      .ho-body { grid-template-columns: 1fr; }
+      .ho-title { font-size: 20px; }
+      .ho-keys { min-width: 110px; }
+    }
+  </style>
+
+  <div id="help-backdrop"></div>
+  <div id="help-overlay">
+    <div class="ho-frame">
+      <span class="ho-corner tl"></span>
+      <span class="ho-corner tr"></span>
+      <span class="ho-corner bl"></span>
+      <span class="ho-corner br"></span>
+
+      <div class="ho-header">
+        <div class="ho-title-group">
+          <span class="ho-eyebrow">Guide du bâtisseur</span>
+          <h2 class="ho-title">Contrôles</h2>
+          <div class="ho-hint">
+            Fermer avec <span class="kbd-inline">H</span> ou <span class="kbd-inline">Échap</span>
+          </div>
+        </div>
+        <button id="help-overlay-close" title="Fermer (H ou Échap)">×</button>
+      </div>
+
+      <div class="ho-body">
+
+        <div class="ho-section">
+          <div class="ho-section-title">Caméra</div>
+          <div class="ho-row">
+            <div class="ho-keys">
+              <span class="kbd dir">Z</span>
+              <span class="kbd dir">Q</span>
+              <span class="kbd dir">S</span>
+              <span class="kbd dir">D</span>
+            </div>
+            <div class="ho-label">Déplacer la caméra (avant, gauche, arrière, droite)</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys">
+              <span class="kbd">A</span>
+              <span class="ho-plus">/</span>
+              <span class="kbd">E</span>
+            </div>
+            <div class="ho-label">Rotation azimut (gauche, droite)</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd mouse">LMB</span></div>
+            <div class="ho-label">Clic gauche maintenu, faire pivoter la caméra</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd mouse">RMB</span></div>
+            <div class="ho-label">Clic droit maintenu, déplacer latéralement</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd mouse">MW</span></div>
+            <div class="ho-label">Molette, zoomer ou dézoomer</div>
+          </div>
+        </div>
+
+        <div class="ho-section">
+          <div class="ho-section-title">Outils</div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">1</span></div>
+            <div class="ho-label">Naviguer (aucun ordre)</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">2</span></div>
+            <div class="ho-label">Miner un voxel ou un obstacle</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">3</span></div>
+            <div class="ho-label">Placer un bloc depuis les stocks</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">7</span></div>
+            <div class="ho-label">Construire une maison</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">8</span></div>
+            <div class="ho-label">Poser un champ</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">0</span></div>
+            <div class="ho-label">Maison de recherche</div>
+          </div>
+        </div>
+
+        <div class="ho-section">
+          <div class="ho-section-title">Actions</div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd mouse">LMB</span></div>
+            <div class="ho-label">Appliquer l'outil sur la tuile survolée</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys">
+              <span class="kbd xwide">Shift</span>
+              <span class="ho-plus">+</span>
+              <span class="kbd mouse">LMB</span>
+            </div>
+            <div class="ho-label">Appliquer sur toute la strate (même biome, même hauteur)</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys">
+              <span class="kbd xwide">Shift</span>
+              <span class="ho-plus">+</span>
+              <span class="kbd mouse">RMB</span>
+            </div>
+            <div class="ho-label">Annuler les ordres sur la strate survolée</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys">
+              <span class="kbd xwide">Shift</span>
+              <span class="ho-plus">+</span>
+              <span class="kbd mouse">MW</span>
+            </div>
+            <div class="ho-label">Changer de type de filon (outil Filon)</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">R</span></div>
+            <div class="ho-label">Nouvelle partie (confirmation demandée)</div>
+          </div>
+        </div>
+
+        <div class="ho-section">
+          <div class="ho-section-title">Menus</div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">T</span></div>
+            <div class="ho-label">Arbre des technologies</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">H</span></div>
+            <div class="ho-label">Afficher ou masquer cette aide</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd wide">?</span></div>
+            <div class="ho-label">Guide détaillé (tutoriel textuel)</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd xwide">Échap</span></div>
+            <div class="ho-label">Menu pause, ou fermer un panneau ouvert</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./main.js"></script>
   <script>
     (function () {
@@ -1207,7 +1559,7 @@
       window.addEventListener('keydown', (e) => {
         const target = e.target
         if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
-        if (e.key === '?' || e.key === 'h' || e.key === 'H') { e.preventDefault(); open() }
+        if (e.key === '?') { e.preventDefault(); open() }
         if (e.key === 'Escape' && !panel.classList.contains('hidden')) close()
       })
       // masque le hint si deja vu
