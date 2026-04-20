@@ -1,0 +1,9 @@
+{
+  "quests": [
+    { "id": "q-berries-5",  "title": "Récolter 5 baies",           "target": 5,  "color": "#8c5cc4", "checkKey": "berries" },
+    { "id": "q-mine-10",    "title": "Miner 10 blocs de pierre",   "target": 10, "color": "#a8a196", "checkKey": "minesCompleted" },
+    { "id": "q-house-2",    "title": "Poser une deuxième maison",  "target": 2,  "color": "#c97a4a", "checkKey": "housesPlaced" },
+    { "id": "q-colons-8",   "title": "Avoir 8 colons en vie",      "target": 8,  "color": "#ffb070", "checkKey": "colonistsCount" },
+    { "id": "q-berries-20", "title": "Récolter 20 baies au total", "target": 20, "color": "#6b2d8c", "checkKey": "totalBerriesHarvested" }
+  ]
+}

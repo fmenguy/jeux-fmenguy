@@ -2,9 +2,12 @@ import * as THREE from 'three'
 import {
   GRID, MIN_STRATES, MAX_STRATES, WATER_LEVEL, SHALLOW_WATER_LEVEL,
   COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
-  MALE_NAMES, FEMALE_NAMES, GENDER_SYMBOLS, GENDER_COLORS,
-  CHIEF_COLOR, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME, COL, ORE_TO_STOCK
+  GENDER_SYMBOLS, GENDER_COLORS,
+  CHIEF_COLOR, COL, ORE_TO_STOCK
 } from './constants.js'
+import {
+  MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
+} from './gamedata.js'
 import { state } from './state.js'
 import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
 import { topVoxelIndex, colorForLayer, isDeepWater } from './terrain.js'

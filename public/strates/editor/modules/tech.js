@@ -1,4 +1,5 @@
-import { GRID, ORE_TECH, TECH_BUBBLE_LINES, TECH_BUBBLE_COOLDOWN } from './constants.js'
+import { GRID, ORE_TECH, TECH_BUBBLE_COOLDOWN } from './constants.js'
+import { TECH_BUBBLE_LINES } from './gamedata.js'
 import { state } from './state.js'
 
 // ============================================================================
