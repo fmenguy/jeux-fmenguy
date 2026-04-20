@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>POC Cel-shading — Strates</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a1a; font-family: monospace; overflow: hidden; }
+  canvas { display: block; }
+
+  #ui {
+    position: fixed; top: 16px; left: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 10;
+  }
+  .group {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .group-label {
+    font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+    color: rgba(255,255,255,0.4); margin-bottom: 2px;
+  }
+  .btns { display: flex; gap: 4px; flex-wrap: wrap; }
+  button {
+    font-family: monospace; font-size: 11px;
+    padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7);
+    cursor: pointer; transition: all .15s;
+  }
+  button:hover { background: rgba(255,255,255,0.14); }
+  button.active { background: #ffd98a; color: #1a1a1a; border-color: #ffd98a; font-weight: 700; }
+
+  #info {
+    position: fixed; bottom: 16px; left: 16px;
+    font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: .05em;
+  }
+  #back {
+    position: fixed; top: 16px; right: 16px;
+    font-family: monospace; font-size: 11px;
+    padding: 6px 14px; border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.6);
+    cursor: pointer; text-decoration: none;
+    z-index: 10;
+  }
+  #back:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <div class="group">
+    <span class="group-label">Shading</span>
+    <div class="btns">
+      <button data-group="shade" data-val="flat" class="active">Flat</button>
+      <button data-group="shade" data-val="toon2">Toon 2</button>
+      <button data-group="shade" data-val="toon3">Toon 3</button>
+      <button data-group="shade" data-val="toon4">Toon 4</button>
+    </div>
+  </div>
+  <div class="group">
+    <span class="group-label">Contours</span>
+    <div class="btns">
+      <button data-group="outline" data-val="none" class="active">Aucun</button>
+      <button data-group="outline" data-val="thin">Fins</button>
+      <button data-group="outline" data-val="thick">Épais</button>
+    </div>
+  </div>
+  <div class="group">
+    <span class="group-label">Lumière</span>
+    <div class="btns">
+      <button data-group="light" data-val="day" class="active">Jour</button>
+      <button data-group="light" data-val="golden">Dorée</button>
+      <button data-group="light" data-val="dusk">Crépuscule</button>
+      <button data-group="light" data-val="night">Nuit</button>
+    </div>
+  </div>
+  <div class="group">
+    <span class="group-label">Palette</span>
+    <div class="btns">
+      <button data-group="palette" data-val="game" class="active">Jeu actuel</button>
+      <button data-group="palette" data-val="dorf">Dorfromantik</button>
+      <button data-group="palette" data-val="warm">Chaude</button>
+    </div>
+  </div>
+  <div class="group">
+    <span class="group-label">Brume</span>
+    <div class="btns">
+      <button data-group="fog" data-val="off" class="active">Off</button>
+      <button data-group="fog" data-val="light">Légère</button>
+      <button data-group="fog" data-val="heavy">Dense</button>
+    </div>
+  </div>
+</div>
+
+<a href="../index.html" id="back">← Accueil</a>
+<div id="info">POC Cel-shading · Strates · clic-drag = orbite · molette = zoom</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
+import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js'
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
+
+// ─── Renderer ───────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ antialias: true })
+renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
+renderer.toneMapping = THREE.ACESFilmicToneMapping
+renderer.toneMappingExposure = 1.1
+document.body.appendChild(renderer.domElement)
+
+// ─── Scène & caméra ─────────────────────────────────────────────
+const scene = new THREE.Scene()
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 200)
+camera.position.set(14, 12, 14)
+const controls = new OrbitControls(camera, renderer.domElement)
+controls.enableDamping = true
+controls.target.set(0, 2, 0)
+
+// ─── Palettes ───────────────────────────────────────────────────
+const PALETTES = {
+  game: {
+    grass: 0x7cc06a, grassDark: 0x5ea24d, forest: 0x3f7a3a,
+    sand:  0xe8cf8e, rock: 0xa8a196, snow: 0xf2f2ee,
+    water: 0x5ba8c4, sky: 0xcfe6f5
+  },
+  dorf: {
+    grass: 0x8db87a, grassDark: 0x6a9460, forest: 0x4a7245,
+    sand:  0xd4b97a, rock: 0x8a8478, snow: 0xe8e8e4,
+    water: 0x6a9eb8, sky: 0xb8d4e8
+  },
+  warm: {
+    grass: 0x9abe6e, grassDark: 0x7a9850, forest: 0x527840,
+    sand:  0xe0c07a, rock: 0xb09878, snow: 0xf4f0e0,
+    water: 0x7ab8c8, sky: 0xdde8f0
+  }
+}
+let currentPalette = PALETTES.game
+
+// ─── Gradient maps pour toon ────────────────────────────────────
+function makeGradient(steps) {
+  const data = new Uint8Array(steps)
+  for (let i = 0; i < steps; i++) data[i] = Math.round((i / (steps - 1)) * 255)
+  const tex = new THREE.DataTexture(data, steps, 1, THREE.RedFormat)
+  tex.minFilter = tex.magFilter = THREE.NearestFilter
+  tex.needsUpdate = true
+  return tex
+}
+const gradients = { toon2: makeGradient(2), toon3: makeGradient(3), toon4: makeGradient(4) }
+
+// ─── État ────────────────────────────────────────────────────────
+const state = { shade: 'flat', outline: 'none', light: 'day', palette: 'game', fog: 'off' }
+
+// ─── Matériaux ───────────────────────────────────────────────────
+const mats = {}
+function buildMat(hex, shade) {
+  if (shade === 'flat') return new THREE.MeshLambertMaterial({ color: hex })
+  const gmap = gradients[shade]
+  return new THREE.MeshToonMaterial({ color: hex, gradientMap: gmap })
+}
+function colorKey(name) {
+  return currentPalette[name] ?? currentPalette.grass
+}
+
+// ─── Géométries ─────────────────────────────────────────────────
+const boxGeo  = new THREE.BoxGeometry(1, 1, 1)
+const treeGeo = new THREE.ConeGeometry(.55, 1.4, 6)
+const trunkGeo= new THREE.CylinderGeometry(.08, .1, .5, 5)
+
+// ─── Construction de la scène ────────────────────────────────────
+const voxelMeshes = []
+const outlineTargets = []
+
+function makeMat(colorHex) {
+  const m = buildMat(colorHex, state.shade)
+  mats[colorHex] = m
+  return m
+}
+
+function addVoxel(x, y, z, colorHex) {
+  const m = new THREE.Mesh(boxGeo, makeMat(colorHex))
+  m.position.set(x, y - .5, z)
+  m.castShadow = true
+  m.receiveShadow = true
+  m.userData.colorKey = colorHex
+  scene.add(m)
+  voxelMeshes.push(m)
+  outlineTargets.push(m)
+  return m
+}
+
+function addTree(x, y, z, scale = 1) {
+  const g = new THREE.Group()
+  const crown = new THREE.Mesh(treeGeo, makeMat(colorKey('forest')))
+  crown.position.y = .9 * scale
+  crown.scale.setScalar(scale)
+  crown.castShadow = true
+  const trunk = new THREE.Mesh(trunkGeo, makeMat(0x7a5a36))
+  trunk.position.y = .25 * scale
+  trunk.scale.setScalar(scale)
+  g.add(crown, trunk)
+  g.position.set(x, y, z)
+  scene.add(g)
+  outlineTargets.push(crown, trunk)
+  return g
+}
+
+// Île voxel
+const island = [
+  // base eau (visuelle seulement, plan)
+  // strate roche
+  [[-2,1,-2],[−1,1,-2],[0,1,-2],[1,1,-2],[2,1,-2],
+   [-2,1,-1],[−1,1,-1],[0,1,-1],[1,1,-1],[2,1,-1],
+   [-2,1, 0],[−1,1, 0],[0,1, 0],[1,1, 0],[2,1, 0],
+   [-2,1, 1],[−1,1, 1],[0,1, 1],[1,1, 1],[2,1, 1],
+   [-2,1, 2],[−1,1, 2],[0,1, 2],[1,1, 2],[2,1, 2]],
+  'rock',
+  // strate herbe dessus
+  [[-1,2,-1],[0,2,-1],[1,2,-1],
+   [-1,2, 0],[0,2, 0],[1,2, 0],
+   [-1,2, 1],[0,2, 1],[1,2, 1]],
+  'grass',
+  // sable sur les bords
+  [[-2,2,-2],[-1,2,-2],[0,2,-2],[1,2,-2],[2,2,-2],
+   [-2,2, 2],[-1,2, 2],[0,2, 2],[1,2, 2],[2,2, 2],
+   [-2,2,-1],[-2,2, 0],[-2,2, 1],
+   [ 2,2,-1],[ 2,2, 0],[ 2,2, 1]],
+  'sand',
+]
+
+// Version simplifiée et lisible de la scène
+function buildIsland() {
+  const p = PALETTES[state.palette]
+
+  // Plan eau
+  const waterGeo = new THREE.PlaneGeometry(14, 14)
+  const waterMat = new THREE.MeshLambertMaterial({ color: p.water, transparent: true, opacity: .82 })
+  const water = new THREE.Mesh(waterGeo, waterMat)
+  water.rotation.x = -Math.PI / 2
+  water.position.y = .5
+  water.receiveShadow = true
+  scene.add(water)
+
+  // Fond sableux sous eau
+  const sandBase = new THREE.Mesh(new THREE.PlaneGeometry(14, 14),
+    new THREE.MeshLambertMaterial({ color: p.sand }))
+  sandBase.rotation.x = -Math.PI / 2
+  sandBase.position.y = .02
+  scene.add(sandBase)
+
+  // Strate roche (base île)
+  for (let x = -3; x <= 3; x++) for (let z = -3; z <= 3; z++) {
+    if (Math.abs(x) === 3 && Math.abs(z) === 3) continue
+    addVoxel(x, 1, z, p.rock)
+  }
+  // Bords sable
+  const sandCoords = [
+    [-3,2,-2],[-3,2,-1],[-3,2,0],[-3,2,1],[-3,2,2],
+    [ 3,2,-2],[ 3,2,-1],[ 3,2,0],[ 3,2,1],[ 3,2,2],
+    [-2,2,-3],[-1,2,-3],[0,2,-3],[1,2,-3],[2,2,-3],
+    [-2,2, 3],[-1,2, 3],[0,2, 3],[1,2, 3],[2,2, 3],
+  ]
+  for (const [x,y,z] of sandCoords) addVoxel(x, y, z, p.sand)
+
+  // Plateau herbe
+  for (let x = -2; x <= 2; x++) for (let z = -2; z <= 2; z++) {
+    const color = (Math.abs(x) + Math.abs(z) > 2) ? p.grassDark : p.grass
+    addVoxel(x, 2, z, color)
+  }
+  // Mini colline
+  addVoxel(-1, 3, -1, p.grass)
+  addVoxel(0, 3, -1, p.grassDark)
+  addVoxel(0, 4, -1, p.rock)
+
+  // Arbres
+  addTree(-2, 2, -1, 1.1)
+  addTree(-1.5, 2, 1, .9)
+  addTree(1.8, 2, -1.8, 1.0)
+
+  // Maison voxel (cube rouge)
+  const houseBase = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, .9, 1),
+    buildMat(0xd9c9a6, state.shade)
+  )
+  houseBase.position.set(.5, 2.45, .5)
+  houseBase.castShadow = true
+  scene.add(houseBase)
+  outlineTargets.push(houseBase)
+
+  const roofGeo = new THREE.ConeGeometry(.85, .6, 4)
+  const roofMat = buildMat(0x8a4e3a, state.shade)
+  const roof = new THREE.Mesh(roofGeo, roofMat)
+  roof.rotation.y = Math.PI / 4
+  roof.position.set(.5, 3.2, .5)
+  roof.castShadow = true
+  scene.add(roof)
+  outlineTargets.push(roof)
+
+  // Colon (capsule)
+  const colonGeo = new THREE.CapsuleGeometry(.18, .4, 4, 8)
+  const colonMat = buildMat(0xc9442c, state.shade)
+  const colonist = new THREE.Mesh(colonGeo, colonMat)
+  colonist.position.set(1.2, 2.7, .8)
+  colonist.castShadow = true
+  scene.add(colonist)
+  const headGeo = new THREE.SphereGeometry(.18, 8, 6)
+  const headMat = buildMat(0xead3b0, state.shade)
+  const head = new THREE.Mesh(headGeo, headMat)
+  head.position.set(1.2, 3.18, .8)
+  scene.add(head)
+  outlineTargets.push(colonist, head)
+}
+
+// ─── Lumières ────────────────────────────────────────────────────
+const ambientLight = new THREE.AmbientLight(0xffffff, .6)
+scene.add(ambientLight)
+const sunLight = new THREE.DirectionalLight(0xfff5e0, 1.8)
+sunLight.position.set(6, 12, 8)
+sunLight.castShadow = true
+sunLight.shadow.mapSize.setScalar(1024)
+sunLight.shadow.camera.near = 1
+sunLight.shadow.camera.far = 50
+sunLight.shadow.camera.left = sunLight.shadow.camera.bottom = -10
+sunLight.shadow.camera.right = sunLight.shadow.camera.top = 10
+scene.add(sunLight)
+
+const fillLight = new THREE.HemisphereLight(0xb0c8e8, 0x8a7060, .4)
+scene.add(fillLight)
+
+// ─── Post-processing ─────────────────────────────────────────────
+const composer = new EffectComposer(renderer)
+const renderPass = new RenderPass(scene, camera)
+composer.addPass(renderPass)
+
+const outlinePass = new OutlinePass(
+  new THREE.Vector2(innerWidth, innerHeight), scene, camera
+)
+outlinePass.edgeStrength = 3.0
+outlinePass.edgeGlow = 0
+outlinePass.edgeThickness = 1.0
+outlinePass.visibleEdgeColor.set('#000000')
+outlinePass.hiddenEdgeColor.set('#000000')
+outlinePass.selectedObjects = outlineTargets
+composer.addPass(outlinePass)
+
+const outputPass = new OutputPass()
+composer.addPass(outputPass)
+
+// ─── Application des états ───────────────────────────────────────
+function applyLight() {
+  const presets = {
+    day:    { sun: 0xfff5e0, sunI: 1.8, amb: 0xffffff, ambI: .6, sky: 0xcfe6f5, fill: 0xb0c8e8, fillG: 0x8a7060 },
+    golden: { sun: 0xff9944, sunI: 2.2, amb: 0xffcc88, ambI: .5, sky: 0xf0a060, fill: 0xffb880, fillG: 0x604020 },
+    dusk:   { sun: 0xcc5533, sunI: 1.2, amb: 0x884422, ambI: .4, sky: 0x704060, fill: 0xaa7060, fillG: 0x302010 },
+    night:  { sun: 0x2244aa, sunI: .4,  amb: 0x112244, ambI: .2, sky: 0x0a1020, fill: 0x334466, fillG: 0x100818 },
+  }
+  const p = presets[state.light]
+  sunLight.color.set(p.sun)
+  sunLight.intensity = p.sunI
+  ambientLight.color.set(p.amb)
+  ambientLight.intensity = p.ambI
+  scene.background = new THREE.Color(p.sky)
+  fillLight.color.set(p.fill)
+  fillLight.groundColor.set(p.fillG)
+}
+
+function applyFog() {
+  const presets = {
+    off:   null,
+    light: { color: 0xc8dce8, near: 18, far: 40 },
+    heavy: { color: 0xb8ccd8, near: 8,  far: 22 },
+  }
+  const p = presets[state.fog]
+  scene.fog = p ? new THREE.Fog(p.color, p.near, p.far) : null
+}
+
+function applyOutline() {
+  const thickness = { none: 0, thin: 1.0, thick: 2.5 }
+  outlinePass.edgeStrength = state.outline === 'none' ? 0 : 3.0
+  outlinePass.edgeThickness = thickness[state.outline]
+}
+
+function rebuildScene() {
+  // Vider la scène sauf lumières
+  scene.children
+    .filter(o => o.isMesh || o.isGroup)
+    .forEach(o => scene.remove(o))
+  voxelMeshes.length = 0
+  outlineTargets.length = 0
+  currentPalette = PALETTES[state.palette]
+  buildIsland()
+  outlinePass.selectedObjects = outlineTargets
+  applyLight()
+  applyFog()
+  applyOutline()
+}
+
+// Init
+scene.background = new THREE.Color(0xcfe6f5)
+buildIsland()
+applyLight()
+applyFog()
+applyOutline()
+
+// ─── Boucle ──────────────────────────────────────────────────────
+let t = 0
+function animate() {
+  requestAnimationFrame(animate)
+  t += .008
+  controls.update()
+  // Légère rotation du soleil en mode heure dorée / crépuscule
+  if (state.light === 'golden' || state.light === 'dusk') {
+    sunLight.position.x = Math.cos(t * .3) * 10
+    sunLight.position.z = Math.sin(t * .3) * 8
+  }
+  composer.render()
+}
+animate()
+
+// ─── Resize ──────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(innerWidth, innerHeight)
+  composer.setSize(innerWidth, innerHeight)
+})
+
+// ─── UI ──────────────────────────────────────────────────────────
+document.querySelectorAll('button[data-group]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const group = btn.dataset.group
+    const val   = btn.dataset.val
+    state[group] = val
+    document.querySelectorAll(`button[data-group="${group}"]`).forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+
+    if (group === 'shade' || group === 'palette') {
+      rebuildScene()
+    } else if (group === 'light') {
+      applyLight()
+    } else if (group === 'fog') {
+      applyFog()
+    } else if (group === 'outline') {
+      applyOutline()
+    }
+  })
+})
+</script>
+</body>
+</html>

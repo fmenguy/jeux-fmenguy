@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>POCs visuels — Strates</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f1a20;
+    color: #d0e0e8;
+    font-family: monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 40px 20px;
+  }
+  h1 {
+    font-size: 18px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: #ffd98a;
+    font-weight: 400;
+  }
+  .subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: .1em;
+    margin-top: -24px;
+  }
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    max-width: 800px;
+  }
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 24px 28px;
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: all .2s;
+  }
+  .card:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,212,138,0.4);
+    transform: translateY(-2px);
+  }
+  .card-icon { font-size: 28px; }
+  .card-title { font-size: 13px; font-weight: 700; color: #ffd98a; }
+  .card-desc { font-size: 10px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+  .card-status {
+    font-size: 9px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #6adc8a;
+    margin-top: 4px;
+  }
+  .card-status.wip { color: #f0a040; }
+  a.back {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    text-decoration: none;
+    letter-spacing: .08em;
+  }
+  a.back:hover { color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>Strates POCs</h1>
+<p class="subtitle">Banc d'essai visuel — prototypes isolés, hors jeu</p>
+
+<div class="grid">
+  <a class="card" href="cel-shading.html">
+    <span class="card-icon">🎨</span>
+    <span class="card-title">Cel-shading</span>
+    <span class="card-desc">Comparaison flat / toon 2-4 niveaux, contours OutlinePass, lumière heure dorée / nuit, palettes Dorfromantik, brume.</span>
+    <span class="card-status">Disponible</span>
+  </a>
+</div>
+
+<a class="back" href="../index.html">← Retour à l'accueil</a>
+
+</body>
+</html>
