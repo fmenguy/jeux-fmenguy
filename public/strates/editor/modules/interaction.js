@@ -18,6 +18,7 @@ import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
 import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
+import { openCharSheet, isCharSheetOpen } from './charsheet-ui.js'
 
 // ============================================================================
 // Curseur wireframe
@@ -595,9 +596,29 @@ window.addEventListener('blur', () => {
   isShiftDown = false; clearStrataPreview(); strataPreviewKey = null; strataCachedCells = null
 })
 
+function pickColonist(clientX, clientY) {
+  const rect = dom.getBoundingClientRect()
+  hoverNDC.x = ((clientX - rect.left) / rect.width) * 2 - 1
+  hoverNDC.y = -((clientY - rect.top) / rect.height) * 2 + 1
+  hoverRaycaster.setFromCamera(hoverNDC, camera)
+  let best = null
+  let bestDist = Infinity
+  for (const c of state.colonists) {
+    const hits = hoverRaycaster.intersectObject(c.group, true)
+    for (const h of hits) {
+      if (h.object.isSprite) continue
+      if (h.distance < bestDist) { bestDist = h.distance; best = c }
+    }
+  }
+  return best
+}
+
+let lclickStart = null
 dom.addEventListener('pointerdown', (e) => {
   if (e.button !== 0) return
+  lclickStart = { x: e.clientX, y: e.clientY, t: performance.now() }
   if (state.toolState.tool === 'nav') return
+  if (isCharSheetOpen()) return
   const cell = pickCell(e.clientX, e.clientY)
   if (e.shiftKey && cell) {
     const cells = computeStrata(cell.x, cell.z)
@@ -633,6 +654,22 @@ dom.addEventListener('pointermove', (e) => {
 
 dom.addEventListener('pointerleave', () => { cursorMesh.visible = false; clearStrataPreview() })
 window.addEventListener('pointerup', () => { state.toolState.isPainting = false })
+
+// Clic gauche bref sur un colon : ouvre la fiche personnage
+dom.addEventListener('pointerup', (e) => {
+  if (e.button !== 0) return
+  if (!lclickStart) return
+  const dt = performance.now() - lclickStart.t
+  const dx = e.clientX - lclickStart.x
+  const dy = e.clientY - lclickStart.y
+  const dist2 = dx * dx + dy * dy
+  lclickStart = null
+  if (dt > 260) return
+  if (dist2 > 20) return
+  if (isCharSheetOpen()) return
+  const col = pickColonist(e.clientX, e.clientY)
+  if (col) openCharSheet(col)
+})
 
 // ---------------------------------------------------------------------------
 // Clic droit bref : annulation de job
