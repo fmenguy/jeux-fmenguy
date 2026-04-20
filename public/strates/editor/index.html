@@ -895,15 +895,96 @@
       height: 1px; background: rgba(255,255,255,0.06);
       margin: 4px 0;
     }
+
+    /* Tabs */
+    #tt-tabs { display: flex; gap: 4px; align-items: center; }
+    .tt-tab {
+      font-size: 11px; padding: 4px 12px; border-radius: 5px;
+      border: 1px solid rgba(138,196,255,0.25);
+      background: rgba(138,196,255,0.07); color: rgba(255,255,255,0.5);
+      cursor: pointer; font-family: monospace; letter-spacing: .05em;
+      transition: all .15s;
+    }
+    .tt-tab:hover { background: rgba(138,196,255,0.15); color: rgba(255,255,255,0.8); }
+    .tt-tab.active { background: rgba(138,196,255,0.2); color: #8ac4ff; border-color: rgba(138,196,255,0.5); font-weight: 700; }
+    .tt-tab-future { font-size: 10px; color: rgba(255,255,255,0.2); padding: 4px 8px; letter-spacing: .06em; font-style: italic; }
+
+    /* Animations slide strate */
+    @keyframes slideOutUp   { from { transform:translateY(0); opacity:1; } to { transform:translateY(-32px); opacity:0; } }
+    @keyframes slideOutDown { from { transform:translateY(0); opacity:1; } to { transform:translateY(32px);  opacity:0; } }
+    @keyframes slideInUp    { from { transform:translateY(32px);  opacity:0; } to { transform:translateY(0); opacity:1; } }
+    @keyframes slideInDown  { from { transform:translateY(-32px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    .tt-slide-out-up   { animation: slideOutUp   .2s ease forwards; }
+    .tt-slide-out-down { animation: slideOutDown .2s ease forwards; }
+    .tt-slide-in-up    { animation: slideInUp    .28s ease forwards; }
+    .tt-slide-in-down  { animation: slideInDown  .28s ease forwards; }
+
+    /* Grille batiments */
+    .tt-bld-header, .tt-bld-row {
+      display: grid;
+      grid-template-columns: 130px repeat(7, minmax(140px, 1fr));
+      gap: 4px; margin-bottom: 6px;
+    }
+    .tt-bld-chain-label {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6);
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: 6px 0;
+    }
+    .tt-bld-dot {
+      width: 22px; height: 22px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .tt-bld-age-col {
+      text-align: center; padding: 6px 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .tt-bld-cell {
+      display: flex; flex-direction: column; align-items: stretch; gap: 3px;
+    }
+    .tt-bld-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 7px; padding: 7px 9px;
+    }
+    .tt-bld-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .tt-bld-card-icon {
+      width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #fff;
+    }
+    .tt-bld-card-name { font-size: 11px; font-weight: 600; color: #e8e0d0; }
+    .tt-bld-card-desc { font-size: 9px; color: rgba(255,255,255,0.35); line-height: 1.4; margin-bottom: 4px; }
+    .tt-bld-card-stat { font-size: 9px; color: #ffd98a; }
+    .tt-bld-card-fusion {
+      font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 4px;
+      border-top: 1px solid rgba(255,255,255,0.06); padding-top: 3px;
+    }
+    .tt-bld-arrow {
+      font-size: 10px; color: rgba(255,255,255,0.3); text-align: center;
+      padding: 2px 0; letter-spacing: .05em;
+    }
   </style>
 
   <div id="tt-backdrop"></div>
   <div id="tt-panel">
     <div id="tt-inner">
       <div id="tt-topbar">
-        <h2>Arbre des technologies</h2>
-        <span id="tt-pts">0 pts de recherche</span>
-        <button id="tt-close-btn">Fermer (Esc)</button>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <h2>Arbres de progression</h2>
+          <div id="tt-tabs">
+            <button class="tt-tab active" data-tree="tech">Technologies</button>
+            <button class="tt-tab" data-tree="buildings">Batiments</button>
+            <span class="tt-tab-future">Agriculture</span>
+            <span class="tt-tab-future">Militaire</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span id="tt-pts">0 pts de recherche</span>
+          <button id="tt-close-btn">Fermer Esc</button>
+        </div>
       </div>
       <div id="tt-scroll">
         <div id="tt-grid"></div>
