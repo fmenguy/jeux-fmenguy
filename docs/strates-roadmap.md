@@ -54,7 +54,14 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
   - [x] "Continuer" vs "Nouvelle partie" contextuel selon sauvegardes existantes
   - [x] Vraie nouvelle partie (flag `strates-new-game`, ignore saves existantes)
 - [ ] 2.2 Scénarios prédéfinis (îlot calme, archipel venté, vallée montagneuse)
-- [ ] 2.3 Système d'âges et passage, de l'âge de pierre à l'âge de l'espace (voir vision **Tech tree XXL** dans `strates-design-ideas.md` : 7 âges + 6 branches thématiques + 60 à 90 techs en graphe, inspiré Total War Warhammer et Craft the World, passage d'âge à la FDA par conditions cumulatives)
+- [ ] 2.3 **Tech tree XXL et passage d'âges** (PRIORITÉ HAUTE, cœur du jeu)
+  - Distinct de la fusion de bâtiments : la tech tree commande ce qui est possible, la fusion l'exploite
+  - 60 à 90 techs réparties sur 7 âges et 6 branches (Outils, Agriculture, Construction, Militaire, Savoir, Âge)
+  - Passage d'âge par conditions cumulatives sur plusieurs branches (comme FDA)
+  - UI : arbre visuel interactif scrollable/zoomable, colonnes = âges, lignes = branches
+  - Data-driven : JSON `data/techtree.json` avec `{ id, name, age, branch, icon, cost, requires[], unlocks{} }`
+  - Le panneau Tech actuel (4 techs linéaires) est un proto à remplacer par l'arbre complet
+  - À faire avant ou en parallèle des POC visuels axe 4 — voir `strates-design-ideas.md` section "Tech tree XXL"
 - [ ] 2.4 Mode campagne / mode sandbox / endgame cyclique (changement de planète)
 - [x] **2.5 Map plus grande** (GRID 96x96, livré `88612ab` + `c42038e`)
 - [ ] 2.6 **Fog of war** (style Age of Empires) : révélation progressive par vision des colons et bâtiments (rayon ~8-12 tuiles), cellules explorées restent visibles en version figée — MVP livré `7480879`/`91119a7`, désactivé temporairement `83f0b9f`
@@ -128,9 +135,10 @@ Cinq axes parallèles, déclinables indépendamment. La section détaillée a é
 Sans s'enfermer dans un ordre strict, cette séquence maximise la valeur visible à chaque étape.
 
 **Court terme (quelques sessions)**
-1. Axe 4 visuel : signatures Dorfromantik, cycle jour/nuit, particules minage, premiers sons. La claque visuelle justifie le temps investi, motive la suite.
-2. Axe 2.11 séparation éditeur/jeu : le mode "ordre-only" est l'âme du pitch, le Godmod reste pour le sandbox.
-3. Axe 3.2 outils diversifiés : pelle, houe, faucille. Permet les quêtes intéressantes.
+1. **Axe 4 POC visuels** : tester cel-shading, cycle jour/nuit, eau dans des pages isolées `poc/`. Intégrer uniquement ce qui convainc.
+2. **Axe 2.3 Tech tree XXL** : data/techtree.json + UI arbre visuel. C'est le cœur du jeu, le reste en dépend.
+3. **Fusion de bâtiments** : étendre la mécanique 2x2 à toutes les catégories (habitation, recherche, alimentation). Page codex des chaînes.
+4. Axe 3.2 outils diversifiés : pelle, houe. Permet les quêtes agricoles.
 
 **Moyen terme (demi-douzaine de sessions)**
 4. Axe 2.3 système d'âges concret : passage pierre → bronze avec animation.
