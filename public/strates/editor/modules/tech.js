@@ -36,9 +36,17 @@ export function canMineCell(x, z) {
 export function unlockTech(id, refreshTechsPanel) {
   const t = state.techs[id]
   if (!t || t.unlocked) return
-  if (t.req && !state.techs[t.req].unlocked) return
-  if (state.researchPoints < t.cost) return
-  state.researchPoints -= t.cost
+  // SPEC v1 : prerequis donnes par un tableau requires[] (ids de techs).
+  // Compatibilite retro avec l'ancien champ scalaire t.req.
+  const reqs = Array.isArray(t.requires) && t.requires.length > 0
+    ? t.requires
+    : (t.req ? [t.req] : [])
+  for (const r of reqs) {
+    if (!state.techs[r] || !state.techs[r].unlocked) return
+  }
+  const costNum = (t.cost && typeof t.cost === 'object') ? (t.cost.research || 0) : (t.cost || 0)
+  if (state.researchPoints < costNum) return
+  state.researchPoints -= costNum
   t.unlocked = true
   if (refreshTechsPanel) refreshTechsPanel()
   const el = document.getElementById('tech-' + id)

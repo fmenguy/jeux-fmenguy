@@ -36,11 +36,27 @@ import './modules/stocks.js'
 await loadGameData()
 initQuestDefs()
 
-// Injecter les techs du JSON dans state.techs (sans ecraser les existantes)
+// Injecter les techs du JSON SPEC v1 dans state.techs (sans ecraser les existantes).
+// Normalisation : cost { research: N } -> number, requires [] -> req single id.
+// Le consommateur (tech.js, hud.js, techtree-ui.js) attend encore le format plat
+// legacy (cost number, req string|null). Le cablage du graphe complet requires[]
+// multiple est prevu par Lot C (UI tech tree XXL).
 if (TECH_TREE_DATA && TECH_TREE_DATA.techs) {
   for (const t of TECH_TREE_DATA.techs) {
     if (!state.techs[t.id]) {
-      state.techs[t.id] = { name: t.name, cost: t.cost, req: t.requires[0] || null, age: t.age, icon: t.icon, tint: t.color, unlocked: false }
+      const costNum = (t.cost && typeof t.cost === 'object') ? (t.cost.research || 0) : (t.cost || 0)
+      const reqFirst = Array.isArray(t.requires) ? (t.requires[0] || null) : (t.requires || null)
+      state.techs[t.id] = {
+        name: t.name,
+        cost: costNum,
+        req: reqFirst,
+        requires: Array.isArray(t.requires) ? t.requires.slice() : [],
+        age: t.age,
+        branch: t.branch || null,
+        icon: t.icon,
+        tint: t.color || null,
+        unlocked: false
+      }
     }
   }
 }
