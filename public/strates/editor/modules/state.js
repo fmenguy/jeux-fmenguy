@@ -80,5 +80,16 @@ export const state = {
     isPainting: false,
     paintedThisStroke: new Set()
   },
-  cameraKeys: new Set()
+  cameraKeys: new Set(),
+
+  // Lot B : moteur comportemental
+  // Les valeurs runtime par colon (needs Map, jobQueue Array, flags) vivent
+  // sur l'instance Colonist. Ici on ne stocke que les caches transverses.
+  needsTickAccum: 0,
+  needsBuckets: null,
+
+  // Lot D : ages et achievements
+  currentAge: 1,
+  ageUnlockedAt: { 1: Date.now() },
+  achievements: []
 }
