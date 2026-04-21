@@ -638,6 +638,11 @@ export class Colonist {
           const picked = bush.berries
           if (picked > 0) {
             bush.berries = 0
+            // Lot B : toute baie prelevee du buisson est comptee dans
+            // totalBerriesHarvested, que le colon la mange sur place ou la
+            // ramene au stock. La quete "recolter N baies" suit la cueillette
+            // reelle, pas le stock disponible.
+            state.gameStats.totalBerriesHarvested += picked
             // Lot B : si la tache courante est EAT_SEEK_FOOD, le colon mange
             // sur place et les baies ne rentrent pas au stock. Sinon il
             // ramene tout au stock, comportement normal de cueilleur.
@@ -657,7 +662,6 @@ export class Colonist {
               }
             } else {
               state.resources.berries += picked
-              state.gameStats.totalBerriesHarvested += picked
             }
             refreshBushBerries(bush)
             bush.regenTimer = 0
