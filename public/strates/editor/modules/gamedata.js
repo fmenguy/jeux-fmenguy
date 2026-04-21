@@ -119,6 +119,26 @@ export function getResourceById(id) {
   return RESOURCES_DATA.resources.find(r => r.id === id)
 }
 
+/**
+ * Retourne tous les batiments de l'age donne.
+ * @param {number} n - numero d'age (1 = Pierre, 2 = Bronze, etc.)
+ * @returns {Array}
+ */
+export function getBuildingsForAge(n) {
+  if (!BUILDINGS_DATA || !BUILDINGS_DATA.buildings) return []
+  return BUILDINGS_DATA.buildings.filter(b => b.age === n)
+}
+
+/**
+ * Calcule la nourriture totale disponible (baies + viande).
+ * @param {object} st - objet state
+ * @returns {number}
+ */
+export function getTotalFood(st) {
+  if (!st || !st.resources) return 0
+  return (st.resources.berries || 0) + (st.resources.meat || 0)
+}
+
 // ============================================================================
 // Linter de references croisees (appele au boot)
 // Verifie que chaque "requires" pointe vers un id existant.
