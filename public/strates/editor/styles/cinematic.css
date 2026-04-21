@@ -1,0 +1,168 @@
+/* ============================================================================
+   Cinematic overlay -- passage d'age (Lot D)
+   Utilise : #cinematic-overlay, .cine-title
+   ============================================================================ */
+
+#cinematic-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s ease;
+}
+
+#cinematic-overlay.cine-visible {
+  pointer-events: auto;
+}
+
+#cinematic-overlay.cine-fade-in {
+  opacity: 1;
+}
+
+#cinematic-overlay.cine-fade-out {
+  opacity: 0;
+}
+
+.cine-title {
+  font-family: system-ui, sans-serif;
+  font-size: clamp(28px, 6vw, 72px);
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #fff5d8;
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.88);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  text-shadow:
+    0 0 40px rgba(255, 196, 80, 0.7),
+    0 0 80px rgba(255, 196, 80, 0.35),
+    0 4px 24px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  padding: 0 32px;
+  line-height: 1.1;
+}
+
+.cine-title .cine-subtitle {
+  display: block;
+  font-size: 0.36em;
+  letter-spacing: 0.45em;
+  color: rgba(255, 196, 80, 0.75);
+  margin-top: 14px;
+  font-weight: 400;
+}
+
+.cine-title.cine-title-in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Badge "Monument" sur l'actionbar */
+#cairn-overlay-badge {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(255, 196, 80, 0.22), rgba(168, 134, 42, 0.38));
+  border: 1px solid rgba(255, 196, 80, 0.55);
+  border-radius: 10px;
+  padding: 8px 18px;
+  color: #fff5d8;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  z-index: 25;
+  cursor: default;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateX(-50%) translateY(6px);
+}
+
+#cairn-overlay-badge.badge-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#cairn-overlay-badge .badge-bar-wrap {
+  margin-top: 6px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#cairn-overlay-badge .badge-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #a8862a, #ffd98a);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+#cairn-overlay-badge .badge-label {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+/* Checklist conditions dans le tooltip Cairn */
+#cairn-conditions-tooltip {
+  position: fixed;
+  bottom: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(14, 18, 26, 0.97), rgba(10, 13, 19, 0.99));
+  border: 1px solid rgba(255, 196, 80, 0.4);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: #f3ecdd;
+  font-size: 12px;
+  line-height: 1.6;
+  min-width: 260px;
+  max-width: 340px;
+  z-index: 26;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+#cairn-conditions-tooltip.tooltip-visible {
+  opacity: 1;
+}
+
+#cairn-conditions-tooltip h4 {
+  margin: 0 0 10px 0;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #ffd98a;
+  font-weight: 700;
+}
+
+.cond-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.cond-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cond-dot.ok { background: #64dc64; box-shadow: 0 0 6px rgba(100, 220, 100, 0.5); }
+.cond-dot.ko { background: #ff6b6b; }
+
+.cond-text { flex: 1; font-size: 11px; color: #e9e2cf; }
+.cond-text.ok { color: rgba(200, 240, 200, 0.75); text-decoration: line-through; }

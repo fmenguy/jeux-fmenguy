@@ -518,6 +518,7 @@
       color: rgba(136,204,68,0.8);
     }
   </style>
+  <link rel="stylesheet" href="./styles/cinematic.css">
   <script type="importmap">
   {
     "imports": {
@@ -1572,6 +1573,28 @@
 
       </div>
     </div>
+  </div>
+
+  <!-- Lot D : cinématique de passage d'âge -->
+  <div id="cinematic-overlay">
+    <div class="cine-title" id="cine-title-el">
+      <span id="cine-title-text"></span>
+      <span class="cine-subtitle" id="cine-subtitle-text"></span>
+    </div>
+  </div>
+
+  <!-- Lot D : badge Monument (progression vers le Cairn) -->
+  <div id="cairn-overlay-badge">
+    <div class="badge-label">Monument proche</div>
+    <div class="badge-bar-wrap">
+      <div class="badge-bar-fill" id="cairn-badge-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Lot D : tooltip conditions Cairn -->
+  <div id="cairn-conditions-tooltip">
+    <h4>Conditions Cairn</h4>
+    <div id="cairn-cond-list"></div>
   </div>
 
   <script type="module" src="./main.js"></script>
