@@ -47,6 +47,22 @@ export function initHelpOverlay() {
   if (btnClose) btnClose.addEventListener('click', closeHelpOverlay)
   backdropEl.addEventListener('click', closeHelpOverlay)
 
+  // Toggle "Voir tout" / "Masquer le detail" (U4 : version courte par defaut)
+  const btnToggle = document.getElementById('help-toggle-full')
+  const fullSections = document.getElementById('ho-full-sections')
+  if (btnToggle && fullSections) {
+    btnToggle.addEventListener('click', function() {
+      const hidden = fullSections.hasAttribute('hidden')
+      if (hidden) {
+        fullSections.removeAttribute('hidden')
+        btnToggle.textContent = 'Masquer le detail'
+      } else {
+        fullSections.setAttribute('hidden', '')
+        btnToggle.textContent = 'Voir tout'
+      }
+    })
+  }
+
   window.addEventListener('keydown', (e) => {
     if (isEditable(e.target)) return
     if (e.key === 'h' || e.key === 'H') {
