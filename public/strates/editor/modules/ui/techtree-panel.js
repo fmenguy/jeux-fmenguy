@@ -23,12 +23,13 @@ let isOpen = false
 
 // Dimensions de layout (pixels en coord canvas, scalees par le zoom)
 const COL_W      = 240   // largeur d'un age
-const ROW_H      = 140   // hauteur d'une branche
 const HEADER_H   = 56
 const LABEL_W    = 130
 const CELL_PAD   = 12
 const NODE_W     = 200
-const NODE_H     = ROW_H - CELL_PAD * 2
+const NODE_H     = 68    // hauteur d'un noeud empilable
+const NODE_GAP   = 8
+const ROW_H_MIN  = 140   // hauteur minimale d'une branche
 
 // ─── Styles externalises dans styles/techtree.css ────────────────────────────
 
@@ -153,14 +154,34 @@ function render() {
   const branches = Array.isArray(data.branches) ? data.branches : []
   const techs = Array.isArray(data.techs) ? data.techs : []
 
+  // Index techs par (age, branch) + calcul de ROW_H dynamique
+  const byCell = {}
+  techs.forEach(function(t) {
+    const key = (t.age || 1) + '|' + (t.branch || '')
+    if (!byCell[key]) byCell[key] = []
+    byCell[key].push(t)
+  })
+  const rowH = new Array(branches.length)
+  branches.forEach(function(br, bi) {
+    let maxInRow = 1
+    ages.forEach(function(age, ai) {
+      const ageNum = age.id != null ? age.id : (ai + 1)
+      const list = byCell[ageNum + '|' + br.id] || []
+      if (list.length > maxInRow) maxInRow = list.length
+    })
+    rowH[bi] = Math.max(ROW_H_MIN, CELL_PAD * 2 + maxInRow * NODE_H + (maxInRow - 1) * NODE_GAP)
+  })
+  const rowY = [HEADER_H]
+  for (let i = 0; i < branches.length; i++) rowY.push(rowY[i] + rowH[i])
+
   // Taille totale canvas
   const totalW = LABEL_W + ages.length * COL_W
-  const totalH = HEADER_H + branches.length * ROW_H
+  const totalH = rowY[branches.length]
   canvas.style.width = totalW + 'px'
   canvas.style.height = totalH + 'px'
 
   // Grille de fond (colonnes d'ages + lignes de branches)
-  canvas.appendChild(buildBackgroundGrid(ages, branches, totalW, totalH))
+  canvas.appendChild(buildBackgroundGrid(ages, branches, totalW, totalH, rowY, rowH))
 
   // Header ages
   ages.forEach(function(age, idx) {
@@ -183,21 +204,13 @@ function render() {
     const l = document.createElement('div')
     l.className = 'ttp-branch-label'
     l.style.left = '0px'
-    l.style.top = (HEADER_H + idx * ROW_H) + 'px'
+    l.style.top = rowY[idx] + 'px'
     l.style.width = LABEL_W + 'px'
-    l.style.height = ROW_H + 'px'
+    l.style.height = rowH[idx] + 'px'
     l.style.borderLeftColor = br.color || '#888'
     l.innerHTML = '<span class="ttp-branch-dot" style="background:' + (br.color || '#888') + '"></span>' +
                   '<span class="ttp-branch-name">' + escapeHTML(brName) + '</span>'
     canvas.appendChild(l)
-  })
-
-  // Index techs par (age, branch)
-  const byCell = {}
-  techs.forEach(function(t) {
-    const key = (t.age || 1) + '|' + (t.branch || '')
-    if (!byCell[key]) byCell[key] = []
-    byCell[key].push(t)
   })
 
   // Placer les nœuds
@@ -206,16 +219,14 @@ function render() {
       const ageNum = age.id != null ? age.id : (ai + 1)
       const list = byCell[ageNum + '|' + br.id] || []
       const cellX = LABEL_W + ai * COL_W + CELL_PAD
-      const cellY = HEADER_H + bi * ROW_H + CELL_PAD
-      const cellInnerH = NODE_H
-      // Empile verticalement si plusieurs techs dans la meme case (age 1 : 3 outils)
-      const step = list.length > 1 ? Math.min(cellInnerH, 48) : 0
+      const cellY = rowY[bi] + CELL_PAD
       list.forEach(function(tech, ti) {
         const status = techStatus(tech)
         const node = buildTechNode(tech, status, { cost: techCost(tech), onUnlock: unlockLocal })
         node.style.left = cellX + 'px'
-        node.style.top = (cellY + ti * (step + 8)) + 'px'
+        node.style.top = (cellY + ti * (NODE_H + NODE_GAP)) + 'px'
         node.style.width = NODE_W + 'px'
+        node.style.height = NODE_H + 'px'
         canvas.appendChild(node)
       })
     })
@@ -224,7 +235,7 @@ function render() {
 
 // ─── Grille de fond ──────────────────────────────────────────────────────────
 
-function buildBackgroundGrid(ages, branches, totalW, totalH) {
+function buildBackgroundGrid(ages, branches, totalW, totalH, rowY, rowH) {
   const g = document.createElement('div')
   g.className = 'ttp-grid-bg'
   g.style.width = totalW + 'px'
@@ -246,9 +257,9 @@ function buildBackgroundGrid(ages, branches, totalW, totalH) {
     const row = document.createElement('div')
     row.className = 'ttp-row'
     row.style.left = LABEL_W + 'px'
-    row.style.top = (HEADER_H + i * ROW_H) + 'px'
+    row.style.top = rowY[i] + 'px'
     row.style.width = (totalW - LABEL_W) + 'px'
-    row.style.height = ROW_H + 'px'
+    row.style.height = rowH[i] + 'px'
     row.style.background = 'linear-gradient(90deg, ' + hexToRgba(br.color || '#888', 0.04) + ', transparent 60%)'
     g.appendChild(row)
   })
