@@ -21,6 +21,7 @@ import { findNearestBush, refreshBushBerries } from './placements.js'
 import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
 import { activeSpeakers } from './speech.js'
+import { initColonistNeeds } from './needs.js'
 
 export const COLONIST_COLORS = [0xffcf6b, 0x6bd0ff, 0xff8a8a, 0xb78aff, 0x8aff9c, 0xffa07a, 0x98ddca]
 
@@ -85,6 +86,14 @@ export class Colonist {
     this.researchBuildingId = null
     this.lastContextLine = null
     this.favorite = false
+    // Lot B, moteur comportemental
+    this.needs = new Map()
+    this.jobQueue = []                   // tableau de Task, priorite decroissante
+    this.currentTask = null              // Task en cours d execution
+    this.assignedBuildingId = null       // Cabane pour dormir, Hutte du sage pour bosser
+    this.productivityMul = 1.0           // expose en lecture pour le cablage par placements.js et tech.js (post-Lot-B)
+    this.wasAttacked = false             // flag pour le besoin Blesse
+    initColonistNeeds(this)
     if (opts && opts.restore) {
       const r = opts.restore
       this.gender = r.gender || 'M'
