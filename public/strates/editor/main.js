@@ -180,8 +180,15 @@ function tick(nowMs) {
     tick._lastSeasonHUD = t
     const sEl = document.getElementById('season-name')
     const sIcon = document.getElementById('season-icon')
-    if (sEl || sIcon) {
+    const sTemp = document.getElementById('season-temp')
+    if (sEl || sIcon || sTemp) {
       const cs = currentSeason()
+      // Temperatures indicatives par saison (placeholder visuel, U3)
+      const temps = { spring: 12, summer: 22, autumn: 10, winter: -2 }
+      if (sTemp) {
+        const v = temps[cs.id]
+        sTemp.textContent = (v != null ? v : 15) + '°C'
+      }
       const icons = { spring: '\u{1F33C}', summer: '\u2600', autumn: '\u{1F342}', winter: '\u2744' }
       if (sEl) sEl.textContent = cs.name
       if (sIcon) sIcon.textContent = icons[cs.id] || '\u{1F33F}'
