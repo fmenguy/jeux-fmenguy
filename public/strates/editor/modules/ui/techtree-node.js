@@ -18,21 +18,25 @@
  */
 export function buildTechNode(tech, status, opts) {
   opts = opts || {}
+  const isTeased = status === 'teased'
   const cost = typeof opts.cost === 'number' ? opts.cost : costOf(tech)
   const card = el('div', 'ttp-node ttp-node--' + status)
-  card.dataset.id = tech.id
-  card.dataset.branch = tech.branch || ''
+  // Anti-spoiler : pour les teased, aucun id / branch / icon / cost reel
+  // n'est ecrit dans le DOM. Seul l'age sert a ordonner visuellement.
+  if (!isTeased) {
+    card.dataset.id = tech.id
+    card.dataset.branch = tech.branch || ''
+  }
   card.dataset.age = String(tech.age || 1)
 
-  // Icone
+  // Icone (symbole neutre pour les teased)
   const icon = el('div', 'ttp-node-icon')
-  icon.textContent = status === 'teased' ? '?' : (tech.icon || '')
+  icon.textContent = isTeased ? '?' : (tech.icon || '')
   card.appendChild(icon)
 
-  // Nom (masque en teased, impossible a lire via devtools car on n'ecrit
-  // jamais le vrai nom dans le DOM pour les ages 2+)
+  // Nom (5 points d'interrogation forces pour les teased, jamais le vrai nom)
   const name = el('div', 'ttp-node-name')
-  name.textContent = status === 'teased' ? '?????' : (tech.name || tech.id)
+  name.textContent = isTeased ? '?????' : (tech.name || tech.id)
   card.appendChild(name)
 
   // Cout / etat

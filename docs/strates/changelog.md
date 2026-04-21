@@ -4,6 +4,20 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-21 (session 12) : Lot C -- UI Tech tree XXL (pan, zoom, filtres, anti-spoiler)
+
+- Nouveau panneau plein ecran `modules/ui/techtree-panel.js` + noeuds `modules/ui/techtree-node.js`, feuille de style dediee `styles/techtree.css`.
+- Ouverture via touche **T** ou bouton HUD (cablages existants dans `main.js`, non modifies). Fermeture via **Echap**, clic backdrop, ou bouton Fermer.
+- Grille 7 ages x 6 branches, lecture directe de `TECH_TREE_DATA` (SPEC v1). `ROW_H` dynamique selon empilage max de techs dans la ligne (utile pour la branche outils age I, 4 techs).
+- Etats visuels des noeuds : locked (opacite 0.3), available (bordure neutre), ready (glow bleu + bouton Rechercher), researching (progress bar, reserve), done (glow dore), teased (flou + `?????`). Les teased sortent leur `tech.id`, `branch` et cout du DOM pour prevenir toute lecture via devtools sur les ages 2+.
+- Liens SVG Bezier entre prerequis, stroke dore plein si prereq debloque, pointille gris sinon. Les teased ne recoivent ni n'emettent de lien.
+- Pan : drag souris sur le stage (cursor grab/grabbing). Zoom : molette de 0.5x a 2x, centre sur la position du curseur. Une seule transform CSS translate+scale, perf OK pour 48x48x8+.
+- Filtres par branche : toggle par branche en haut, bouton `Toutes` pour reset. Recherche texte : filtre en opacity 0.18 les noeuds dont le nom ou l'id ne contient pas la query. Les teased ne matchent jamais (preserve la surprise).
+- Deblocage : `unlockLocal` puise dans `state.researchPoints`, ecrit `state.techs[id].unlocked = true`, appelle `refreshTechsPanel` puis re-render. Pas de modification de `data/*.json`, pas de modification de `tech.js`, `jobs.js`, `needs.js` (scope Lot C respecte).
+- `techtree-ui.js` devient un shim qui delegue au nouveau panel, ce qui evite de toucher a `main.js`.
+
+---
+
 ## 2026-04-21 (session 12) : Lot B -- moteur comportemental, besoins Faim + Sans-abri
 
 - **Pre-fix SPEC v1** (commit `lot-B: pre-fix SPEC v1`) : `main.js` injecte les techs du JSON gele en normalisant `cost: { research: N }` vers number et `requires: []` vers le champ plat `req`, le champ `requires[]` etant conserve a cote. `tech.js/unlockTech` accepte un tableau de prerequis (iteration sur `t.requires`) en plus du `t.req` legacy.
