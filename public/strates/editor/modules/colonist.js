@@ -21,8 +21,10 @@ import { findNearestBush, refreshBushBerries } from './placements.js'
 import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
 import { activeSpeakers } from './speech.js'
-import { initColonistNeeds } from './needs.js'
-// tasks.js est consomme aux commits suivants (hunger drives food seeking).
+import { initColonistNeeds, isNeedCritical } from './needs.js'
+import { NEEDS_DATA } from './gamedata.js'
+// tasks.js : file de taches, utilisee ici pour marquer la tache courante.
+import { PRIORITY, TASK_KIND } from './tasks.js'
 
 export const COLONIST_COLORS = [0xffcf6b, 0x6bd0ff, 0xff8a8a, 0xb78aff, 0x8aff9c, 0xffa07a, 0x98ddca]
 
@@ -415,11 +417,23 @@ export class Colonist {
           }
         }
       }
-      if (state.jobs.size > 0) { if (this.pickJob()) return }
-      if (state.buildJobs.size > 0) { if (this.pickBuildJob()) return }
+      // Lot B : priorite absolue a la survie. Si le colon a faim critique,
+      // il abandonne tout et cherche un buisson. La nuit n y change rien
+      // (manger est vital, meme en pleine nuit).
+      if (isNeedCritical(this, 'hunger')) {
+        if (this.pickHarvest()) {
+          this.currentTask = { kind: TASK_KIND.EAT_SEEK_FOOD, priority: PRIORITY.SURVIVAL, reason: 'hunger_critical' }
+          return
+        }
+      }
+      if (state.jobs.size > 0) { if (this.pickJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK }; return } }
+      if (state.buildJobs.size > 0) { if (this.pickBuildJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_BUILD_JOB, priority: PRIORITY.WORK }; return } }
       // Activite exclusive jour : cueillette de baies (agriculture). La nuit
       // les colons affectes a un buisson reviennent au repos.
-      if (!state.isNight && this.pickHarvest()) return
+      if (!state.isNight && this.pickHarvest()) {
+        this.currentTask = { kind: TASK_KIND.HARVEST_BERRIES, priority: PRIORITY.LEISURE }
+        return
+      }
       // Nuit : attirance vers le foyer le plus proche (feu de camp social).
       if (state.isNight && this.pickCampfire()) return
       this.wanderPause -= dt
@@ -619,14 +633,35 @@ export class Colonist {
           const picked = bush.berries
           if (picked > 0) {
             bush.berries = 0
-            state.resources.berries += picked
-            state.gameStats.totalBerriesHarvested += picked
+            // Lot B : si la tache courante est EAT_SEEK_FOOD, le colon mange
+            // sur place et les baies ne rentrent pas au stock. Sinon il
+            // ramene tout au stock, comportement normal de cueilleur.
+            const eating = this.currentTask && this.currentTask.kind === TASK_KIND.EAT_SEEK_FOOD
+            if (eating) {
+              // Baisse la faim data-driven via needs.json satisfied_by[berries].amount.
+              // 1 baie consommee = amount / 20 points de faim en moins. Si le
+              // JSON change, le gameplay suit sans retoucher le code.
+              const need = (NEEDS_DATA && NEEDS_DATA.needs) ? NEEDS_DATA.needs.find(n => n.id === 'hunger') : null
+              const entry = need && Array.isArray(need.satisfied_by)
+                ? need.satisfied_by.find(s => s.resource === 'berries')
+                : null
+              if (entry && this.needs) {
+                const perBerry = (entry.amount || 0) / 20
+                const cur = this.needs.get('hunger') || 0
+                this.needs.set('hunger', Math.max(0, cur - perBerry * picked))
+              }
+            } else {
+              state.resources.berries += picked
+              state.gameStats.totalBerriesHarvested += picked
+            }
             refreshBushBerries(bush)
             bush.regenTimer = 0
           }
           bush.claimedBy = null
           this.targetBush = null
         }
+        // Purge la tache courante a la fin du WORKING.
+        this.currentTask = null
         this.state = 'IDLE'
         this.path = null
         this.group.position.set(this.tx, this.ty, this.tz)
