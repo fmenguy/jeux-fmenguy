@@ -354,7 +354,7 @@ function render() {
     const ageNum = age.id != null ? age.id : (idx + 1)
     const ageName = age.name || age.label || ('Age ' + ageNum)
     const h = document.createElement('div')
-    h.className = 'ttp-age-head' + (age.unlocked === false ? ' ttp-age-head--locked' : '')
+    h.className = 'ttp-age-head' + (ageNum > (state.currentAge || 1) ? ' ttp-age-head--locked' : '')
     h.style.left = (LABEL_W + idx * COL_W) + 'px'
     h.style.top = '0px'
     h.style.width = COL_W + 'px'
@@ -382,6 +382,32 @@ function render() {
   // Cartographie id -> { x, y, w, h } pour tracer les liens SVG
   const nodePos = {}
 
+  // Placeholder par age debloque sans tech (ex : Bronze avant que le JSON
+  // contienne des techs age 2). Affiche un message "Techs a venir" dans la
+  // colonne au lieu de laisser vide ou floute.
+  const currentAge = state.currentAge || 1
+  ages.forEach(function(age, ai) {
+    const ageNum = age.id != null ? age.id : (ai + 1)
+    if (ageNum > currentAge) return
+    let hasAny = false
+    for (let bi = 0; bi < branches.length; bi++) {
+      const key = ageNum + '|' + branches[bi].id
+      if (byCell[key] && byCell[key].length) { hasAny = true; break }
+    }
+    if (hasAny) return
+    const ph = document.createElement('div')
+    ph.className = 'ttp-age-placeholder'
+    ph.style.left = (LABEL_W + ai * COL_W + CELL_PAD) + 'px'
+    ph.style.top = (HEADER_H + CELL_PAD) + 'px'
+    ph.style.width = (COL_W - CELL_PAD * 2) + 'px'
+    ph.style.height = (totalH - HEADER_H - CELL_PAD * 2) + 'px'
+    ph.innerHTML = '<div class="ttp-ph-inner">' +
+      '<div class="ttp-ph-title">Techs ' + escapeHTML(age.name || ('Age ' + ageNum)) + '</div>' +
+      '<div class="ttp-ph-sub">A venir dans une prochaine session</div>' +
+      '</div>'
+    canvas.appendChild(ph)
+  })
+
   // Placer les nœuds
   branches.forEach(function(br, bi) {
     ages.forEach(function(age, ai) {
@@ -402,7 +428,7 @@ function render() {
         node.style.top = py + 'px'
         node.style.width = NODE_W + 'px'
         node.style.height = NODE_H + 'px'
-        nodePos[tech.id] = { x: px, y: py, w: NODE_W, h: NODE_H, teased: status === 'teased' }
+        nodePos[tech.id] = { x: px, y: py, w: NODE_W, h: NODE_H, teased: status === 'teased', branchId: br.id }
         canvas.appendChild(node)
       })
     })
@@ -429,9 +455,11 @@ function buildLinksSVG(techs, nodePos, totalW, totalH) {
     const reqs = Array.isArray(tech.requires) ? tech.requires : []
     const to = nodePos[tech.id]
     if (!to || to.teased) return
+    if (to.branchId && !branchVisible(to.branchId)) return
     reqs.forEach(function(reqId) {
       const from = nodePos[reqId]
       if (!from || from.teased) return
+      if (from.branchId && !branchVisible(from.branchId)) return
       const active = techUnlocked(reqId)
       const x1 = from.x + from.w
       const y1 = from.y + from.h / 2
@@ -459,10 +487,12 @@ function buildBackgroundGrid(ages, branches, totalW, totalH, rowY, rowH) {
   g.style.width = totalW + 'px'
   g.style.height = totalH + 'px'
 
-  // Colonnes ages (tint pour les locked)
+  // Colonnes ages (tint pour les locked, source de verite : state.currentAge)
+  const curAge = state.currentAge || 1
   ages.forEach(function(age, i) {
+    const ageNum = age.id != null ? age.id : (i + 1)
     const col = document.createElement('div')
-    col.className = 'ttp-col' + (age.unlocked === false ? ' ttp-col--locked' : '')
+    col.className = 'ttp-col' + (ageNum > curAge ? ' ttp-col--locked' : '')
     col.style.left = (LABEL_W + i * COL_W) + 'px'
     col.style.top = HEADER_H + 'px'
     col.style.width = COL_W + 'px'
