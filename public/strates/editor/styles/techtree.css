@@ -1,0 +1,107 @@
+/* ============================================================================
+   Tech tree XXL (Lot C)
+   Panneau plein ecran, palette cohernete avec le reste du HUD.
+   ========================================================================== */
+
+#ttp-root {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: none;
+  pointer-events: none;
+  font-family: inherit;
+  color: #e5ecf3;
+}
+#ttp-root.open {
+  display: block;
+  pointer-events: auto;
+}
+
+.ttp-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(10,14,22,0.78), rgba(4,6,10,0.92));
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+}
+
+.ttp-frame {
+  position: absolute;
+  inset: 2vh 2vw;
+  background: linear-gradient(180deg, rgba(14,18,26,0.985), rgba(8,11,17,0.99));
+  border: 1px solid rgba(138, 196, 255, 0.28);
+  border-radius: 14px;
+  box-shadow: 0 32px 120px rgba(0,0,0,0.75),
+              inset 0 1px 0 rgba(255,255,255,0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ttp-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px 12px;
+  border-bottom: 1px solid rgba(138, 196, 255, 0.15);
+  background: linear-gradient(180deg, rgba(20,26,38,0.6), rgba(12,16,22,0));
+}
+.ttp-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8ac4ff;
+  margin: 0;
+}
+.ttp-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ttp-pts {
+  font-size: 12px;
+  color: #ffd98a;
+  letter-spacing: 0.06em;
+}
+.ttp-close {
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.72);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+}
+.ttp-close:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.35);
+}
+
+.ttp-body {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.ttp-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(60,90,150,0.12), transparent 60%),
+    radial-gradient(circle at 85% 80%, rgba(150,110,60,0.08), transparent 55%),
+    #0a0e16;
+}
+.ttp-stage.panning { cursor: grabbing; }
+
+.ttp-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
