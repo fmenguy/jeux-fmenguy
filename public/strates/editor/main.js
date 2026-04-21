@@ -25,6 +25,7 @@ import { initTechTreeUI, toggleTechTree, closeTechTree } from './modules/techtre
 import { initCharSheet } from './modules/charsheet-ui.js'
 import { initHelpOverlay } from './modules/help-overlay.js'
 import { initDayNight, bindDayNightUI, tickDayNight, refreshNightPointsHUD } from './modules/daynight.js'
+import { tickAllNeeds } from './modules/needs.js'
 import { TECH_TREE_DATA } from './modules/gamedata.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
@@ -145,6 +146,10 @@ function tick(nowMs) {
     }
   }
   if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+
+  // Lot B : monter les besoins (faim, Sans-abri) avant la MAJ des colons
+  // pour que leur state soit coherent avant la prise de decision.
+  tickAllNeeds(dt)
 
   for (const c of state.colonists) c.update(dt)
 
