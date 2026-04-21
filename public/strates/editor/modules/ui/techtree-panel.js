@@ -181,7 +181,8 @@ function render() {
   canvas.style.height = totalH + 'px'
 
   // Grille de fond (colonnes d'ages + lignes de branches)
-  canvas.appendChild(buildBackgroundGrid(ages, branches, totalW, totalH, rowY, rowH))
+  const gridBg = buildBackgroundGrid(ages, branches, totalW, totalH, rowY, rowH)
+  canvas.appendChild(gridBg)
 
   // Header ages
   ages.forEach(function(age, idx) {
@@ -213,6 +214,9 @@ function render() {
     canvas.appendChild(l)
   })
 
+  // Cartographie id -> { x, y, w, h } pour tracer les liens SVG
+  const nodePos = {}
+
   // Placer les nœuds
   branches.forEach(function(br, bi) {
     ages.forEach(function(age, ai) {
@@ -223,14 +227,59 @@ function render() {
       list.forEach(function(tech, ti) {
         const status = techStatus(tech)
         const node = buildTechNode(tech, status, { cost: techCost(tech), onUnlock: unlockLocal })
-        node.style.left = cellX + 'px'
-        node.style.top = (cellY + ti * (NODE_H + NODE_GAP)) + 'px'
+        const px = cellX
+        const py = cellY + ti * (NODE_H + NODE_GAP)
+        node.style.left = px + 'px'
+        node.style.top = py + 'px'
         node.style.width = NODE_W + 'px'
         node.style.height = NODE_H + 'px'
+        nodePos[tech.id] = { x: px, y: py, w: NODE_W, h: NODE_H, teased: status === 'teased' }
         canvas.appendChild(node)
       })
     })
   })
+
+  // Liens SVG entre prerequis (insere juste apres la grille de fond,
+  // donc derriere les noeuds mais devant le fond)
+  const svg = buildLinksSVG(techs, nodePos, totalW, totalH)
+  if (gridBg.nextSibling) canvas.insertBefore(svg, gridBg.nextSibling)
+  else canvas.appendChild(svg)
+}
+
+// ─── Liens SVG entre prerequis ───────────────────────────────────────────────
+
+function buildLinksSVG(techs, nodePos, totalW, totalH) {
+  const xmlns = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(xmlns, 'svg')
+  svg.setAttribute('class', 'ttp-links')
+  svg.setAttribute('width', String(totalW))
+  svg.setAttribute('height', String(totalH))
+  svg.setAttribute('viewBox', '0 0 ' + totalW + ' ' + totalH)
+
+  techs.forEach(function(tech) {
+    const reqs = Array.isArray(tech.requires) ? tech.requires : []
+    const to = nodePos[tech.id]
+    if (!to || to.teased) return
+    reqs.forEach(function(reqId) {
+      const from = nodePos[reqId]
+      if (!from || from.teased) return
+      const active = techUnlocked(reqId)
+      const x1 = from.x + from.w
+      const y1 = from.y + from.h / 2
+      const x2 = to.x
+      const y2 = to.y + to.h / 2
+      const midX = (x1 + x2) / 2
+      const d = 'M ' + x1 + ' ' + y1 +
+                ' C ' + midX + ' ' + y1 +
+                ', ' + midX + ' ' + y2 +
+                ', ' + x2 + ' ' + y2
+      const path = document.createElementNS(xmlns, 'path')
+      path.setAttribute('d', d)
+      path.setAttribute('class', 'ttp-link ' + (active ? 'ttp-link--active' : 'ttp-link--idle'))
+      svg.appendChild(path)
+    })
+  })
+  return svg
 }
 
 // ─── Grille de fond ──────────────────────────────────────────────────────────
