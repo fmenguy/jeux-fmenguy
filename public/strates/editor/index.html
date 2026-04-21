@@ -215,6 +215,21 @@
       color: #d9b15a; font-style: italic; font-size: 11px;
     }
 
+    /* Bouton Arbre des technologies flottant */
+    #btn-techtree-float {
+      position: fixed; right: 16px; bottom: 200px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(180deg, rgba(138,196,255,0.35), rgba(60,100,180,0.6));
+      border: 1px solid rgba(138,196,255,0.6);
+      color: #e6f3ff; font-size: 18px; font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      z-index: 30;
+      transition: transform 0.15s;
+    }
+    #btn-techtree-float:hover { transform: translateY(-2px); }
+
     /* Bouton audio flottant */
     #btn-audio {
       position: fixed; right: 16px; bottom: 150px;
@@ -544,6 +559,7 @@
 
   <button id="btn-help" title="Aide et explications">?</button>
   <button id="btn-audio" title="Activer la musique">&#9834;</button>
+  <button id="btn-techtree-float" title="Arbre des technologies (T)">&#128202;</button>
   <div id="season-pill" title="Saison en cours"><span id="season-icon">&#127804;</span><span id="season-name">printemps</span><span id="weather-label" style="font-size:11px;opacity:0.75;margin-left:6px;"></span></div>
   <div id="daynight-pill" title="Basculer jour / nuit (N)"><span id="daynight-icon">&#9728;</span></div>
 
@@ -568,90 +584,6 @@
     <div class="row" style="margin-top: 4px;" title="Points produits par les chercheurs au laboratoire, utilisés pour débloquer les technologies"><span class="key">Points de recherche</span><span class="val"><span id="r-points">0</span> pts</span></div>
     <div class="row" title="Points produits par les colons en observation nocturne depuis un promontoire"><span class="key">Points nocturnes</span><span class="val">&#127769; <span id="r-nightpoints">0</span> pts</span></div>
   </div>
-
-  <div id="techs" style="position: fixed; right: 16px; top: 320px; width: 280px; background: rgba(15,18,24,0.82); border: 1px solid rgba(120,180,255,0.4); border-radius: 12px; padding: 12px 14px; backdrop-filter: blur(8px); color: #f3ecdd; font-size: 12px; line-height: 1.4; box-shadow: 0 6px 22px rgba(0,0,0,0.4); z-index: 11;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <h3 style="margin:0;font-size:11px;color:#8ac4ff;letter-spacing:.14em;font-weight:700;text-transform:uppercase;">Tech</h3>
-      <button id="btn-techtree" title="Arbre des technologies (T)" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(138,196,255,0.4);background:rgba(138,196,255,0.12);color:#8ac4ff;cursor:pointer;">Arbre T</button>
-    </div>
-    <div id="techs-body"></div>
-  </div>
-  <style>
-    .tech-tree { display: flex; flex-direction: column; gap: 0; }
-    .tech-link {
-      width: 2px; height: 14px; margin-left: 22px;
-      background: linear-gradient(to bottom, rgba(120,180,255,0.15), rgba(120,180,255,0.05));
-      border-radius: 1px;
-    }
-    .tech-link.active {
-      background: linear-gradient(to bottom, #ffd98a, #8ac4ff);
-      box-shadow: 0 0 6px rgba(138, 196, 255, 0.4);
-    }
-    .tech-node {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 10px; border-radius: 9px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      transition: border-color 0.3s, background 0.3s, transform 0.15s;
-    }
-    .tech-node.locked { opacity: 0.5; }
-    .tech-node.available { border-color: rgba(120,180,255,0.25); }
-    .tech-node.ready {
-      border-color: #8ac4ff;
-      background: rgba(120,180,255,0.1);
-      box-shadow: 0 0 10px rgba(138, 196, 255, 0.18);
-    }
-    .tech-node.done {
-      border-color: #ffd98a;
-      background: rgba(217,177,90,0.12);
-    }
-    .tech-node.flash { animation: techFlash 0.8s ease-out; }
-    @keyframes techFlash {
-      0% { background: rgba(255,240,180,0.85); transform: scale(1.03); }
-      100% { background: rgba(217,177,90,0.12); transform: scale(1); }
-    }
-    .tech-icon {
-      width: 30px; height: 30px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 14px; color: #1a1f2a;
-      border: 2px solid rgba(0,0,0,0.25);
-      box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.3);
-      flex-shrink: 0;
-    }
-    .tech-node.done .tech-icon { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 0 8px rgba(255,217,138,0.6); }
-    .tech-info { flex: 1; min-width: 0; }
-    .tech-info .tname { font-weight: 600; font-size: 12px; color: #f3ecdd; line-height: 1.1; }
-    .tech-info .tage {
-      font-size: 9px; color: #c7b98c; letter-spacing: 0.08em; text-transform: uppercase;
-      margin-top: 1px;
-    }
-    .tech-prog {
-      margin-top: 4px; height: 3px;
-      background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;
-    }
-    .tech-prog-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #3a5a8c, #8ac4ff);
-      transition: width 0.4s ease-out;
-    }
-    .tech-action { flex-shrink: 0; }
-    .tech-action button {
-      font-size: 10px; padding: 5px 10px; border-radius: 6px;
-      border: 1px solid #8ac4ff;
-      background: linear-gradient(180deg, rgba(138,196,255,0.35), rgba(120,180,255,0.18));
-      color: #e6f3ff; cursor: pointer; font-weight: 600;
-      transition: transform 0.1s, box-shadow 0.15s;
-    }
-    .tech-action button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(138,196,255,0.3);
-    }
-    .tech-action .tcost { font-size: 10px; color: #c7b98c; }
-    .tech-action .tdone {
-      font-size: 10px; color: #ffd98a; font-weight: 700;
-      letter-spacing: 0.08em;
-    }
-  </style>
 
   <div id="quests">
     <h3>Quêtes</h3>

@@ -88,9 +88,11 @@ bindDayNightUI()
 refreshNightPointsHUD()
 initAgeTransitions()
 
-// Bouton "Arbre T" dans le mini-panel tech
-const btnTT = document.getElementById('btn-techtree')
+// Bouton Arbre des technologies (bouton flottant HUD, touche T)
+const btnTT = document.getElementById('btn-techtree') || document.getElementById('btn-techtree-float')
 if (btnTT) btnTT.addEventListener('click', toggleTechTree)
+const btnTTFloat = document.getElementById('btn-techtree-float')
+if (btnTTFloat) btnTTFloat.addEventListener('click', toggleTechTree)
 
 // Touche T
 window.addEventListener('keydown', function(e) {
