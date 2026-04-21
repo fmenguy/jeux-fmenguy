@@ -698,6 +698,83 @@ export function clearAllPlacements() {
 }
 
 // ============================================================================
+// Cairn de pierre (monument de passage a l'Age du Bronze)
+// Empilement de 4 blocs pierre grise formes d'une colonne.
+// ============================================================================
+function makeCairn() {
+  const g = new THREE.Group()
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x8b8278, roughness: 0.93, flatShading: true })
+  const capMat   = new THREE.MeshStandardMaterial({ color: 0xc2b8a8, roughness: 0.88, flatShading: true })
+
+  // 4 blocs empiles, chaque bloc legerement plus petit que le precedent
+  const heights = [0.55, 0.5, 0.45, 0.38]
+  const scales  = [1.00, 0.88, 0.76, 0.62]
+  let yOff = 0
+  heights.forEach((h, i) => {
+    const s = scales[i]
+    const block = new THREE.Mesh(new THREE.BoxGeometry(s, h, s), i === heights.length - 1 ? capMat : stoneMat)
+    block.position.y = yOff + h / 2
+    block.castShadow = true
+    block.receiveShadow = true
+    g.add(block)
+    yOff += h
+  })
+
+  // Petite etoile au sommet
+  const starMat = new THREE.MeshStandardMaterial({
+    color: 0xf9d97a,
+    roughness: 0.3,
+    emissive: 0xa07010,
+    emissiveIntensity: 0.7,
+    flatShading: true
+  })
+  const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.13, 0), starMat)
+  star.position.y = yOff + 0.16
+  g.add(star)
+
+  return g
+}
+
+/**
+ * Place le Cairn sur la tuile (gx, gz) et l'ajoute a state.cairns.
+ * Retourne l'entree { x, z, group } ou null si la tuile est invalide.
+ */
+export function addCairn(gx, gz) {
+  const top = state.cellTop[gz * GRID + gx]
+  if (top <= SHALLOW_WATER_LEVEL) return null
+  const g = makeCairn()
+  g.position.set(gx + 0.5, top, gz + 0.5)
+  scene.add(g)
+  if (!state.cairns) state.cairns = []
+  const entry = { x: gx, z: gz, group: g }
+  state.cairns.push(entry)
+  return entry
+}
+
+/**
+ * Trouve la premiere cellule libre pres du point (cx, cz), en spirale.
+ * Retourne { x, z } ou null.
+ */
+export function findFreeCellNear(cx, cz, maxRadius) {
+  if (maxRadius === undefined) maxRadius = 20
+  for (let r = 0; r <= maxRadius; r++) {
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dz = -r; dz <= r; dz++) {
+        if (Math.abs(dx) !== r && Math.abs(dz) !== r) continue
+        const x = Math.round(cx) + dx
+        const z = Math.round(cz) + dz
+        if (x < 1 || z < 1 || x >= GRID - 1 || z >= GRID - 1) continue
+        const top = state.cellTop[z * GRID + x]
+        if (top <= SHALLOW_WATER_LEVEL) continue
+        if (isCellOccupied(x, z)) continue
+        return { x, z }
+      }
+    }
+  }
+  return null
+}
+
+// ============================================================================
 // Helpers d'occupation
 // ============================================================================
 export function isCellOccupied(x, z) {
