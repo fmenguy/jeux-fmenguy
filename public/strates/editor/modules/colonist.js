@@ -22,6 +22,7 @@ import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
 import { activeSpeakers } from './speech.js'
 import { initColonistNeeds } from './needs.js'
+// tasks.js est consomme aux commits suivants (hunger drives food seeking).
 
 export const COLONIST_COLORS = [0xffcf6b, 0x6bd0ff, 0xff8a8a, 0xb78aff, 0x8aff9c, 0xffa07a, 0x98ddca]
 
