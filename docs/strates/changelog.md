@@ -23,6 +23,40 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-21 (session 12) : Lot D -- Monument Cairn, conditions Bronze, cinematique de passage
+
+### Nouveaux fichiers
+- `modules/age-transitions.js` : logique complete du passage Age de Pierre vers Age du Bronze.
+  - `canBuildCairn(state)` : verifie les 7 conditions cumulatives (population, stocks bois/pierre/nourriture, hutte du sage, chercheur, points de recherche). Retourne `{ ok, missing }`.
+  - `getCairnProgress(state)` : ratio 0-1 de progression (pour le badge "Monument proche").
+  - `triggerAgeTransitionBronze()` : declenche la cinematique puis applique la bascule d'age.
+  - `initAgeTransitions()` : injecte le bouton Cairn dans le groupe "Monument" de l'actionbar.
+  - `checkCairnOverlay()` : appele en tick lent (1s), met a jour le badge et l'etat visuel du bouton.
+  - Flag `DEV_SKIP_BONES = true` : bypass la condition "os" tant que Lot B (Chasseur) n'est pas livre.
+- `modules/cinematics.js` : cinematique generique `playCinematic({ title, subtitle, onEnd })`.
+  - Fanfare synthetique Web Audio API (aucun fichier MP3).
+  - Sequence : fade noir 1s, titre "AGE DU BRONZE" 2s, son fanfare 0.5s, fade retour 1s.
+- `styles/cinematic.css` : overlay noir, titre epique, badge "Monument proche", tooltip conditions Cairn.
+
+### Modifications
+- `modules/state.js` : ajout `currentAge = 1`, `ageUnlockedAt`, `achievements`.
+- `modules/persistence.js` : serialisation et restauration de ces trois champs. Reinitialisation dans `clearEverything()`.
+- `modules/gamedata.js` : ajout `getBuildingsForAge(n)` et `getTotalFood(state)`.
+- `index.html` : `<link>` vers `cinematic.css`, trois divs Lot D (`#cinematic-overlay`, `#cairn-overlay-badge`, `#cairn-conditions-tooltip`).
+- `main.js` : import et appel de `initAgeTransitions()` au boot, `checkCairnOverlay()` dans le tick lent.
+
+### Definition of Done partielle
+- Conditions verifiees, bouton Cairn grise (visuel) si conditions non reunies, tooltip au survol.
+- Badge "Monument proche" apparait quand progression > 80%.
+- Cinematique : fade noir + titre "AGE DU BRONZE" + fanfare + fade retour.
+- `state.currentAge = 2`, `state.achievements` enregistre l'evenement, sauvegarde checkpoint auto.
+- Persistance : reload apres passage confirme `state.currentAge === 2`.
+
+### Ticket ouvert pour Lot C
+- `techtree-panel.js` doit tenir compte de `state.currentAge` dans `techStatus()` pour que les techs Bronze deviennent "recherchables" (et non "teased") apres la transition. La condition actuelle `(tech.age >= 2) => 'teased'` ne lit pas `state.currentAge`. Lot D appelle deja `refreshTechTreeAfterAgeChange(2)` en import dynamique -- Lot C doit exposer cette fonction.
+
+---
+
 ## 2026-04-21 (session 11) : Lot A -- SPEC v1 gelee, JSON data-driven age I complet
 
 - **BREAKING** : `data/techtree.json` et `data/buildings.json` protos remplacés par les versions SPEC v1 gelées.
