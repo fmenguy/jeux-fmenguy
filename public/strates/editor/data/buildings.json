@@ -1,91 +1,146 @@
 {
-  "chains": [
+  "_spec": "v1",
+  "buildings": [
     {
-      "id": "habitation",
-      "name": "Habitation",
-      "desc": "Logement des colons, augmente la capacite de population",
-      "color": "#7a6aaa",
-      "icon": "H",
-      "levels": [
-        { "id": "cabin",    "name": "Cabane",             "age": 1, "fusionReq": 4, "pop": 2,  "desc": "Premier abri basique" },
-        { "id": "house",    "name": "Maison",              "age": 2, "fusionReq": 4, "pop": 5,  "desc": "Confort modeste, famille stable" },
-        { "id": "manor",    "name": "Manoir",              "age": 3, "fusionReq": 4, "pop": 12, "desc": "Demeure aisee, prestige local" },
-        { "id": "castle-res","name": "Chateau",            "age": 4, "fusionReq": 4, "pop": 28, "desc": "Siege seigneurial, centre administratif" },
-        { "id": "palace",   "name": "Palais",              "age": 6, "fusionReq": 4, "pop": 60, "desc": "Chef-d'oeuvre architectural, capitale" },
-        { "id": "arcology", "name": "Arcologie",           "age": 7, "fusionReq": null, "pop": 200, "desc": "Cite verticale autonome, endgame" }
-      ]
+      "id": "foyer",
+      "name": "Foyer",
+      "age": 1,
+      "category": "production",
+      "size": "1x1",
+      "cost": { "stone": 8, "wood": 3 },
+      "requires": { "tech": ["fire-mastery"] },
+      "provides": { "cooking": true },
+      "activity": "both",
+      "description": "Coeur du camp. Permet la cuisson de la viande et le craft de la Hache, Pioche et Lance."
     },
     {
-      "id": "recherche",
-      "name": "Recherche",
-      "desc": "Production de points de recherche, decouverte de nouvelles technologies",
-      "color": "#4a8aaa",
-      "icon": "R",
-      "levels": [
-        { "id": "lab",       "name": "Laboratoire",        "age": 1, "fusionReq": 4, "pts": 1,  "desc": "Atelier de reflexion primitif" },
-        { "id": "big-lab",   "name": "Grand Laboratoire",  "age": 2, "fusionReq": 4, "pts": 4,  "desc": "Cooperation entre chercheurs" },
-        { "id": "academy",   "name": "Academie",           "age": 3, "fusionReq": 4, "pts": 12, "desc": "Transmission du savoir systematique" },
-        { "id": "university","name": "Universite",         "age": 4, "fusionReq": 4, "pts": 30, "desc": "Recherche fondamentale avancee" },
-        { "id": "institute", "name": "Institut",           "age": 6, "fusionReq": 4, "pts": 80, "desc": "Centre de recherche mondial" },
-        { "id": "space-lab", "name": "Laboratoire orbital","age": 7, "fusionReq": null,"pts": 250,"desc": "Recherche en apesanteur, percees majeures" }
-      ]
+      "id": "abri-fortune",
+      "name": "Abri de fortune",
+      "age": 1,
+      "category": "habitation",
+      "size": "1x1",
+      "cost": { "wood": 5 },
+      "requires": { "tech": ["shelter-basic"] },
+      "provides": { "pop": 1 },
+      "fusion": { "count": 2, "into": "cabane" },
+      "activity": "both",
+      "description": "Premier abri basique. Population +1. Upgradable en Cabane (fusion 2 abris)."
     },
     {
-      "id": "alimentation",
-      "name": "Alimentation",
-      "desc": "Nourrir les colons, rendements agricoles et stocks",
-      "color": "#4a8a3a",
-      "icon": "A",
-      "levels": [
-        { "id": "field",      "name": "Champ",             "age": 1, "fusionReq": 4, "food": 2,  "desc": "Culture rudimentaire de baies" },
-        { "id": "farm",       "name": "Ferme",             "age": 2, "fusionReq": 4, "food": 6,  "desc": "Elevage et cereales" },
-        { "id": "estate",     "name": "Domaine agricole",  "age": 3, "fusionReq": 4, "food": 16, "desc": "Production diversifiee, excedents" },
-        { "id": "plantation", "name": "Plantation",        "age": 4, "fusionReq": 4, "food": 40, "desc": "Exploitation industrielle des terres" },
-        { "id": "agroindustry","name":"Agroindustrie",     "age": 5, "fusionReq": 4, "food": 100,"desc": "Rendements maximaux, reserves nationales" },
-        { "id": "hydroponics","name": "Serre hydronique",  "age": 7, "fusionReq": null,"food": 400,"desc": "Culture hors-sol, alimentation de la colonie spatiale" }
-      ]
+      "id": "cabane",
+      "name": "Cabane",
+      "age": 1,
+      "category": "habitation",
+      "size": "1x1",
+      "cost": { "wood": 10, "stone": 5 },
+      "requires": { "tech": [], "buildings": ["foyer"] },
+      "provides": { "pop": 2 },
+      "fusion": { "count": 4, "into": "longhouse" },
+      "activity": "both",
+      "description": "Logement confortable. Population +2. Necessite un Foyer present sur la carte."
     },
     {
-      "id": "production",
-      "name": "Production",
-      "desc": "Extraction et transformation des ressources, outillage",
-      "color": "#8a6030",
-      "icon": "P",
-      "levels": [
-        { "id": "hearth",    "name": "Foyer",              "age": 1, "fusionReq": 4, "desc": "Premier traitement du minerai" },
-        { "id": "forge-b",   "name": "Forge",              "age": 2, "fusionReq": 4, "desc": "Travail du metal, outils en bronze" },
-        { "id": "foundry",   "name": "Fonderie",           "age": 3, "fusionReq": 4, "desc": "Hauts-fourneaux, acier et fonte" },
-        { "id": "factory",   "name": "Usine",              "age": 4, "fusionReq": 4, "desc": "Production en serie, revolution industrielle" },
-        { "id": "complex",   "name": "Complexe industriel","age": 5, "fusionReq": 4, "desc": "Automatisation, rendements extremes" },
-        { "id": "manufact",  "name": "Manufacture auto.",  "age": 7, "fusionReq": null, "desc": "Robots, impression 3D, production spatiale" }
-      ]
+      "id": "longhouse",
+      "name": "Longhouse",
+      "age": 1,
+      "category": "habitation",
+      "size": "2x2",
+      "cost": { "wood": 0, "stone": 0 },
+      "requires": { "buildings": ["cabane", "cabane", "cabane", "cabane"] },
+      "provides": { "pop": 10 },
+      "fusion": { "count": 4, "into": "grande-salle" },
+      "activity": "both",
+      "description": "Grande salle communautaire issue de la fusion de 4 Cabanes. Population +10."
     },
     {
-      "id": "astronomie",
-      "name": "Astronomie",
-      "desc": "Observation nocturne, production de points nocturnes, techs spatiales et temporelles",
-      "color": "#4a5a9a",
-      "icon": "N",
-      "levels": [
-        { "id": "observatory-mound", "name": "Promontoire",        "age": 1, "fusionReq": null, "pts": 1,  "desc": "Tour rudimentaire pour scruter les etoiles, genere des points nocturnes la nuit" },
-        { "id": "observatory",       "name": "Observatoire",       "age": 3, "fusionReq": null, "pts": 4,  "desc": "Batiment dedie avec lunettes et cartographie celeste" },
-        { "id": "telescope",         "name": "Grand telescope",    "age": 5, "fusionReq": null, "pts": 15, "desc": "Observation profonde, detection d'evenements cosmiques" },
-        { "id": "radio-array",       "name": "Radio-telescope",    "age": 6, "fusionReq": null, "pts": 45, "desc": "Ecoute des signaux, navigation interplanetaire" }
-      ]
+      "id": "hutte-du-sage",
+      "name": "Hutte du sage",
+      "age": 1,
+      "category": "recherche",
+      "size": "1x1",
+      "cost": { "wood": 12, "stone": 8 },
+      "requires": { "tech": ["basic-research"], "buildings": ["cabane"] },
+      "provides": { "research_per_tick": 1 },
+      "activity": "day",
+      "description": "Lieu de savoir. Active le metier Chercheur, produit +1 point de recherche par tick."
     },
     {
-      "id": "monuments",
-      "name": "Monuments",
-      "desc": "Prestige, moral des colons, deblocage de capacites uniques",
-      "color": "#9a7a3a",
-      "icon": "M",
-      "levels": [
-        { "id": "totem",     "name": "Totem",              "age": 1, "fusionReq": null, "desc": "Symbole tribal, moral +1" },
-        { "id": "statue",    "name": "Statue",             "age": 2, "fusionReq": null, "desc": "Commemoration d'un heros" },
-        { "id": "temple",    "name": "Temple",             "age": 3, "fusionReq": null, "desc": "Lieu de culte, cohesion sociale" },
-        { "id": "monument",  "name": "Monument national",  "age": 5, "fusionReq": null, "desc": "Identite de la civilisation" },
-        { "id": "gateway",   "name": "Portail orbital",    "age": 7, "fusionReq": null, "desc": "Point de depart vers les etoiles. Declenche l'endgame." }
-      ]
+      "id": "champ",
+      "name": "Champ",
+      "age": 1,
+      "category": "alimentation",
+      "size": "1x1",
+      "cost": { "wood": 2 },
+      "requires": { "tech": ["first-field"] },
+      "provides": { "food_per_tick": 0.5 },
+      "fusion": { "count": 4, "into": "potager" },
+      "activity": "day",
+      "description": "Zone de culture rudimentaire. Production de nourriture passive. Fusion 4x en Potager."
+    },
+    {
+      "id": "buisson",
+      "name": "Buisson cultive",
+      "age": 1,
+      "category": "alimentation",
+      "size": "1x1",
+      "cost": { "wood": 1 },
+      "requires": { "tech": [] },
+      "provides": { "berries_per_tick": 0.3 },
+      "activity": "day",
+      "description": "Buisson de baies entretenu. Repousse periodiquement. Separe du Champ."
+    },
+    {
+      "id": "potager",
+      "name": "Potager",
+      "age": 1,
+      "category": "alimentation",
+      "size": "2x2",
+      "cost": { "wood": 0 },
+      "requires": { "buildings": ["champ", "champ", "champ", "champ"] },
+      "provides": { "food_per_tick": 3 },
+      "activity": "day",
+      "description": "Jardin potager issu de la fusion de 4 Champs. Production alimentaire amelioree."
+    },
+    {
+      "id": "promontoire",
+      "name": "Promontoire",
+      "age": 1,
+      "category": "nocturne",
+      "size": "1x1",
+      "cost": { "stone": 15, "wood": 5 },
+      "requires": { "tech": ["promontory"], "buildings": ["hutte-du-sage"] },
+      "provides": { "night_points_per_tick": 1 },
+      "activity": "night",
+      "description": "Tour d'observation nocturne. Genere des points nocturnes quand un Astronome y stationne la nuit."
+    },
+    {
+      "id": "totem",
+      "name": "Totem",
+      "age": 1,
+      "category": "monument",
+      "size": "1x1",
+      "cost": { "wood": 10 },
+      "requires": { "tech": [] },
+      "provides": { "morale": 1 },
+      "activity": "both",
+      "description": "Symbole tribal. +1 moral a toute la colonie. Pas de production."
+    },
+    {
+      "id": "cairn-pierre",
+      "name": "Cairn de pierre",
+      "age": 1,
+      "category": "monument",
+      "size": "1x1",
+      "cost": { "stone": 50, "wood": 20, "bone": 10 },
+      "requires": {
+        "tech":       ["pick-stone", "axe-stone"],
+        "buildings":  ["cabane", "hutte-du-sage", "foyer"],
+        "population": 6,
+        "custom":     "cairn-bronze-gate"
+      },
+      "unique": true,
+      "onBuild": "trigger_age_transition_bronze",
+      "description": "Monument rituel qui marque la fin de l'age de pierre. Sa construction est longue et solennelle. Declenche le passage a l'age du Bronze."
     }
   ]
 }
