@@ -107,6 +107,11 @@ export class Colonist {
       this.favorite = !!r.favorite
       if (typeof r.ty === 'number') this.ty = r.ty
       if (r.state) this.state = r.state
+      // Lot B : restaure l assignation de bati si presente dans la save,
+      // sinon suppose qu il y avait au moins une maison (la save implique
+      // que le hameau initial a ete cree).
+      if (r.assignedBuildingId) this.assignedBuildingId = r.assignedBuildingId
+      else if (state.houses && state.houses.length > 0) this.assignedBuildingId = 'cabane'
     } else if (opts && opts.forceName) {
       this.gender = opts.forceGender || 'M'
       this.name = opts.forceName
@@ -724,6 +729,13 @@ export function clearColonists() {
 export function spawnColonsAroundHouse(hx, hz, count) {
   const spawned = []
   const tried = new Set()
+  // Lot B : tout colon qui spawn autour d une maison recoit cette maison
+  // comme assignedBuildingId. needs.js l utilise pour le besoin shelter.
+  // On choisit l id de batiment habitation le plus courant a l age I : "cabane".
+  // La maison proto actuelle est encore placee par placements.addHouse sans
+  // id explicite, mais le colon a juste besoin de savoir qu il est assigne
+  // a une habitation pour ne pas etre Sans-abri.
+  const shelterId = 'cabane'
   for (let r = 1; r <= 2 && spawned.length < count; r++) {
     for (let dz = -r; dz <= r && spawned.length < count; dz++) {
       for (let dx = -r; dx <= r && spawned.length < count; dx++) {
@@ -739,7 +751,8 @@ export function spawnColonsAroundHouse(hx, hz, count) {
         let occ = false
         for (const c of state.colonists) if (c.x === x && c.z === z) { occ = true; break }
         if (occ) continue
-        spawnColonist(x, z)
+        const c = spawnColonist(x, z)
+        if (c) c.assignedBuildingId = shelterId
         spawned.push({ x, z })
       }
     }
@@ -747,7 +760,8 @@ export function spawnColonsAroundHouse(hx, hz, count) {
   while (spawned.length < count) {
     const fx = Math.max(0, Math.min(GRID - 1, hx + spawned.length))
     const fz = Math.max(0, Math.min(GRID - 1, hz))
-    spawnColonist(fx, fz)
+    const c = spawnColonist(fx, fz)
+    if (c) c.assignedBuildingId = shelterId
     spawned.push({ x: fx, z: fz })
   }
   return spawned
