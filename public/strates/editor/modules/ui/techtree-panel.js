@@ -21,6 +21,15 @@ import { buildTechNode } from './techtree-node.js'
 let root = null
 let isOpen = false
 
+// Etat pan + zoom du canvas
+const view = {
+  tx: 40,      // translation x en pixels
+  ty: 0,       // translation y en pixels
+  scale: 1,    // facteur de zoom (0.5 a 2)
+}
+const ZOOM_MIN = 0.5
+const ZOOM_MAX = 2.0
+
 // Dimensions de layout (pixels en coord canvas, scalees par le zoom)
 const COL_W      = 240   // largeur d'un age
 const HEADER_H   = 56
@@ -77,6 +86,63 @@ export function initTechTreePanel() {
     if (!isOpen) return
     if (e.key === 'Escape') { e.preventDefault(); closeTechTreePanel() }
   })
+
+  bindPanZoom()
+}
+
+// ─── Pan + zoom ──────────────────────────────────────────────────────────────
+
+function bindPanZoom() {
+  const stage = root.querySelector('#ttp-stage')
+  if (!stage) return
+
+  let dragging = false
+  let sx = 0, sy = 0, startTx = 0, startTy = 0
+
+  stage.addEventListener('mousedown', function(e) {
+    // Ne pas hijacker les clics sur un bouton ou card
+    if (e.target.closest('.ttp-node-unlock')) return
+    dragging = true
+    stage.classList.add('panning')
+    sx = e.clientX; sy = e.clientY
+    startTx = view.tx; startTy = view.ty
+    e.preventDefault()
+  })
+  window.addEventListener('mousemove', function(e) {
+    if (!dragging || !isOpen) return
+    view.tx = startTx + (e.clientX - sx)
+    view.ty = startTy + (e.clientY - sy)
+    applyTransform()
+  })
+  window.addEventListener('mouseup', function() {
+    if (!dragging) return
+    dragging = false
+    if (stage) stage.classList.remove('panning')
+  })
+
+  stage.addEventListener('wheel', function(e) {
+    if (!isOpen) return
+    e.preventDefault()
+    const rect = stage.getBoundingClientRect()
+    const px = e.clientX - rect.left
+    const py = e.clientY - rect.top
+    const delta = e.deltaY > 0 ? 0.9 : 1.1
+    const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, view.scale * delta))
+    if (next === view.scale) return
+    // Zoom centre sur la position du curseur : on garde le point monde sous le
+    // curseur identique avant/apres zoom.
+    const ratio = next / view.scale
+    view.tx = px - (px - view.tx) * ratio
+    view.ty = py - (py - view.ty) * ratio
+    view.scale = next
+    applyTransform()
+  }, { passive: false })
+}
+
+function applyTransform() {
+  const canvas = root && root.querySelector('#ttp-canvas')
+  if (!canvas) return
+  canvas.style.transform = 'translate(' + view.tx + 'px, ' + view.ty + 'px) scale(' + view.scale + ')'
 }
 
 // ─── Ouverture / fermeture ───────────────────────────────────────────────────
@@ -87,6 +153,7 @@ export function openTechTreePanel() {
   isOpen = true
   root.classList.add('open')
   render()
+  applyTransform()
 }
 export function closeTechTreePanel() {
   if (!root) return
