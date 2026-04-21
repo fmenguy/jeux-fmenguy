@@ -234,6 +234,8 @@ export function initAgeTransitions() {
   _badgeEl = document.getElementById('cairn-overlay-badge')
   _badgeBar = document.getElementById('cairn-badge-bar')
   _updateBadge()
+  // Applique l'etat initial du bouton (grise si deja en Bronze au reload)
+  checkCairnOverlay()
 }
 
 function _injectCairnButton() {
@@ -377,6 +379,13 @@ function _updateBadge() {
   }
 }
 
+// Retourne true si un Cairn a deja ete pose (unique par partie)
+function _cairnAlreadyBuilt() {
+  if (state.currentAge >= 2) return true
+  if (state.cairns && state.cairns.length > 0) return true
+  return false
+}
+
 /**
  * Appele depuis la boucle principale (tick lent ~1s) pour mettre a jour
  * le badge et l'etat du bouton Cairn.
@@ -385,16 +394,32 @@ export function checkCairnOverlay() {
   _updateBadge()
 
   if (_cairnBtn) {
+    // Si le Cairn est deja pose, griser le bouton definitivement
+    if (_cairnAlreadyBuilt()) {
+      _cairnBtn.style.opacity = '0.4'
+      _cairnBtn.style.pointerEvents = 'none'
+      _cairnBtn.style.cursor = 'not-allowed'
+      _cairnBtn.title = 'Cairn de pierre deja pose'
+      return
+    }
+
+    // Sinon : reflet des conditions
     const { ok } = canBuildCairn(state)
     if (ok) {
       _cairnBtn.style.borderColor = 'rgba(255, 196, 80, 0.9)'
       _cairnBtn.style.background  = 'rgba(255, 196, 80, 0.22)'
       _cairnBtn.style.color       = '#fff5d8'
+      _cairnBtn.style.opacity     = ''
+      _cairnBtn.style.pointerEvents = ''
+      _cairnBtn.style.cursor      = ''
       _cairnBtn.title = 'Poser le Cairn de pierre -- conditions reunies !'
     } else {
       _cairnBtn.style.borderColor = 'rgba(255, 196, 80, 0.35)'
       _cairnBtn.style.background  = ''
       _cairnBtn.style.color       = ''
+      _cairnBtn.style.opacity     = ''
+      _cairnBtn.style.pointerEvents = ''
+      _cairnBtn.style.cursor      = ''
       _cairnBtn.title = 'Cairn de pierre (conditions non reunies -- survolez pour voir)'
     }
   }
