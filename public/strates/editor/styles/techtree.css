@@ -1,6 +1,6 @@
 /* ============================================================================
    Tech tree XXL (Lot C)
-   Panneau plein ecran, palette cohernete avec le reste du HUD.
+   Panneau plein ecran, palette coherente avec le reste du HUD.
    ========================================================================== */
 
 #ttp-root {
@@ -31,13 +31,13 @@
   background: linear-gradient(180deg, rgba(14,18,26,0.985), rgba(8,11,17,0.99));
   border: 1px solid rgba(138, 196, 255, 0.28);
   border-radius: 14px;
-  box-shadow: 0 32px 120px rgba(0,0,0,0.75),
-              inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow: 0 32px 120px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.04);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
+/* Header */
 .ttp-header {
   flex-shrink: 0;
   display: flex;
@@ -48,53 +48,34 @@
   background: linear-gradient(180deg, rgba(20,26,38,0.6), rgba(12,16,22,0));
 }
 .ttp-title {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #8ac4ff;
-  margin: 0;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: #8ac4ff; margin: 0;
 }
-.ttp-meta {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.ttp-pts {
-  font-size: 12px;
-  color: #ffd98a;
-  letter-spacing: 0.06em;
-}
+.ttp-meta { display: flex; align-items: center; gap: 14px; }
+.ttp-pts  { font-size: 12px; color: #ffd98a; letter-spacing: 0.06em; }
 .ttp-close {
-  font-size: 11px;
-  padding: 5px 12px;
-  border-radius: 6px;
+  font-size: 11px; padding: 5px 12px; border-radius: 6px;
   border: 1px solid rgba(255,255,255,0.22);
   background: rgba(255,255,255,0.05);
   color: rgba(255,255,255,0.72);
-  cursor: pointer;
-  letter-spacing: 0.05em;
+  cursor: pointer; letter-spacing: 0.05em;
   transition: all 0.15s ease;
 }
 .ttp-close:hover {
-  color: #fff;
-  background: rgba(255,255,255,0.12);
+  color: #fff; background: rgba(255,255,255,0.12);
   border-color: rgba(255,255,255,0.35);
 }
 
-.ttp-body {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
+/* Stage (zone pannable, contient le canvas) */
+.ttp-body { flex: 1; position: relative; overflow: hidden; }
 .ttp-stage {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   overflow: hidden;
   cursor: grab;
   background:
-    radial-gradient(circle at 15% 20%, rgba(60,90,150,0.12), transparent 60%),
-    radial-gradient(circle at 85% 80%, rgba(150,110,60,0.08), transparent 55%),
+    radial-gradient(circle at 15% 20%, rgba(60,90,150,0.10), transparent 60%),
+    radial-gradient(circle at 85% 80%, rgba(150,110,60,0.06), transparent 55%),
     #0a0e16;
 }
 .ttp-stage.panning { cursor: grabbing; }
@@ -104,4 +85,181 @@
   top: 0; left: 0;
   transform-origin: 0 0;
   will-change: transform;
+}
+
+/* Info transitoire */
+.ttp-info {
+  position: absolute; top: 40%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 13px; color: rgba(255,255,255,0.5);
+}
+
+/* Grille de fond */
+.ttp-grid-bg { position: absolute; top: 0; left: 0; pointer-events: none; }
+.ttp-col {
+  position: absolute;
+  border-left: 1px dashed rgba(255,255,255,0.05);
+}
+.ttp-col--locked {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.02),
+    rgba(255,255,255,0.02) 8px,
+    rgba(0,0,0,0.08) 8px,
+    rgba(0,0,0,0.08) 16px
+  );
+}
+.ttp-row {
+  position: absolute;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Header ages */
+.ttp-age-head {
+  position: absolute;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+  border-bottom: 2px solid #8ac4ff;
+  background: linear-gradient(180deg, rgba(40,60,90,0.18), transparent);
+}
+.ttp-age-head--locked {
+  border-bottom-color: rgba(255,255,255,0.15);
+  opacity: 0.6;
+}
+.ttp-age-head .ttp-age-num {
+  font-size: 9px; letter-spacing: 0.18em;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+}
+.ttp-age-head .ttp-age-name {
+  font-size: 13px; font-weight: 700;
+  color: #e7e2d2; letter-spacing: 0.1em;
+}
+
+/* Labels de branche */
+.ttp-branch-label {
+  position: absolute;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 12px;
+  border-left: 3px solid #888;
+  background: linear-gradient(90deg, rgba(20,26,38,0.35), transparent);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+}
+.ttp-branch-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ============================================================================
+   Nœuds (cards)
+   ========================================================================== */
+
+.ttp-node {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex; flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(24,30,42,0.92), rgba(16,20,28,0.95));
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  pointer-events: auto;
+}
+.ttp-node:hover { transform: translateY(-1px); }
+
+.ttp-node-icon {
+  font-size: 18px;
+  line-height: 1;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+}
+.ttp-node-name {
+  font-size: 12px; font-weight: 600;
+  color: #e5ecf3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ttp-node-foot {
+  display: flex; align-items: center;
+  font-size: 10px;
+  margin-top: auto;
+}
+
+/* Etats */
+.ttp-node--locked {
+  opacity: 0.3;
+  filter: grayscale(0.7);
+}
+.ttp-node--available {
+  border-color: rgba(255,255,255,0.18);
+}
+.ttp-node--ready {
+  border-color: #8ac4ff;
+  box-shadow: 0 0 16px rgba(138,196,255,0.35), 0 2px 8px rgba(0,0,0,0.3);
+}
+.ttp-node--researching {
+  border-color: #ffd98a;
+}
+.ttp-node--done {
+  border-color: #f0c040;
+  box-shadow: 0 0 18px rgba(240,192,64,0.4), 0 2px 8px rgba(0,0,0,0.3);
+  background: linear-gradient(180deg, rgba(50,40,18,0.9), rgba(32,25,12,0.95));
+}
+.ttp-node--teased {
+  opacity: 0.45;
+  filter: blur(2px) grayscale(0.9);
+  pointer-events: none;
+}
+
+/* Badges */
+.ttp-badge {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.05em;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+}
+.ttp-badge--cost   { background: rgba(138,196,255,0.12); color: #8ac4ff; }
+.ttp-badge--locked { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); }
+.ttp-badge--done   { background: rgba(240,192,64,0.18); color: #ffd98a; }
+.ttp-badge--teased { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+
+/* Bouton rechercher (state ready) */
+.ttp-node-unlock {
+  font-size: 10px; font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #8ac4ff;
+  background: linear-gradient(180deg, rgba(60,110,180,0.5), rgba(30,60,110,0.6));
+  color: #e8f4ff;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s ease;
+}
+.ttp-node-unlock:hover {
+  background: linear-gradient(180deg, rgba(80,140,220,0.7), rgba(40,80,140,0.8));
+  box-shadow: 0 0 10px rgba(138,196,255,0.5);
+}
+
+/* Progress bar (state researching) */
+.ttp-node-progress {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ttp-node-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8ac4ff, #c08aff);
+  transition: width 0.3s ease;
 }
