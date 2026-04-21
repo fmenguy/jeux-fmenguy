@@ -4,6 +4,38 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-21 (session 13) : Lot C -- corrections bugs B4, B6, B7 + quick wins U1 U2 U3 U4
+
+### B4 - Tech tree age II placeholder apres transition Bronze
+- `techtree-panel.js` : `techStatus()` et `matchesQuery()` utilisent desormais `state.currentAge` comme source de verite (au lieu de la valeur statique `age >= 2`). Les colonnes d'ages inferieurs ou egaux a l'age courant ne sont plus floutees.
+- Aucune tech n'etant encore definie pour l'age 2 dans `techtree.json`, un placeholder "Techs Bronze, a venir dans une prochaine session" s'affiche dans la colonne de l'age debloque mais sans tech.
+- Les classes visuelles `ttp-age-head--locked` et `ttp-col--locked` sont desormais calculees par comparaison `ageNum > state.currentAge`.
+
+### B6 - Filtres branche fonctionnels
+- `techtree-panel.js` : les liens SVG entre prerequis sont masques si au moins un des deux noeuds appartient a une branche cachee (ajout de `branchId` dans la cartographie `nodePos`). La logique des toggles sur les boutons etait correcte mais les liens n'etaient pas filtres et le feedback visuel etait faible.
+- `styles/techtree.css` : les boutons de filtre inactifs (branches masquees) ont maintenant un style barre (line-through), couleur attenuee, dot diminue. Contraste fort avec les boutons actifs.
+
+### B7 - Escape ferme panneau sans ouvrir le menu pause
+- `modules/interaction.js` : le listener Echap verifie desormais l'etat de trois panneaux plein ecran (`#ttp-root.open`, `#char-panel.open`, `#help-overlay.open`) avant de traiter le menu pause. Si un panneau est ouvert, l'evenement est ignore et le panneau gere sa fermeture via son propre listener. Le menu pause ne s'ouvre plus que lorsqu'aucun panneau n'est visible.
+
+### U1 - Suppression de la fenetre Tech flottante obsolete
+- `index.html` : retrait complet du bloc `#techs` (mini panel en haut a droite) et de son CSS (~80 lignes). Ajout d'un bouton flottant `#btn-techtree-float` (icone diagramme) sous `#btn-audio` pour ouvrir l'arbre XXL.
+- `main.js` : cablage du nouveau bouton, compatibilite avec l'ancien id preservee.
+- `hud.js` : `refreshTechsPanel()` devient silencieuse (early return si `techsBodyEl` absent).
+
+### U2 - Boutons save/load/nouvelle partie deplaces
+- `index.html` : retrait des 3 boutons depuis la barre `#actionbar > .group.controls`. Creation d'une zone dediee flottante `#save-controls` en haut a droite (pill avec blur, icones disquette/dossier/recycle, bouton Nouvelle en rouge pour clarte destructive). L'actionbar ne contient plus que des outils.
+
+### U3 - Compteur temperature dans HUD meteo
+- `index.html` : ajout d'un span `#season-temp` dans `#season-pill`.
+- `main.js` : valeurs indicatives fixes par saison (Printemps 12°, Ete 22°, Automne 10°, Hiver -2°) mises a jour a chaque tick HUD saison.
+
+### U4 - Page aide version courte par defaut + Voir tout
+- `index.html` : nouvelle section `.ho-essentiel` en haut du `.ho-body` avec 5 lignes (deplacement ZQSD + souris, miner 2, placer 3, tech tree T, Echap pour sauvegarder). Wrapping `#ho-full-sections` (attribut `hidden`) autour des anciennes sections Camera, Outils, Actions, Menus. Bouton `#help-toggle-full` style dore.
+- `help-overlay.js` : gere le toggle du bouton (texte "Voir tout" / "Masquer le detail", bascule l'attribut `hidden`).
+
+---
+
 ## 2026-04-21 (session 13) : Lot D -- corrections bugs B2, B3, B5
 
 ### B2 - Son fanfare retravaille
