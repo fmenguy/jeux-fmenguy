@@ -285,6 +285,16 @@ if (pauseMenu) pauseMenu.addEventListener('click', (e) => { if (e.target === pau
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    // Ne pas ouvrir le menu pause si un panneau plein ecran est deja ouvert.
+    // Les panneaux concernes (tech tree XXL, fiche colon, overlay d'aide)
+    // gerent eux-memes la fermeture sur Echap, via leurs propres listeners.
+    const ttp = document.getElementById('ttp-root')
+    if (ttp && ttp.classList.contains('open')) return
+    const cs = document.getElementById('char-panel')
+    if (cs && cs.classList.contains('open')) return
+    const ho = document.getElementById('help-overlay')
+    if (ho && ho.classList.contains('open')) return
+
     const sm = document.getElementById('save-menu')
     const pm = document.getElementById('pause-menu')
     if (sm && !sm.classList.contains('hidden')) { closeSaveMenu(); return }
