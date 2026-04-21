@@ -30,6 +30,12 @@ const view = {
 const ZOOM_MIN = 0.5
 const ZOOM_MAX = 2.0
 
+// Etat filtres et recherche
+const filter = {
+  branches: null,    // Set d'ids de branches visibles, null = toutes
+  query: '',         // texte de recherche lowercase
+}
+
 // Dimensions de layout (pixels en coord canvas, scalees par le zoom)
 const COL_W      = 240   // largeur d'un age
 const HEADER_H   = 56
@@ -71,6 +77,10 @@ export function initTechTreePanel() {
     '      <button class="ttp-close" id="ttp-close" aria-label="Fermer">Fermer (Esc)</button>',
     '    </div>',
     '  </header>',
+    '  <div class="ttp-toolbar">',
+    '    <div class="ttp-filters" id="ttp-filters"></div>',
+    '    <input type="text" class="ttp-search" id="ttp-search" placeholder="Rechercher une tech..." />',
+    '  </div>',
     '  <div class="ttp-body">',
     '    <div class="ttp-stage" id="ttp-stage">',
     '      <div class="ttp-canvas" id="ttp-canvas"></div>',
@@ -88,6 +98,64 @@ export function initTechTreePanel() {
   })
 
   bindPanZoom()
+  bindSearch()
+}
+
+// ─── Filtres branches + recherche ────────────────────────────────────────────
+
+function renderFilterToolbar() {
+  const bar = root && root.querySelector('#ttp-filters')
+  if (!bar) return
+  bar.innerHTML = ''
+  const branches = (TECH_TREE_DATA && TECH_TREE_DATA.branches) || []
+  // Bouton "Toutes"
+  const allBtn = document.createElement('button')
+  allBtn.className = 'ttp-filter-btn' + (filter.branches === null ? ' active' : '')
+  allBtn.textContent = 'Toutes'
+  allBtn.addEventListener('click', function() {
+    filter.branches = null
+    render()
+  })
+  bar.appendChild(allBtn)
+
+  branches.forEach(function(br) {
+    const b = document.createElement('button')
+    const active = filter.branches === null || filter.branches.has(br.id)
+    b.className = 'ttp-filter-btn' + (active ? ' active' : '')
+    b.style.borderColor = br.color || '#888'
+    b.innerHTML = '<span class="ttp-filter-dot" style="background:' + (br.color || '#888') + '"></span>' +
+                  escapeHTML(br.name || br.id)
+    b.addEventListener('click', function() {
+      if (filter.branches === null) {
+        filter.branches = new Set(branches.map(function(x) { return x.id }))
+      }
+      if (filter.branches.has(br.id)) filter.branches.delete(br.id)
+      else filter.branches.add(br.id)
+      // Si toutes cochees, on repasse en null pour lisibilite
+      if (filter.branches.size === branches.length) filter.branches = null
+      render()
+    })
+    bar.appendChild(b)
+  })
+}
+
+function bindSearch() {
+  const input = root && root.querySelector('#ttp-search')
+  if (!input) return
+  input.addEventListener('input', function() {
+    filter.query = (input.value || '').trim().toLowerCase()
+    render()
+  })
+}
+
+function branchVisible(branchId) {
+  return filter.branches === null || filter.branches.has(branchId)
+}
+function matchesQuery(tech) {
+  if (!filter.query) return true
+  if ((tech.age || 1) >= 2) return false   // les teases ne matchent jamais (preserve la surprise)
+  const hay = (tech.name + ' ' + (tech.id || '')).toLowerCase()
+  return hay.indexOf(filter.query) !== -1
 }
 
 // ─── Pan + zoom ──────────────────────────────────────────────────────────────
@@ -207,6 +275,7 @@ function render() {
   if (!root) return
   const pts = document.getElementById('ttp-pts')
   if (pts) pts.textContent = (state.researchPoints || 0) + ' pts'
+  renderFilterToolbar()
 
   const canvas = document.getElementById('ttp-canvas')
   if (!canvas) return
@@ -293,7 +362,11 @@ function render() {
       const cellY = rowY[bi] + CELL_PAD
       list.forEach(function(tech, ti) {
         const status = techStatus(tech)
+        const hiddenByBranch = !branchVisible(br.id)
+        const dimmedByQuery = filter.query && !matchesQuery(tech)
         const node = buildTechNode(tech, status, { cost: techCost(tech), onUnlock: unlockLocal })
+        if (hiddenByBranch) node.classList.add('ttp-node--hidden')
+        if (dimmedByQuery) node.classList.add('ttp-node--dimmed')
         const px = cellX
         const py = cellY + ti * (NODE_H + NODE_GAP)
         node.style.left = px + 'px'
