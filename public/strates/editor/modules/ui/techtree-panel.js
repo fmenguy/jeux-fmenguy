@@ -73,6 +73,7 @@ export function initTechTreePanel() {
     '  <header class="ttp-header">',
     '    <h2 class="ttp-title">Arbre des technologies</h2>',
     '    <div class="ttp-meta">',
+    '      <span class="ttp-hint">Drag pour panner, molette pour zoomer</span>',
     '      <span class="ttp-pts" id="ttp-pts">0 pts</span>',
     '      <button class="ttp-close" id="ttp-close" aria-label="Fermer">Fermer (Esc)</button>',
     '    </div>',
