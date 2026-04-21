@@ -688,6 +688,13 @@ export function clearAllPlacements() {
     }
     state.observatories.length = 0
   }
+  if (state.cairns && state.cairns.length) {
+    for (const c of state.cairns) {
+      scene.remove(c.group)
+      c.group.traverse(node => { if (node.material) node.material.dispose(); if (node.geometry) node.geometry.dispose() })
+    }
+    state.cairns.length = 0
+  }
 }
 
 // ============================================================================

@@ -3,7 +3,8 @@ import { state } from './state.js'
 import { rebuildTerrainFromState, repaintCellSurface } from './terrain.js'
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
-  addManorFromSave, clearAllPlacements, isCellOccupied, addObservatory
+  addManorFromSave, clearAllPlacements, isCellOccupied, addObservatory,
+  addCairn
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
@@ -139,7 +140,8 @@ function serializeSnapshot() {
     visited: state.visited ? Array.from(state.visited) : null,
     currentAge: state.currentAge || 1,
     ageUnlockedAt: state.ageUnlockedAt || { 1: Date.now() },
-    achievements: Array.isArray(state.achievements) ? state.achievements.slice() : []
+    achievements: Array.isArray(state.achievements) ? state.achievements.slice() : [],
+    cairns: (state.cairns || []).map(c => ({ x: c.x, z: c.z }))
   }
 }
 
@@ -171,6 +173,7 @@ function clearEverything() {
   state.currentAge = 1
   state.ageUnlockedAt = { 1: Date.now() }
   state.achievements = []
+  state.cairns = []
 }
 
 function applySnapshot(data) {
@@ -263,6 +266,13 @@ function applySnapshot(data) {
   state.currentAge = data.currentAge || 1
   state.ageUnlockedAt = data.ageUnlockedAt || { 1: Date.now() }
   state.achievements = Array.isArray(data.achievements) ? data.achievements.slice() : []
+  // Lot D : cairns (monuments poses)
+  state.cairns = []
+  if (Array.isArray(data.cairns)) {
+    for (const c of data.cairns) {
+      addCairn(c.x, c.z)
+    }
+  }
   startNextQuest()
 
   state.lastJobTime = performance.now() / 1000
