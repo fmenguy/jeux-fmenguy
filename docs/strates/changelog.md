@@ -4,6 +4,20 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-21 (session 11) : Lot A -- SPEC v1 gelee, JSON data-driven age I complet
+
+- **BREAKING** : `data/techtree.json` et `data/buildings.json` protos remplacés par les versions SPEC v1 gelées.
+- Nouveau `data/resources.json` (13 entrees) : toutes les ressources age I + stubs cuivre/charbon age II.
+- `data/techtree.json` reécrit (SPEC v1) : 7 ages (1 actif, 2-7 stubs), 6 branches, 13 techs age I exhaustives.
+- `data/buildings.json` reécrit (SPEC v1) : 11 batiments age I (habitation, production, recherche, alimentation, nocturne, monument). Cairn avec `onBuild: trigger_age_transition_bronze`.
+- Nouveau `data/jobs.json` (8 metiers age I) : Cueilleur, Bucheron, Mineur, Chasseur, Chercheur, Astronome, Terrassier, Explorateur.
+- Nouveau `data/needs.json` (3 besoins age I) : Faim, Sans-abri, Blesse.
+- `modules/gamedata.js` etendu : charge les 5 nouveaux JSON, expose 5 accesseurs (`getTechsForAge`, `getBuildingById`, `getJobsRequiringTech`, `getNeedsForAge`, `getResourceById`), linter cross-fichiers au boot, 7 tests unitaires purs (`runUnitTests()`).
+- Schema SPEC v1 gele -- tout changement de schema necessite un bump vers v2 avec validation utilisateur.
+- Note pour Lot B/C : `modules/tech.js` et `modules/techtree-ui.js` sont a adapter pour lire les nouveaux JSON au lieu des donnees hardcodees.
+
+---
+
 ## 2026-04-20 (session 10) : MVP cycle jour/nuit (axe 4.2)
 
 - Nouveau module `modules/daynight.js` : toggle manuel via touche **N** ou icône HUD soleil/lune, transition d'ambiance lissée (~1.5s) sur la couleur de fond, fog, directional light (intensité 2.4 le jour, 0.35 la nuit, teinte lunaire bleutée), hemisphere light et uniforms du Sky.

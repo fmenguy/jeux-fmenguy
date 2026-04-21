@@ -1,0 +1,77 @@
+{
+  "_spec": "v1",
+  "jobs": [
+    {
+      "id": "cueilleur",
+      "name": "Cueilleur",
+      "age": 1,
+      "requires": {},
+      "produces": ["berries"],
+      "activity": "day",
+      "description": "Metier starter par defaut. Aucun outil requis. Priorite aux buissons non epuises."
+    },
+    {
+      "id": "bucheron",
+      "name": "Bucheron",
+      "age": 1,
+      "requires": { "tech": ["axe-stone"] },
+      "produces": ["wood"],
+      "activity": "day",
+      "description": "Cherche l'arbre le plus proche. Necessite la Hache en pierre."
+    },
+    {
+      "id": "mineur",
+      "name": "Mineur",
+      "age": 1,
+      "requires": {},
+      "produces": ["stone", "silex", "dirt"],
+      "activity": "day",
+      "description": "Travail a mains nues possible en age I. La Pioche en pierre ameliore le rendement. Produit Pierre et Silex (drop rare)."
+    },
+    {
+      "id": "chasseur",
+      "name": "Chasseur",
+      "age": 1,
+      "requires": { "tech": ["spear-wood"] },
+      "produces": ["raw-meat", "bone", "hide"],
+      "activity": "day",
+      "description": "Patrouille la zone, attaque les animaux. Risque d'etat Blesse. Necessite la Lance en bois."
+    },
+    {
+      "id": "chercheur",
+      "name": "Chercheur",
+      "age": 1,
+      "requires": { "buildings": ["hutte-du-sage"] },
+      "produces": ["research-points"],
+      "activity": "day",
+      "description": "Reste dans la Hutte du sage, produit des points de recherche par tick."
+    },
+    {
+      "id": "astronome",
+      "name": "Astronome",
+      "age": 1,
+      "requires": { "buildings": ["promontoire"] },
+      "produces": ["night-points"],
+      "activity": "night",
+      "description": "Observe les etoiles depuis le Promontoire. Genere des points nocturnes par tick."
+    },
+    {
+      "id": "terrassier",
+      "name": "Terrassier",
+      "age": 1,
+      "requires": { "tech": ["shovel-stone"] },
+      "produces": ["dirt"],
+      "activity": "day",
+      "description": "Terrassement et nivellement du terrain. Necessite la Pelle en pierre."
+    },
+    {
+      "id": "explorateur",
+      "name": "Explorateur",
+      "age": 1,
+      "requires": { "tech": ["scouting"] },
+      "produces": [],
+      "activity": "day",
+      "description": "Etend le rayon de vision de la colonie. Necessite la tech Eclaireur."
+    }
+  ]
+}

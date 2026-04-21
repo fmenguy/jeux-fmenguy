@@ -1,0 +1,123 @@
+{
+  "_spec": "v1",
+  "resources": [
+    {
+      "id": "wood",
+      "name": "Bois",
+      "icon": "🪵",
+      "age": 1,
+      "category": "matiere",
+      "source": "Arbres (Bucheron + Hache pierre)",
+      "usage": "Construction cabane, foyer, abri, totem"
+    },
+    {
+      "id": "stone",
+      "name": "Pierre",
+      "icon": "🪨",
+      "age": 1,
+      "category": "matiere",
+      "source": "Affleurements (Mineur, mains nues)",
+      "usage": "Construction, outils, Cairn"
+    },
+    {
+      "id": "silex",
+      "name": "Silex",
+      "icon": "🪨",
+      "age": 1,
+      "category": "matiere",
+      "subtype": "pierre",
+      "source": "Sous-type Pierre (minage affleurement, drop rare)",
+      "usage": "Craft Hache pierre et Pioche pierre au Foyer"
+    },
+    {
+      "id": "dirt",
+      "name": "Terre",
+      "icon": "🌾",
+      "age": 1,
+      "category": "matiere",
+      "source": "Minage herbe ou sable",
+      "usage": "Construction Abri, nivellement"
+    },
+    {
+      "id": "berries",
+      "name": "Baies",
+      "icon": "🫐",
+      "age": 1,
+      "category": "nourriture",
+      "source": "Buissons (Cueilleur, aucun outil)",
+      "usage": "Nourriture basique (Faim faible)"
+    },
+    {
+      "id": "raw-meat",
+      "name": "Viande crue",
+      "icon": "🥩",
+      "age": 1,
+      "category": "nourriture",
+      "source": "Chasse (Chasseur + lance)",
+      "usage": "Cuisson Foyer vers Viande cuite"
+    },
+    {
+      "id": "cooked-meat",
+      "name": "Viande cuite",
+      "icon": "🍖",
+      "age": 1,
+      "category": "nourriture",
+      "source": "Cuisson Foyer",
+      "usage": "Nourriture haute valeur (Faim elevee)"
+    },
+    {
+      "id": "bone",
+      "name": "Os",
+      "icon": "🦴",
+      "age": 1,
+      "category": "materiau",
+      "source": "Chasse",
+      "usage": "Craft outils basiques, Cairn (10 os)"
+    },
+    {
+      "id": "hide",
+      "name": "Peau",
+      "icon": "🧶",
+      "age": 1,
+      "category": "materiau",
+      "source": "Chasse",
+      "usage": "Vetements contre Froid (Nice-to-have)"
+    },
+    {
+      "id": "research-points",
+      "name": "Points de recherche",
+      "icon": "🧠",
+      "age": 1,
+      "category": "abstrait",
+      "source": "Hutte du sage (jour, Chercheur)",
+      "usage": "Debloquer techs"
+    },
+    {
+      "id": "night-points",
+      "name": "Points nocturnes",
+      "icon": "🌙",
+      "age": 1,
+      "category": "abstrait",
+      "source": "Promontoire (nuit, Astronome)",
+      "usage": "Debloquer techs Nocturne"
+    },
+    {
+      "id": "copper",
+      "name": "Cuivre",
+      "icon": "🔩",
+      "age": 2,
+      "category": "minerai",
+      "source": "Filons (non exploitables age I)",
+      "usage": "Age Bronze uniquement"
+    },
+    {
+      "id": "coal",
+      "name": "Charbon",
+      "icon": "🪨",
+      "age": 2,
+      "category": "minerai",
+      "source": "Filons (non exploitables age I)",
+      "usage": "Age Bronze uniquement"
+    }
+  ]
+}
