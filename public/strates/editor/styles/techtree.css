@@ -94,6 +94,28 @@
   font-size: 13px; color: rgba(255,255,255,0.5);
 }
 
+/* Liens SVG entre prerequis */
+.ttp-links {
+  position: absolute;
+  top: 0; left: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.ttp-link {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.ttp-link--idle {
+  stroke: rgba(255,255,255,0.14);
+  stroke-dasharray: 4 4;
+}
+.ttp-link--active {
+  stroke: #f0c040;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 3px rgba(240,192,64,0.5));
+}
+
 /* Grille de fond */
 .ttp-grid-bg { position: absolute; top: 0; left: 0; pointer-events: none; }
 .ttp-col {
