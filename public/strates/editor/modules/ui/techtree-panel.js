@@ -20,6 +20,7 @@ import { buildTechNode } from './techtree-node.js'
 
 let root = null
 let isOpen = false
+let dirty = false
 
 // Etat pan + zoom du canvas
 const view = {
@@ -220,6 +221,7 @@ export function openTechTreePanel() {
   if (!root) initTechTreePanel()
   if (!root) return
   isOpen = true
+  dirty = false
   root.classList.add('open')
   render()
   applyTransform()
@@ -234,6 +236,30 @@ export function toggleTechTreePanel() {
   if (!root) return
   if (isOpen) closeTechTreePanel()
   else openTechTreePanel()
+}
+
+// ─── Hook Lot D : re-render apres transition d'age ───────────────────────────
+//
+// Appele par age-transitions.js apres qu'une transition d'age a debloque des
+// techs supplementaires. Si le panneau est ouvert, on force un re-render
+// immediat pour que les techs concernees passent de teased a available. Sinon
+// on marque un flag dirty consomme au prochain open().
+//
+// L'age debloque est deja lu via TECH_TREE_DATA.ages[].unlocked (SPEC v1). Le
+// parametre age est informatif (log, animations futures), la source de verite
+// reste le JSON.
+export function refreshTechTreeAfterAgeChange(age) {
+  if (isOpen) {
+    render()
+  } else {
+    dirty = true
+  }
+}
+
+// Expose globalement pour que age-transitions.js (Lot D) puisse l'appeler sans
+// dependance d'import directe.
+if (typeof window !== 'undefined') {
+  window.refreshTechTreeAfterAgeChange = refreshTechTreeAfterAgeChange
 }
 
 // ─── Helpers donnees ─────────────────────────────────────────────────────────
