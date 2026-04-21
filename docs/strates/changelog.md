@@ -4,6 +4,14 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-21 (session 12) : Lot C -- hook refreshTechTreeAfterAgeChange pour Lot D
+
+- Nouvelle fonction exportee `refreshTechTreeAfterAgeChange(age)` dans `modules/ui/techtree-panel.js`, egalement exposee sur `window` pour consommation par `age-transitions.js` (Lot D) sans import direct.
+- Si le panneau est ouvert au moment de l'appel, re-render immediat (les techs nouvellement debloquees passent de teased a available/ready). Sinon, flag `dirty` consomme au prochain `openTechTreePanel()`.
+- Source de verite inchangee : `TECH_TREE_DATA.ages[].unlocked` (SPEC v1). La fonction force uniquement le re-render DOM.
+
+---
+
 ## 2026-04-21 (session 12) : Lot C -- UI Tech tree XXL (pan, zoom, filtres, anti-spoiler)
 
 - Nouveau panneau plein ecran `modules/ui/techtree-panel.js` + noeuds `modules/ui/techtree-node.js`, feuille de style dediee `styles/techtree.css`.
