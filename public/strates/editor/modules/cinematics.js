@@ -9,82 +9,37 @@
 // ---------------------------------------------------------------------------
 
 /**
- * Joue une fanfare heroique synthetique (~2s).
+ * Joue une fanfare douce (accord majeur Do-Mi-Sol, enveloppe ADSR, ~2s).
  * Utilise AudioContext web natif, aucun fichier externe.
  */
 function playFanfare() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const t = ctx.currentTime
 
-    // Notes de la fanfare : Mi3, Sol3, Si3, Mi4, Sol4 puis decrescendo
-    const notes = [
-      { freq: 164.81, start: 0.0,  dur: 0.18, vol: 0.35 },
-      { freq: 196.00, start: 0.12, dur: 0.18, vol: 0.38 },
-      { freq: 246.94, start: 0.24, dur: 0.22, vol: 0.40 },
-      { freq: 329.63, start: 0.36, dur: 0.30, vol: 0.45 },
-      { freq: 392.00, start: 0.58, dur: 0.55, vol: 0.50 },
-      { freq: 493.88, start: 0.80, dur: 0.55, vol: 0.42 },
-      { freq: 659.25, start: 1.00, dur: 0.90, vol: 0.38 },
-    ]
+    // Accord Do majeur : Do4, Mi4, Sol4
+    const freqs = [261.63, 329.63, 392.00]
 
-    const masterGain = ctx.createGain()
-    masterGain.gain.setValueAtTime(1.0, ctx.currentTime)
-    masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.2)
-    masterGain.connect(ctx.destination)
-
-    // Filtre lowpass leger pour adoucir
-    const filter = ctx.createBiquadFilter()
-    filter.type = 'lowpass'
-    filter.frequency.setValueAtTime(3200, ctx.currentTime)
-    filter.connect(masterGain)
-
-    notes.forEach(({ freq, start, dur, vol }) => {
-      // Oscillateur principal (onde carree douce)
+    freqs.forEach(freq => {
       const osc = ctx.createOscillator()
-      osc.type = 'square'
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + start)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, t)
 
-      // Harmonique une octave au-dessus (onde triangle, plus douce)
-      const osc2 = ctx.createOscillator()
-      osc2.type = 'triangle'
-      osc2.frequency.setValueAtTime(freq * 2, ctx.currentTime + start)
+      const gain = ctx.createGain()
+      // Attaque : 0 -> 0.15 en 0.05s
+      gain.gain.setValueAtTime(0, t)
+      gain.gain.linearRampToValueAtTime(0.15, t + 0.05)
+      // Sustain court : reste a 0.12 jusqu'a 0.3s
+      gain.gain.linearRampToValueAtTime(0.12, t + 0.30)
+      // Decay progressif vers 0 en 1.5s
+      gain.gain.linearRampToValueAtTime(0, t + 1.80)
 
-      const envGain = ctx.createGain()
-      envGain.gain.setValueAtTime(0, ctx.currentTime + start)
-      envGain.gain.linearRampToValueAtTime(vol, ctx.currentTime + start + 0.04)
-      envGain.gain.setValueAtTime(vol, ctx.currentTime + start + dur - 0.06)
-      envGain.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
 
-      const envGain2 = ctx.createGain()
-      envGain2.gain.setValueAtTime(0, ctx.currentTime + start)
-      envGain2.gain.linearRampToValueAtTime(vol * 0.3, ctx.currentTime + start + 0.04)
-      envGain2.gain.setValueAtTime(vol * 0.3, ctx.currentTime + start + dur - 0.06)
-      envGain2.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur)
-
-      osc.connect(envGain)
-      osc2.connect(envGain2)
-      envGain.connect(filter)
-      envGain2.connect(filter)
-
-      osc.start(ctx.currentTime + start)
-      osc.stop(ctx.currentTime + start + dur + 0.05)
-      osc2.start(ctx.currentTime + start)
-      osc2.stop(ctx.currentTime + start + dur + 0.05)
+      osc.start(t)
+      osc.stop(t + 2.0)
     })
-
-    // Percussion d'intro : bruit impulsionnel
-    const bufferSize = Math.floor(ctx.sampleRate * 0.12)
-    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-    const data = noiseBuffer.getChannelData(0)
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize)
-    const noise = ctx.createBufferSource()
-    noise.buffer = noiseBuffer
-    const noiseGain = ctx.createGain()
-    noiseGain.gain.setValueAtTime(0.25, ctx.currentTime)
-    noiseGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.12)
-    noise.connect(noiseGain)
-    noiseGain.connect(masterGain)
-    noise.start(ctx.currentTime)
 
     // Ferme le contexte proprement apres la fin
     setTimeout(() => {
