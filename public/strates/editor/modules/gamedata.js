@@ -160,8 +160,6 @@ function _runLinter() {
         }
       })
       // Verifier les ids dans unlocks
-      // Note : le champ "tools" est exclu de la validation car il n'y a pas de fichier tools.json
-      // (les tools sont geres en interne par le moteur, voir tech.js)
       if (tech.unlocks) {
         const unlockFields = ['buildings', 'jobs', 'resources']
         unlockFields.forEach(field => {
