@@ -350,6 +350,26 @@
 </style>
 </head>
 <body>
+<div id="pw-gate" style="position:fixed;inset:0;z-index:9999;background:#f4efe4;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;">
+  <div style="text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;">
+    <div style="font-size:1.1rem;color:#3a3026;font-weight:500;">Accès privé</div>
+    <input id="pw-input" type="password" placeholder="Mot de passe" autofocus
+      style="padding:8px 14px;border:1px solid #c9bfa6;border-radius:6px;font-size:1rem;background:#fff;outline:none;width:200px;">
+    <div id="pw-error" style="color:#a63d3d;font-size:0.85rem;min-height:1.2em;"></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var gate = document.getElementById('pw-gate');
+    var input = document.getElementById('pw-input');
+    var error = document.getElementById('pw-error');
+    function check() {
+      if (input.value === 'mengmengf') { gate.remove(); }
+      else { error.textContent = 'Mot de passe incorrect.'; input.value = ''; input.focus(); }
+    }
+    input.addEventListener('keydown', function(e){ if (e.key === 'Enter') check(); });
+  })();
+</script>
   <div id="root"></div>
 
   <script type="application/json" id="game-data">
