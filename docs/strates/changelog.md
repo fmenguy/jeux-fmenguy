@@ -4,6 +4,22 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-21 (session 13) : Lot D -- corrections bugs B2, B3, B5
+
+### B2 - Son fanfare retravaille
+- `modules/cinematics.js` : la fanfare synthetique utilise desormais 3 oscillateurs `sine` en accord Do majeur (Do4 261.63 Hz, Mi4 329.63 Hz, Sol4 392.00 Hz) avec enveloppe ADSR douce (attaque 0.05s, gain max 0.15, decay progressif sur 1.5s). Suppression des ondes `square`, du bruit impulsionnel et du filtre lowpass agressifs.
+
+### B3 - Rendu voxel Cairn
+- `modules/placements.js` : nouvelle fonction `makeCairn()` (colonne de 4 blocs BoxGeometry pierre grise empiles, scales decroissants, etoile OctahedronGeometry doree au sommet), `addCairn(gx, gz)` qui place le Group Three.js dans la scene et pousse dans `state.cairns`, `findFreeCellNear(cx, cz, maxRadius)` pour trouver une cellule libre en spirale autour du spawn.
+- `modules/age-transitions.js` : `_onCairnClick` appelle `findFreeCellNear` puis `addCairn` avant de declencher la cinematique (delai 200ms pour laisser le mesh apparaitre).
+- `modules/persistence.js` : serialisation `cairns[]`, restauration et reset dans `clearEverything`.
+- `modules/state.js` : champ `cairns: []` ajoute dans Lot D.
+
+### B5 - Bouton Cairn unique
+- `modules/age-transitions.js` : `_cairnAlreadyBuilt()` detecte si `state.cairns.length > 0` ou `state.currentAge >= 2`. `checkCairnOverlay()` grise le bouton (opacity 0.4, pointer-events none, cursor not-allowed) quand le Cairn est deja pose. `initAgeTransitions()` appelle `checkCairnOverlay()` au boot pour gerer le reload apres passage en Bronze.
+
+---
+
 ## 2026-04-21 (session 12) : Lot C -- hook refreshTechTreeAfterAgeChange pour Lot D
 
 - Nouvelle fonction exportee `refreshTechTreeAfterAgeChange(age)` dans `modules/ui/techtree-panel.js`, egalement exposee sur `window` pour consommation par `age-transitions.js` (Lot D) sans import direct.
