@@ -4,6 +4,25 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-21 (session 12) : Lot B -- moteur comportemental, besoins Faim + Sans-abri
+
+- **Pre-fix SPEC v1** (commit `lot-B: pre-fix SPEC v1`) : `main.js` injecte les techs du JSON gele en normalisant `cost: { research: N }` vers number et `requires: []` vers le champ plat `req`, le champ `requires[]` etant conserve a cote. `tech.js/unlockTech` accepte un tableau de prerequis (iteration sur `t.requires`) en plus du `t.req` legacy.
+- Nouveau module **`modules/needs.js`** : lecture `needs.json` via `gamedata.js`, initialisation `c.needs` Map par colon, tick des jauges (hunger monte a `need.rate * 100% /s`), evaluation des regles (shelter via `assignedBuildingId`), calcul `productivityMul` compose en parsant `effects.productivity_N%`. Seuils `THRESHOLD_LOW = 50%`, `THRESHOLD_CRITICAL = 80%`.
+- Nouveau module **`modules/tasks.js`** : scheduler de taches par colon. Constantes `PRIORITY` (SURVIVAL 100, WORK 60, LEISURE 30, IDLE 10) et `TASK_KIND`. Fonctions `enqueueTask`, `peekTask`, `popTask`, `hasTaskOfKind`, `clearLowPriorityTasks`, `canPreempt`. Renomme depuis `jobs.js` pour eviter collision avec les marqueurs de minage du joueur et `data/jobs.json` (metiers).
+- **`state.js`** : champs `needsTickAccum`, `needsBuckets` (cache d index needs.json).
+- **`colonist.js`** :
+  - instance recoit `needs` (Map), `jobQueue` (Array), `currentTask`, `assignedBuildingId`, `productivityMul`, `wasAttacked`.
+  - `initColonistNeeds(this)` au constructeur.
+  - En IDLE, si `isNeedCritical(this, 'hunger')`, le colon abandonne tout et appelle `pickHarvest` en priorite SURVIVAL (jour et nuit).
+  - Fin de WORKING sur un buisson : si `currentTask.kind === EAT_SEEK_FOOD`, les baies sont mangees sur place (baisse de hunger data-driven via `satisfied_by[berries].amount / 20` par baie), sinon elles vont au stock (cueillette leisure).
+  - `spawnColonsAroundHouse` attribue `assignedBuildingId = 'cabane'` a chaque colon, fixant le besoin shelter.
+  - Restauration de save : `assignedBuildingId` lu depuis la save si present, sinon attribue 'cabane' par defaut tant qu une maison existe.
+- **`main.js`** : `tickAllNeeds(dt)` appele a chaque frame avant la MAJ des colons.
+- `productivityMul` est expose sur chaque colon. Le cablage avec les vitesses de production (placements.js, tech.js) est un ticket separe post-Lot-B.
+- Scope respecte : pas de modification de `data/*.json`, `ui/*`, `hud.js`, `placements.js`, `techtree-ui.js`.
+
+---
+
 ## 2026-04-21 (session 11) : Lot A -- SPEC v1 gelee, JSON data-driven age I complet
 
 - **BREAKING** : `data/techtree.json` et `data/buildings.json` protos remplacés par les versions SPEC v1 gelées.
