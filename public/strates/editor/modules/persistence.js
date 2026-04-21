@@ -136,7 +136,10 @@ function serializeSnapshot() {
     questIndex: state.questIndex,
     questCompletedAt: state.questCompletedAt,
     season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone },
-    visited: state.visited ? Array.from(state.visited) : null
+    visited: state.visited ? Array.from(state.visited) : null,
+    currentAge: state.currentAge || 1,
+    ageUnlockedAt: state.ageUnlockedAt || { 1: Date.now() },
+    achievements: Array.isArray(state.achievements) ? state.achievements.slice() : []
   }
 }
 
@@ -164,6 +167,10 @@ function clearEverything() {
   state.contextBubbles.fieldTriggerStartAt = -1
   state.questIndex = 0
   resetQuestSig()
+  // Lot D
+  state.currentAge = 1
+  state.ageUnlockedAt = { 1: Date.now() }
+  state.achievements = []
 }
 
 function applySnapshot(data) {
@@ -252,6 +259,10 @@ function applySnapshot(data) {
     state.season.elapsed = data.season.elapsed || 0
     state.season.cyclesDone = data.season.cyclesDone || 0
   }
+  // Lot D : ages
+  state.currentAge = data.currentAge || 1
+  state.ageUnlockedAt = data.ageUnlockedAt || { 1: Date.now() }
+  state.achievements = Array.isArray(data.achievements) ? data.achievements.slice() : []
   startNextQuest()
 
   state.lastJobTime = performance.now() / 1000
