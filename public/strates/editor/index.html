@@ -1285,6 +1285,18 @@
       border: 1px solid rgba(255,217,138,0.3);
       color: #ffd98a;
     }
+    .ho-essentiel { border: 1px solid rgba(255,217,138,0.25); border-radius: 10px; padding: 14px 16px; background: rgba(255,217,138,0.05); margin-bottom: 12px; }
+    .ho-essentiel .ho-section-title { color: #ffd98a; }
+    .ho-toggle-btn {
+      padding: 7px 18px; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: #fff5d8; cursor: pointer;
+      border: 1px solid rgba(255,217,138,0.5);
+      background: linear-gradient(180deg, rgba(255,217,138,0.22), rgba(168,134,42,0.4));
+      border-radius: 7px;
+      transition: transform 0.12s, box-shadow 0.15s;
+    }
+    .ho-toggle-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,217,138,0.25); }
     #help-overlay-close {
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,217,138,0.25);
@@ -1417,6 +1429,35 @@
 
       <div class="ho-body">
 
+        <div class="ho-section ho-essentiel">
+          <div class="ho-section-title">L'essentiel</div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd dir">Z</span><span class="kbd dir">Q</span><span class="kbd dir">S</span><span class="kbd dir">D</span></div>
+            <div class="ho-label">Déplacer la caméra. Molette pour zoomer, clic gauche maintenu pour pivoter.</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">2</span></div>
+            <div class="ho-label">Miner une tuile (clic gauche pour désigner).</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">3</span></div>
+            <div class="ho-label">Placer un bloc depuis les stocks.</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd">T</span></div>
+            <div class="ho-label">Ouvrir l'arbre des technologies.</div>
+          </div>
+          <div class="ho-row">
+            <div class="ho-keys"><span class="kbd xwide">Échap</span></div>
+            <div class="ho-label">Menu pause, sauvegarder, charger, retour à l'accueil.</div>
+          </div>
+          <div class="ho-row" style="justify-content:center;margin-top:12px;">
+            <button id="help-toggle-full" class="ho-toggle-btn" type="button">Voir tout</button>
+          </div>
+        </div>
+
+        <div class="ho-full" id="ho-full-sections" hidden>
+
         <div class="ho-section">
           <div class="ho-section-title">Caméra</div>
           <div class="ho-row">
@@ -1540,6 +1581,8 @@
             <div class="ho-keys"><span class="kbd xwide">Échap</span></div>
             <div class="ho-label">Menu pause, ou fermer un panneau ouvert</div>
           </div>
+        </div>
+
         </div>
 
       </div>
