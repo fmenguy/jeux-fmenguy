@@ -1,0 +1,43 @@
+{
+  "_spec": "v1",
+  "needs": [
+    {
+      "id": "hunger",
+      "name": "Faim",
+      "age_introduced": 1,
+      "rate": 0.01,
+      "max": 100,
+      "satisfied_by": [
+        { "resource": "berries",      "amount": 20 },
+        { "resource": "cooked-meat",  "amount": 40 },
+        { "resource": "raw-meat",     "amount": 25 }
+      ],
+      "effects": {
+        "low":      "bulle_faim",
+        "critical": "productivity_-50%"
+      },
+      "description": "La faim monte au fil du temps. Trois seuils : Rassasie (prod 100%), Affame (prod -50% + anim), Famine (MORT)."
+    },
+    {
+      "id": "shelter",
+      "name": "Sans-abri",
+      "age_introduced": 1,
+      "rule": "colonist_has_assigned_cabane",
+      "effects": {
+        "missing": "productivity_-30%"
+      },
+      "description": "Un colon sans Cabane ou Abri attribue est marque Sans-abri. Productivite -30%. Hiver : mortalite acceleree."
+    },
+    {
+      "id": "injured",
+      "name": "Blesse",
+      "age_introduced": 1,
+      "rule": "colonist_was_attacked",
+      "effects": {
+        "active": "productivity_-40%",
+        "recovery": "rest_required"
+      },
+      "description": "Etat simple (pas maladie). Productivite reduite. Le colon recupere avec du repos. Arrive lors de la chasse."
+    }
+  ]
+}

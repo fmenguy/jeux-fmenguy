@@ -1,187 +1,205 @@
 {
+  "_spec": "v1",
   "ages": [
-    { "id": "pierre",     "num": 1, "label": "Pierre",     "color": "#8a7060" },
-    { "id": "bronze",     "num": 2, "label": "Bronze",     "color": "#b87333" },
-    { "id": "fer",        "num": 3, "label": "Fer",         "color": "#8090a0" },
-    { "id": "industriel", "num": 4, "label": "Industriel", "color": "#607080" },
-    { "id": "moderne",    "num": 5, "label": "Moderne",    "color": "#5080a0" },
-    { "id": "atomique",   "num": 6, "label": "Atomique",   "color": "#608060" },
-    { "id": "espace",     "num": 7, "label": "Espace",     "color": "#304060" }
+    { "id": 1, "name": "Pierre",     "unlocked": true  },
+    { "id": 2, "name": "Bronze",     "unlocked": false },
+    { "id": 3, "name": "Fer",        "unlocked": false },
+    { "id": 4, "name": "Industriel", "unlocked": false },
+    { "id": 5, "name": "Moderne",    "unlocked": false },
+    { "id": 6, "name": "Atomique",   "unlocked": false },
+    { "id": 7, "name": "Espace",     "unlocked": false }
   ],
   "branches": [
-    { "id": "outils",        "label": "Outils",        "color": "#8a6a4a" },
-    { "id": "agriculture",   "label": "Agriculture",   "color": "#4a8a3a" },
-    { "id": "construction",  "label": "Construction",  "color": "#6a6a9a" },
-    { "id": "exploration",   "label": "Exploration",   "color": "#4a7a6a" },
-    { "id": "savoir",        "label": "Savoir",        "color": "#4a6a8a" },
-    { "id": "age",           "label": "Passage d'age", "color": "#9a7a3a" }
+    { "id": "outils",       "name": "Outils",       "color": "#6b6b68" },
+    { "id": "agriculture",  "name": "Agriculture",  "color": "#9b7a2c" },
+    { "id": "construction", "name": "Construction", "color": "#8b5a2b" },
+    { "id": "savoir",       "name": "Savoir",       "color": "#3d5a99" },
+    { "id": "exploration",  "name": "Exploration",  "color": "#2f6b5a" },
+    { "id": "nocturne",     "name": "Nocturne",     "color": "#1b2540" }
   ],
   "techs": [
     {
-      "id": "axe-stone", "name": "Hache en pierre", "desc": "Permet l'abattage d'arbres",
-      "age": 1, "branch": "outils", "icon": "H", "color": "#8a6a4a",
-      "cost": 4, "requires": []
+      "id": "pick-stone",
+      "name": "Pioche en pierre",
+      "age": 1,
+      "branch": "outils",
+      "icon": "⛏",
+      "cost": { "research": 5 },
+      "requires": [],
+      "unlocks": {
+        "jobs":      ["mineur"],
+        "resources": ["stone"]
+      },
+      "description": "Permet le minage de la roche basique. Chaque frappe rapporte plus de pierre.",
+      "speech": ["Il faut une pioche pour casser ca."]
     },
     {
-      "id": "pick-stone", "name": "Pioche en pierre", "desc": "Permet le minage de roche et de neige",
-      "age": 1, "branch": "outils", "icon": "P", "color": "#9ca3af",
-      "cost": 5, "requires": []
+      "id": "axe-stone",
+      "name": "Hache en pierre",
+      "age": 1,
+      "branch": "outils",
+      "icon": "🪓",
+      "cost": { "research": 5 },
+      "requires": [],
+      "unlocks": {
+        "jobs":      ["bucheron"],
+        "resources": ["wood"]
+      },
+      "description": "Permet l'abattage des arbres. Chaque arbre rapporte du bois.",
+      "speech": ["Cette hache va bien servir."]
     },
     {
-      "id": "field-basic", "name": "Premier champ", "desc": "Culture de baies et racines comestibles",
-      "age": 1, "branch": "agriculture", "icon": "C", "color": "#4a8a3a",
-      "cost": 3, "requires": []
+      "id": "spear-wood",
+      "name": "Lance en bois",
+      "age": 1,
+      "branch": "outils",
+      "icon": "🏹",
+      "cost": { "research": 5 },
+      "requires": [],
+      "unlocks": {
+        "jobs":      ["chasseur"],
+        "resources": ["raw-meat", "bone", "hide"]
+      },
+      "description": "Outil de chasse basique. Debloque le metier Chasseur.",
+      "speech": ["On va pouvoir chasser maintenant."]
     },
     {
-      "id": "campfire", "name": "Foyer", "desc": "Point de rassemblement, chaleur et cuisson basique",
-      "age": 1, "branch": "construction", "icon": "F", "color": "#c06020",
-      "cost": 2, "requires": []
+      "id": "shovel-stone",
+      "name": "Pelle en pierre",
+      "age": 1,
+      "branch": "outils",
+      "icon": "🪣",
+      "cost": { "research": 8 },
+      "requires": ["pick-stone"],
+      "unlocks": {
+        "jobs":      ["terrassier"]
+      },
+      "description": "Permet le terrassement de la terre et du sable.",
+      "speech": ["On peut creuser le sol maintenant."]
     },
     {
-      "id": "shelter", "name": "Abri de fortune", "desc": "Premier abri contre les intemperies",
-      "age": 1, "branch": "construction", "icon": "A", "color": "#8a7060",
-      "cost": 4, "requires": ["campfire"]
+      "id": "gathering-improved",
+      "name": "Cueillette amelioree",
+      "age": 1,
+      "branch": "agriculture",
+      "icon": "🫐",
+      "cost": { "research": 8 },
+      "requires": [],
+      "unlocks": {
+        "resources": ["berries"]
+      },
+      "description": "Techniques de cueillette optimisees. +1 baie par buisson recolte.",
+      "speech": ["On sait mieux cueillir desormais."]
     },
     {
-      "id": "scout", "name": "Eclaireur", "desc": "Etend le rayon de vision de la colonie",
-      "age": 1, "branch": "exploration", "icon": "E", "color": "#4a7a6a",
-      "cost": 4, "requires": []
+      "id": "first-field",
+      "name": "Premier champ",
+      "age": 1,
+      "branch": "agriculture",
+      "icon": "🌾",
+      "cost": { "research": 10 },
+      "requires": [],
+      "unlocks": {
+        "buildings": ["champ"]
+      },
+      "description": "Domestication des plantes sauvages. Permet de placer des champs cultivables.",
+      "speech": ["Un champ ici fera notre bonheur."]
     },
     {
-      "id": "fire-mastery", "name": "Maitrise du feu", "desc": "Ceramique, forge primitive, signaux",
-      "age": 1, "branch": "savoir", "icon": "S", "color": "#e06030",
-      "cost": 2, "requires": []
+      "id": "fire-mastery",
+      "name": "Maitrise du feu",
+      "age": 1,
+      "branch": "construction",
+      "icon": "🔥",
+      "cost": { "research": 0 },
+      "requires": [],
+      "unlocks": {
+        "buildings": ["foyer"]
+      },
+      "description": "Controle du feu pour la cuisson et la protection. Debloque le Foyer. Tech de depart, gratuite.",
+      "speech": ["Le feu est notre allie depuis toujours."]
     },
     {
-      "id": "oral-tradition", "name": "Tradition orale", "desc": "Transmission du savoir entre generations",
-      "age": 1, "branch": "savoir", "icon": "T", "color": "#4a6a8a",
-      "cost": 4, "requires": ["fire-mastery"]
+      "id": "shelter-basic",
+      "name": "Abri de fortune",
+      "age": 1,
+      "branch": "construction",
+      "icon": "🏚",
+      "cost": { "research": 5 },
+      "requires": [],
+      "unlocks": {
+        "buildings": ["abri-fortune"]
+      },
+      "description": "Construction d'un abri rudimentaire contre les intemperies.",
+      "speech": ["Un toit minimal, mais c'est mieux que rien."]
     },
     {
-      "id": "pick-bronze", "name": "Pioche en bronze", "desc": "Permet le minage de cuivre et charbon",
-      "age": 2, "branch": "outils", "icon": "B", "color": "#b87333",
-      "cost": 15, "requires": ["pick-stone"]
+      "id": "oral-tradition",
+      "name": "Tradition orale",
+      "age": 1,
+      "branch": "savoir",
+      "icon": "📖",
+      "cost": { "research": 0 },
+      "requires": ["fire-mastery"],
+      "unlocks": {},
+      "description": "Transmission du savoir entre generations. Debloquee avec la Maitrise du feu. Tech gratuite.",
+      "speech": ["Les anciens nous ont tout appris."]
     },
     {
-      "id": "shovel-bronze", "name": "Pelle en bronze", "desc": "Terrassement et drainage efficaces",
-      "age": 2, "branch": "outils", "icon": "E", "color": "#c08040",
-      "cost": 10, "requires": ["pick-stone"]
+      "id": "basic-research",
+      "name": "Recherche de base",
+      "age": 1,
+      "branch": "savoir",
+      "icon": "🔬",
+      "cost": { "research": 0 },
+      "requires": [],
+      "unlocks": {
+        "buildings": ["hutte-du-sage"]
+      },
+      "description": "Organisation du savoir collectif. Debloque la Hutte du sage. Tech gratuite de depart.",
+      "speech": ["Notre curiosite va nous mener loin."]
     },
     {
-      "id": "field-wheat", "name": "Champ de ble", "desc": "Culture cereale, base de l'alimentation stable",
-      "age": 2, "branch": "agriculture", "icon": "B", "color": "#c0a030",
-      "cost": 12, "requires": ["field-basic"]
+      "id": "scouting",
+      "name": "Eclaireur",
+      "age": 1,
+      "branch": "exploration",
+      "icon": "👁",
+      "cost": { "research": 8 },
+      "requires": [],
+      "unlocks": {
+        "jobs":      ["explorateur"]
+      },
+      "description": "Techniques de reconnaissance et d'orientation. Debloque le metier Explorateur.",
+      "speech": ["Allons voir ce qu'il y a par là."]
     },
     {
-      "id": "granary", "name": "Grenier", "desc": "Stockage des recoltes, survie des periodes creuses",
-      "age": 2, "branch": "agriculture", "icon": "G", "color": "#8a6020",
-      "cost": 14, "requires": ["field-wheat"]
+      "id": "promontory",
+      "name": "Promontoire",
+      "age": 1,
+      "branch": "nocturne",
+      "icon": "🌠",
+      "cost": { "research": 0, "night": 0 },
+      "requires": [],
+      "unlocks": {
+        "buildings": ["promontoire"],
+        "jobs":      ["astronome"],
+        "resources": ["night-points"]
+      },
+      "description": "Construction d'une tour d'observation. Genere des points nocturnes la nuit.",
+      "speech": ["Depuis la-haut, les etoiles parlent."]
     },
     {
-      "id": "forge", "name": "Forge", "desc": "Travail du metal, base de tous les outils en bronze",
-      "age": 2, "branch": "construction", "icon": "F", "color": "#804030",
-      "cost": 14, "requires": ["shelter"]
-    },
-    {
-      "id": "road-stone", "name": "Route pavee", "desc": "Deplacements plus rapides, commerce facilite",
-      "age": 2, "branch": "construction", "icon": "R", "color": "#707880",
-      "cost": 10, "requires": ["shelter"]
-    },
-    {
-      "id": "trade-routes", "name": "Routes commerciales", "desc": "Echanges avec d'autres colonies, synergies de ressources",
-      "age": 2, "branch": "exploration", "icon": "C", "color": "#6a9a5a",
-      "cost": 12, "requires": ["road-stone", "scout"]
-    },
-    {
-      "id": "cartography", "name": "Cartographie", "desc": "Cartes des territoires, planification des expeditions",
-      "age": 2, "branch": "exploration", "icon": "K", "color": "#4a8a7a",
-      "cost": 10, "requires": ["scout"]
-    },
-    {
-      "id": "writing", "name": "Ecriture", "desc": "Consignation des connaissances, lois et contrats",
-      "age": 2, "branch": "savoir", "icon": "E", "color": "#5080b0",
-      "cost": 10, "requires": ["oral-tradition"]
-    },
-    {
-      "id": "age-bronze", "name": "Maitrise du bronze", "desc": "Passage a l'age du bronze - debloquer forge, ecriture et pioche de bronze",
-      "age": 2, "branch": "age", "icon": "B", "color": "#b87333",
-      "cost": 20, "requires": ["forge", "writing", "pick-bronze", "trade-routes"],
-      "isAgePassage": true
-    },
-    {
-      "id": "pick-iron", "name": "Pioche en fer", "desc": "Permet le minage de fer et d'argent",
-      "age": 3, "branch": "outils", "icon": "F", "color": "#c0c5cc",
-      "cost": 30, "requires": ["pick-bronze"]
-    },
-    {
-      "id": "pick-gold", "name": "Pioche en or", "desc": "Permet le minage d'or et d'amethyste",
-      "age": 3, "branch": "outils", "icon": "O", "color": "#f2c94c",
-      "cost": 60, "requires": ["pick-iron"]
-    },
-    {
-      "id": "hoe-iron", "name": "Houe en fer", "desc": "Travail de la terre profond, meilleurs rendements",
-      "age": 3, "branch": "outils", "icon": "H", "color": "#909898",
-      "cost": 18, "requires": ["shovel-bronze"]
-    },
-    {
-      "id": "irrigation", "name": "Irrigation", "desc": "Canaux d'eau, rendements doublés en eté",
-      "age": 3, "branch": "agriculture", "icon": "I", "color": "#3090b0",
-      "cost": 22, "requires": ["granary", "hoe-iron"]
-    },
-    {
-      "id": "mill", "name": "Moulin", "desc": "Farine, pain, base d'une colonie prospere",
-      "age": 3, "branch": "agriculture", "icon": "M", "color": "#c8a040",
-      "cost": 28, "requires": ["field-wheat"]
-    },
-    {
-      "id": "castle", "name": "Chateau fort", "desc": "Protection maximale, siege du pouvoir",
-      "age": 3, "branch": "construction", "icon": "C", "color": "#a09080",
-      "cost": 40, "requires": ["forge"]
-    },
-    {
-      "id": "lookout", "name": "Tour de vigie", "desc": "Vision etendue sur les territoires voisins",
-      "age": 3, "branch": "exploration", "icon": "V", "color": "#5a8a7a",
-      "cost": 22, "requires": ["cartography"]
-    },
-    {
-      "id": "expedition", "name": "Grande expedition", "desc": "Decouverte de nouveaux biomes et ressources rares",
-      "age": 3, "branch": "exploration", "icon": "X", "color": "#3a7a6a",
-      "cost": 28, "requires": ["lookout"]
-    },
-    {
-      "id": "library", "name": "Bibliotheque", "desc": "Accumulation du savoir, acceleration de la recherche",
-      "age": 3, "branch": "savoir", "icon": "B", "color": "#4060a0",
-      "cost": 28, "requires": ["writing"]
-    },
-    {
-      "id": "age-iron", "name": "Maitrise du fer", "desc": "Passage a l'age du fer - debloquer chateau, bibliotheque et pioche de fer",
-      "age": 3, "branch": "age", "icon": "F", "color": "#8090a0",
-      "cost": 50, "requires": ["castle", "library", "pick-iron"],
-      "isAgePassage": true
-    },
-    {
-      "id": "steam-engine", "name": "Machine a vapeur", "desc": "Revolution industrielle en cours...",
-      "age": 4, "branch": "outils", "icon": "V", "color": "#506070",
-      "cost": 80, "requires": ["age-iron"],
-      "future": true
-    },
-    {
-      "id": "electricity", "name": "Electricite", "desc": "L'ere moderne approche...",
-      "age": 5, "branch": "savoir", "icon": "E", "color": "#4070a0",
-      "cost": 120, "requires": ["steam-engine"],
-      "future": true
-    },
-    {
-      "id": "nuclear", "name": "Energie nucleaire", "desc": "Le pouvoir de l'atome...",
-      "age": 6, "branch": "savoir", "icon": "N", "color": "#406040",
-      "cost": 200, "requires": ["electricity"],
-      "future": true
-    },
-    {
-      "id": "rocket", "name": "Fusee orbitale", "desc": "Les etoiles nous attendent...",
-      "age": 7, "branch": "construction", "icon": "R", "color": "#203050",
-      "cost": 300, "requires": ["nuclear"],
-      "future": true
+      "id": "astronomy-1",
+      "name": "Astronomie I",
+      "age": 1,
+      "branch": "nocturne",
+      "icon": "🔭",
+      "cost": { "research": 10, "night": 20 },
+      "requires": ["promontory"],
+      "unlocks": {},
+      "description": "Connaissance des cycles celestes. Reduit la duree de la nuit de 20 secondes.",
+      "speech": ["Les etoiles nous guident desormais."]
     }
   ]
 }
