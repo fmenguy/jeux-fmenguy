@@ -155,7 +155,8 @@ function branchVisible(branchId) {
 }
 function matchesQuery(tech) {
   if (!filter.query) return true
-  if ((tech.age || 1) >= 2) return false   // les teases ne matchent jamais (preserve la surprise)
+  const currentAge = state.currentAge || 1
+  if ((tech.age || 1) > currentAge) return false   // les teases ne matchent jamais (preserve la surprise)
   const hay = (tech.name + ' ' + (tech.id || '')).toLowerCase()
   return hay.indexOf(filter.query) !== -1
 }
@@ -274,7 +275,8 @@ function techUnlocked(id) {
   return !!(state.techs && state.techs[id] && state.techs[id].unlocked)
 }
 function techStatus(tech) {
-  if ((tech.age || 1) >= 2) return 'teased'
+  const currentAge = state.currentAge || 1
+  if ((tech.age || 1) > currentAge) return 'teased'
   if (techUnlocked(tech.id)) return 'done'
   const reqs = Array.isArray(tech.requires) ? tech.requires : []
   const reqsMet = reqs.every(function(r) { return techUnlocked(r) })
