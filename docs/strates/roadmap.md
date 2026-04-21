@@ -154,3 +154,36 @@ Sans s'enfermer dans un ordre strict, cette séquence maximise la valeur visible
 ## Fil directeur
 
 L'agent `strates-guide` (voir `.claude/agents/strates-guide.md`) peut être invoqué à chaque début de session pour lire les docs, faire le point et proposer la prochaine étape. Usage conseillé : taper `/agents` puis choisir strates-guide, ou demander "où on en est ?".
+
+---
+
+## Retours de test session 12 (axes à intégrer)
+
+Ces 15 axes sont issus des retours de test de la session 12 (2026-04-21). Ils sont validés pour planification après la livraison de l'axe 4 graphique. Ils viennent enrichir les axes existants ou ouvrir de nouveaux sous-axes.
+
+### UI/UX
+
+- **Palette de construction type Pharaoh / Laysara** : onglet bâtiments latéral ou bas d'écran, bâtiments débloqués progressivement selon l'âge et la tech tree. Remplace ou enrichit le sélecteur actuel.
+- **Séparation nette Mode Éditeur vs Mode Jeu** : deux modes distincts avec contrôles séparés. Le mode éditeur (godmod) n'est pas accessible en partie normale. Complète l'item 2.11 existant.
+- **Tech tree par âge avec navigation horizontale** : au lieu d'un méga-arbre qui déborde, une vue centrée sur un âge à la fois avec navigation gauche/droite entre âges. Simplifie la lecture, évite la surcharge visuelle.
+- **Tech early "Observation"** (ou métier équivalent) : débloque thermomètre, calendrier visible, infos HUD avancées (saison précise, prévision météo, heure détaillée). Lie la découverte d'infos au progrès technique plutôt qu'à l'affichage par défaut.
+
+### Gameplay
+
+- **Cascade d'évolution bâtiments** : 4 manoirs fusionnés donnent 1 mairie unique par village, la mairie crée un chef de village. Un seul chef actif par village. Lie la mécanique de fusion existante à une progression sociale.
+- **Règle de taille bâtiments** : bâtiments standards occupent 1 ou 4 blocs (grille 1x1 ou 2x2), les monuments uniques occupent 16 blocs (4x4). Rend la carte lisible et donne du poids visuel aux monuments.
+- **Minage = terraforming joueur, récolte = colons auto** : le joueur peut miner directement pour remodeler le terrain (terraforming), mais la récolte de ressources (bois, pierre, minerai) est déléguée aux colons selon leur métier assigné. Sépare l'action directe de la gestion indirecte.
+- **Dialogues différenciés jour/nuit** : les colons ont des répliques distinctes selon le cycle. Complète le toggle jour/nuit (axe 4.2). Ajoute de la texture narrative sans nouveau système.
+
+### Visuel
+
+- **Code couleur des toits par type de bâtiment** : rouge/orange pour habitations, bleu pour science, vert pour agriculture, gris pour production. Lisibilité immédiate de la carte depuis la vue isométrique.
+- **Modèle colons à retravailler** : le modèle actuel est jugé trop cubique et pas raccord avec l'univers visuel cible. À retravailler en cohérence avec la direction artistique Dorfromantik.
+- **Filons visuellement identifiables** : les blocs de minerai ont une couleur distincte selon le type (fer = rouille, cuivre = orange, charbon = noir). Rend la prospection intuitive.
+- **Ciel nuit stylisé** : étoiles, lune, nuages nocturnes. Complète le toggle jour/nuit (axe 4.2). Renforce l'immersion du cycle.
+- **Lumières dynamiques dans bâtiments la nuit** : fenêtres qui s'allument, halos chauds autour des feux et foyers. Lié au cycle jour/nuit (axe 4.2).
+- **Cairn visuel** : le cairn est un empilement de 4 blocs roches à modéliser comme un vrai monument. Actuellement absent ou mal rendu visuellement.
+
+### Métiers
+
+- **Métiers inspirés RimWorld/ONI** : colon polyvalent par défaut, spécialisation par assignation. La spécialisation est visible via un chapeau coloré sur le modèle du colon (chapeau mineur, chapeau bûcheron, etc.). Le spécialiste débloque des actions exclusives (seul le mineur peut extraire le fer, seul le bûcheron peut abattre les arbres durs, etc.). Complète et précise l'axe 3.2 existant.
