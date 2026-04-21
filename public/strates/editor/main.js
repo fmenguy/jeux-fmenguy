@@ -27,6 +27,7 @@ import { initHelpOverlay } from './modules/help-overlay.js'
 import { initDayNight, bindDayNightUI, tickDayNight, refreshNightPointsHUD } from './modules/daynight.js'
 import { tickAllNeeds } from './modules/needs.js'
 import { TECH_TREE_DATA } from './modules/gamedata.js'
+import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -85,6 +86,7 @@ initHelpOverlay()
 initDayNight()
 bindDayNightUI()
 refreshNightPointsHUD()
+initAgeTransitions()
 
 // Bouton "Arbre T" dans le mini-panel tech
 const btnTT = document.getElementById('btn-techtree')
@@ -187,10 +189,11 @@ function tick(nowMs) {
   updateQuests(t)
   renderQuests()
 
-  // bulles contextuelles (1s de cadence)
+  // bulles contextuelles + badge Cairn (1s de cadence)
   if (!tick._lastContextCheck || t - tick._lastContextCheck >= 1.0) {
     tick._lastContextCheck = t
     if (!tryBlockedTechBubble(t)) tryTriggerContextBubble(t)
+    checkCairnOverlay()
   }
 
   if (hudRefs.rBerriesEl) hudRefs.rBerriesEl.textContent = state.resources.berries
