@@ -23,7 +23,7 @@ import { initAudio, tickAudio } from './modules/audio.js'
 import { tickWeather } from './modules/weather.js'
 import { initTechTreeUI, toggleTechTree, closeTechTree } from './modules/techtree-ui.js'
 import { initCharSheet } from './modules/charsheet-ui.js'
-import { initHelpOverlay } from './modules/help-overlay.js'
+import { initHelpOverlay, isHelpOverlayOpen } from './modules/help-overlay.js'
 import { initDayNight, bindDayNightUI, tickDayNight, refreshNightPointsHUD } from './modules/daynight.js'
 import { tickAllNeeds } from './modules/needs.js'
 import { TECH_TREE_DATA } from './modules/gamedata.js'
@@ -115,6 +115,19 @@ function tick(nowMs) {
     return
   }
   lastFrameMs = nowMs
+  // Pause totale du tick de jeu tant que l'overlay d'aide (touche H) est ouvert.
+  // On vide le delta pour ne pas accumuler, on continue juste le rendu camera.
+  if (isHelpOverlayOpen()) {
+    clock.getDelta()
+    for (const [, m] of state.markers) m.lookAt(camera.position)
+    for (const [, m] of state.buildMarkers) m.lookAt(camera.position)
+    updateCameraPan(0)
+    controls.update()
+    composer.render()
+    tickFps()
+    requestAnimationFrame(tick)
+    return
+  }
   const dt = Math.min(0.1, clock.getDelta())
   const t = clock.elapsedTime
   waterMat.uniforms.uTime.value = t
