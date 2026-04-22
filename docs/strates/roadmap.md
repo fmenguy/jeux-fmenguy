@@ -187,3 +187,46 @@ Ces 15 axes sont issus des retours de test de la session 12 (2026-04-21). Ils so
 ### Métiers
 
 - **Métiers inspirés RimWorld/ONI** : colon polyvalent par défaut, spécialisation par assignation. La spécialisation est visible via un chapeau coloré sur le modèle du colon (chapeau mineur, chapeau bûcheron, etc.). Le spécialiste débloque des actions exclusives (seul le mineur peut extraire le fer, seul le bûcheron peut abattre les arbres durs, etc.). Complète et précise l'axe 3.2 existant.
+
+## Retours session 13 - idées design ajoutées (2026-04-22)
+
+### Création de partie - 2 écrans avant lancement
+
+Au démarrage d'une nouvelle partie, deux écrans successifs avant de poser le premier bloc.
+
+**Écran 1 - Choix de famille fondatrice**
+
+Le joueur choisit parmi 3 familles. Chaque famille influence les dialogues des colons, leurs noms générés, et leur orientation de gameplay (bonus ou accès exclusif à certaines branches).
+
+- **Kroniens** - industrie et construction. Production accélérée, accès plus rapide aux bâtiments de transformation. Dialogues orientés travail et production.
+- **Atosiens** - recherche et exploration. Bonus points de recherche, cartographie plus large au départ. Noms générés à partir des prénoms des collègues Atos de l'auteur. Dialogues orientés curiosité et découverte.
+- **Chromiens** - agriculture, population et commerce. Croissance démographique plus rapide, rendement agricole amélioré, commerce débloqué plus tôt. Dialogues orientés communauté et échanges.
+
+Les noms des familles sont des placeholders, ils peuvent évoluer. Le principe reste : 3 orientations distinctes, choix engageant dès le début, rejouabilité.
+
+**Écran 2 - Génération du monde**
+
+Configuration procédurale de la carte avant génération.
+
+- Profil par défaut (équivalent actuel)
+- Archipel - nombreuses petites îles, commerce maritime favorisé
+- Continents - grandes masses terrestres séparées, exploration longue distance
+- Rivières - densité hydraulique élevée, irrigation facile, poissonneux
+- Montagnes - reliefs accentués, filons rares (or, gemmes) plus présents en altitude
+
+Chaque profil influence la densité des ressources, le placement des biomes et la difficulté initiale.
+
+### Axe biomes et ressources spécifiques
+
+Développer une couche biomes distincte du seul relief. Chaque biome a sa palette de ressources exclusives et ses contraintes.
+
+Exemples non exhaustifs :
+- Forêt tempérée - bois abondant, gibier varié
+- Forêt boréale - bois résineux, fourrure, pas d'agriculture
+- Plaine - agriculture optimale, peu de bois
+- Montagne - minerais (or, fer, pierre rare), peu de nourriture
+- Toundra - ressources rares, tests de résistance au froid
+- Marais - ressources uniques (tourbe, herbes), maladies
+- Côte - pêche, sel, accès commerce maritime
+
+À lier avec le profil de génération de monde (Écran 2 ci-dessus) pour que chaque partie ait une identité distincte dès le spawn.
