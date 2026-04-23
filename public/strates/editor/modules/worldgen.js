@@ -6,7 +6,7 @@ import { prng, mulberry32, rebuildPerm } from './rng.js'
 import { buildTerrain, repaintCellSurface } from './terrain.js'
 import {
   addHouse, addTree, addRock, addOre, addBush, addResearchHouse,
-  assignResearcherToBuilding, isCellOccupied, clearAllPlacements
+  assignResearcherToBuilding, isCellOccupied, clearAllPlacements, addDeer
 } from './placements.js'
 import { spawnColonist, clearColonists, findSpawn } from './colonist.js'
 import { startNextQuest, resetQuestSig } from './quests.js'
@@ -155,6 +155,20 @@ export function populateDefaultScene() {
       if (entry) assignResearcherToBuilding(entry)
     }
     state.pendingDefaultResearch = null
+  }
+
+  // Cerfs decoratifs : 3 a 6 sur cellules herbe eloignees du spawn
+  const deerCount = 3 + Math.floor(rng() * 4)
+  let deersPlaced = 0
+  for (let tries = 0; tries < 600 && deersPlaced < deerCount; tries++) {
+    const x = Math.floor(rng() * GRID)
+    const z = Math.floor(rng() * GRID)
+    const biome = state.cellBiome[z * GRID + x]
+    if (biome !== 'grass' && biome !== 'forest') continue
+    if (isCellOccupied(x, z)) continue
+    const dist = Math.abs(x - spawn.x) + Math.abs(z - spawn.z)
+    if (dist < 8) continue  // eviter le spawn du joueur
+    if (addDeer(x, z)) deersPlaced++
   }
 }
 
