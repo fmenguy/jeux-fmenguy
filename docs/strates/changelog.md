@@ -4,6 +4,36 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 18) : Lot A -- corrections conformite pilotage v0.3
+
+### Conformite verifee
+
+Tous les JSON et gamedata.js ont ete relus et compares au pilotage v0.4 (age-pierre-pilotage-v0.3.html).
+
+### Corrections apportees dans techtree.json
+
+- `spear-wood` renomme de "Arc" (icone fleche) en "Lance en bois" (icone boomerang). Le pilotage v0.3 Checklist branche Outils nomme explicitement "Lance en bois".
+- `pick-stone` : ajout de `"copper"` et `"coal"` dans `unlocks.resources`, conformement a l'onglet Contrat du pilotage qui montre ces filons "visibles mais non exploitables age I".
+- Description de `pick-stone` mise a jour pour mentionner la visibilite des filons Bronze.
+
+### Fichiers conformes (aucune modification)
+
+- `data/buildings.json` : conforme, tous les batiments age I presents (Foyer, Abri, Cabane, Longhouse, Hutte du sage, Champ, Buisson, Potager, Promontoire, Totem, Cairn).
+- `data/jobs.json` : conforme, 8 metiers ages I (Cueilleur, Bucheron, Mineur, Chasseur, Chercheur, Astronome, Terrassier, Explorateur).
+- `data/needs.json` : conforme, 3 besoins ages I (Faim, Sans-abri, Blesse).
+- `data/resources.json` : conforme, 13 ressources dont 2 stubs age II (Cuivre, Charbon).
+- `modules/gamedata.js` : conforme, 5 accesseurs exposes (getTechsForAge, getBuildingById, getJobsRequiringTech, getResourceById, getNeedsForAge), linter croise actif, 7 tests unitaires purs.
+
+### Linter au boot
+
+Simulation Node.js du linter : 0 erreur de reference croisee sur les 5 JSON.
+
+### Fichiers modifies
+
+- `public/strates/editor/data/techtree.json`
+
+---
+
 ## 2026-04-23 (session 17) : Lot C -- pulse visuel tech en cours de recherche
 
 ### Feature 2 de la maquette v2
