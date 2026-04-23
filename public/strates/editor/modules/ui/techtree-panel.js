@@ -1,10 +1,9 @@
 // ============================================================================
-// Panneau Tech tree XXL (Lot C)
+// Panneau Tech tree XXL (Lot C) - maquette v2 "constellation"
 //
-// Panneau plein ecran avec pan + zoom, colonnes = ages, lignes = branches,
-// noeuds = cards, liens SVG entre prerequis, filtres par branche + recherche
-// texte. Ages 2+ en flou avec "?????" au lieu du nom reel (preserve la
-// surprise, ne jamais afficher meme via devtools).
+// Vue globale constellation : branches hexagonales autour du centre "Age en
+// cours". Vue detail par branche avec pan + zoom, cards tech, liens SVG
+// orthogonaux. Ages 2+ restent teases (flou + "?????").
 //
 // Consomme :
 //   - TECH_TREE_DATA (JSON SPEC v1 via gamedata.js, lecture seule)
@@ -21,31 +20,49 @@ import { buildTechNode } from './techtree-node.js'
 let root = null
 let isOpen = false
 let dirty = false
+let currentBranch = null
 
-// Etat pan + zoom du canvas
+// Etat pan + zoom de la vue detail
 const view = {
-  tx: 40,      // translation x en pixels
-  ty: 0,       // translation y en pixels
-  scale: 1,    // facteur de zoom (0.5 a 2)
+  tx: 240,
+  ty: 0,
+  scale: 0.88,
 }
 const ZOOM_MIN = 0.5
-const ZOOM_MAX = 2.0
+const ZOOM_MAX = 1.4
 
-// Etat filtres et recherche
-const filter = {
-  branches: null,    // Set d'ids de branches visibles, null = toutes
-  query: '',         // texte de recherche lowercase
+// Etat filtres + recherche
+const active = new Set()
+
+// Metadonnees visuelles des branches (icone + pitch) non presentes dans le JSON
+// brut. Cle = branch.id du JSON (outils, agriculture, etc.).
+const BRANCH_META = {
+  outils:       { ic: '⛏', pitch: "Le geste avant la pensee. Ce que tiennent leurs mains faconne ce qu'ils peuvent faire." },
+  agriculture:  { ic: '🌾', pitch: "De la cueillette au champ. La terre commence a rendre ce qu'on lui donne." },
+  construction: { ic: '🏠', pitch: "Du foyer a la longere. Poser des murs, c'est decider de rester." },
+  savoir:       { ic: '✦', pitch: "Les histoires, puis les notes. On garde ce que les anciens ont compris avant nous." },
+  exploration:  { ic: '🧭', pitch: "Au-dela de la crete. Celui qui marche revient avec des nouvelles du monde." },
+  nocturne:     { ic: '🌙', pitch: "Les etoiles ont un ordre. La nuit n'est plus une attente, mais une lecture." },
 }
 
-// Dimensions de layout (pixels en coord canvas, scalees par le zoom)
-const COL_W      = 240   // largeur d'un age
-const HEADER_H   = 56
-const LABEL_W    = 130
-const CELL_PAD   = 12
-const NODE_W     = 200
-const NODE_H     = 68    // hauteur d'un noeud empilable
-const NODE_GAP   = 8
-const ROW_H_MIN  = 140   // hauteur minimale d'une branche
+// Positions radiales des branches dans la constellation (coord relatives au
+// centre de .ttp-constellation, qui fait 820x820 et dont le centre est
+// top:50%/left:50%).
+const BRANCH_POS = {
+  outils:       { dx:    0, dy: -300 },
+  nocturne:     { dx:  260, dy: -150 },
+  agriculture:  { dx:  260, dy:  150 },
+  construction: { dx:    0, dy:  320 },
+  savoir:       { dx: -260, dy:  150 },
+  exploration:  { dx: -260, dy: -150 },
+}
+
+// Layout de la vue detail
+const CELL_W  = 240
+const CELL_H  = 150
+const PAD_X   = 80
+const PAD_Y   = 180
+const AGES_PER_VIEW = 2
 
 // ─── Styles externalises dans styles/techtree.css ────────────────────────────
 
@@ -71,143 +88,145 @@ export function initTechTreePanel() {
   root.innerHTML = [
     '<div class="ttp-backdrop"></div>',
     '<div class="ttp-frame">',
-    '  <header class="ttp-header">',
-    '    <h2 class="ttp-title">Arbre des technologies</h2>',
-    '    <div class="ttp-meta">',
-    '      <span class="ttp-hint">Drag pour panner, molette pour zoomer</span>',
-    '      <span class="ttp-pts" id="ttp-pts">0 pts</span>',
-    '      <button class="ttp-close" id="ttp-close" aria-label="Fermer">Fermer (Esc)</button>',
+
+    // TOPBAR
+    '  <div class="ttp-topbar">',
+    '    <h1>Strates <small>Arbre</small></h1>',
+    '    <button class="ttp-btn-back" id="ttp-back">Retour</button>',
+    '    <div class="ttp-crumb">',
+    '      <span id="ttp-crumb-age">Age I, Pierre</span>',
+    '      <span class="sep" id="ttp-crumb-sep" style="display:none">/</span>',
+    '      <span class="cur" id="ttp-crumb-cur" style="display:none"></span>',
     '    </div>',
-    '  </header>',
-    '  <div class="ttp-toolbar">',
-    '    <div class="ttp-filters" id="ttp-filters"></div>',
-    '    <input type="text" class="ttp-search" id="ttp-search" placeholder="Rechercher une tech..." />',
+    '    <div class="ttp-age-pill">Age en cours, <b id="ttp-age-name">Pierre</b></div>',
+    '    <div class="ttp-res">',
+    '      <span><b id="ttp-pts">0</b> pts recherche</span>',
+    '    </div>',
+    '    <button class="ttp-close" id="ttp-close" title="Fermer">X</button>',
     '  </div>',
-    '  <div class="ttp-body">',
-    '    <div class="ttp-stage" id="ttp-stage">',
-    '      <div class="ttp-canvas" id="ttp-canvas"></div>',
+
+    // Recherche globale
+    '  <div class="ttp-search-top">',
+    '    <span style="color:var(--ttp-ink-3)">&#x1F50E;&#xFE0E;</span>',
+    '    <input id="ttp-search" type="text" placeholder="Rechercher une technologie..." />',
+    '  </div>',
+
+    // STAGE
+    '  <div class="ttp-stage" id="ttp-stage">',
+
+    // Constellation (vue globale)
+    '    <div class="ttp-constellation" id="ttp-constellation">',
+    '      <svg class="ttp-spokes" id="ttp-spokes" viewBox="-410 -410 820 820"></svg>',
+    '      <div class="ttp-center">',
+    '        <div class="ring r3"></div><div class="ring r2"></div><div class="ring"></div>',
+    '        <div class="lbl">Age 01</div>',
+    '        <div class="name"><em id="ttp-center-name">Pierre</em></div>',
+    '        <div class="sub">Tout commence par le feu, une pioche, et l\'histoire qu\'on se raconte.</div>',
+    '        <div class="progress"><span>Debloquees</span><b id="ttp-global-progress">0/0</b></div>',
+    '      </div>',
+    '    </div>',
+
+    // Vue detail branche
+    '    <div class="ttp-detail-view" id="ttp-detail">',
+    '      <div class="ttp-canvas-wrap" id="ttp-canvas-wrap">',
+    '        <div class="ttp-branch-canvas" id="ttp-canvas">',
+    '          <div class="ttp-branch-header" id="ttp-branch-header"></div>',
+    '          <svg class="ttp-links" id="ttp-links" width="1800" height="900"></svg>',
+    '        </div>',
+    '      </div>',
     '    </div>',
     '  </div>',
+
+    // Age rail (bas)
+    '  <div class="ttp-agerail" id="ttp-agerail"></div>',
+
+    // Filtres (bas gauche)
+    '  <div class="ttp-filters-panel" id="ttp-filters">',
+    '    <div class="title">Filtres branches</div>',
+    '  </div>',
+
+    // Hint
+    '  <div class="ttp-hint">Echap pour revenir, glisser pour panner, molette pour zoomer</div>',
+
     '</div>'
   ].join('')
   document.body.appendChild(root)
 
   root.querySelector('#ttp-close').addEventListener('click', closeTechTreePanel)
-  root.querySelector('.ttp-backdrop').addEventListener('click', closeTechTreePanel)
+  root.querySelector('#ttp-back').addEventListener('click', closeBranch)
+
   window.addEventListener('keydown', function(e) {
     if (!isOpen) return
-    if (e.key === 'Escape') { e.preventDefault(); closeTechTreePanel() }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      if (root.classList.contains('detail-mode')) closeBranch()
+      else closeTechTreePanel()
+    }
   })
 
-  bindPanZoom()
   bindSearch()
-}
-
-// ─── Filtres branches + recherche ────────────────────────────────────────────
-
-function renderFilterToolbar() {
-  const bar = root && root.querySelector('#ttp-filters')
-  if (!bar) return
-  bar.innerHTML = ''
-  const branches = (TECH_TREE_DATA && TECH_TREE_DATA.branches) || []
-  // Bouton "Toutes"
-  const allBtn = document.createElement('button')
-  allBtn.className = 'ttp-filter-btn' + (filter.branches === null ? ' active' : '')
-  allBtn.textContent = 'Toutes'
-  allBtn.addEventListener('click', function() {
-    filter.branches = null
-    render()
-  })
-  bar.appendChild(allBtn)
-
-  branches.forEach(function(br) {
-    const b = document.createElement('button')
-    // B13, logique filtre inversee : filter.branches = null signifie aucun
-    // filtre actif, toutes visibles. Sinon c'est l'ensemble des branches
-    // mises en SURBRILLANCE (cliquees). Les autres sont dimmed / masquees.
-    const active = filter.branches !== null && filter.branches.has(br.id)
-    b.className = 'ttp-filter-btn' + (active ? ' active' : '')
-    b.style.borderColor = br.color || '#888'
-    b.innerHTML = '<span class="ttp-filter-dot" style="background:' + (br.color || '#888') + '"></span>' +
-                  escapeHTML(br.name || br.id)
-    b.addEventListener('click', function() {
-      if (filter.branches === null) filter.branches = new Set()
-      if (filter.branches.has(br.id)) filter.branches.delete(br.id)
-      else filter.branches.add(br.id)
-      // Aucun filtre = tout visible (plus propre qu'un Set vide)
-      if (filter.branches.size === 0) filter.branches = null
-      render()
-    })
-    bar.appendChild(b)
-  })
+  bindPanZoom()
 }
 
 function bindSearch() {
   const input = root && root.querySelector('#ttp-search')
   if (!input) return
   input.addEventListener('input', function() {
-    filter.query = (input.value || '').trim().toLowerCase()
-    render()
+    const q = (input.value || '').trim().toLowerCase()
+    root.querySelectorAll('.ttp-branch').forEach(function(el) {
+      if (!q) { el.classList.remove('dimmed'); return }
+      const hit = el.textContent.toLowerCase().indexOf(q) !== -1
+      el.classList.toggle('dimmed', !hit)
+    })
   })
 }
 
-function branchVisible(branchId) {
-  // Aucun filtre actif : toutes visibles. Sinon : seules les branches du Set
-  // sont visibles pleinement, les autres sont attenuees (voir ttp-node--faded).
-  return filter.branches === null || filter.branches.has(branchId)
-}
-function matchesQuery(tech) {
-  if (!filter.query) return true
-  const currentAge = state.currentAge || 1
-  if ((tech.age || 1) > currentAge) return false   // les teases ne matchent jamais (preserve la surprise)
-  const hay = (tech.name + ' ' + (tech.id || '')).toLowerCase()
-  return hay.indexOf(filter.query) !== -1
-}
-
-// ─── Pan + zoom ──────────────────────────────────────────────────────────────
+// ─── Pan + zoom (vue detail) ────────────────────────────────────────────────
 
 function bindPanZoom() {
-  const stage = root.querySelector('#ttp-stage')
-  if (!stage) return
+  const wrap = root && root.querySelector('#ttp-canvas-wrap')
+  const canv = root && root.querySelector('#ttp-canvas')
+  if (!wrap || !canv) return
 
   let dragging = false
-  let sx = 0, sy = 0, startTx = 0, startTy = 0
+  let sx = 0, sy = 0, stx = 0, sty = 0
 
-  stage.addEventListener('mousedown', function(e) {
-    // Ne pas hijacker les clics sur un bouton ou card
-    if (e.target.closest('.ttp-node-unlock')) return
+  wrap.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.ttp-tech')) return
+    if (e.target.closest('.ttp-tech-unlock')) return
     dragging = true
-    stage.classList.add('panning')
     sx = e.clientX; sy = e.clientY
-    startTx = view.tx; startTy = view.ty
+    stx = view.tx; sty = view.ty
+    wrap.classList.add('dragging')
+    canv.classList.add('dragging')
     e.preventDefault()
   })
   window.addEventListener('mousemove', function(e) {
     if (!dragging || !isOpen) return
-    view.tx = startTx + (e.clientX - sx)
-    view.ty = startTy + (e.clientY - sy)
+    view.tx = stx + (e.clientX - sx)
+    view.ty = sty + (e.clientY - sy)
     applyTransform()
   })
   window.addEventListener('mouseup', function() {
     if (!dragging) return
     dragging = false
-    if (stage) stage.classList.remove('panning')
+    wrap.classList.remove('dragging')
+    canv.classList.remove('dragging')
   })
 
-  stage.addEventListener('wheel', function(e) {
+  wrap.addEventListener('wheel', function(e) {
     if (!isOpen) return
+    if (!root.classList.contains('detail-mode')) return
     e.preventDefault()
-    const rect = stage.getBoundingClientRect()
-    const px = e.clientX - rect.left
-    const py = e.clientY - rect.top
-    const delta = e.deltaY > 0 ? 0.9 : 1.1
-    const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, view.scale * delta))
-    if (next === view.scale) return
-    // Zoom centre sur la position du curseur : on garde le point monde sous le
-    // curseur identique avant/apres zoom.
-    const ratio = next / view.scale
-    view.tx = px - (px - view.tx) * ratio
-    view.ty = py - (py - view.ty) * ratio
+    const rect = wrap.getBoundingClientRect()
+    const mx = e.clientX - rect.left
+    const my = e.clientY - rect.top
+    const old = view.scale
+    const delta = e.deltaY > 0 ? -0.08 : 0.08
+    const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, old + delta))
+    if (next === old) return
+    view.tx = mx - (mx - view.tx) * (next / old)
+    view.ty = my - (my - view.ty) * (next / old)
     view.scale = next
     applyTransform()
   }, { passive: false })
@@ -227,13 +246,15 @@ export function openTechTreePanel() {
   isOpen = true
   dirty = false
   root.classList.add('open')
+  root.classList.remove('detail-mode')
   render()
-  applyTransform()
 }
 export function closeTechTreePanel() {
   if (!root) return
   isOpen = false
   root.classList.remove('open')
+  root.classList.remove('detail-mode')
+  currentBranch = null
 }
 export function toggleTechTreePanel() {
   if (!root) initTechTreePanel()
@@ -242,16 +263,8 @@ export function toggleTechTreePanel() {
   else openTechTreePanel()
 }
 
-// ─── Hook Lot D : re-render apres transition d'age ───────────────────────────
-//
-// Appele par age-transitions.js apres qu'une transition d'age a debloque des
-// techs supplementaires. Si le panneau est ouvert, on force un re-render
-// immediat pour que les techs concernees passent de teased a available. Sinon
-// on marque un flag dirty consomme au prochain open().
-//
-// L'age debloque est deja lu via TECH_TREE_DATA.ages[].unlocked (SPEC v1). Le
-// parametre age est informatif (log, animations futures), la source de verite
-// reste le JSON.
+// ─── Hook Lot D : refresh apres transition d'age ────────────────────────────
+
 export function refreshTechTreeAfterAgeChange(age) {
   if (isOpen) {
     render()
@@ -259,9 +272,6 @@ export function refreshTechTreeAfterAgeChange(age) {
     dirty = true
   }
 }
-
-// Expose globalement pour que age-transitions.js (Lot D) puisse l'appeler sans
-// dependance d'import directe.
 if (typeof window !== 'undefined') {
   window.refreshTechTreeAfterAgeChange = refreshTechTreeAfterAgeChange
 }
@@ -286,10 +296,15 @@ function techStatus(tech) {
   if (!reqsMet) return 'locked'
   return (state.researchPoints || 0) >= techCost(tech) ? 'ready' : 'available'
 }
+function byId(id) {
+  const techs = (TECH_TREE_DATA && TECH_TREE_DATA.techs) || []
+  for (let i = 0; i < techs.length; i++) if (techs[i].id === id) return techs[i]
+  return null
+}
 
 // Deblocage local : puise dans state.researchPoints, ne modifie pas data/*.json.
 function unlockLocal(techId) {
-  const tech = (TECH_TREE_DATA.techs || []).find(function(t) { return t.id === techId })
+  const tech = byId(techId)
   if (!tech) return
   if (techStatus(tech) !== 'ready') return
   const cost = techCost(tech)
@@ -299,272 +314,328 @@ function unlockLocal(techId) {
   state.techs[techId].unlocked = true
   state.techs[techId].name = tech.name
   if (typeof refreshTechsPanel === 'function') refreshTechsPanel()
-  render()
+  if (root.classList.contains('detail-mode')) {
+    renderBranchDetail(currentBranch)
+  }
+  renderConstellation()
+  renderTopbar()
 }
 
-// ─── Rendu grille ages x branches ────────────────────────────────────────────
+// ─── Render principal ───────────────────────────────────────────────────────
 
 function render() {
   if (!root) return
-  const pts = document.getElementById('ttp-pts')
-  if (pts) pts.textContent = (state.researchPoints || 0) + ' pts'
-  renderFilterToolbar()
-
-  const canvas = document.getElementById('ttp-canvas')
-  if (!canvas) return
-  canvas.innerHTML = ''
-
-  const data = TECH_TREE_DATA
-  if (!data) {
-    canvas.appendChild(infoEl('Chargement des donnees tech tree...'))
-    return
+  renderTopbar()
+  renderFilters()
+  renderAgeRail()
+  renderConstellation()
+  if (root.classList.contains('detail-mode') && currentBranch) {
+    renderBranchDetail(currentBranch)
   }
-  const ages = Array.isArray(data.ages) ? data.ages : []
-  const branches = Array.isArray(data.branches) ? data.branches : []
-  const techs = Array.isArray(data.techs) ? data.techs : []
+}
 
-  // Index techs par (age, branch) + calcul de ROW_H dynamique
-  const byCell = {}
-  techs.forEach(function(t) {
-    const key = (t.age || 1) + '|' + (t.branch || '')
-    if (!byCell[key]) byCell[key] = []
-    byCell[key].push(t)
-  })
-  const rowH = new Array(branches.length)
-  branches.forEach(function(br, bi) {
-    let maxInRow = 1
-    ages.forEach(function(age, ai) {
-      const ageNum = age.id != null ? age.id : (ai + 1)
-      const list = byCell[ageNum + '|' + br.id] || []
-      if (list.length > maxInRow) maxInRow = list.length
-    })
-    rowH[bi] = Math.max(ROW_H_MIN, CELL_PAD * 2 + maxInRow * NODE_H + (maxInRow - 1) * NODE_GAP)
-  })
-  const rowY = [HEADER_H]
-  for (let i = 0; i < branches.length; i++) rowY.push(rowY[i] + rowH[i])
+function renderTopbar() {
+  const pts = document.getElementById('ttp-pts')
+  if (pts) pts.textContent = String(state.researchPoints || 0)
+  const data = TECH_TREE_DATA
+  const ages = (data && data.ages) || []
+  const curAge = state.currentAge || 1
+  const curAgeObj = ages.find(function(a) { return a.id === curAge }) || ages[0]
+  const ageName = (curAgeObj && (curAgeObj.name || curAgeObj.label)) || 'Pierre'
+  const an = document.getElementById('ttp-age-name')
+  if (an) an.textContent = ageName
+  const cn = document.getElementById('ttp-center-name')
+  if (cn) cn.textContent = ageName
+  const crumb = document.getElementById('ttp-crumb-age')
+  if (crumb) crumb.textContent = 'Age ' + roman(curAge) + ', ' + ageName
+}
 
-  // Taille totale canvas
-  const totalW = LABEL_W + ages.length * COL_W
-  const totalH = rowY[branches.length]
-  canvas.style.width = totalW + 'px'
-  canvas.style.height = totalH + 'px'
-
-  // Grille de fond (colonnes d'ages + lignes de branches)
-  const gridBg = buildBackgroundGrid(ages, branches, totalW, totalH, rowY, rowH)
-  canvas.appendChild(gridBg)
-
-  // Header ages
-  ages.forEach(function(age, idx) {
-    const ageNum = age.id != null ? age.id : (idx + 1)
-    const ageName = age.name || age.label || ('Age ' + ageNum)
-    const h = document.createElement('div')
-    h.className = 'ttp-age-head' + (ageNum > (state.currentAge || 1) ? ' ttp-age-head--locked' : '')
-    h.style.left = (LABEL_W + idx * COL_W) + 'px'
-    h.style.top = '0px'
-    h.style.width = COL_W + 'px'
-    h.style.height = HEADER_H + 'px'
-    h.innerHTML = '<span class="ttp-age-num">Age ' + ageNum + '</span>' +
-                  '<span class="ttp-age-name">' + escapeHTML(ageName) + '</span>'
-    canvas.appendChild(h)
-  })
-
-  // Labels branches
-  branches.forEach(function(br, idx) {
-    const brName = br.name || br.label || br.id
-    const l = document.createElement('div')
-    l.className = 'ttp-branch-label'
-    l.style.left = '0px'
-    l.style.top = rowY[idx] + 'px'
-    l.style.width = LABEL_W + 'px'
-    l.style.height = rowH[idx] + 'px'
-    l.style.borderLeftColor = br.color || '#888'
-    l.innerHTML = '<span class="ttp-branch-dot" style="background:' + (br.color || '#888') + '"></span>' +
-                  '<span class="ttp-branch-name">' + escapeHTML(brName) + '</span>'
-    canvas.appendChild(l)
-  })
-
-  // Cartographie id -> { x, y, w, h } pour tracer les liens SVG
-  const nodePos = {}
-
-  // Placeholder par age debloque sans tech (ex : Bronze avant que le JSON
-  // contienne des techs age 2). Affiche un message "Techs a venir" dans la
-  // colonne au lieu de laisser vide ou floute.
-  const currentAge = state.currentAge || 1
-  ages.forEach(function(age, ai) {
-    const ageNum = age.id != null ? age.id : (ai + 1)
-    if (ageNum > currentAge) return
-    let hasAny = false
-    for (let bi = 0; bi < branches.length; bi++) {
-      const key = ageNum + '|' + branches[bi].id
-      if (byCell[key] && byCell[key].length) { hasAny = true; break }
-    }
-    if (hasAny) return
-    const ph = document.createElement('div')
-    ph.className = 'ttp-age-placeholder'
-    ph.style.left = (LABEL_W + ai * COL_W + CELL_PAD) + 'px'
-    ph.style.top = (HEADER_H + CELL_PAD) + 'px'
-    ph.style.width = (COL_W - CELL_PAD * 2) + 'px'
-    ph.style.height = (totalH - HEADER_H - CELL_PAD * 2) + 'px'
-    ph.innerHTML = '<div class="ttp-ph-inner">' +
-      '<div class="ttp-ph-title">Techs ' + escapeHTML(age.name || ('Age ' + ageNum)) + '</div>' +
-      '<div class="ttp-ph-sub">A venir dans une prochaine session</div>' +
-      '</div>'
-    canvas.appendChild(ph)
-  })
-
-  // Placer les nœuds
-  branches.forEach(function(br, bi) {
-    ages.forEach(function(age, ai) {
-      const ageNum = age.id != null ? age.id : (ai + 1)
-      const list = byCell[ageNum + '|' + br.id] || []
-      const cellX = LABEL_W + ai * COL_W + CELL_PAD
-      const cellY = rowY[bi] + CELL_PAD
-      list.forEach(function(tech, ti) {
-        const status = techStatus(tech)
-        const fadedByBranch = !branchVisible(br.id)
-        const dimmedByQuery = filter.query && !matchesQuery(tech)
-        const node = buildTechNode(tech, status, { cost: techCost(tech), onUnlock: unlockLocal })
-        // B13 : attenuation au lieu de masquage pour que le joueur garde la
-        // structure du tree sous les yeux.
-        if (fadedByBranch) node.classList.add('ttp-node--faded')
-        if (dimmedByQuery) node.classList.add('ttp-node--dimmed')
-        const px = cellX
-        const py = cellY + ti * (NODE_H + NODE_GAP)
-        node.style.left = px + 'px'
-        node.style.top = py + 'px'
-        node.style.width = NODE_W + 'px'
-        node.style.height = NODE_H + 'px'
-        nodePos[tech.id] = { x: px, y: py, w: NODE_W, h: NODE_H, teased: status === 'teased', branchId: br.id }
-        canvas.appendChild(node)
+function renderFilters() {
+  const bar = document.getElementById('ttp-filters')
+  if (!bar) return
+  // on preserve le <div class="title">
+  bar.querySelectorAll('.ttp-filter').forEach(function(el) { el.remove() })
+  const branches = (TECH_TREE_DATA && TECH_TREE_DATA.branches) || []
+  if (active.size === 0) branches.forEach(function(br) { active.add(br.id) })
+  branches.forEach(function(br) {
+    const b = document.createElement('button')
+    b.className = 'ttp-filter' + (active.has(br.id) ? '' : ' off')
+    b.dataset.br = br.id
+    b.innerHTML = '<span class="sw" style="background:' + (br.color || '#888') + '"></span>' +
+                  escapeHTML(br.name || br.id)
+    b.addEventListener('click', function() {
+      if (active.has(br.id)) { active.delete(br.id); b.classList.add('off') }
+      else { active.add(br.id); b.classList.remove('off') }
+      root.querySelectorAll('.ttp-branch').forEach(function(c) {
+        c.classList.toggle('dimmed', !active.has(c.dataset.br))
+      })
+      root.querySelectorAll('.ttp-spokes line').forEach(function(l) {
+        l.style.opacity = active.has(l.dataset.br) ? '' : '0.1'
       })
     })
+    bar.appendChild(b)
   })
-
-  // Liens SVG entre prerequis (insere juste apres la grille de fond,
-  // donc derriere les noeuds mais devant le fond)
-  const svg = buildLinksSVG(techs, nodePos, totalW, totalH)
-  if (gridBg.nextSibling) canvas.insertBefore(svg, gridBg.nextSibling)
-  else canvas.appendChild(svg)
 }
 
-// ─── Liens SVG entre prerequis ───────────────────────────────────────────────
+function renderAgeRail() {
+  const rail = document.getElementById('ttp-agerail')
+  if (!rail) return
+  rail.innerHTML = ''
+  const ages = (TECH_TREE_DATA && TECH_TREE_DATA.ages) || []
+  const curAge = state.currentAge || 1
+  ages.forEach(function(a) {
+    const d = document.createElement('div')
+    const unlocked = a.unlocked || a.id <= curAge
+    d.className = 'dot' + (a.id === curAge ? ' active' : (unlocked ? '' : ' locked'))
+    d.title = 'Age ' + roman(a.id) + (a.name ? ', ' + a.name : '')
+    d.textContent = roman(a.id)
+    rail.appendChild(d)
+  })
+}
 
-function buildLinksSVG(techs, nodePos, totalW, totalH) {
-  const xmlns = 'http://www.w3.org/2000/svg'
-  const svg = document.createElementNS(xmlns, 'svg')
-  svg.setAttribute('class', 'ttp-links')
-  svg.setAttribute('width', String(totalW))
-  svg.setAttribute('height', String(totalH))
-  svg.setAttribute('viewBox', '0 0 ' + totalW + ' ' + totalH)
+// ─── Constellation (vue globale) ────────────────────────────────────────────
 
-  techs.forEach(function(tech) {
-    const reqs = Array.isArray(tech.requires) ? tech.requires : []
-    const to = nodePos[tech.id]
-    if (!to || to.teased) return
-    if (to.branchId && !branchVisible(to.branchId)) return
-    reqs.forEach(function(reqId) {
-      const from = nodePos[reqId]
-      if (!from || from.teased) return
-      if (from.branchId && !branchVisible(from.branchId)) return
-      const active = techUnlocked(reqId)
+function renderConstellation() {
+  const cst = document.getElementById('ttp-constellation')
+  if (!cst) return
+  // nettoyer les anciennes branches (garder svg + center)
+  cst.querySelectorAll('.ttp-branch').forEach(function(el) { el.remove() })
 
-      // B12, alignement propre des liens SVG sur les bords des cards.
-      // Par defaut, sortie au milieu du bord droit de la source, entree au
-      // milieu du bord gauche de la cible. Tangentes Bezier proportionnelles
-      // a la distance horizontale (tension 0.5) pour eviter les S-shapes
-      // disgracieuses. Cas particulier meme colonne (age identique) : on
-      // route par en bas ou en haut selon la position verticale relative.
-      const sameColumn = Math.abs((from.x + from.w / 2) - (to.x + to.w / 2)) < 4
-      let x1, y1, x2, y2, c1x, c1y, c2x, c2y
+  const data = TECH_TREE_DATA
+  if (!data) return
+  const branches = data.branches || []
+  const techs = (data.techs || []).filter(function(t) { return (t.age || 1) === (state.currentAge || 1) })
 
-      if (sameColumn) {
-        // Lien vertical dans la meme cellule (from au-dessus de to ou inverse)
-        const fromTop = from.y + from.h / 2 < to.y + to.h / 2
-        x1 = from.x + from.w / 2
-        y1 = fromTop ? (from.y + from.h) : from.y
-        x2 = to.x + to.w / 2
-        y2 = fromTop ? to.y : (to.y + to.h)
-        const gap = Math.max(8, Math.abs(y2 - y1) * 0.4)
-        c1x = x1; c1y = y1 + (fromTop ? gap : -gap)
-        c2x = x2; c2y = y2 + (fromTop ? -gap : gap)
-      } else {
-        // Lien horizontal d'une cellule source vers une cellule cible a droite
-        // (ou a gauche si prerequis dans un age superieur, rare). On ancre au
-        // bord vertical central de chaque card.
-        const leftToRight = to.x >= from.x + from.w - 1
-        x1 = leftToRight ? (from.x + from.w) : from.x
-        y1 = from.y + from.h / 2
-        x2 = leftToRight ? to.x : (to.x + to.w)
-        y2 = to.y + to.h / 2
-        const dx = Math.max(20, Math.abs(x2 - x1) * 0.5)
-        c1x = x1 + (leftToRight ? dx : -dx); c1y = y1
-        c2x = x2 + (leftToRight ? -dx : dx); c2y = y2
-      }
+  // Spokes (rayons centraux)
+  const spokes = document.getElementById('ttp-spokes')
+  if (spokes) {
+    spokes.innerHTML = ''
+    branches.forEach(function(br) {
+      const p = BRANCH_POS[br.id]
+      if (!p) return
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+      line.setAttribute('x1', '0')
+      line.setAttribute('y1', '0')
+      line.setAttribute('x2', String(p.dx * 0.85))
+      line.setAttribute('y2', String(p.dy * 0.85))
+      line.dataset.br = br.id
+      spokes.appendChild(line)
+    })
+  }
 
-      const d = 'M ' + x1 + ' ' + y1 +
-                ' C ' + c1x + ' ' + c1y +
-                ', ' + c2x + ' ' + c2y +
-                ', ' + x2 + ' ' + y2
-      const path = document.createElementNS(xmlns, 'path')
-      path.setAttribute('d', d)
-      path.setAttribute('class', 'ttp-link ' + (active ? 'ttp-link--active' : 'ttp-link--idle'))
-      svg.appendChild(path)
+  // Progress global
+  let doneG = 0
+  let totalG = 0
+  branches.forEach(function(br) {
+    const list = techs.filter(function(t) { return t.branch === br.id })
+    totalG += list.length
+    list.forEach(function(t) { if (techUnlocked(t.id)) doneG++ })
+  })
+  const gp = document.getElementById('ttp-global-progress')
+  if (gp) gp.textContent = doneG + '/' + totalG
+
+  // Une carte par branche
+  branches.forEach(function(br) {
+    const meta = BRANCH_META[br.id] || { ic: '•', pitch: '' }
+    const pos = BRANCH_POS[br.id]
+    if (!pos) return
+    const list = techs.filter(function(t) { return t.branch === br.id })
+    const done = list.filter(function(t) { return techUnlocked(t.id) })
+    const pct = list.length ? Math.round((done.length / list.length) * 100) : 0
+
+    const card = document.createElement('div')
+    card.className = 'ttp-branch' + (active.size && !active.has(br.id) ? ' dimmed' : '')
+    card.dataset.br = br.id
+    card.style.left = '50%'
+    card.style.top = '50%'
+    card.style.marginLeft = pos.dx + 'px'
+    card.style.marginTop = pos.dy + 'px'
+
+    const chipsHtml = list.slice(0, 4).map(function(t) {
+      const st = techStatus(t)
+      const cls = st === 'done' ? 'ttp-done' : (st === 'ready' ? 'research' : '')
+      return '<span class="chip ' + cls + '">' + escapeHTML(t.name) + '</span>'
+    }).join('')
+
+    card.innerHTML =
+      '<div class="card">' +
+      '  <div class="head"><div class="emblem">' + meta.ic + '</div><div><div class="nm">' + escapeHTML(br.name) + '</div></div></div>' +
+      '  <div class="count"><b>' + done.length + '</b>/' + list.length + ' debloquees</div>' +
+      '  <div class="bar"><i style="--p:' + pct + '%"></i></div>' +
+      '  <div class="chips">' + chipsHtml + '</div>' +
+      '</div>'
+
+    card.addEventListener('click', function() { openBranch(br.id) })
+    cst.appendChild(card)
+  })
+}
+
+// ─── Vue detail branche ─────────────────────────────────────────────────────
+
+function openBranch(brId) {
+  currentBranch = brId
+  root.classList.add('detail-mode')
+
+  // Breadcrumb
+  const data = TECH_TREE_DATA
+  const br = (data && data.branches || []).find(function(b) { return b.id === brId })
+  const name = (br && br.name) || brId
+  const sep = document.getElementById('ttp-crumb-sep')
+  const cur = document.getElementById('ttp-crumb-cur')
+  if (sep) sep.style.display = 'inline'
+  if (cur) { cur.style.display = 'inline'; cur.textContent = name }
+
+  renderBranchDetail(brId)
+  resetPan()
+}
+
+function closeBranch() {
+  root.classList.remove('detail-mode')
+  const sep = document.getElementById('ttp-crumb-sep')
+  const cur = document.getElementById('ttp-crumb-cur')
+  if (sep) sep.style.display = 'none'
+  if (cur) cur.style.display = 'none'
+  currentBranch = null
+}
+
+function renderBranchDetail(brId) {
+  const canvas = document.getElementById('ttp-canvas')
+  const wrap = document.getElementById('ttp-canvas-wrap')
+  const links = document.getElementById('ttp-links')
+  if (!canvas || !links || !wrap) return
+
+  const data = TECH_TREE_DATA
+  const branches = (data && data.branches) || []
+  const ages = (data && data.ages) || []
+  const techs = (data && data.techs) || []
+  const br = branches.find(function(b) { return b.id === brId })
+  if (!br) return
+  const meta = BRANCH_META[brId] || { ic: '•', pitch: '' }
+  wrap.style.setProperty('--vc', br.color || '#888')
+  canvas.style.setProperty('--vc', br.color || '#888')
+
+  // Reset contenu (garder header + svg)
+  canvas.querySelectorAll('.ttp-tech').forEach(function(n) { n.remove() })
+  canvas.querySelectorAll('.ttp-age-col').forEach(function(n) { n.remove() })
+  links.innerHTML = ''
+
+  // Header branche
+  const header = document.getElementById('ttp-branch-header')
+  if (header) {
+    header.style.setProperty('--vc', br.color || '#888')
+    header.innerHTML =
+      '<div class="el">' +
+      '  <div class="emblem">' + meta.ic + '</div>' +
+      '  <div>' +
+      '    <div class="br">Branche</div>' +
+      '    <div class="nm">' + escapeHTML(br.name) + '</div>' +
+      '  </div>' +
+      '</div>' +
+      '<div class="pitch">' + escapeHTML(meta.pitch) + '</div>'
+  }
+
+  // Colonnes d'age (Age I, Age II teaser)
+  const curAge = state.currentAge || 1
+  const visibleAges = ages.slice(0, Math.max(curAge + 1, 2)).slice(0, AGES_PER_VIEW * 4)
+  // Afficher l'age courant + un teaser
+  const ageCols = []
+  ages.forEach(function(a, idx) {
+    if (idx >= 2 && a.id > curAge + 1) return
+    if (idx > 3) return
+    ageCols.push(a)
+  })
+
+  ageCols.slice(0, 3).forEach(function(a, idx) {
+    const teased = a.id > curAge
+    const col = document.createElement('div')
+    col.className = 'ttp-age-col' + (teased ? ' teased' : '')
+    const x = PAD_X + idx * 5 * CELL_W - 40
+    const w = 5 * CELL_W
+    col.style.left = x + 'px'
+    col.style.width = w + 'px'
+    col.innerHTML =
+      '<div class="ah"><b>' + (teased ? '?????' : escapeHTML(a.name || '')) + '</b>' +
+      'Age ' + String(a.id).padStart(2, '0') + (teased ? ', teaser' : ', en cours') + '</div>'
+    canvas.appendChild(col)
+  })
+
+  // Placer les techs de cette branche
+  const branchTechs = techs.filter(function(t) { return t.branch === brId })
+  const nodePos = {}
+
+  // Regroupement par age pour deduire col/row stable
+  const byAge = {}
+  branchTechs.forEach(function(t) {
+    const a = t.age || 1
+    if (!byAge[a]) byAge[a] = []
+    byAge[a].push(t)
+  })
+
+  Object.keys(byAge).forEach(function(ageKey) {
+    const ageNum = Number(ageKey)
+    const list = byAge[ageKey]
+    const ageIdx = ageCols.findIndex(function(x) { return x.id === ageNum })
+    if (ageIdx < 0) return
+    list.forEach(function(t, i) {
+      // Disposition grille 5 col x N rows
+      const col = i % 3
+      const row = Math.floor(i / 3)
+      const cx = PAD_X + (ageIdx * 5 + col + 1) * CELL_W + CELL_W / 2 - CELL_W
+      const cy = PAD_Y + 40 + row * CELL_H + CELL_H / 2
+      const status = techStatus(t)
+      const node = buildTechNode(t, status, {
+        cost: techCost(t),
+        onUnlock: unlockLocal,
+        vc: br.color,
+      })
+      node.style.left = cx + 'px'
+      node.style.top = cy + 'px'
+      canvas.appendChild(node)
+      nodePos[t.id] = { x: cx, y: cy, w: 200, h: 110 }
     })
   })
-  return svg
+
+  // Liens SVG orthogonaux
+  branchTechs.forEach(function(t) {
+    const to = nodePos[t.id]
+    if (!to) return
+    const reqs = Array.isArray(t.requires) ? t.requires : []
+    reqs.forEach(function(rid) {
+      const src = byId(rid)
+      if (!src) return
+      if (src.branch !== brId) return
+      const from = nodePos[rid]
+      if (!from) return
+      const x1 = from.x + from.w / 2 - 10
+      const y1 = from.y
+      const x2 = to.x - to.w / 2 + 10
+      const y2 = to.y
+      const midX = (x1 + x2) / 2
+      const d = 'M ' + x1 + ' ' + y1 + ' L ' + midX + ' ' + y1 + ' L ' + midX + ' ' + y2 + ' L ' + x2 + ' ' + y2
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+      path.setAttribute('d', d)
+      const done = techUnlocked(t.id) && techUnlocked(rid)
+      path.setAttribute('class', 'ttp-link-line' + (done ? ' done' : ''))
+      links.appendChild(path)
+    })
+  })
 }
 
-// ─── Grille de fond ──────────────────────────────────────────────────────────
-
-function buildBackgroundGrid(ages, branches, totalW, totalH, rowY, rowH) {
-  const g = document.createElement('div')
-  g.className = 'ttp-grid-bg'
-  g.style.width = totalW + 'px'
-  g.style.height = totalH + 'px'
-
-  // Colonnes ages (tint pour les locked, source de verite : state.currentAge)
-  const curAge = state.currentAge || 1
-  ages.forEach(function(age, i) {
-    const ageNum = age.id != null ? age.id : (i + 1)
-    const col = document.createElement('div')
-    col.className = 'ttp-col' + (ageNum > curAge ? ' ttp-col--locked' : '')
-    col.style.left = (LABEL_W + i * COL_W) + 'px'
-    col.style.top = HEADER_H + 'px'
-    col.style.width = COL_W + 'px'
-    col.style.height = (totalH - HEADER_H) + 'px'
-    g.appendChild(col)
-  })
-
-  // Lignes branches (teinte leger)
-  branches.forEach(function(br, i) {
-    const row = document.createElement('div')
-    row.className = 'ttp-row'
-    row.style.left = LABEL_W + 'px'
-    row.style.top = rowY[i] + 'px'
-    row.style.width = (totalW - LABEL_W) + 'px'
-    row.style.height = rowH[i] + 'px'
-    row.style.background = 'linear-gradient(90deg, ' + hexToRgba(br.color || '#888', 0.04) + ', transparent 60%)'
-    g.appendChild(row)
-  })
-
-  return g
+function resetPan() {
+  view.scale = 0.88
+  view.tx = 240
+  view.ty = 0
+  applyTransform()
 }
 
 // ─── Utils ───────────────────────────────────────────────────────────────────
 
-function infoEl(text) {
-  const n = document.createElement('div')
-  n.className = 'ttp-info'
-  n.textContent = text
-  return n
+function roman(n) {
+  const map = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
+  return map[n] || String(n)
 }
 function escapeHTML(s) {
-  return String(s).replace(/[&<>"']/g, function(c) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
     return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
   })
-}
-function hexToRgba(hex, a) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!m) return 'rgba(136,136,136,' + a + ')'
-  return 'rgba(' + parseInt(m[1], 16) + ',' + parseInt(m[2], 16) + ',' + parseInt(m[3], 16) + ',' + a + ')'
 }
