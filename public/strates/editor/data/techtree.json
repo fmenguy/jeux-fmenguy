@@ -49,7 +49,7 @@
       "speech": ["Cette hache va bien servir."]
     },
     {
-      "id": "spear-wood",
+      "id": "bow-wood",
       "name": "Arc",
       "age": 1,
       "branch": "outils",

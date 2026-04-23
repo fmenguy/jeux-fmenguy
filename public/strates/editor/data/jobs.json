@@ -32,7 +32,7 @@
       "id": "chasseur",
       "name": "Chasseur",
       "age": 1,
-      "requires": { "tech": ["spear-wood"] },
+      "requires": { "tech": ["bow-wood"] },
       "produces": ["raw-meat", "bone", "hide"],
       "activity": "day",
       "description": "Patrouille la zone, attaque les animaux. Risque d'etat Blesse. Necessite la Lance en bois."
