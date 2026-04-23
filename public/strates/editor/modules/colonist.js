@@ -474,6 +474,31 @@ export class Colonist {
           }
         }
       }
+      // Lot B (file de recherche) : le chef s auto-assigne a la hutte du sage
+      // des qu une tech est active dans la file. C est indispensable au tout
+      // debut de partie, ou le chef est le seul colon dispo et ou l UI doit
+      // montrer une progression immediate apres que le joueur a enfile une tech.
+      if (
+        state.activeResearch != null
+        && this.isChief
+        && this.researchBuildingId == null
+        && Array.isArray(state.researchHouses)
+        && state.researchHouses.length > 0
+      ) {
+        this.researchBuildingId = state.researchHouses[0].id
+        const building = findResearchBuildingById(this.researchBuildingId)
+        if (building) {
+          const approach = findApproach(this.x, this.z, building.x, building.z)
+          if (approach) {
+            this.path = approach.path
+            this.pathStep = 0
+            this.state = 'MOVING'
+            this.isWandering = false
+            this.updateTrail()
+            return
+          }
+        }
+      }
       // Lot B perf : la prise de decision (pickHarvest, pickJob, pickBuildJob)
       // appelle du pathfinding A* couteux. On throttle a ~3 Hz par colon pour
       // eviter les micro-freezes en foule IDLE. La rotation tete et la flanerie
