@@ -579,31 +579,6 @@
         });
       });
 
-      // Contrôles pinceau dans l'onglet Terraformer
-      const brushSizes = [1, 3, 5, 7];
-      let brushIdx = 1;
-      const brushValLbl = document.getElementById('brush-val-lbl');
-      function updateBrushLabel() {
-        const s = brushSizes[brushIdx];
-        if (brushValLbl) brushValLbl.textContent = s + '×' + s;
-        window._terraBrushSize = s;
-      }
-      function changeBrush(dir) {
-        brushIdx = Math.max(0, Math.min(brushSizes.length - 1, brushIdx + dir));
-        updateBrushLabel();
-        window.dispatchEvent(new CustomEvent('strates:brushSize', { detail: { size: brushSizes[brushIdx] } }));
-      }
-      const bMinus = document.getElementById('brush-minus');
-      const bPlus  = document.getElementById('brush-plus');
-      if (bMinus) bMinus.addEventListener('click', () => changeBrush(-1));
-      if (bPlus)  bPlus.addEventListener('click',  () => changeBrush(1));
-      document.addEventListener('keydown', e => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        if (e.key === '-' || e.key === '_') changeBrush(-1);
-        if (e.key === '+' || e.key === '=') changeBrush(1);
-      });
-      updateBrushLabel();
-
       // Rail droite : toggle panneaux
       const railBtns = document.querySelectorAll('.rail-btn');
       const popPanel = document.getElementById('popPanel');
@@ -889,10 +864,6 @@
         <span class="ico">&#127959;</span>
         <span>Construire</span>
       </button>
-      <button class="ab-tab" data-tab="terra">
-        <span class="ico">&#129699;</span>
-        <span>Terraformer</span>
-      </button>
     </div>
 
     <!-- Onglet Récoltes -->
@@ -949,27 +920,6 @@
         <span class="nm">Cairn</span>
         <span class="cond">50&#129704; 20&#129695; 10&#129460;</span>
       </button>
-    </div>
-
-    <!-- Onglet Terraformer -->
-    <div class="ab-body" id="ab-terra" style="display:none">
-      <button class="tool" data-tool="level" title="Retirer un bloc de terrain (seau, sans colon). Minerais protégés.">
-        <span class="ic">&#129699;</span>
-        <span class="nm">Retirer</span>
-      </button>
-      <button class="tool" data-tool="build" title="Placer un bloc depuis les stocks (seau)">
-        <span class="ic">&#129699;</span>
-        <span class="nm">Placer</span>
-      </button>
-      <div class="brush-zone">
-        <span class="brush-label">Pinceau</span>
-        <div class="brush-row">
-          <button class="brush-pm" id="brush-minus" title="Réduire le pinceau (-)">&#8722;</button>
-          <div class="brush-val" id="brush-val-lbl">3×3</div>
-          <button class="brush-pm" id="brush-plus" title="Agrandir le pinceau (+)">+</button>
-        </div>
-        <span class="brush-hint">touches  &#8722; / +</span>
-      </div>
     </div>
 
     <!-- Godmod (toujours visible pour debug) -->
