@@ -2,7 +2,20 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Strates — Mindmap de conception</title>
+<title>Strates — Mindmap de conception · v0.3</title>
+<style>
+  /* v0.3 — Axe Social injected banner */
+  .v03-banner{position:sticky;top:0;z-index:100;background:#fff6c9;border-bottom:1.5px dashed #d94a2c;padding:10px 28px;font-family:'Kalam',system-ui,sans-serif;font-size:13.5px;color:#1f1a14}
+  .v03-banner b{font-family:'Caveat',cursive;font-weight:700;font-size:20px;color:#d94a2c;margin-right:8px}
+  .v03-social{margin:18px 28px;padding:16px 20px;border:1.5px solid #1f1a14;border-radius:6px 10px 8px 12px/10px 6px 12px 8px;background:#f4efe4;box-shadow:2px 3px 0 rgba(31,26,20,.06);font-family:'Kalam',system-ui,sans-serif}
+  .v03-social h3{font-family:'Caveat',cursive;font-weight:700;font-size:30px;margin:0 0 6px;color:#6a4a8a}
+  .v03-social h4{font-family:'Caveat',cursive;font-weight:700;font-size:20px;margin:10px 0 4px;color:#3a3026}
+  .v03-social ul{margin:4px 0 4px 20px;padding:0;font-size:13.5px;line-height:1.45}
+  .v03-social .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+  .v03-social .col{background:#ece4d1;border:1.5px dashed #1f1a14;border-radius:5px;padding:10px 12px}
+  .v03-social small{display:block;font-size:12px;color:#7a6d5c;margin-top:6px;font-style:italic}
+  @media(max-width:900px){.v03-social .cols{grid-template-columns:1fr}}
+</style>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -350,6 +363,58 @@
 </style>
 </head>
 <body>
+  <div class="v03-banner"><b>v0.3 ·</b> Tech tree XXL livré (source brute <code>public/strates/techtree-v2.html</code>) · nouvel axe <b style="color:#6a4a8a">Social</b> à intégrer ↓ · <a href="age-pierre-pilotage-v0.3.html" style="color:#3d5a99">◄ voir pilotage Âge de Pierre v0.3</a></div>
+
+  <section class="v03-social">
+    <h3>🫂 Axe Social — à intégrer comme 4e strate</h3>
+    <p style="margin:0">En complément des 3 strates existantes (<b>Technologie</b>, <b>Bâtiments</b>, <b>Communauté</b>), on ajoute un <b>4e axe Social</b> qui gère les liens entre colons et structure la vie du village dans la durée. C'est ce qui transforme une colonie d'ouvriers en <i>tribu</i>.</p>
+
+    <div class="cols">
+      <div class="col">
+        <h4>💞 Couples</h4>
+        <ul>
+          <li>2 colons adultes logés dans la même Cabane peuvent se « lier » (affinité passive au fil du temps)</li>
+          <li>État <b>en couple</b> affiché sur fiche colon + bulle « ❤️ » occasionnelle</li>
+          <li>Bonus de moral mutuel, malus en cas de séparation / décès</li>
+          <li>Prérequis à la reproduction naturelle (axe Communauté → Besoins)</li>
+        </ul>
+        <small>Âge I : optionnel / tease — Âge Bronze : mécanique active</small>
+      </div>
+
+      <div class="col">
+        <h4>👶 Parent / Enfant</h4>
+        <ul>
+          <li>Couple logé → bébé après délai (saisonnier) ; enfant non-productif pendant N saisons</li>
+          <li>Lignée tracée : nom de famille / ascendance visible sur fiche</li>
+          <li>Enfants héritent d'un biais de métier (XP bonus) du parent majoritaire</li>
+          <li>Mort d'un parent → état <b>orphelin</b> (malus moral, adoption possible)</li>
+        </ul>
+        <small>Enrichit les fiches personnages et donne du poids aux décès</small>
+      </div>
+
+      <div class="col">
+        <h4>🪶 Hiérarchie</h4>
+        <ul>
+          <li>Chef par défaut (François), succession à sa mort (fils aîné / doyen / élu selon tech)</li>
+          <li>Rôles sociaux : <b>Sage</b> (Hutte du sage), <b>Chaman</b> (Totem), <b>Chasseur en chef</b></li>
+          <li>Influence : le chef a un bonus de moral de zone, un décret actif (priorité colonie)</li>
+          <li>Structure évolue avec l'âge : tribu (Pierre) → conseil (Bronze) → royaume (Fer)</li>
+        </ul>
+        <small>Lien direct avec axe Communauté → Métiers + Tech tree → Savoir</small>
+      </div>
+    </div>
+
+    <h4 style="margin-top:14px">🔗 Intégrations avec les 3 axes existants</h4>
+    <ul>
+      <li><b>Communauté</b> : nouvelles catégories <i>Liens</i> (couples, famille) + <i>Statuts sociaux</i> (chef, sage, enfant)</li>
+      <li><b>Tech tree — branche Savoir</b> : nouvelles techs <i>Rites de passage</i>, <i>Filiation</i>, <i>Conseil des anciens</i> (Bronze+)</li>
+      <li><b>Bâtiments</b> : Totem et Cairn deviennent des <i>lieux sociaux</i> (mariages, funérailles, passages d'âge d'enfant)</li>
+      <li><b>Besoins</b> : nouveau besoin <i>Lien social</i> (solitude → malus moral), satisfait par repas communs au Foyer / veillées au Promontoire</li>
+    </ul>
+
+    <small>↳ À préciser dans la prochaine itération : contenu par âge, règles de succession, affichage UI (arbre généalogique simplifié ?). Pour l'Âge de Pierre, on se limite à : couples liables + 1 enfant possible + chef par défaut.</small>
+  </section>
+
   <div id="root"></div>
 
   <script type="application/json" id="game-data">
