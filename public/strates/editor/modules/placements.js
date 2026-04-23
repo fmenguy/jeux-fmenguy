@@ -7,6 +7,7 @@ import { state } from './state.js'
 import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
 import { findApproach } from './pathfind.js'
+import { getBuildingById } from './gamedata.js'
 
 // ============================================================================
 // Arbres (trunk + leaf InstancedMesh)
@@ -908,4 +909,83 @@ export function grabBushAt(x, z) {
   if (!isBushOn(x, z)) return 0
   removeBushesIn([{ x, z }])
   return 1 + Math.floor(Math.random() * 3)
+}
+
+// ============================================================================
+// Flag "unique" des batiments (U7, session 14)
+// ============================================================================
+// Certains batiments de data/buildings.json portent "unique": true. Le moteur
+// compte les instances existantes dans state et expose un guard generique.
+// Le Cairn est gere a part par age-transitions.js (cinematique + etat d age).
+
+// Map id batiment -> nom du tableau d instances dans state
+const UNIQUE_STATE_ARRAY_BY_BUILDING = {
+  'hutte-du-sage': 'researchHouses',
+  'cairn-pierre':  'cairns'
+}
+
+// Map tool de l actionbar -> id batiment vise. Le tool "cairn" reste gere par
+// age-transitions.js (conditions cumulatives, cinematique). On ne touche pas
+// ici au bouton Cairn pour eviter les double gestion.
+const UNIQUE_TOOL_TO_BUILDING = {
+  'research': 'hutte-du-sage'
+}
+
+/**
+ * Compte les instances posees d un batiment, en s appuyant sur les tableaux
+ * de state. Retourne 0 si le batiment n est pas connu ou sans mapping.
+ * @param {string} buildingId
+ * @returns {number}
+ */
+export function countBuildingInstances(buildingId) {
+  const arrName = UNIQUE_STATE_ARRAY_BY_BUILDING[buildingId]
+  if (!arrName) return 0
+  const arr = state[arrName]
+  if (!Array.isArray(arr)) return 0
+  return arr.length
+}
+
+/**
+ * Retourne true si le batiment a "unique": true dans buildings.json ET qu au
+ * moins une instance est deja posee dans state. Utilise par le HUD et la
+ * logique de pose pour griser/desactiver le bouton.
+ * @param {string} buildingId
+ * @returns {boolean}
+ */
+export function isBuildingUniqueAndPlaced(buildingId) {
+  const def = getBuildingById(buildingId)
+  if (!def || def.unique !== true) return false
+  return countBuildingInstances(buildingId) > 0
+}
+
+/**
+ * Parcourt les boutons de l actionbar (data-tool=...) et grise/active ceux
+ * associes a un batiment "unique" deja pose. Appele a cadence lente (~1s)
+ * depuis la boucle principale. Le bouton Cairn garde son traitement propre
+ * dans age-transitions.js.
+ */
+export function checkUniqueBuildingButtons() {
+  for (const tool in UNIQUE_TOOL_TO_BUILDING) {
+    const btn = document.querySelector(`.tool[data-tool="${tool}"]`)
+    if (!btn) continue
+    const buildingId = UNIQUE_TOOL_TO_BUILDING[tool]
+    const placed = isBuildingUniqueAndPlaced(buildingId)
+    if (placed) {
+      if (!btn.dataset.uniqueBlocked) {
+        btn.dataset.uniqueBlocked = '1'
+        btn.dataset.origTitle = btn.title || ''
+        btn.disabled = true
+        btn.classList.add('disabled-unique')
+        btn.style.pointerEvents = 'none'
+        btn.title = 'Batiment unique deja pose'
+      }
+    } else if (btn.dataset.uniqueBlocked) {
+      delete btn.dataset.uniqueBlocked
+      btn.disabled = false
+      btn.classList.remove('disabled-unique')
+      btn.style.pointerEvents = ''
+      btn.title = btn.dataset.origTitle || ''
+      delete btn.dataset.origTitle
+    }
+  }
 }

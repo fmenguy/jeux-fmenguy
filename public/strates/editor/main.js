@@ -6,7 +6,7 @@ import { state } from './modules/state.js'
 import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
-import { refreshBushBerries, countActiveResearchers, tickTreeGrowth } from './modules/placements.js'
+import { refreshBushBerries, countActiveResearchers, tickTreeGrowth, checkUniqueBuildingButtons } from './modules/placements.js'
 import { tryBlockedTechBubble, hasPendingResearchableTech } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
@@ -219,6 +219,7 @@ function tick(nowMs) {
     tick._lastContextCheck = t
     if (!tryBlockedTechBubble(t)) tryTriggerContextBubble(t)
     checkCairnOverlay()
+    checkUniqueBuildingButtons()
   }
 
   if (hudRefs.rBerriesEl) hudRefs.rBerriesEl.textContent = state.resources.berries
