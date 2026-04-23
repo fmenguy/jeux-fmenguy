@@ -50,7 +50,7 @@
     },
     {
       "id": "spear-wood",
-      "name": "Lance en bois",
+      "name": "Arc en bois",
       "age": 1,
       "branch": "outils",
       "icon": "🏹",
@@ -60,22 +60,23 @@
         "jobs":      ["chasseur"],
         "resources": ["raw-meat", "bone", "hide"]
       },
-      "description": "Outil de chasse basique. Debloque le metier Chasseur.",
+      "description": "Arc de chasse basique. Débloque le métier Chasseur.",
       "speech": ["On va pouvoir chasser maintenant."]
     },
     {
       "id": "shovel-stone",
-      "name": "Pelle en pierre",
+      "name": "Terraformation",
       "age": 1,
       "branch": "outils",
       "icon": "🪣",
       "cost": { "research": 8 },
       "requires": ["pick-stone"],
       "unlocks": {
-        "jobs":      ["terrassier"]
+        "jobs":      ["terrassier"],
+        "tools":     ["level", "build"]
       },
-      "description": "Permet le terrassement de la terre et du sable.",
-      "speech": ["On peut creuser le sol maintenant."]
+      "description": "Débloque le seau et le menu Terraformer pour remodeler le terrain.",
+      "speech": ["On peut remodeler le terrain maintenant."]
     },
     {
       "id": "gathering-improved",
