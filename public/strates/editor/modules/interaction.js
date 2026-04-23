@@ -11,7 +11,8 @@ import {
   assignResearcherToBuilding, removeTreesIn, removeRocksIn, removeHousesIn,
   removeResearchHousesIn, removeOresIn, removeBushesIn, removeManorsIn,
   checkManorMerge, isCellOccupied, isMineBlocked,
-  addObservatory, removeObservatoriesIn
+  addObservatory, removeObservatoriesIn,
+  isBuildingUniqueAndPlaced
 } from './placements.js'
 import { addJob, addBuildJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell } from './tech.js'
@@ -464,6 +465,7 @@ function applyToolAtCell(cell) {
       }
       break
     case 'research':
+      if (isBuildingUniqueAndPlaced('hutte-du-sage')) break
       if (!isCellOccupied(cell.x, cell.z)) {
         const entry = addResearchHouse(cell.x, cell.z)
         if (entry) assignResearcherToBuilding(entry)
@@ -578,6 +580,7 @@ function applyToolToStrata(cells) {
         }
         break
       case 'research':
+        if (isBuildingUniqueAndPlaced('hutte-du-sage')) break
         if (!isCellOccupied(c.x, c.z)) {
           const entry = addResearchHouse(c.x, c.z)
           if (entry) assignResearcherToBuilding(entry)
