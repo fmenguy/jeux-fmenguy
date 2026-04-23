@@ -83,14 +83,18 @@
     .rail-btn .lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
     .rail-btn .badge{position:absolute;top:-3px;right:-3px;background:var(--gold);color:#1a1510;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center}
 
-    /* ====== Panneau population ====== */
+    /* ====== Panneau population (modal centré) ====== */
     .pop-panel{
-      position:fixed;right:80px;top:58px;width:300px;max-height:calc(100vh - 170px);
-      background:rgba(27,25,20,.96);backdrop-filter:blur(10px);
-      border:1px solid var(--rule);border-radius:4px;
-      box-shadow:0 20px 60px rgba(0,0,0,.6),0 2px 4px rgba(0,0,0,.3);
-      z-index:16;display:none;flex-direction:column;
-      overflow:hidden;color:var(--ink);
+      position:fixed;inset:0;z-index:50;
+      display:none;align-items:center;justify-content:center;
+      background:rgba(10,8,5,.72);backdrop-filter:blur(6px);
+    }
+    .pop-panel.open{display:flex;}
+    .pop-frame{
+      width:min(820px,92vw);height:min(600px,84vh);
+      background:rgba(27,25,20,.97);border:1px solid var(--rule);border-radius:8px;
+      box-shadow:0 28px 80px rgba(0,0,0,.7);
+      display:flex;flex-direction:column;overflow:hidden;color:var(--ink);
     }
     .pop-head{padding:14px 16px 10px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between}
     .pop-head h3{margin:0;font-family:var(--serif);font-weight:500;font-size:17px;color:var(--ink);letter-spacing:-.005em}
@@ -211,7 +215,7 @@
     .tool.disabled-unique:hover{transform:none}
 
     .sep{width:1px;background:var(--rule);margin:4px 6px;align-self:stretch}
-    .group-label{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);padding:0 2px;align-self:stretch;display:flex;align-items:center}
+    .group-label{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;padding:0 8px;display:flex;align-items:center;white-space:nowrap}
 
     .brush {
       min-width: 30px; padding: 6px 4px;
@@ -278,23 +282,37 @@
     .btn-ctrl:hover { background: rgba(65, 75, 94, 0.9); }
 
     #quests {
-      position: fixed; right: 16px; top: 16px;
-      width: 280px;
-      background: rgba(15, 18, 24, 0.82);
-      border: 1px solid rgba(168, 134, 42, 0.55);
-      border-radius: 12px;
-      padding: 12px 14px;
-      backdrop-filter: blur(8px);
-      color: #f3ecdd;
-      font-size: 12px; line-height: 1.4;
-      box-shadow: 0 6px 22px rgba(0,0,0,0.4);
-      z-index: 11;
+      position: fixed; inset: 0; z-index: 50;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(10,8,5,.72); backdrop-filter: blur(6px);
+    }
+    #quests.open { display: flex; }
+    .q-frame {
+      width: min(700px, 92vw); height: min(560px, 84vh);
+      background: rgba(15,12,8,.97); border: 1px solid var(--rule);
+      border-radius: 8px; box-shadow: 0 28px 80px rgba(0,0,0,.7);
+      display: flex; flex-direction: column; overflow: hidden;
+      color: var(--ink);
+    }
+    .q-head {
+      padding: 16px 20px 12px; border-bottom: 1px solid var(--rule);
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(180deg, rgba(212,184,112,.05), transparent);
     }
     #quests h3 {
-      margin: 0 0 8px 0; font-size: 11px;
-      color: #d9b15a; letter-spacing: 0.14em;
-      font-weight: 700; text-transform: uppercase;
+      margin: 0; font-family: var(--serif); font-weight: 500; font-size: 18px;
+      color: var(--ink); letter-spacing: -.005em;
     }
+    .q-close {
+      background: transparent; border: none; color: var(--ink-3);
+      font-size: 18px; cursor: pointer; padding: 2px 8px; line-height: 1;
+    }
+    .q-close:hover { color: var(--ink); }
+    .q-body {
+      flex: 1; overflow-y: auto; padding: 16px 20px;
+    }
+    .q-body::-webkit-scrollbar { width: 6px; }
+    .q-body::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
     .quest {
       padding: 8px 10px; margin-bottom: 6px;
       background: rgba(255,255,255,0.03);
@@ -486,19 +504,6 @@
     body[data-mode="game"] .godmod-ctrl  { display: none; }
     body[data-mode="game"] .godmod-label { display: none; }
 
-    /* Badge mode */
-    #mode-badge {
-      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-      font-family: monospace; font-size: 10px; letter-spacing: .12em;
-      text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
-      pointer-events: none; z-index: 50;
-      background: rgba(255,217,138,0.12); border: 1px solid rgba(255,217,138,0.3);
-      color: rgba(255,217,138,0.7);
-    }
-    body[data-mode="game"] #mode-badge {
-      background: rgba(136,204,68,0.12); border-color: rgba(136,204,68,0.3);
-      color: rgba(136,204,68,0.8);
-    }
   </style>
   <link rel="stylesheet" href="./styles/cinematic.css">
   <script type="importmap">
@@ -545,20 +550,29 @@
         btn.addEventListener('click', () => {
           const panel = btn.dataset.panel;
           if (panel === 'techtree') {
-            const backdrop = document.getElementById('tt-backdrop');
-            const ttPanel = document.getElementById('tt-panel');
-            if (backdrop) backdrop.classList.toggle('open');
-            if (ttPanel) ttPanel.classList.toggle('open');
+            const ev = new CustomEvent('strates:toggleTechTree');
+            window.dispatchEvent(ev);
             return;
           }
           if (panel === 'population' && popPanel) {
-            const isOpen = popPanel.style.display === 'flex';
-            popPanel.style.display = isOpen ? 'none' : 'flex';
+            const isOpen = popPanel.classList.contains('open');
+            popPanel.classList.toggle('open', !isOpen);
             railBtns.forEach(b => b.classList.remove('active'));
             if (!isOpen) btn.classList.add('active');
             return;
           }
-          // Autres panneaux (social, quests, map) : placeholder, toggle actif
+          // Panneau quêtes
+          if (panel === 'quests') {
+            const qPanel = document.getElementById('quests');
+            if (qPanel) {
+              const isOpen = qPanel.classList.contains('open');
+              railBtns.forEach(b => b.classList.remove('active'));
+              qPanel.classList.toggle('open', !isOpen);
+              if (!isOpen) btn.classList.add('active');
+            }
+            return;
+          }
+          // Autres panneaux (social, map) : placeholder, toggle actif
           railBtns.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
         });
@@ -568,14 +582,40 @@
       const popClose = document.querySelector('.pop-close');
       if (popClose && popPanel) {
         popClose.addEventListener('click', () => {
-          popPanel.style.display = 'none';
+          popPanel.classList.remove('open');
           document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
+        });
+      }
+      // Click backdrop pour fermer pop-panel
+      if (popPanel) {
+        popPanel.addEventListener('click', (e) => {
+          if (e.target === popPanel) {
+            popPanel.classList.remove('open');
+            document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
+          }
+        });
+      }
+      // Bouton fermeture quêtes + click backdrop
+      const questsClose = document.getElementById('quests-close');
+      const questsPanel = document.getElementById('quests');
+      if (questsClose && questsPanel) {
+        questsClose.addEventListener('click', () => {
+          questsPanel.classList.remove('open');
+          document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
+        });
+      }
+      if (questsPanel) {
+        questsPanel.addEventListener('click', (e) => {
+          if (e.target === questsPanel) {
+            questsPanel.classList.remove('open');
+            document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
+          }
         });
       }
     });
   </script>
 
-  <div id="mode-badge"></div>
+
   <div id="loader">génération du monde...</div>
   <div id="app"></div>
 
@@ -670,30 +710,37 @@
     </button>
   </div>
 
-  <!-- ============ Panneau population ============ -->
+  <!-- ============ Panneau population (modal centré) ============ -->
   <aside class="pop-panel" id="popPanel">
-    <div class="pop-head">
-      <h3>Population</h3>
-      <span class="count"><span id="c-count">0</span> colons</span>
-      <button class="pop-close" title="Fermer">&times;</button>
-    </div>
-    <div class="village-switch">
-      <span class="small">Village</span>
-      <span class="chip on">La Souche</span>
-      <span class="chip" style="opacity:.45;cursor:not-allowed">+ Nouveau</span>
-      <span class="spacer"></span>
-    </div>
-    <div class="pop-list" id="colons-list"></div>
-    <div class="pop-foot">
-      <button>Vue complete</button>
-      <button>Affecter metiers</button>
+    <div class="pop-frame" id="popFrame">
+      <div class="pop-head">
+        <h3>Population</h3>
+        <span class="count"><span id="c-count">0</span> colons</span>
+        <button class="pop-close" title="Fermer">&times;</button>
+      </div>
+      <div class="village-switch">
+        <span class="small">Village</span>
+        <span class="chip on">La Souche</span>
+        <span class="chip" style="opacity:.45;cursor:not-allowed">+ Nouveau</span>
+        <span class="spacer"></span>
+      </div>
+      <div class="pop-list" id="colons-list"></div>
+      <div class="pop-foot">
+        <button>Vue complète</button>
+        <button>Affecter métiers</button>
+      </div>
     </div>
   </aside>
 
-  <!-- ============ Quetes (reutilise l'ID existant) ============ -->
-  <div id="quests" style="display:none">
-    <h3>Quêtes</h3>
-    <div id="quests-body"></div>
+  <!-- ============ Quetes (modal centré) ============ -->
+  <div id="quests">
+    <div class="q-frame">
+      <div class="q-head">
+        <h3>Quêtes</h3>
+        <button class="q-close" id="quests-close" title="Fermer">&times;</button>
+      </div>
+      <div class="q-body" id="quests-body"></div>
+    </div>
   </div>
 
   <!-- ============ Anciens IDs conserves (DOM cache pour compatibilite hud.js) ============ -->
