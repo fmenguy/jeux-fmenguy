@@ -341,73 +341,7 @@
       box-shadow: 0 6px 18px rgba(255,217,138,0.3);
     }
 
-    /* Hint discret au premier chargement */
-    #help-hint {
-      position: fixed; right: 66px; bottom: 108px;
-      background: rgba(15,18,24,0.88);
-      color: #ffd98a;
-      padding: 6px 12px; border-radius: 8px;
-      font-size: 12px;
-      border: 1px solid rgba(255,217,138,0.35);
-      z-index: 29;
-      pointer-events: none;
-      animation: hintPulse 2.4s ease-in-out infinite;
-    }
-    #help-hint.hidden { display: none; }
-    @keyframes hintPulse {
-      0%, 100% { opacity: 0.8; transform: translateX(0); }
-      50% { opacity: 1; transform: translateX(-3px); }
-    }
-
-    /* Panneau d'aide */
-    #help-panel {
-      position: fixed; inset: 40px;
-      background: linear-gradient(180deg, rgba(20,24,30,0.96), rgba(15,18,24,0.98));
-      border: 1px solid rgba(255,217,138,0.4);
-      border-radius: 14px;
-      padding: 0;
-      backdrop-filter: blur(12px);
-      color: #f3ecdd;
-      z-index: 50;
-      overflow: hidden;
-      display: flex; flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-    }
-    #help-panel.hidden { display: none; }
-    .help-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 24px;
-      border-bottom: 1px solid rgba(255,217,138,0.2);
-      background: rgba(255,217,138,0.05);
-    }
-    .help-header h3 {
-      margin: 0; font-size: 18px; color: #ffd98a;
-      letter-spacing: 0.08em; text-transform: uppercase;
-    }
-    #btn-help-close {
-      background: transparent; border: none; color: #c7b98c;
-      font-size: 28px; cursor: pointer; padding: 0 8px;
-      line-height: 1;
-    }
-    #btn-help-close:hover { color: #ffd98a; }
-    .help-body {
-      padding: 20px 32px; overflow-y: auto; flex: 1;
-      max-width: 900px; margin: 0 auto;
-      font-size: 14px; line-height: 1.6;
-    }
-    .help-body section { margin-bottom: 22px; }
-    .help-body h4 {
-      margin: 0 0 8px 0; font-size: 13px;
-      color: #ffd98a; letter-spacing: 0.1em;
-      text-transform: uppercase; font-weight: 700;
-      border-left: 3px solid #a8862a; padding-left: 10px;
-    }
-    .help-body p { margin: 6px 0; color: #e9e2cf; }
-    .help-body ul { margin: 6px 0; padding-left: 24px; }
-    .help-body li { margin: 3px 0; color: #e9e2cf; }
-    .help-body b { color: #ffd98a; }
-    .help-body::-webkit-scrollbar { width: 8px; }
-    .help-body::-webkit-scrollbar-thumb { background: rgba(255,217,138,0.3); border-radius: 4px; }
+    /* #help-panel, #help-hint et classes associees retires (B9) : panneau obsolete axe editeur. L'aide active est #help-overlay style Clair Obscur. */
 
     /* Save menu */
     #save-menu {
@@ -625,81 +559,8 @@
     <div id="quests-body"></div>
   </div>
 
-  <div id="help-panel" class="hidden">
-    <div class="help-header">
-      <h3>Bienvenue dans Strates</h3>
-      <button id="btn-help-close" title="Fermer (Échap)">×</button>
-    </div>
-    <div class="help-body">
-      <section>
-        <h4>Contrôles de la caméra</h4>
-        <ul>
-          <li><b>Clic gauche maintenu</b> : faire pivoter la caméra</li>
-          <li><b>Clic droit maintenu</b> : déplacer la caméra latéralement</li>
-          <li><b>Molette</b> : zoomer / dézoomer</li>
-          <li><b>Z Q S D</b> ou <b>W A S D</b> : déplacer la caméra au clavier</li>
-          <li><b>A / E</b> : faire pivoter l'azimut (rotation gauche / droite)</li>
-        </ul>
-      </section>
-      <section>
-        <h4>Les colons</h4>
-        <p>Vos colons vivent en autonomie. Ils errent, se parlent, récoltent les baies, et exécutent les tâches que vous leur désignez. François ♂ est le chef (couronne dorée). Ils montent au maximum 2 blocs de dénivelé.</p>
-      </section>
-      <section>
-        <h4>Poser des tâches</h4>
-        <ul>
-          <li><b>Miner (2)</b> : peint en rouge les blocs à creuser. Clic droit bref sur un marqueur pour annuler.</li>
-          <li><b>Placer (3)</b> : pose un bloc de terre ou de pierre puisé dans vos stocks.</li>
-          <li><b>Shift + clic gauche</b> : applique l'outil sur toute la strate (même biome, même hauteur).</li>
-          <li><b>Shift + clic droit</b> : annule tous les ordres sur la strate.</li>
-        </ul>
-      </section>
-      <section>
-        <h4>Ramasser avant de miner</h4>
-        <p>Ce qui est posé sur une tuile doit être <b>ramassé avant</b> de pouvoir miner le voxel en dessous. Un seul ordre Miner traite un obstacle à la fois, dans cet ordre : <b>arbre</b> (+bois), <b>rocher</b> (+pierre ×2-3), <b>filon</b> (+minerai), <b>buisson</b> (+1 à 3 baies bonus), puis <b>voxel</b>. Pour récolter un buisson au maximum (5 à 15 baies), laissez les colons le cueillir naturellement quand ils sont libres.</p>
-      </section>
-      <section>
-        <h4>Les points de recherche</h4>
-        <p>Posez une <b>maison à toit bleu</b> (outil <b>Recherche, 0</b>). Un colon disponible y sera automatiquement affecté. Tant qu'il y est, il génère <b>1 point toutes les 3 secondes</b>. Ces points servent à débloquer les technologies dans le panneau <b>TECH</b> à droite (pioches successives : pierre, bronze, fer, or). Chaque tech permet d'exploiter des filons plus rares.</p>
-      </section>
-      <section>
-        <h4>Abattre les arbres</h4>
-        <p>Les arbres doivent être abattus pour libérer une tuile et récolter du bois. Débloquez d'abord la <b>hache en pierre</b> dans le panneau TECH (4 points de recherche). Ensuite, utilisez <b>Miner (2)</b> sur une tuile avec arbre : le colon va abattre et remplit le compteur "bois".</p>
-      </section>
-      <section>
-        <h4>Extraire les filons</h4>
-        <p>Les tas colorés sur les montagnes sont des <b>filons</b> (cuivre, fer, charbon, argent, or, améthyste). Pour les récolter, utilisez l'outil <b>Miner (2)</b> sur la tuile du filon. Le colon va sur place et remplit le stock correspondant. Chaque minerai requiert une pioche adéquate (cuivre/charbon = pioche bronze, fer/argent = pioche fer, or/améthyste = pioche or). Sans la bonne tech, le colon refuse et un indice bleu apparaît.</p>
-      </section>
-      <section>
-        <h4>Les quêtes</h4>
-        <p>En haut à droite, la quête active vous guide. Une fois complétée, la suivante apparaît. Elles balisent les premiers pas sans vous contraindre.</p>
-      </section>
-      <section>
-        <h4>Outils éditeur (cadre bleu)</h4>
-        <p>Ces outils servent à peupler la carte manuellement : forêt, rocher, filon, maison, champ, baies. Dans le mode jeu final (à venir), ils ne seront pas accessibles au joueur ; ici on peut tout essayer librement.</p>
-      </section>
-      <section>
-        <h4>Sauvegarde</h4>
-        <p>Votre partie est sauvegardée <b>automatiquement</b> toutes les 30 secondes. Les boutons <b>Sauver</b>, <b>Charger</b> et <b>Nouvelle</b> en bas à droite permettent d'agir manuellement.</p>
-      </section>
-      <section>
-        <h4>Raccourcis clavier</h4>
-        <ul>
-          <li><b>1</b> Naviguer &nbsp;·&nbsp; <b>2</b> Miner &nbsp;·&nbsp; <b>3</b> Placer</li>
-          <li><b>7</b> Maison &nbsp;·&nbsp; <b>8</b> Champ &nbsp;·&nbsp; <b>0</b> Recherche &nbsp;·&nbsp; <b>P</b> Promontoire</li>
-          <li><b>N</b> : basculer jour / nuit</li>
-          <li><b>A / E</b> : rotation azimut caméra</li>
-          <li><b>R</b> : nouvelle partie (confirmation demandée)</li>
-          <li><b>Échap</b> : menu pause</li>
-          <li><b>?</b> ou <b>H</b> : cette aide</li>
-        </ul>
-      </section>
-    </div>
-  </div>
+  <!-- Ancien panneau #help-panel retire (B9) : references outils editeur obsoletes en mode jeu. L'aide active est #help-overlay style Clair Obscur ci-dessous. -->
 
-  <div id="help-hint">
-    Appuyez sur <b>?</b> pour l'aide
-  </div>
 
   <div id="pause-menu" class="hidden">
     <div class="pause-modal">
