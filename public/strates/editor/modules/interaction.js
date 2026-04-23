@@ -133,6 +133,8 @@ export function refreshToolButtons() {
   const btnPick = document.querySelector('.tool[data-tool="pick"]')
   if (btnHache) btnHache.style.display = techUnlocked('axe-stone') ? '' : 'none'
   if (btnPick) btnPick.style.display = techUnlocked('pick-stone') ? '' : 'none'
+  const btnResearch = document.querySelector('.tool[data-tool="place-research"]')
+  if (btnResearch) btnResearch.style.display = techUnlocked('basic-research') ? '' : 'none'
 }
 
 export function labelOfTool(t) {
@@ -147,6 +149,7 @@ export function labelOfTool(t) {
     rock: 'poser un rocher',
     house: 'poser une maison',
     research: 'poser un laboratoire',
+    'place-research': 'placer hutte du sage',
     field: 'tracer un champ',
     bush: 'poser un buisson',
     observatory: 'poser un promontoire',
@@ -526,6 +529,18 @@ function applyToolAtCell(cell) {
         if (entry) assignResearcherToBuilding(entry)
       }
       break
+    case 'place-research': {
+      if (!techUnlocked('basic-research')) break
+      if (isBuildingUniqueAndPlaced('hutte-du-sage')) break
+      const prk = cell.z * GRID + cell.x
+      if (state.toolState.paintedThisStroke.has('pr' + prk)) break
+      state.toolState.paintedThisStroke.add('pr' + prk)
+      if (!isCellOccupied(cell.x, cell.z)) {
+        const entry = addResearchHouse(cell.x, cell.z)
+        if (entry) assignResearcherToBuilding(entry)
+      }
+      break
+    }
     case 'bush':
       if (!isCellOccupied(cell.x, cell.z) && toolAllowedOnCell('bush', cell.x, cell.z)) addBush(cell.x, cell.z)
       break
@@ -641,6 +656,18 @@ function applyToolToStrata(cells) {
           if (entry) assignResearcherToBuilding(entry)
         }
         break
+      case 'place-research': {
+        if (!techUnlocked('basic-research')) break
+        if (isBuildingUniqueAndPlaced('hutte-du-sage')) break
+        const prk2 = c.z * GRID + c.x
+        if (state.toolState.paintedThisStroke.has('pr' + prk2)) break
+        state.toolState.paintedThisStroke.add('pr' + prk2)
+        if (!isCellOccupied(c.x, c.z)) {
+          const entry = addResearchHouse(c.x, c.z)
+          if (entry) assignResearcherToBuilding(entry)
+        }
+        break
+      }
       case 'bush':
         if (!isCellOccupied(c.x, c.z) && toolAllowedOnCell('bush', c.x, c.z)) addBush(c.x, c.z)
         break
