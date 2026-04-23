@@ -1,10 +1,10 @@
 import * as THREE from 'three'
 import {
-  GRID, MIN_STRATES, MAX_STRATES, SHALLOW_WATER_LEVEL, STRATA_MAX, ORE_KEYS, ORE_TYPES
+  GRID, MAX_STRATES, SHALLOW_WATER_LEVEL, STRATA_MAX, ORE_KEYS, ORE_TYPES
 } from './constants.js'
 import { state } from './state.js'
 import { prng } from './rng.js'
-import { scene, renderer, camera, controls, HIDDEN_MATRIX, tmpObj, tmpColor } from './scene.js'
+import { scene, renderer, camera, controls, tmpObj, tmpColor } from './scene.js'
 import { repaintCellSurface, colorForLayer } from './terrain.js'
 import {
   addTree, addRock, addOre, addHouse, addBush, addResearchHouse,
@@ -21,7 +21,7 @@ import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
 import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
 import { openCharSheet, isCharSheetOpen } from './charsheet-ui.js'
-import { incrStockForBiome, totalBuildStock, consumeBuildStock } from './stocks.js'
+import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
 
 // ============================================================================
@@ -142,7 +142,6 @@ export function labelOfTool(t) {
     mine: 'récolter ressources',
     hache: 'hache (abattre arbres)',
     pick: 'pioche (extraire minerais)',
-    level: 'niveler terrain',
     build: 'placer un bloc',
     forest: 'planter une forêt',
     rock: 'poser un rocher',
@@ -470,32 +469,6 @@ function applyToolAtCell(cell) {
       }
       addJob(c.x, c.z)
     }
-    return
-  }
-  if (t === 'level') {
-    // Terraformation directe par le joueur : retire 1 voxel top immédiatement, sans job colon.
-    // Protège les ores, les objets occupant la cellule, et les niveaux plancher/eau.
-    // paintedThisStroke garantit au plus 1 couche retirée par cellule par stroke (mousedown→mouseup).
-    const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
-    let colorsDirty = false
-    for (const c of cells) {
-      const k = c.z * GRID + c.x
-      if (state.toolState.paintedThisStroke.has('lv' + k)) continue
-      if (state.cellOre && state.cellOre[k]) continue
-      if (isCellOccupied(c.x, c.z)) continue
-      const top = state.cellTop[k]
-      if (top <= MIN_STRATES) continue
-      if (top <= SHALLOW_WATER_LEVEL) continue
-      const idx = state.instanceIndex[c.z * GRID + c.x] ? state.instanceIndex[c.z * GRID + c.x][top - 1] : -1
-      if (idx < 0) continue
-      state.instanced.setMatrixAt(idx, HIDDEN_MATRIX)
-      state.instanced.instanceMatrix.needsUpdate = true
-      state.cellTop[k] = top - 1
-      incrStockForBiome(state.cellBiome[k])
-      state.toolState.paintedThisStroke.add('lv' + k)
-      colorsDirty = true
-    }
-    if (colorsDirty && state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
     return
   }
   if (t === 'build') {
