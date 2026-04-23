@@ -5,8 +5,8 @@ import { state } from './state.js'
 import { prng, mulberry32, rebuildPerm } from './rng.js'
 import { buildTerrain, repaintCellSurface } from './terrain.js'
 import {
-  addHouse, addTree, addRock, addOre, addBush, addResearchHouse,
-  assignResearcherToBuilding, isCellOccupied, clearAllPlacements, addDeer
+  addHouse, addTree, addRock, addOre, addBush,
+  isCellOccupied, clearAllPlacements, addDeer
 } from './placements.js'
 import { spawnColonist, clearColonists, findSpawn } from './colonist.js'
 import { startNextQuest, resetQuestSig } from './quests.js'
@@ -23,23 +23,11 @@ export function populateDefaultScene() {
   const spawn = state.spawn
   const rng = prng.rng
 
-  const houseOffsets = [[0, 0], [2, 1], [-2, 1]]
+  const houseOffsets = [[0, 0], [4, 1], [-4, 1]]
   for (const [ox, oz] of houseOffsets) {
     const x = Math.max(0, Math.min(GRID - 1, spawn.x + ox))
     const z = Math.max(0, Math.min(GRID - 1, spawn.z + oz))
     if (!isCellOccupied(x, z)) addHouse(x, z)
-  }
-
-  {
-    const offsets = [[0, -2], [1, -2], [-1, -2], [0, -3], [2, -1]]
-    for (const [ox, oz] of offsets) {
-      const x = Math.max(0, Math.min(GRID - 1, spawn.x + ox))
-      const z = Math.max(0, Math.min(GRID - 1, spawn.z + oz))
-      if (isCellOccupied(x, z)) continue
-      if (state.cellTop[z * GRID + x] <= SHALLOW_WATER_LEVEL) continue
-      state.pendingDefaultResearch = { x, z }
-      break
-    }
   }
 
   let placed = 0
@@ -146,15 +134,6 @@ export function populateDefaultScene() {
     } else {
       spawnColonist(cx, cz)
     }
-  }
-
-  if (state.pendingDefaultResearch) {
-    const { x, z } = state.pendingDefaultResearch
-    if (!isCellOccupied(x, z)) {
-      const entry = addResearchHouse(x, z)
-      if (entry) assignResearcherToBuilding(entry)
-    }
-    state.pendingDefaultResearch = null
   }
 
   // Cerfs decoratifs : 3 a 6 sur cellules herbe eloignees du spawn
