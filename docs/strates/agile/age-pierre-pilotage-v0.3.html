@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Strates · Pilotage Âge de Pierre · v0.3</title>
+<title>Strates · Pilotage Âge de Pierre · v0.4</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -236,8 +236,8 @@ const TABS = [
 const STATUS_FROM_REPO = {
   done:    ['Grille voxel, chunks, A*', 'Pioche pierre (tech)', 'Hache pierre (tech)', 'Recherche (hutte + pts)', 'Cueillette baies', 'Placement maison + spawn 2 colons', 'Bulles contextuelles', 'Noms + genre + François chef', 'Quêtes initiales (3)', 'Sauvegarde localStorage', 'Saisons (palette, neige, pluie)', 'Cycle jour/nuit (toggle N)', 'Promontoire → points nocturnes', 'Feu de camp social (MVP)', 'Filon extraction (pioche gate)', 'Verticalité (strates 10)'],
   partial: ['Outils colons : seules pioche + hache (il manque pelle, faucille, canne)', 'Besoins vitaux (faim/sommeil à câbler)', 'Tech tree (4 techs linéaires = proto, arbre XXL à faire)', 'Métiers (pas d\'attribution de rôles côté UI)', 'Fog of war (désactivé temporairement)'],
-  missing: ['Monument "Cairn de pierre" (passage d\'âge)', 'Chasse (gibier → viande/os/peau)', 'Besoins faim + sans-abri câblés sur pop', 'JSON techtree/buildings/jobs/needs (data-driven âge 1)', 'Cinématique passage bronze', 'Tutoriel enchaîné premières 15 min', 'Totem (+1 moral)', 'Abri de fortune comme bâtiment distinct'],
-  newlyDone: ['UI Tech tree XXL — vue globale constellation (7 branches en orbite) + vue détaillée Humankind (angles droits, pan/zoom bornés)', 'File de recherche en bulles (bas de page, 5 max, drag contraint)', 'Cross-branch badges (↗ Savoir, ↗ Outils, etc.) sur techs avec prérequis hors branche', 'Cadenas chiffré sur techs locked (🔒 + nb de prérequis manquants)', 'Bouton « Mettre le chemin en file » (chaîne topologique auto)', 'Popup unlock façon Endless Space (2 suggestions cliquables)']
+  missing: ['Monument "Cairn de pierre" (passage d\'âge)', 'Chasse (gibier → viande/os/peau)', 'Besoins faim + sans-abri câblés sur pop', 'JSON techtree/buildings/jobs/needs (data-driven âge 1)', 'Cinématique passage bronze', 'Tutoriel enchaîné premières 15 min', 'Totem (+1 moral)', 'Abri de fortune comme bâtiment distinct', 'Raccourcis clavier AZERTY non fonctionnels (supprimés, souris uniquement)'],
+  newlyDone: ['UI Tech tree XXL — vue globale constellation (7 branches en orbite) + vue détaillée Humankind (angles droits, pan/zoom bornés)', 'File de recherche en bulles (bas de page, 5 max, drag contraint)', 'Cross-branch badges (↗ Savoir, ↗ Outils, etc.) sur techs avec prérequis hors branche', 'Cadenas chiffré sur techs locked (🔒 + nb de prérequis manquants)', 'Bouton « Mettre le chemin en file » (chaîne topologique auto)', 'Popup unlock façon Endless Space (2 suggestions cliquables)', 'Actionbar finale : nav-zone permanente + 3 onglets Récoltes/Construire/Terraformer', 'Outil Niveler : retrait direct de voxel terrain sans colon (minerais protégés)', 'Outil Placer : pose directe de voxel depuis les stocks sans colon', 'Pinceau carré pour tous les outils terraformation (1x1, 3x3, 5x5, 7x7)', 'Colonist : ne terraformant plus le terrain nu, mining limité aux ressources', 'Tech tree : fiche droite 340px (coût/description/murmure/prérequis/débloque/actions)', 'Tech tree : hover req-highlight (liens SVG pulsés or, techs irrélevantes estompées)', 'Tech tree : file de recherche en bulles (vue globale uniquement, 5 slots max)', 'Tech tree : constellation globale avec spokes, filtres branches, rail des âges']
 };
 
 const STRATES = {
@@ -248,8 +248,8 @@ const STRATES = {
       'Outils': [
         { n: 'Pioche pierre',   s: 'done', c: 5, req: ['Silex'], notes: 'craftée au Foyer, améliore rendement Mineur' },
         { n: 'Hache pierre',    s: 'done', c: 5, req: ['Silex'], notes: 'craftée au Foyer, débloque Bûcheron' },
-        { n: 'Lance en bois',   s: 'todo', c: 5, req: [], notes: 'craftée au Foyer, débloque Chasseur' },
-        { n: 'Pelle pierre',    s: 'todo', c: 8, req: ['Pioche pierre'], notes: '[optionnel âge I] terrassier' },
+        { n: 'Lance en bois',   s: 'partial', c: 5, req: [], notes: 'présente dans JSON sous nom "Arc", gameplay Chasseur pas câblé' },
+        { n: 'Pelle pierre',    s: 'partial', c: 8, req: ['Pioche pierre'], notes: 'renommée Terraformation, outil Niveler/Placer livré' },
         { n: 'Faucille pierre', s: 'todo', c: 10, req: ['Hache pierre'], notes: '[transition Bronze] récolte blé sauvage' }
       ],
       'Agriculture': [
@@ -393,7 +393,7 @@ function Header({ tab, setTab }) {
       </div>
       <div className="brandrow" style={{ marginTop: 4 }}>
         <div className="brand">STRATES · Âge I</div>
-        <div className="sub">plan de bataille pour livrer l'âge de pierre de bout en bout · v0.3 · tech tree XXL livré · intégration HUD en cours</div>
+        <div className="sub">plan de bataille pour livrer l'âge de pierre de bout en bout · v0.4 · actionbar finale + tech tree complet livré · Lot A priorité suivante</div>
       </div>
       <div className="tabs">
         {TABS.map(([id, name], i) => (
@@ -460,7 +460,7 @@ function OverviewTab() {
       <hr className="wavy"/>
 
       <div className="callout" style={{ borderColor: 'var(--done)', background: '#e8f2e1' }}>
-        <span className="lbl" style={{ color: 'var(--done)' }}>✅ Livré aujourd'hui · v0.3</span>
+        <span className="lbl" style={{ color: 'var(--done)' }}>✅ Livré aujourd'hui · v0.4</span>
         <ul style={{ margin: '4px 0 0', paddingLeft: 18, fontSize: 13 }}>
           {STATUS_FROM_REPO.newlyDone.map((x,i)=><li key={i}>{x}</li>)}
         </ul>
@@ -838,26 +838,28 @@ function TicketsTab() {
     },
     {
       lot: 'lotC',
-      title: 'Lot C · UI Tech tree XXL  ✅ LIVRÉ v0.3 (à intégrer au repo)',
+      title: 'Lot C · UI Tech tree XXL  ✅ LIVRÉ v0.4 — intégré',
       owner: 'Claude UI',
       files: ['modules/ui/techtree-panel.js (nouveau)', 'modules/ui/techtree-node.js (nouveau)', 'styles/techtree.css', 'index.html (bouton d\'ouverture)'],
       forbidden: ['data/*.json (lecture seule)', 'modules/jobs.js', 'modules/needs.js'],
       objective: 'Panneau arbre visuel scrollable/zoomable, 7 colonnes (âges) × 6 lignes (branches). Âge I actif, 2-7 teased/verrouillés en flou.',
       tasks: [
-        'Panneau plein écran ouvert via touche T ou bouton HUD.',
-        'Pan à la souris (drag background), zoom molette (0.5× à 2×).',
-        'Colonnes = âges (header "Âge I — Pierre", etc.). Lignes = branches.',
-        'Nœuds = cartes (icône + nom + coût), états visuels : verrouillé (0.3), disponible (bordure neutre), recherchable (glow bleu), en cours (progress), débloqué (glow doré).',
-        'Liens SVG entre prérequis (depuis requires).',
-        'Filtre par branche (toggles en haut).',
-        'Recherche texte (filtre cards par nom).',
-        'Âges 2+ affichés en flou + "?????" au lieu du nom des techs — preserve la surprise.'
+        '✅ Panneau plein écran ouvert via touche T ou bouton HUD.',
+        '✅ Pan à la souris (drag background), zoom molette (0.5× à 2×).',
+        '✅ Vue globale constellation : branches hexagonales en orbite, spokes SVG, filtres, rail des âges.',
+        '✅ Vue détail branche : cartes tech (icône + nom + coût), états visuels : verrouillé, disponible, recherchable, en cours, débloqué.',
+        '✅ Fiche droite 340px : coût, description, murmure, prérequis, débloque, actions.',
+        '✅ Liens SVG entre prérequis avec hover req-highlight (liens pulsés or, techs irrélevantes estompées).',
+        '✅ Filtre par branche (toggles colorés).',
+        '✅ Recherche texte (filtre cards par nom).',
+        '✅ File de recherche en bulles (vue globale uniquement, 5 slots max).',
+        '✅ Âges 2+ affichés en flou + "?????" — aucun contenu réel dans le DOM.'
       ],
       accept: [
-        'Ouvrir le panneau affiche toutes les techs âge I avec leur statut réel depuis state.',
-        'Cliquer "Rechercher" sur une tech disponible lance la recherche en puisant dans researchPoints.',
-        'Zoom/pan fluide sur 48x48x8 et plus, pas de lag.',
-        'Pas de contenu âge 2+ visible en clair (même via devtools du jeu).'
+        '✅ Ouvrir le panneau affiche toutes les techs âge I avec leur statut réel depuis state.',
+        '✅ Cliquer "Rechercher" sur une tech disponible lance la recherche en puisant dans researchPoints.',
+        '✅ Zoom/pan fluide, pas de lag.',
+        '✅ Pas de contenu âge 2+ visible en clair (même via devtools du jeu).'
       ]
     },
     {
@@ -1100,7 +1102,7 @@ function AdviceTab() {
   const FAQ = [
     { q: 'Je ne peux avoir qu\'un seul agent qui bosse à la fois, pas 4. Comment je fais ?', a: 'Fais les lots dans l\'ordre A → B → C → D. Le principe de parallélisation reste utile : chaque lot a un scope étanche, donc tu peux reprendre plus tard sans relire tout le projet. Un Claude par session = pas de conflit.' },
     { q: 'Combien de temps pour livrer l\'âge I complet ?', a: 'Estimation : 6-8 sessions de 2-3h. Plus court si tu as déjà l\'infra (c\'est ton cas), plus long si tu itères beaucoup sur le visuel.' },
-    { q: 'Je fais quoi quand je ne sais plus où j\'en suis ?', a: 'Tu as ton agent strates-guide. Sinon : re-ouvre cet onglet, regarde la Definition of Done, trouve la première case rouge, c\'est ton prochain chantier.' },
+    { q: 'Je fais quoi quand je ne sais plus où j\'en suis ?', a: 'Re-ouvre cet onglet, regarde la Definition of Done, trouve la première case rouge, c\'est ton prochain chantier.' },
     { q: 'Le Cairn c\'est ringard, je veux un monolithe obsidien/un feu sacré.', a: 'Renomme-le. Le nom n\'est qu\'un placeholder. Ce qui compte c\'est la mécanique : un bâtiment unique, conditions cumulatives, déclenche le passage.' },
     { q: 'Je dois vraiment faire le tech tree XXL maintenant ?', a: 'Oui. Pas le CONTENU XXL (seul âge I est rempli), mais la STRUCTURE XXL. Ajouter plus tard un panneau fondamentalement différent = refonte + bugs. Commencer dès le début avec le vrai panneau = zéro dette technique.' },
     { q: 'La mindmap et ce doc risquent de se désynchroniser.', a: 'On peut brancher ce doc pour qu\'il lise directement data/techtree.json de ton repo (via fetch ou export JSON statique). Dis-moi si tu veux que je fasse cette plomberie.' }
@@ -1126,11 +1128,11 @@ function AdviceTab() {
       <h3 className="hh">💡 Bonnes pratiques pour les Claudes</h3>
       <div className="sketch-box">
         <ol style={{ fontSize: 14, lineHeight: 1.5, paddingLeft: 20, margin: 0 }}>
-          <li><b>Toujours lire</b> <span className="code">docs/strates/roadmap.md</span> et <span className="code">changelog.md</span> en début de session (ton agent <span className="code">strates-guide</span> le fait pour toi).</li>
+          <li><b>Toujours lire</b> <span className="code">docs/strates/roadmap.md</span> et <span className="code">changelog.md</span> en début de session.</li>
           <li><b>Vérifier dans le navigateur</b> avant commit, pas juste <span className="code">node --check</span>.</li>
           <li><b>Un commit = une tâche finie.</b> Message <span className="code">lot-A: ajouter techtree.json âge 1</span>.</li>
           <li><b>Mettre à jour le changelog</b> à chaque livraison, même mineure. Ça devient ton fil d'Ariane.</li>
-          <li><b>Sub-agent <span className="code">strates-guide</span></b> à invoquer quand un agent arrive : il synthétise vision + état + prochaine étape.</li>
+          <li><b>Lire le changelog</b> et la roadmap en début de session pour synthétiser vision + état + prochaine étape.</li>
           <li><b>Ne jamais modifier la branche <span className="code">strate</span> sans branche dédiée</b>. Un lot = une branche <span className="code">lot-A-data-age1</span>.</li>
           <li><b>Les tests Vitest (axe 1.6)</b> peuvent attendre, mais écris les fonctions pures comme si tu allais les tester demain.</li>
         </ol>
