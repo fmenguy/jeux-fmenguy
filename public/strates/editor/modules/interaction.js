@@ -318,10 +318,7 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keydown', (e) => {
   const map = {
-    '1': 'nav', '2': 'mine', '3': 'level', '4': 'build',
-    '7': 'house', '0': 'research', '8': 'field',
     'p': 'observatory', 'P': 'observatory',
-    ...(window.STRATES_MODE === 'sandbox' ? { '4': 'forest', '5': 'rock', '6': 'ore', '9': 'bush' } : {})
   }
   if (map[e.key]) setTool(map[e.key])
   if (e.key === 'r' || e.key === 'R') resetWorld(refreshHUD)
