@@ -4,6 +4,7 @@ import {
   GRID, WATER_LEVEL, SHALLOW_WATER_LEVEL
 } from './constants.js'
 import { state } from './state.js'
+import { totalBuildStock } from './stocks.js'
 import { countActiveResearchers } from './placements.js'
 import { unlockTech } from './tech.js'
 import { BUILDINGS_DATA } from './gamedata.js'
@@ -30,6 +31,7 @@ const cResearchersEl = document.getElementById('c-researchers')
 const rBerriesEl = document.getElementById('r-berries')
 const rWoodEl = document.getElementById('r-wood')
 const rStoneEl = document.getElementById('r-stone')
+const rBlocsEl = document.getElementById('r-blocs')
 const cCountEl = document.getElementById('c-count')
 const colonsListEl = document.getElementById('colons-list')
 const colonsHeaderEl = document.getElementById('colons-header')
@@ -125,6 +127,7 @@ export function refreshHUD() {
   if (rBerriesEl) rBerriesEl.textContent = state.resources.berries
   if (rWoodEl) rWoodEl.textContent = state.resources.wood
   if (rStoneEl) rStoneEl.textContent = state.resources.stone
+  if (rBlocsEl) rBlocsEl.textContent = totalBuildStock()
   if (rNightPointsEl) rNightPointsEl.textContent = state.nightPoints
   refreshStocksLine()
   refreshTechsPanel()
@@ -253,7 +256,7 @@ export function tickFps() {
 
 // referentiels pour tick()
 export const hudRefs = {
-  rBerriesEl, rWoodEl, rStoneEl, cBushesEl, rPointsEl, rNightPointsEl
+  rBerriesEl, rWoodEl, rStoneEl, rBlocsEl, cBushesEl, rPointsEl, rNightPointsEl
 }
 
 // ============================================================================
