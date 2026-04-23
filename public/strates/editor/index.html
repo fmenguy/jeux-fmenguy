@@ -213,6 +213,24 @@
     .ab-tab.active::after{content:"";position:absolute;top:0;left:10%;right:10%;height:2px;background:var(--gold)}
 
     .ab-body{display:flex;align-items:center;padding:10px 14px;gap:4px;min-height:72px}
+    .ab-body.grid{flex-wrap:wrap;align-content:flex-start;align-items:flex-start;min-height:136px;padding:8px 12px;gap:4px;max-width:380px}
+    .ab-body.grid .sep{width:100%;height:1px;margin:2px 0;flex-shrink:0}
+    .ab-body.grid .group-label{width:100%;padding:4px 2px 0;font-size:8px;border-top:1px solid var(--rule);margin-top:2px}
+
+    .nav-zone{display:flex;align-items:center;justify-content:center;padding:8px 10px;border-right:1px solid var(--rule);background:rgba(0,0,0,.18)}
+    .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;min-width:64px;background:linear-gradient(180deg,rgba(212,184,112,.14),rgba(212,184,112,.04));border:1px solid var(--gold);border-radius:3px;cursor:pointer;color:var(--gold);font-family:inherit;transition:all .12s}
+    .nav-btn .ic{font-size:20px;line-height:1}
+    .nav-btn .nm{font-family:var(--sans);font-size:11px;font-weight:500}
+    .nav-btn .kb{font-family:var(--mono);font-size:8px;color:rgba(212,184,112,.5);letter-spacing:.05em;margin-top:1px}
+    .nav-btn:hover{background:linear-gradient(180deg,rgba(212,184,112,.24),rgba(212,184,112,.08))}
+
+    .brush-zone{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 10px;border-left:1px solid var(--rule);margin-left:4px}
+    .brush-zone .brush-label{font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+    .brush-zone .brush-row{display:flex;gap:4px;align-items:center}
+    .brush-zone .brush-pm{width:26px;height:26px;border:1px solid var(--rule);border-radius:3px;background:var(--panel-2);color:var(--ink-2);font-family:var(--mono);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;line-height:1}
+    .brush-zone .brush-pm:hover{border-color:var(--gold-2);color:var(--gold)}
+    .brush-zone .brush-val{min-width:36px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink-2);border:1px solid var(--rule);border-radius:3px;padding:4px 4px;background:rgba(0,0,0,.2)}
+    .brush-zone .brush-hint{font-family:var(--mono);font-size:7.5px;color:var(--ink-3);letter-spacing:.06em}
 
     .tool{
       display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;min-width:70px;
@@ -226,7 +244,8 @@
     .tool .ic{font-size:20px;line-height:1}
     .tool .nm{font-family:var(--sans);font-size:11px;margin-top:2px;font-weight:500}
     .tool .kb{position:absolute;top:3px;right:4px;font-family:var(--mono);font-size:8px;color:var(--ink-3);letter-spacing:.05em}
-    .tool.locked{opacity:.4;cursor:not-allowed}
+    .tool .cond{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:7px;color:var(--ink-3);letter-spacing:.03em}
+    .tool.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
     .tool.disabled-unique{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
     .tool.disabled-unique:hover{transform:none}
 
@@ -559,6 +578,31 @@
         });
       });
 
+      // Contrôles pinceau dans l'onglet Terraformer
+      const brushSizes = [1, 3, 5, 7];
+      let brushIdx = 1;
+      const brushValLbl = document.getElementById('brush-val-lbl');
+      function updateBrushLabel() {
+        const s = brushSizes[brushIdx];
+        if (brushValLbl) brushValLbl.textContent = s + '×' + s;
+        window._terraBrushSize = s;
+      }
+      function changeBrush(dir) {
+        brushIdx = Math.max(0, Math.min(brushSizes.length - 1, brushIdx + dir));
+        updateBrushLabel();
+        window.dispatchEvent(new CustomEvent('strates:brushSize', { detail: { size: brushSizes[brushIdx] } }));
+      }
+      const bMinus = document.getElementById('brush-minus');
+      const bPlus  = document.getElementById('brush-plus');
+      if (bMinus) bMinus.addEventListener('click', () => changeBrush(-1));
+      if (bPlus)  bPlus.addEventListener('click',  () => changeBrush(1));
+      document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === '-' || e.key === '_') changeBrush(-1);
+        if (e.key === '+' || e.key === '=') changeBrush(1);
+      });
+      updateBrushLabel();
+
       // Rail droite : toggle panneaux
       const railBtns = document.querySelectorAll('.rail-btn');
       const popPanel = document.getElementById('popPanel');
@@ -840,76 +884,112 @@
 
 
   <div id="actionbar" class="actionbar">
+
+    <!-- Naviguer : toujours visible, hors onglets -->
+    <div class="nav-zone">
+      <button class="nav-btn tool active" data-tool="nav" title="Naviguer dans le monde (Échap / 1)">
+        <span class="ic">&#128400;</span>
+        <span class="nm">Naviguer</span>
+        <span class="kb">Échap / 1</span>
+      </button>
+    </div>
+
     <div class="ab-tabs">
-      <button class="ab-tab active" data-tab="orders">
-        <span class="ico">&#9874;</span>
-        <span>Ordres</span>
+      <button class="ab-tab active" data-tab="recoltes">
+        <span class="ico">&#127826;</span>
+        <span>Récoltes</span>
       </button>
       <button class="ab-tab" data-tab="build">
         <span class="ico">&#127959;</span>
         <span>Construire</span>
       </button>
+      <button class="ab-tab" data-tab="terra">
+        <span class="ico">&#129750;</span>
+        <span>Terraformer</span>
+      </button>
     </div>
 
-    <div class="ab-body orders" id="ab-orders">
-      <button class="tool active" data-tool="nav">
-        <span class="ic">&#128400;</span>
-        <span class="nm">Naviguer</span>
-        <span class="kb">1</span>
-      </button>
-      <div class="sep"></div>
-      <button class="tool" data-tool="mine">
-        <span class="ic">&#9935;</span>
-        <span class="nm">Récolte</span>
+    <!-- Onglet Récoltes -->
+    <div class="ab-body" id="ab-recoltes">
+      <button class="tool" data-tool="mine" title="Récolter baies et ressources naturelles">
+        <span class="ic">&#127826;</span>
+        <span class="nm">Récolter</span>
         <span class="kb">2</span>
       </button>
-      <button class="tool" data-tool="hache" style="display:none" title="Abattre les arbres (requiert Hache en pierre)">
+      <div class="sep"></div>
+      <button class="tool locked" data-tool="hache" style="display:none" title="Abattre les arbres (requiert Hache)">
         <span class="ic">&#129683;</span>
         <span class="nm">Hache</span>
       </button>
-      <button class="tool" data-tool="pick" style="display:none" title="Miner la roche (requiert Pioche en pierre)">
+      <button class="tool locked" data-tool="pick" style="display:none" title="Miner la roche (requiert Pioche)">
         <span class="ic">&#9935;</span>
         <span class="nm">Pioche</span>
       </button>
-      <button class="tool" data-tool="level" title="Niveler le terrain : retire 1 voxel directement (sans colon). Les minerais sont protégés.">
-        <span class="ic">&#129750;</span>
-        <span class="nm">Niveler</span>
-        <span class="kb">3</span>
-      </button>
-      <button class="tool" data-tool="build" title="Placer un bloc de terre ou de pierre puise dans les stocks">
-        <span class="ic">&#129521;</span>
-        <span class="nm">Placer bloc</span>
-        <span class="kb">4</span>
+      <button class="tool locked" data-tool="hunt" title="Chasser (requiert Arc)">
+        <span class="ic">&#127993;</span>
+        <span class="nm">Chasser</span>
       </button>
     </div>
 
-    <div class="ab-body build" id="ab-build" style="display:none">
-      <button class="tool" data-tool="house">
+    <!-- Onglet Construire -->
+    <div class="ab-body grid" id="ab-build" style="display:none">
+      <button class="tool" data-tool="house" title="Construire une maison">
         <span class="ic">&#127968;</span>
         <span class="nm">Maison</span>
-        <span class="kb">7</span>
       </button>
-      <button class="tool" data-tool="research">
+      <button class="tool locked" data-tool="foyer" title="Foyer (requiert Maîtrise du feu)">
+        <span class="ic">&#128293;</span>
+        <span class="nm">Foyer</span>
+      </button>
+      <button class="tool locked" data-tool="research" title="Hutte du sage (requiert Recherche de base)">
         <span class="ic">&#128300;</span>
         <span class="nm">Recherche</span>
-        <span class="kb">0</span>
       </button>
-      <button class="tool" data-tool="field">
-        <span class="ic">&#127806;</span>
-        <span class="nm">Champ</span>
-        <span class="kb">8</span>
-      </button>
-      <button class="tool" data-tool="observatory" title="Promontoire d'observation, genere des points nocturnes la nuit">
+      <button class="tool locked" data-tool="observatory" title="Promontoire d'observation (requiert Promontoire)">
         <span class="ic">&#128508;</span>
         <span class="nm">Promontoire</span>
-        <span class="kb">P</span>
       </button>
-      <button class="tool" data-tool="cairn">
+      <button class="tool locked" data-tool="abri" title="Abri de fortune (requiert Abri de fortune)">
+        <span class="ic">&#127968;</span>
+        <span class="nm">Abri</span>
+      </button>
+      <button class="tool locked" data-tool="field" title="Champ (requiert Premier champ)">
+        <span class="ic">&#127806;</span>
+        <span class="nm">Champ</span>
+      </button>
+      <div class="sep" style="width:100%;height:1px;margin:2px 0;flex-shrink:0"></div>
+      <span class="group-label" style="width:100%;writing-mode:horizontal-tb;transform:none;padding:2px 4px;font-size:8px;border-top:1px solid var(--rule);margin-top:2px">Monument</span>
+      <button class="tool locked" data-tool="cairn" title="Cairn (50 pierre + 20 bois + 10 os)">
         <span class="ic">&#128511;</span>
         <span class="nm">Cairn</span>
+        <span class="cond">50&#129704; 20&#129695; 10&#129460;</span>
       </button>
     </div>
 
+    <!-- Onglet Terraformer -->
+    <div class="ab-body" id="ab-terra" style="display:none">
+      <button class="tool" data-tool="level" title="Retirer un bloc de terrain (seau, sans colon). Minerais protégés.">
+        <span class="ic">&#129750;</span>
+        <span class="nm">Retirer</span>
+        <span class="kb">3</span>
+      </button>
+      <button class="tool" data-tool="build" title="Placer un bloc depuis les stocks (seau)">
+        <span class="ic">&#129750;</span>
+        <span class="nm">Placer</span>
+        <span class="kb">4</span>
+      </button>
+      <div class="brush-zone">
+        <span class="brush-label">Pinceau</span>
+        <div class="brush-row">
+          <button class="brush-pm" id="brush-minus" title="Réduire le pinceau (-)">&#8722;</button>
+          <div class="brush-val" id="brush-val-lbl">3×3</div>
+          <button class="brush-pm" id="brush-plus" title="Agrandir le pinceau (+)">+</button>
+        </div>
+        <span class="brush-hint">touches  &#8722; / +</span>
+      </div>
+    </div>
+
+    <!-- Godmod (toujours visible pour debug) -->
     <div class="ab-body godmod" id="ab-godmod">
       <span class="group-label">godmod</span>
       <button class="tool" data-tool="forest">
