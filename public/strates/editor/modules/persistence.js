@@ -129,6 +129,7 @@ function serializeSnapshot() {
     ),
     researchPoints: state.researchPoints,
     researchTickAccum: state.researchTickAccum,
+    totalResearchSpent: state.totalResearchSpent || 0,
     nightPoints: state.nightPoints || 0,
     isNight: !!state.isNight,
     observatories: (state.observatories || []).map(o => ({ x: o.x, z: o.z })),
@@ -158,6 +159,7 @@ function clearEverything() {
   for (const k of STOCK_KEYS) state.stocks[k] = 0
   state.researchPoints = 0
   state.researchTickAccum = 0
+  state.totalResearchSpent = 0
   state.nightPoints = 0
   state.isNight = false
   for (const id in state.techs) state.techs[id].unlocked = false
@@ -244,6 +246,7 @@ function applySnapshot(data) {
   }
   state.researchPoints = data.researchPoints || 0
   state.researchTickAccum = data.researchTickAccum || 0
+  state.totalResearchSpent = data.totalResearchSpent || 0
   state.nightPoints = data.nightPoints || 0
   state.isNight = !!data.isNight
   if (Array.isArray(data.observatories)) {
