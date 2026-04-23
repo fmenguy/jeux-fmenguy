@@ -50,6 +50,22 @@
     .game-title{font-family:var(--serif);font-weight:500;font-size:15px;letter-spacing:.01em;color:var(--ink)}
     .game-title small{color:var(--ink-3);font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;margin-left:8px;font-weight:400}
 
+    /* Widget recherche topbar-left */
+    .research-widget{display:flex;align-items:center;gap:8px;border-left:1px solid var(--rule);padding-left:12px;margin-left:4px}
+    .res-tech-btn{
+      display:flex;align-items:center;gap:5px;
+      background:rgba(212,184,112,.08);border:1px solid var(--gold-2);border-radius:3px;
+      padding:3px 10px;color:var(--gold);cursor:pointer;
+      font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+      transition:background .15s,border-color .15s;white-space:nowrap;
+    }
+    .res-tech-btn:hover{background:rgba(212,184,112,.16);border-color:var(--gold)}
+    .res-progress{display:flex;flex-direction:column;gap:2px;min-width:110px;max-width:180px}
+    .res-tech-name{font-family:var(--mono);font-size:9px;letter-spacing:.07em;color:var(--gold-2);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .res-bar-track{height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+    .res-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-2),var(--gold));border-radius:2px;transition:width .4s ease-out;width:0%}
+    .res-tech-pct{font-family:var(--mono);font-size:8.5px;color:var(--ink-3);letter-spacing:.06em}
+
     .res{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:3px;transition:background .15s}
     .res:hover{background:rgba(212,184,112,.06)}
     .res .ic{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -612,6 +628,14 @@
           }
         });
       }
+
+      // Bouton Techs dans la topbar-left
+      const btnOpenTT = document.getElementById('btn-open-techtree');
+      if (btnOpenTT) {
+        btnOpenTT.addEventListener('click', () => {
+          window.dispatchEvent(new CustomEvent('strates:toggleTechTree'));
+        });
+      }
     });
   </script>
 
@@ -623,6 +647,17 @@
   <div class="topbar">
     <div class="left">
       <span class="game-title">Strates <small>Alpha</small></span>
+      <div class="research-widget">
+        <button class="res-tech-btn" id="btn-open-techtree" title="Arbre des technologies (T)">
+          <svg width="13" height="13" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="5" r="2"/><circle cx="5" cy="13" r="2"/><circle cx="11" cy="13" r="2"/><circle cx="17" cy="13" r="2"/><path d="M11 7 V11 M11 7 L5 11 M11 7 L17 11"/></svg>
+          Techs
+        </button>
+        <div class="res-progress" id="res-progress-block">
+          <span class="res-tech-name" id="res-tech-name">Aucune recherche</span>
+          <div class="res-bar-track"><div class="res-bar-fill" id="res-bar-fill"></div></div>
+          <span class="res-tech-pct" id="res-tech-pct"></span>
+        </div>
+      </div>
     </div>
 
     <div class="center">
@@ -708,14 +743,6 @@
     <button class="rail-btn" data-panel="quests" title="Quetes">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 3 H14 L17 6 V19 L11 16 L5 19 V6 Z"/></svg>
       <span class="lab">Quêtes</span>
-    </button>
-    <button class="rail-btn" data-panel="techtree" title="Arbre des technologies (T)">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="5" r="2"/><circle cx="5" cy="13" r="2"/><circle cx="11" cy="13" r="2"/><circle cx="17" cy="13" r="2"/><path d="M11 7 V11 M11 7 L5 11 M11 7 L17 11"/></svg>
-      <span class="lab">Tech</span>
-    </button>
-    <button class="rail-btn" data-panel="map" title="Mini-carte">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 5 L8 3 L14 5 L19 3 V17 L14 19 L8 17 L3 19 Z M8 3 V17 M14 5 V19"/></svg>
-      <span class="lab">Carte</span>
     </button>
   </div>
 
