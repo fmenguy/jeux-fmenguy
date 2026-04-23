@@ -151,6 +151,7 @@ function tick(nowMs) {
   }
 
   // flashs de minage
+  let colorsDirty = false
   for (let i = state.flashes.length - 1; i >= 0; i--) {
     const f = state.flashes[i]
     f.t += dt
@@ -159,13 +160,16 @@ function tick(nowMs) {
     if (f.t >= 0.3) {
       state.instanced.setColorAt(idxV, state.origColor[idxV])
       state.flashes.splice(i, 1)
+      colorsDirty = true
     } else {
       const k = 1 - (f.t / 0.3)
       tmpColor.copy(state.origColor[idxV]).lerp(COL.flash, k)
       state.instanced.setColorAt(idxV, tmpColor)
+      colorsDirty = true
     }
   }
-  if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+  // Lot B perf : upload GPU uniquement si une couleur a ete modifiee cette frame.
+  if (colorsDirty && state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
 
   // Lot B : monter les besoins (faim, Sans-abri) avant la MAJ des colons
   // pour que leur state soit coherent avant la prise de decision.

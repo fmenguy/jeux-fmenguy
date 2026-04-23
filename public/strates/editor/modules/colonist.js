@@ -84,6 +84,9 @@ export class Colonist {
     this.wanderPause = 2 + Math.random() * 4
     this.lookTimer = 1 + Math.random() * 3
     this.targetYaw = 0
+    // Lot B perf : throttle de la prise de decision IDLE (pathfinding A* lourd).
+    // Valeur initiale aleatoire pour decorreler les colons entre eux.
+    this.decisionCooldown = Math.random() * 0.3
     this.speechTimer = 0
     this.nextSpeech = 10 + Math.random() * 10
     this.lastLine = null
@@ -471,22 +474,30 @@ export class Colonist {
           }
         }
       }
-      // Lot B : priorite absolue a la survie. Si le colon a faim critique,
-      // il abandonne tout et cherche un buisson. La nuit n y change rien
-      // (manger est vital, meme en pleine nuit).
-      if (isNeedCritical(this, 'hunger')) {
-        if (this.pickHarvest()) {
-          this.currentTask = { kind: TASK_KIND.EAT_SEEK_FOOD, priority: PRIORITY.SURVIVAL, reason: 'hunger_critical' }
+      // Lot B perf : la prise de decision (pickHarvest, pickJob, pickBuildJob)
+      // appelle du pathfinding A* couteux. On throttle a ~3 Hz par colon pour
+      // eviter les micro-freezes en foule IDLE. La rotation tete et la flanerie
+      // plus bas continuent tourner a 60 Hz normalement.
+      this.decisionCooldown -= dt
+      if (this.decisionCooldown <= 0) {
+        this.decisionCooldown = 0.3 + Math.random() * 0.3
+        // Lot B : priorite absolue a la survie. Si le colon a faim critique,
+        // il abandonne tout et cherche un buisson. La nuit n y change rien
+        // (manger est vital, meme en pleine nuit).
+        if (isNeedCritical(this, 'hunger')) {
+          if (this.pickHarvest()) {
+            this.currentTask = { kind: TASK_KIND.EAT_SEEK_FOOD, priority: PRIORITY.SURVIVAL, reason: 'hunger_critical' }
+            return
+          }
+        }
+        if (state.jobs.size > 0) { if (this.pickJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK }; return } }
+        if (state.buildJobs.size > 0) { if (this.pickBuildJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_BUILD_JOB, priority: PRIORITY.WORK }; return } }
+        // Activite exclusive jour : cueillette de baies (agriculture). La nuit
+        // les colons affectes a un buisson reviennent au repos.
+        if (!state.isNight && this.pickHarvest()) {
+          this.currentTask = { kind: TASK_KIND.HARVEST_BERRIES, priority: PRIORITY.LEISURE }
           return
         }
-      }
-      if (state.jobs.size > 0) { if (this.pickJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK }; return } }
-      if (state.buildJobs.size > 0) { if (this.pickBuildJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_BUILD_JOB, priority: PRIORITY.WORK }; return } }
-      // Activite exclusive jour : cueillette de baies (agriculture). La nuit
-      // les colons affectes a un buisson reviennent au repos.
-      if (!state.isNight && this.pickHarvest()) {
-        this.currentTask = { kind: TASK_KIND.HARVEST_BERRIES, priority: PRIORITY.LEISURE }
-        return
       }
       // Lot B, B10 : auto-collecte de base au repos (rochers, arbres si hache).
       // desactive - remplace par systeme 3 boutons (pioche/hache/baie)
