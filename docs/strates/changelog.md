@@ -4,6 +4,15 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 15) : Lot C -- U7 palette vignette grisee batiment unique
+
+### U7 -- styles CSS + refresh HUD pour batiment unique deja pose
+- `index.html` : nouvelle classe `.tool.disabled-unique` (opacity 0.4, cursor not-allowed, filter grayscale, suppression des effets hover et active). Appliquee sur les boutons data-tool de la palette actionbar.
+- `modules/hud.js` : nouvelle fonction exportee `refreshUniqueBuildingsPalette()` appelee depuis `refreshHUD()`. Mapping `TOOL_TO_BUILDING_ID` (research -> hutte-du-sage, cairn -> cairn-pierre) et `INSTANCE_CHECKS` (lectures dediees de state.researchHouses et state.cairns). Helper `buildingIsUnique(id)` lit `BUILDINGS_DATA` pour valider le flag unique. Cohabite proprement avec la logique Lot B (placements.checkUniqueBuildingButtons) qui applique la meme classe depuis un tick lent.
+- Scope UI respecte : aucune modification de placements.js, interaction.js, data/*.json.
+
+---
+
 ## 2026-04-23 (session 14) : Lot B -- U7 consommation flag unique batiment
 
 ### U7 -- bouton de pose grise pour batiment unique deja pose

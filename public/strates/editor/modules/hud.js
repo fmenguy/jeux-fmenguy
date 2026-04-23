@@ -6,6 +6,7 @@ import {
 import { state } from './state.js'
 import { countActiveResearchers } from './placements.js'
 import { unlockTech } from './tech.js'
+import { BUILDINGS_DATA } from './gamedata.js'
 
 // ============================================================================
 // HUD : stocks, techs, colons, compteurs, FPS
@@ -127,6 +128,55 @@ export function refreshHUD() {
   if (rNightPointsEl) rNightPointsEl.textContent = state.nightPoints
   refreshStocksLine()
   refreshTechsPanel()
+  refreshUniqueBuildingsPalette()
+}
+
+// ----------------------------------------------------------------------------
+// U7, palette batiments uniques.
+//
+// Certains batiments ont "unique": true dans buildings.json (Hutte du sage,
+// Cairn de pierre). Quand une instance existe deja sur la carte, la vignette
+// correspondante dans l'actionbar recoit la classe .disabled-unique pour etre
+// grisee visuellement (opacite, curseur not-allowed, pas de hover). La logique
+// moteur (empecher la pose reelle) est geree par sub-agent engine en parallele.
+// ----------------------------------------------------------------------------
+
+// Mapping data-tool -> id de batiment dans buildings.json.
+// Seuls les outils correspondant a un batiment unique sont utiles ici, mais
+// on garde la table ouverte pour extensions futures.
+const TOOL_TO_BUILDING_ID = {
+  research: 'hutte-du-sage',
+  cairn:    'cairn-pierre'
+}
+
+// Mapping id de batiment -> fonction qui dit si une instance existe dans state.
+// On lit les tableaux dedies existants (researchHouses, cairns, etc.) sans
+// introduire un state.buildings generique.
+const INSTANCE_CHECKS = {
+  'hutte-du-sage': () => Array.isArray(state.researchHouses) && state.researchHouses.length > 0,
+  'cairn-pierre':  () => Array.isArray(state.cairns) && state.cairns.length > 0
+}
+
+function buildingIsUnique(id) {
+  if (!BUILDINGS_DATA || !Array.isArray(BUILDINGS_DATA.buildings)) return false
+  const b = BUILDINGS_DATA.buildings.find(x => x.id === id)
+  return !!(b && b.unique === true)
+}
+
+export function refreshUniqueBuildingsPalette() {
+  const btns = document.querySelectorAll('#actionbar .tool[data-tool]')
+  btns.forEach(btn => {
+    const tool = btn.dataset.tool
+    const buildingId = TOOL_TO_BUILDING_ID[tool]
+    if (!buildingId) return
+    if (!buildingIsUnique(buildingId)) {
+      btn.classList.remove('disabled-unique')
+      return
+    }
+    const checker = INSTANCE_CHECKS[buildingId]
+    const exists = typeof checker === 'function' ? checker() : false
+    btn.classList.toggle('disabled-unique', exists)
+  })
 }
 
 function stateLabel(c) {
