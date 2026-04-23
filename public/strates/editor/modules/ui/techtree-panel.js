@@ -122,19 +122,20 @@ function renderFilterToolbar() {
 
   branches.forEach(function(br) {
     const b = document.createElement('button')
-    const active = filter.branches === null || filter.branches.has(br.id)
+    // B13, logique filtre inversee : filter.branches = null signifie aucun
+    // filtre actif, toutes visibles. Sinon c'est l'ensemble des branches
+    // mises en SURBRILLANCE (cliquees). Les autres sont dimmed / masquees.
+    const active = filter.branches !== null && filter.branches.has(br.id)
     b.className = 'ttp-filter-btn' + (active ? ' active' : '')
     b.style.borderColor = br.color || '#888'
     b.innerHTML = '<span class="ttp-filter-dot" style="background:' + (br.color || '#888') + '"></span>' +
                   escapeHTML(br.name || br.id)
     b.addEventListener('click', function() {
-      if (filter.branches === null) {
-        filter.branches = new Set(branches.map(function(x) { return x.id }))
-      }
+      if (filter.branches === null) filter.branches = new Set()
       if (filter.branches.has(br.id)) filter.branches.delete(br.id)
       else filter.branches.add(br.id)
-      // Si toutes cochees, on repasse en null pour lisibilite
-      if (filter.branches.size === branches.length) filter.branches = null
+      // Aucun filtre = tout visible (plus propre qu'un Set vide)
+      if (filter.branches.size === 0) filter.branches = null
       render()
     })
     bar.appendChild(b)
@@ -151,6 +152,8 @@ function bindSearch() {
 }
 
 function branchVisible(branchId) {
+  // Aucun filtre actif : toutes visibles. Sinon : seules les branches du Set
+  // sont visibles pleinement, les autres sont attenuees (voir ttp-node--faded).
   return filter.branches === null || filter.branches.has(branchId)
 }
 function matchesQuery(tech) {
@@ -417,10 +420,12 @@ function render() {
       const cellY = rowY[bi] + CELL_PAD
       list.forEach(function(tech, ti) {
         const status = techStatus(tech)
-        const hiddenByBranch = !branchVisible(br.id)
+        const fadedByBranch = !branchVisible(br.id)
         const dimmedByQuery = filter.query && !matchesQuery(tech)
         const node = buildTechNode(tech, status, { cost: techCost(tech), onUnlock: unlockLocal })
-        if (hiddenByBranch) node.classList.add('ttp-node--hidden')
+        // B13 : attenuation au lieu de masquage pour que le joueur garde la
+        // structure du tree sous les yeux.
+        if (fadedByBranch) node.classList.add('ttp-node--faded')
         if (dimmedByQuery) node.classList.add('ttp-node--dimmed')
         const px = cellX
         const py = cellY + ti * (NODE_H + NODE_GAP)
