@@ -223,40 +223,7 @@
       color: #d9b15a; font-style: italic; font-size: 11px;
     }
 
-    /* Zone flottante save/load/nouvelle partie (evite le chevauchement avec #quests qui occupe right:16 width:280) */
-    #save-controls {
-      position: fixed; top: 16px; right: 312px;
-      display: flex; gap: 6px;
-      z-index: 30;
-      background: rgba(15,18,24,0.78);
-      border: 1px solid rgba(138,196,255,0.3);
-      border-radius: 10px;
-      padding: 6px;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-    }
-    #save-controls .save-btn {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 5px 9px;
-      background: rgba(138,196,255,0.08);
-      border: 1px solid rgba(138,196,255,0.35);
-      color: #e6f3ff;
-      font-size: 11px; font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-    }
-    #save-controls .save-btn:hover {
-      background: rgba(138,196,255,0.18);
-      transform: translateY(-1px);
-    }
-    #save-controls .save-btn.danger {
-      border-color: rgba(255,160,120,0.45);
-      color: #ffd0b8;
-      background: rgba(255,140,100,0.08);
-    }
-    #save-controls .save-btn.danger:hover { background: rgba(255,140,100,0.18); }
-    #save-controls .save-lbl { letter-spacing: 0.04em; }
+    /* B8bis : styles #save-controls retires (panneau supprime, doublon avec menu Echap). */
 
     /* Bouton Arbre des technologies flottant */
     #btn-techtree-float {
@@ -669,12 +636,7 @@
     </div>
   </div>
 
-  <!-- Zone dediee save/load/nouvelle partie -->
-  <div id="save-controls">
-    <button class="save-btn" id="btn-save" title="Sauvegarder la partie">&#128190;<span class="save-lbl">Sauver</span></button>
-    <button class="save-btn" id="btn-load" title="Charger la derniere sauvegarde">&#128194;<span class="save-lbl">Charger</span></button>
-    <button class="save-btn danger" id="btn-reset" title="Nouvelle partie (R)">&#10227;<span class="save-lbl">Nouvelle</span></button>
-  </div>
+  <!-- B8bis : panneau save/load/nouvelle retire (doublon avec le menu Echap). Le bouton disquette rapide (U8, bas droite) reste intact. -->
 
   <!-- Arbre des technologies -->
   <style>
