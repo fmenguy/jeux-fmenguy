@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/population.css">
   <style>
     :root{
       --bg:#1b1914;
@@ -618,7 +619,10 @@
             const isOpen = popPanel.classList.contains('open');
             popPanel.classList.toggle('open', !isOpen);
             railBtns.forEach(b => b.classList.remove('active'));
-            if (!isOpen) btn.classList.add('active');
+            if (!isOpen) {
+              btn.classList.add('active');
+              window.dispatchEvent(new CustomEvent('strates:populationOpen'));
+            }
             return;
           }
           // Panneau quêtes
@@ -791,25 +795,8 @@
   </div>
 
   <!-- ============ Panneau population (modal centré) ============ -->
+  <!-- Le contenu est injecté par modules/ui/population-modal.js -->
   <aside class="pop-panel" id="popPanel">
-    <div class="pop-frame" id="popFrame">
-      <div class="pop-head">
-        <h3>Population</h3>
-        <span class="count"><span id="c-count">0</span> colons</span>
-        <button class="pop-close" title="Fermer">&times;</button>
-      </div>
-      <div class="village-switch">
-        <span class="small">Village</span>
-        <span class="chip on">La Souche</span>
-        <span class="chip" style="opacity:.45;cursor:not-allowed">+ Nouveau</span>
-        <span class="spacer"></span>
-      </div>
-      <div class="pop-list" id="colons-list"></div>
-      <div class="pop-foot">
-        <button>Vue complète</button>
-        <button>Affecter métiers</button>
-      </div>
-    </div>
   </aside>
 
   <!-- ============ Quetes (modal centré) ============ -->
