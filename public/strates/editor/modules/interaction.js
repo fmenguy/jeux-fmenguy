@@ -176,6 +176,7 @@ export function setBrush(b) {
 
 toolBtns.forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)))
 brushBtns.forEach(b => b.addEventListener('click', () => setBrush(parseInt(b.dataset.brush, 10))))
+window.addEventListener('strates:brushSize', e => setBrush(e.detail.size))
 
 const btnReset = document.getElementById('btn-reset')
 if (btnReset) btnReset.addEventListener('click', () => {
