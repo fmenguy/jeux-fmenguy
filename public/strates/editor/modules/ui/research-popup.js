@@ -121,6 +121,65 @@ function showPopup(id, tech) {
   }, 4000)
 }
 
+// ============================================================================
+// Toast HUD generique (message court, fond sombre, 2-3 s)
+// ============================================================================
+
+const TOAST_CSS = `
+.hud-toast {
+  position: fixed; bottom: 68px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(27,25,20,0.94);
+  border: 1px solid rgba(212,184,112,0.35);
+  border-radius: 4px; padding: 10px 18px;
+  z-index: 300; opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none; backdrop-filter: blur(8px);
+  color: var(--ink, #ede3cc);
+  font-family: var(--sans, "Inter", sans-serif);
+  font-size: 13px; white-space: nowrap;
+}
+.hud-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.hud-toast.hidden  { display: none; }
+`
+
+let toastStyleInjected = false
+let toastHideTimer = null
+let toastRemoveTimer = null
+
+function ensureToastDom() {
+  if (document.getElementById('hud-toast-el')) return
+  if (!toastStyleInjected) {
+    const st = document.createElement('style')
+    st.id = 'hud-toast-style'
+    st.textContent = TOAST_CSS
+    document.head.appendChild(st)
+    toastStyleInjected = true
+  }
+  const el = document.createElement('div')
+  el.id = 'hud-toast-el'
+  el.className = 'hud-toast hidden'
+  document.body.appendChild(el)
+}
+
+export function showHudToast(message, durationMs) {
+  const dur = durationMs != null ? durationMs : 2500
+  ensureToastDom()
+  const el = document.getElementById('hud-toast-el')
+  if (!el) return
+  el.textContent = message
+  if (toastHideTimer)   { clearTimeout(toastHideTimer);   toastHideTimer = null }
+  if (toastRemoveTimer) { clearTimeout(toastRemoveTimer); toastRemoveTimer = null }
+  el.classList.remove('hidden')
+  el.classList.remove('visible')
+  void el.offsetHeight
+  el.classList.add('visible')
+  toastHideTimer = setTimeout(function() {
+    el.classList.remove('visible')
+    toastRemoveTimer = setTimeout(function() { el.classList.add('hidden') }, 300)
+  }, dur)
+}
+
 export function installResearchPopup() {
   if (installed) return
   installed = true
