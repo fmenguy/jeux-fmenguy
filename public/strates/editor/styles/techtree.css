@@ -137,6 +137,8 @@
 /* Noeuds filtres */
 .ttp-node--hidden { display: none; }
 .ttp-node--dimmed { opacity: 0.18; filter: grayscale(1); }
+/* B13 : filtre par branche, les branches non cochees sont attenuees (pas masquees) */
+.ttp-node--faded { opacity: 0.2; filter: grayscale(0.6); pointer-events: none; }
 
 /* Placeholder colonne d'age debloquee mais sans tech definie */
 .ttp-age-placeholder {
