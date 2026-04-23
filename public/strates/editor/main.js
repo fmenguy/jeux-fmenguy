@@ -236,7 +236,12 @@ function tick(nowMs) {
   updateCameraPan(dt)
   controls.update()
   composer.render()
-  updateDynHUD()
+  // Lot B perf : HUD dynamique gate a 5 Hz (boucle O(colons) + string signature
+  // couteuses a 60 Hz). Invisible pour le joueur, gros gain CPU.
+  if (!tick._lastDynHUD || t - tick._lastDynHUD > 0.2) {
+    tick._lastDynHUD = t
+    updateDynHUD()
+  }
   tickFps()
 
 
