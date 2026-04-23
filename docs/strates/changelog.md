@@ -4,6 +4,29 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 14) : Lot C -- B8 B9 B12 B13 + U5 U8
+
+### B8 -- save/load sans chevauchement panneau quetes
+- `index.html` : `#save-controls` repositionne a `top: 16px; right: 312px` (decale de la largeur du panneau #quests + marge) pour eviter la superposition en haut a droite.
+
+### B9 -- aide sans references editeur terrain
+- `index.html` : suppression complete de l'ancien `#help-panel` (et de `#help-hint`, classes `.help-body`, `.help-header`) qui documentait les outils godmod editeur (Foret, Rocher, Filon, Champ, Baies, cadre bleu). L'aide active reste `#help-overlay` style Clair Obscur, deja centree sur le mode jeu.
+
+### B12 -- liens SVG tech tree alignes sur bords cards
+- `modules/ui/techtree-panel.js` : refonte du calcul des paths Bezier. Sortie au milieu du bord droit de la card source, entree au milieu du bord gauche de la cible. Tangentes horizontales proportionnelles a la distance (tension 0.5) au lieu de `midX` systematique. Cas particulier meme colonne (prereq vertical) : ancrage haut/bas avec tangentes verticales.
+
+### B13 -- filtres branches tech tree operationnels
+- `modules/ui/techtree-panel.js` : logique inversee. `filter.branches` est desormais l'ensemble des branches SURBRILLANCE (cliquees). `null` = aucun filtre actif, toutes visibles. Clic sur un filtre ajoute/retire la branche de l'ensemble. Ensemble vide = retour a null.
+- `styles/techtree.css` : nouvelle classe `.ttp-node--faded` (opacity 0.2, grayscale 0.6, pointer-events none) appliquee aux cards hors branche filtree. Remplace `ttp-node--hidden` (display:none) qui masquait totalement et cassait la lisibilite structurelle du tree.
+
+### U5 -- renommer ordre Placer en Placer bloc
+- `index.html` : le bouton `data-tool="build"` dans la barre `ordres` affiche desormais `Placer bloc` au lieu de `Placer`, avec tooltip clarifiant qu'il s'agit de poser un bloc puise dans les stocks (terre ou pierre). Le raccourci `3` est inchange.
+
+### U8 -- bouton disquette sauvegarde rapide bas droite
+- `index.html` : nouveau bouton circulaire flottant `#btn-quicksave` (48x48 px, position fixed bottom:16 right:16). Au clic, appelle `saveGame('auto')` via un petit module inline qui importe `modules/persistence.js`. Feedback visuel : le bouton passe en vert 1.4 s avec toast "Partie sauvegardee". Placeholder UI en attendant la refonte complete.
+
+---
+
 ## 2026-04-23 (session 14) : Lot A -- U6 U7 hutte du sage flag unique
 
 ### U6 U7 - Champs unique et _note sur la Hutte du sage
