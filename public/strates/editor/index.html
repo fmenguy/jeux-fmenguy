@@ -4,26 +4,233 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Strates, éditeur de carte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: #0b0d12; overflow: hidden; font-family: system-ui, sans-serif; color: #f3ecdd; user-select: none; }
+    :root{
+      --bg:#1b1914;
+      --panel:#221e18;
+      --panel-2:#2b261e;
+      --panel-3:#362f25;
+      --rule:#3d352a;
+      --ink:#ede3cc;
+      --ink-2:#b9ad91;
+      --ink-3:#7f7562;
+      --gold:#d4b870;
+      --gold-2:#a88d4a;
+      --grass:#7cc06a;
+      --wood:#c48a52;
+      --stone:#b0a98f;
+      --food:#c94a6a;
+      --sun:#e8c760;
+      --moon:#8fb4d6;
+      --accent:#d4b870;
+      --danger:#c9442c;
+      --serif:"Fraunces","Iowan Old Style",Georgia,serif;
+      --sans:"Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;
+      --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+    }
+    html, body { margin: 0; padding: 0; height: 100%; background: #0b0d12; overflow: hidden; font-family: var(--sans); color: #f3ecdd; user-select: none; }
     #app { position: fixed; inset: 0; }
 
-    #hud {
-      position: fixed; left: 16px; top: 16px;
-      background: rgba(20, 24, 30, 0.6);
-      padding: 12px 16px; border-radius: 10px;
-      backdrop-filter: blur(8px);
-      font-size: 13px; line-height: 1.55;
-      pointer-events: none;
-      max-width: 360px;
-      z-index: 10;
+    /* ====== Topbar ressources ====== */
+    .topbar{
+      position:fixed;top:0;left:0;right:0;height:42px;
+      background:linear-gradient(180deg,rgba(27,25,20,.96),rgba(27,25,20,.88));
+      border-bottom:1px solid var(--rule);
+      backdrop-filter:blur(8px);
+      display:grid;grid-template-columns:minmax(140px,auto) 1fr minmax(140px,auto);align-items:center;
+      z-index:20;
+      padding:0 16px;gap:8px;
     }
-    #hud b { color: #ffd98a; }
-    #hud .row { display: flex; justify-content: space-between; gap: 18px; }
-    #hud .key { color: #c7b98c; }
-    #hud .val { color: #fff; font-variant-numeric: tabular-nums; }
-    #hud h4 { margin: 8px 0 2px 0; font-size: 12px; color: #ffd98a; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-    #hud { pointer-events: auto; }
+    .topbar .left,.topbar .right{display:flex;align-items:center;gap:10px;min-width:0}
+    .topbar .center{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;overflow:hidden}
+    .topbar .right{justify-content:flex-end;gap:12px}
+    .game-title{font-family:var(--serif);font-weight:500;font-size:15px;letter-spacing:.01em;color:var(--ink)}
+    .game-title small{color:var(--ink-3);font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;margin-left:8px;font-weight:400}
+
+    .res{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:3px;transition:background .15s}
+    .res:hover{background:rgba(212,184,112,.06)}
+    .res .ic{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+    .res .v{font-family:var(--serif);font-size:15px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+    .res .v small{color:var(--ink-3);font-family:var(--mono);font-size:9px;letter-spacing:.1em;margin-left:2px;font-weight:400;text-transform:uppercase}
+    .res-sep{width:1px;height:18px;background:var(--rule);margin:0 2px}
+
+    .season{display:flex;align-items:center;gap:8px;padding:4px 10px;border:1px solid var(--rule);border-radius:3px;background:rgba(0,0,0,.2)}
+    .season .ic{font-size:14px}
+    .season .label{font-family:var(--serif);font-size:13px;color:var(--ink)}
+    .season .temp{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+
+    .time{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
+    .time b{color:var(--ink);font-weight:500}
+
+    .icon-btn{width:28px;height:28px;border-radius:3px;border:1px solid transparent;background:transparent;color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:16px;line-height:1;font-family:inherit}
+    .icon-btn:hover{background:rgba(212,184,112,.1);color:var(--gold);border-color:var(--rule)}
+
+    /* ====== Rail droite ====== */
+    .leftrail{position:fixed;right:14px;top:58px;bottom:100px;width:54px;display:flex;flex-direction:column;gap:8px;z-index:15}
+    .rail-btn{
+      width:54px;height:54px;border-radius:4px;
+      background:linear-gradient(180deg,var(--panel-2),var(--panel));
+      border:1px solid var(--rule);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+      cursor:pointer;transition:all .15s;color:var(--ink-2);
+      position:relative;font-family:inherit;
+    }
+    .rail-btn:hover{border-color:var(--gold-2);color:var(--ink);transform:translateX(-1px)}
+    .rail-btn.active{border-color:var(--gold);color:var(--gold);background:linear-gradient(180deg,#2e281e,#241f18)}
+    .rail-btn .lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+    .rail-btn .badge{position:absolute;top:-3px;right:-3px;background:var(--gold);color:#1a1510;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center}
+
+    /* ====== Panneau population ====== */
+    .pop-panel{
+      position:fixed;right:80px;top:58px;width:300px;max-height:calc(100vh - 170px);
+      background:rgba(27,25,20,.96);backdrop-filter:blur(10px);
+      border:1px solid var(--rule);border-radius:4px;
+      box-shadow:0 20px 60px rgba(0,0,0,.6),0 2px 4px rgba(0,0,0,.3);
+      z-index:16;display:none;flex-direction:column;
+      overflow:hidden;color:var(--ink);
+    }
+    .pop-head{padding:14px 16px 10px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between}
+    .pop-head h3{margin:0;font-family:var(--serif);font-weight:500;font-size:17px;color:var(--ink);letter-spacing:-.005em}
+    .pop-head .count{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+    .pop-close{background:transparent;border:none;color:var(--ink-3);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit}
+    .pop-close:hover{color:var(--ink)}
+
+    .village-switch{padding:8px 16px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-3)}
+    .village-switch .chip{padding:3px 8px;border-radius:2px;background:var(--panel-2);color:var(--ink-2);font-family:var(--mono);font-size:10px;letter-spacing:.08em;cursor:pointer}
+    .village-switch .chip.on{background:var(--gold);color:#1a1510}
+    .village-switch .spacer{flex:1}
+    .village-switch .small{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em}
+
+    .pop-list{overflow-y:auto;flex:1;padding:4px 0}
+    .pop-list::-webkit-scrollbar{width:6px}
+    .pop-list::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px}
+
+    .colon-row{padding:10px 16px;border-bottom:1px solid rgba(61,53,42,.5);cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:10px}
+    .colon-row:hover{background:rgba(212,184,112,.05)}
+    .colon-row.selected{background:rgba(212,184,112,.1);border-left:2px solid var(--gold);padding-left:14px}
+    .portrait{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4a3d28,#2a221a);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--rule);font-family:var(--serif);font-size:14px;color:var(--ink-2)}
+    .portrait.m{background:linear-gradient(135deg,#2d4a6a,#1d3144)}
+    .portrait.f{background:linear-gradient(135deg,#6a2d4a,#4a1d31)}
+    .colon-meta{flex:1;min-width:0}
+    .colon-name{font-family:var(--serif);font-size:14.5px;color:var(--ink);font-weight:500;line-height:1.2;display:flex;align-items:center;gap:5px}
+    .colon-name .g{font-size:10px;opacity:.6}
+    .colon-name .g.m{color:#8fb4d6}
+    .colon-name .g.f{color:#e89bb4}
+    .colon-state{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin-top:2px}
+    .colon-state.work{color:var(--grass)}
+    .colon-state.research{color:#8fb4d6}
+    .colon-state.idle{color:var(--ink-3)}
+    .job-icon{width:18px;height:18px;border-radius:3px;background:var(--panel-3);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink-2)}
+
+    .pop-foot{padding:10px 16px;border-top:1px solid var(--rule);display:flex;gap:6px;font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+    .pop-foot button{flex:1;padding:6px 8px;background:var(--panel-2);border:1px solid var(--rule);color:var(--ink-2);border-radius:2px;cursor:pointer;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase}
+    .pop-foot button:hover{color:var(--gold);border-color:var(--gold-2)}
+
+    /* ====== Fiche colon (statique maquette, sera branchée plus tard) ====== */
+    .colon-card{
+      position:fixed;left:14px;top:58px;width:300px;max-height:calc(100vh - 170px);
+      background:rgba(27,25,20,.96);backdrop-filter:blur(10px);
+      border:1px solid var(--rule);border-radius:4px;z-index:14;
+      box-shadow:0 20px 60px rgba(0,0,0,.6);
+      overflow:hidden;display:flex;flex-direction:column;color:var(--ink);
+    }
+    .card-head{padding:14px 14px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--rule);background:linear-gradient(180deg,rgba(212,184,112,.06),transparent)}
+    .card-head .portrait{width:36px;height:36px;font-size:15px}
+    .card-head h4{margin:0;font-family:var(--serif);font-size:18px;font-weight:500;color:var(--ink);line-height:1.1}
+    .card-head .sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--gold-2);text-transform:uppercase;margin-top:3px}
+
+    .card-section{padding:12px 14px;border-bottom:1px solid rgba(61,53,42,.6)}
+    .card-section h5{margin:0 0 8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;font-weight:500}
+    .card-stat{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:12.5px}
+    .card-stat .k{color:var(--ink-3);font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase}
+    .card-stat .v{color:var(--ink);font-family:var(--serif);font-size:13px}
+
+    .bars .bar-row{margin:6px 0}
+    .bar-row .lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ink-2);margin-bottom:3px;letter-spacing:.06em;text-transform:uppercase}
+    .bar-row .lbl .v{color:var(--ink);font-family:var(--serif);font-size:11.5px;text-transform:none;letter-spacing:0}
+    .bar{height:5px;background:var(--panel-3);border-radius:2px;overflow:hidden}
+    .bar>i{display:block;height:100%;border-radius:2px}
+    .bar .hunger{background:var(--food);width:72%}
+    .bar .sleep{background:#8fb4d6;width:54%}
+    .bar .social{background:#b79bd9;width:88%}
+
+    .skills{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .skill{padding:6px 4px;background:var(--panel-2);border:1px solid var(--rule);border-radius:2px;text-align:center}
+    .skill .ic{font-size:14px;margin-bottom:2px}
+    .skill .lv{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+    .skill .lv b{color:var(--gold);font-weight:700;margin-left:3px}
+    .skill.active{border-color:var(--gold-2);background:rgba(212,184,112,.1)}
+
+    .word{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-2);line-height:1.45}
+    .word::before{content:"« ";color:var(--gold-2)}
+    .word::after{content:" »";color:var(--gold-2)}
+
+    /* ====== Actionbar refonte maquette ====== */
+    .actionbar{
+      position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+      background:linear-gradient(180deg,rgba(27,25,20,.96),rgba(20,18,14,.96));
+      border:1px solid var(--rule);border-radius:4px;z-index:20;
+      box-shadow:0 14px 40px rgba(0,0,0,.6),0 2px 4px rgba(0,0,0,.3);
+      display:flex;align-items:stretch;overflow:hidden;
+      max-width:calc(100vw - 160px);
+      padding:0;gap:0;backdrop-filter:blur(6px);
+    }
+    .ab-tabs{display:flex;border-right:1px solid var(--rule);background:rgba(0,0,0,.25)}
+    .ab-tab{
+      padding:0 18px;min-width:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+      cursor:pointer;color:var(--ink-3);font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+      background:transparent;border:none;border-right:1px solid var(--rule);transition:all .15s;position:relative;
+    }
+    .ab-tab:last-child{border-right:none}
+    .ab-tab .ico{font-size:18px;color:var(--ink-2)}
+    .ab-tab:hover{color:var(--ink);background:rgba(212,184,112,.04)}
+    .ab-tab:hover .ico{color:var(--gold-2)}
+    .ab-tab.active{color:var(--gold);background:linear-gradient(180deg,rgba(212,184,112,.14),rgba(212,184,112,.04))}
+    .ab-tab.active .ico{color:var(--gold)}
+    .ab-tab.active::after{content:"";position:absolute;top:0;left:10%;right:10%;height:2px;background:var(--gold)}
+
+    .ab-body{display:flex;align-items:center;padding:10px 14px;gap:4px;min-height:72px}
+
+    .tool{
+      display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;min-width:70px;
+      background:linear-gradient(180deg,var(--panel-2),var(--panel));
+      border:1px solid var(--rule);border-radius:3px;
+      cursor:pointer;color:var(--ink-2);transition:all .12s;position:relative;
+      font-family:inherit;
+    }
+    .tool:hover{border-color:var(--gold-2);color:var(--ink);transform:translateY(-1px)}
+    .tool.active, .tool.on{border-color:var(--gold);color:var(--gold);background:linear-gradient(180deg,rgba(212,184,112,.18),rgba(212,184,112,.04))}
+    .tool .ic{font-size:20px;line-height:1}
+    .tool .nm{font-family:var(--sans);font-size:11px;margin-top:2px;font-weight:500}
+    .tool .kb{position:absolute;top:3px;right:4px;font-family:var(--mono);font-size:8px;color:var(--ink-3);letter-spacing:.05em}
+    .tool.locked{opacity:.4;cursor:not-allowed}
+    .tool.disabled-unique{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
+    .tool.disabled-unique:hover{transform:none}
+
+    .sep{width:1px;background:var(--rule);margin:4px 6px;align-self:stretch}
+    .group-label{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);padding:0 2px;align-self:stretch;display:flex;align-items:center}
+
+    .brush {
+      min-width: 30px; padding: 6px 4px;
+      background: rgba(40, 46, 58, 0.7);
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      color: var(--ink-2);
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+      font-family:inherit;
+    }
+    .brush.active {
+      background: rgba(212,184,112,.18);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* #hud : ancien panneau HUD supprime, remplace par topbar + pop-panel + fiche colon (U5 maquette) */
     #colons-header { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
     #colons-header .caret { font-size: 10px; opacity: 0.7; transition: transform 0.15s; }
     #colons-header.collapsed .caret { transform: rotate(-90deg); }
@@ -49,18 +256,7 @@
     #colons-list::-webkit-scrollbar { width: 6px; }
     #colons-list::-webkit-scrollbar-thumb { background: rgba(255,217,138,0.25); border-radius: 3px; }
 
-    #help {
-      position: fixed; right: 16px; top: 16px;
-      background: rgba(20, 24, 30, 0.55);
-      padding: 10px 14px; border-radius: 10px;
-      backdrop-filter: blur(6px);
-      font-size: 12px; line-height: 1.5;
-      max-width: 280px;
-      color: #c7b98c;
-      pointer-events: none;
-      z-index: 10;
-    }
-    #help b { color: #ffd98a; }
+    /* #help : supprime avec l'ancien HUD. */
 
     #loader {
       position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -69,91 +265,7 @@
     }
     #loader.hidden { display: none; }
 
-    #actionbar {
-      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
-      display: flex; align-items: stretch; gap: 6px;
-      background: rgba(15, 18, 24, 0.82);
-      padding: 10px 14px;
-      border: 1px solid rgba(255, 217, 138, 0.22);
-      border-radius: 14px;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-      z-index: 20;
-    }
-    .group {
-      display: flex; gap: 4px; padding: 4px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.05);
-      align-items: stretch;
-    }
-    .group.colons { border-color: rgba(255, 150, 80, 0.35); }
-    .group.placement { border-color: rgba(120, 180, 255, 0.35); }
-    .group.controls { border-color: rgba(255,255,255,0.08); }
-    .group-label {
-      font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
-      color: rgba(255,255,255,0.4);
-      align-self: center; padding: 0 6px;
-    }
-    .group.colons .group-label { color: #ffb070; }
-    .group.placement .group-label { color: #8ac4ff; }
-
-    .tool {
-      min-width: 62px; padding: 6px 8px;
-      background: rgba(40, 46, 58, 0.75);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 7px;
-      color: #e9e2cf;
-      font-size: 12px; line-height: 1.15;
-      cursor: pointer;
-      text-align: center;
-      transition: background 0.15s, border 0.15s, transform 0.05s;
-    }
-    .tool:hover { background: rgba(65, 75, 94, 0.88); }
-    .tool:active { transform: translateY(1px); }
-    .tool.active {
-      background: rgba(255, 217, 138, 0.22);
-      border-color: #ffd98a;
-      color: #fff5d8;
-      box-shadow: inset 0 0 0 1px rgba(255,217,138,0.35);
-    }
-    /* U7, bouton de bâtiment unique deja pose : vignette grisee non cliquable. */
-    .tool.disabled-unique {
-      opacity: 0.4;
-      cursor: not-allowed;
-      filter: grayscale(0.6);
-    }
-    .tool.disabled-unique:hover { background: rgba(40, 46, 58, 0.75); }
-    .tool.disabled-unique:active { transform: none; }
-    .group.colons .tool.active {
-      background: rgba(255, 130, 60, 0.25);
-      border-color: #ff9350;
-      color: #ffe8d6;
-    }
-    .group.placement .tool.active {
-      background: rgba(120, 180, 255, 0.22);
-      border-color: #7dc8ff;
-      color: #e6f3ff;
-    }
-    .tool .key { display: block; font-size: 10px; opacity: 0.55; margin-top: 2px; }
-    .tool .sub { display: block; font-size: 10px; color: #ffd98a; margin-top: 1px; }
-
-    .brush {
-      min-width: 30px; padding: 6px 4px;
-      background: rgba(40, 46, 58, 0.7);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 7px;
-      color: #e9e2cf;
-      font-size: 12px;
-      cursor: pointer;
-      text-align: center;
-    }
-    .brush.active {
-      background: rgba(125, 200, 255, 0.22);
-      border-color: #7dc8ff;
-      color: #d8eeff;
-    }
-
+    /* Anciens styles #actionbar/.group/.tool/.brush retires : remplaces par .actionbar + .ab-tabs + .tool (maquette U5). */
     .btn-ctrl {
       padding: 6px 10px;
       background: rgba(40, 46, 58, 0.75);
@@ -223,99 +335,9 @@
       color: #d9b15a; font-style: italic; font-size: 11px;
     }
 
-    /* B8bis : styles #save-controls retires (panneau supprime, doublon avec menu Echap). */
-
-    /* Bouton Arbre des technologies flottant */
-    #btn-techtree-float {
-      position: fixed; right: 16px; bottom: 200px;
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(180deg, rgba(138,196,255,0.35), rgba(60,100,180,0.6));
-      border: 1px solid rgba(138,196,255,0.6);
-      color: #e6f3ff; font-size: 18px; font-weight: 700;
-      cursor: pointer;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-      z-index: 30;
-      transition: transform 0.15s;
-    }
-    #btn-techtree-float:hover { transform: translateY(-2px); }
-
-    /* Bouton audio flottant */
-    #btn-audio {
-      position: fixed; right: 16px; bottom: 150px;
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(180deg, rgba(138,196,255,0.3), rgba(60,100,180,0.6));
-      border: 1px solid rgba(138,196,255,0.55);
-      color: #e6f3ff; font-size: 18px; font-weight: 700;
-      cursor: pointer;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-      z-index: 30;
-      transition: transform 0.15s;
-    }
-    #btn-audio:hover { transform: translateY(-2px); }
-    #btn-audio.on {
-      background: linear-gradient(180deg, rgba(255,217,138,0.4), rgba(168,134,42,0.7));
-      border-color: rgba(255,217,138,0.6);
-      color: #fff5d8;
-    }
-
-
-    /* Pastille saison */
-    #season-pill {
-      position: fixed; left: 50%; top: 16px; transform: translateX(-50%);
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(15,18,24,0.8);
-      border: 1px solid rgba(255,217,138,0.35);
-      border-radius: 22px;
-      padding: 6px 16px 6px 12px;
-      backdrop-filter: blur(8px);
-      color: #f3ecdd;
-      font-size: 13px; letter-spacing: 0.06em;
-      z-index: 11;
-      text-transform: capitalize;
-    }
-    #season-pill #season-icon { font-size: 16px; }
-
-    /* Pastille jour/nuit */
-    #daynight-pill {
-      position: fixed; left: calc(50% + 140px); top: 16px;
-      display: flex; align-items: center; justify-content: center;
-      width: 36px; height: 36px;
-      background: rgba(255, 220, 140, 0.82);
-      color: #2a2210;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.35);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-      font-size: 18px; font-weight: 700;
-      cursor: pointer; user-select: none;
-      z-index: 11;
-      transition: background 0.35s, color 0.35s, box-shadow 0.35s;
-    }
-    #daynight-pill:hover { transform: scale(1.06); }
-    #daynight-pill.night {
-      background: rgba(30, 40, 90, 0.85);
-      color: #eaf2ff;
-      box-shadow: 0 4px 16px rgba(90, 130, 220, 0.35);
-    }
-
-    /* Bouton d'aide flottant */
-    #btn-help {
-      position: fixed; right: 16px; bottom: 100px;
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(180deg, rgba(255,217,138,0.35), rgba(168,134,42,0.6));
-      border: 1px solid rgba(255,217,138,0.6);
-      color: #fff5d8; font-size: 20px; font-weight: 700;
-      cursor: pointer;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-      z-index: 30;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    #btn-help:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(255,217,138,0.3);
-    }
+    /* U5 : anciens boutons flottants (#btn-techtree-float, #btn-audio, #btn-help, #season-pill, #daynight-pill) migres en .icon-btn dans la topbar. */
+    #btn-audio.on { color: var(--gold); background: rgba(212,184,112,0.12); }
+    #daynight-pill.night { color: var(--moon); }
 
     /* #help-panel, #help-hint et classes associees retires (B9) : panneau obsolete axe editeur. L'aide active est #help-overlay style Clair Obscur. */
 
@@ -460,7 +482,7 @@
     */
 
     /* Mode jeu : masque les outils godmod */
-    body[data-mode="game"] .group.godmod { display: none; }
+    body[data-mode="game"] .ab-body.godmod { display: none !important; }
     body[data-mode="game"] .godmod-ctrl  { display: none; }
     body[data-mode="game"] .godmod-label { display: none; }
 
@@ -498,41 +520,204 @@
     })()
   </script>
 
+  <script>
+    // U5 : logique d'onglets actionbar + toggle panneaux rail droite
+    document.addEventListener('DOMContentLoaded', function() {
+      // Onglets actionbar
+      const abTabs = document.querySelectorAll('.ab-tab');
+      abTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          abTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.dataset.tab;
+          document.querySelectorAll('.ab-body').forEach(b => {
+            if (!b.classList.contains('godmod')) b.style.display = 'none';
+          });
+          const body = document.getElementById('ab-' + target);
+          if (body) body.style.display = 'flex';
+        });
+      });
+
+      // Rail droite : toggle panneaux
+      const railBtns = document.querySelectorAll('.rail-btn');
+      const popPanel = document.getElementById('popPanel');
+      railBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const panel = btn.dataset.panel;
+          if (panel === 'techtree') {
+            const backdrop = document.getElementById('tt-backdrop');
+            const ttPanel = document.getElementById('tt-panel');
+            if (backdrop) backdrop.classList.toggle('open');
+            if (ttPanel) ttPanel.classList.toggle('open');
+            return;
+          }
+          if (panel === 'population' && popPanel) {
+            const isOpen = popPanel.style.display === 'flex';
+            popPanel.style.display = isOpen ? 'none' : 'flex';
+            railBtns.forEach(b => b.classList.remove('active'));
+            if (!isOpen) btn.classList.add('active');
+            return;
+          }
+          // Autres panneaux (social, quests, map) : placeholder, toggle actif
+          railBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      // Bouton fermeture pop-panel
+      const popClose = document.querySelector('.pop-close');
+      if (popClose && popPanel) {
+        popClose.addEventListener('click', () => {
+          popPanel.style.display = 'none';
+          document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
+        });
+      }
+    });
+  </script>
+
   <div id="mode-badge"></div>
   <div id="loader">génération du monde...</div>
   <div id="app"></div>
 
-  <button id="btn-help" title="Aide et explications">?</button>
-  <button id="btn-audio" title="Activer la musique">&#9834;</button>
-  <button id="btn-techtree-float" title="Arbre des technologies (T)">&#128202;</button>
-  <div id="season-pill" title="Saison en cours"><span id="season-icon">&#127804;</span><span id="season-name">printemps</span><span id="season-temp" style="font-size:12px;margin-left:8px;color:#ffd98a;font-variant-numeric:tabular-nums;" title="Temperature indicative">12&deg;C</span><span id="weather-label" style="font-size:11px;opacity:0.75;margin-left:6px;"></span></div>
-  <div id="daynight-pill" title="Basculer jour / nuit (N)"><span id="daynight-icon">&#9728;</span></div>
+  <!-- ============ Topbar ressources (refonte U5 maquette) ============ -->
+  <div class="topbar">
+    <div class="left">
+      <span class="game-title">Strates <small>Alpha</small></span>
+    </div>
 
-  <div id="hud">
-    <div><b>Strates</b><span id="hud-mode-label">, éditeur de carte</span></div>
-    <div class="row" title="Images par seconde"><span class="key">FPS</span><span class="val" id="fps">0</span></div>
-    <div class="row" title="Outil actuellement sélectionné"><span class="key">Outil</span><span class="val" id="hud-tool">naviguer</span></div>
-    <h4 id="colons-header" title="Clic pour replier la liste"><span class="caret">&#9660;</span> Colons : <span id="c-count">0</span></h4>
-    <div id="colons-list"></div>
-    <div class="row" title="Tâches désignées en attente d'exécution"><span class="key">Tâches en attente</span><span class="val" id="jobs">0</span></div>
-    <div class="row" title="Colons au repos / en déplacement / au travail"><span class="key">Repos / Marche / Travail</span><span class="val"><span id="idle">0</span> / <span id="moving">0</span> / <span id="working">0</span></span></div>
-    <div class="row" title="Nombre de colons affichant une bulle"><span class="key">Colons qui parlent</span><span class="val" id="talking">0</span></div>
-    <h4>Placement</h4>
-    <div class="row"><span class="key">Arbres / Rochers / Maisons</span><span class="val"><span id="c-trees">0</span> / <span id="c-rocks">0</span> / <span id="c-houses">0</span></span></div>
-    <div class="row"><span class="key">Champs / Filons</span><span class="val"><span id="c-fields">0</span> / <span id="c-ores">0</span></span></div>
-    <div class="row"><span class="key">Buissons</span><span class="val" id="c-bushes">0</span></div>
-    <div class="row" title="Bâtiments de recherche posés / colons actuellement chercheurs"><span class="key">Laboratoires / Chercheurs</span><span class="val"><span id="c-research">0</span> / <span id="c-researchers">0</span></span></div>
-    <div id="c-ores-detail" style="font-size: 11px; color: #c7b98c; margin-top: 2px;"></div>
-    <h4>Ressources</h4>
-    <div class="row" title="Ressources cumulées depuis les récoltes"><span class="key">Baies / Bois / Pierre</span><span class="val"><span id="r-berries">0</span> / <span id="r-wood">0</span> / <span id="r-stone">0</span></span></div>
-    <div id="stocks-line" style="font-size: 11px; color: #c7b98c; margin-top: 2px;" title="Ressources prêtes à être posées par les colons (outil Placer)">Stocks : vide</div>
-    <div class="row" style="margin-top: 4px;" title="Points produits par les chercheurs au laboratoire, utilisés pour débloquer les technologies"><span class="key">Points de recherche</span><span class="val"><span id="r-points">0</span> pts</span></div>
-    <div class="row" title="Points produits par les colons en observation nocturne depuis un promontoire"><span class="key">Points nocturnes</span><span class="val">&#127769; <span id="r-nightpoints">0</span> pts</span></div>
+    <div class="center">
+      <div class="res" title="Baies (nourriture)">
+        <span class="ic">
+          <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="9" r="5" fill="#c94a6a"/><path d="M8 4 Q9 2 11 3" stroke="#6a8a3a" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
+        </span>
+        <span class="v"><span id="r-berries">0</span> <small>baies</small></span>
+      </div>
+
+      <div class="res-sep"></div>
+
+      <div class="res" title="Bois">
+        <span class="ic">
+          <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1 L12 10 L4 10 Z" fill="#4e8a3c"/><path d="M8 4 L11 10 L5 10 Z" fill="#64a14c"/><rect x="7" y="10" width="2" height="4" fill="#7a5a36"/></svg>
+        </span>
+        <span class="v"><span id="r-wood">0</span> <small>bois</small></span>
+      </div>
+
+      <div class="res-sep"></div>
+
+      <div class="res" title="Pierre">
+        <span class="ic">
+          <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 10 L6 5 L11 4 L13 8 L11 12 L5 12 Z" fill="#a69e8a"/><path d="M6 5 L11 4 L13 8 L11 12 L5 12 Z" fill="none" stroke="#6b6456" stroke-width=".6" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="v"><span id="r-stone">0</span> <small>pierre</small></span>
+      </div>
+
+      <div class="res-sep"></div>
+
+      <div class="res" title="Points de recherche diurnes">
+        <span class="ic">
+          <svg width="16" height="16" viewBox="0 0 16 16"><ellipse cx="8" cy="9" rx="3.2" ry="4.5" fill="#e8c760"/><rect x="6.5" y="3" width="3" height="2" fill="#c9a44a"/></svg>
+        </span>
+        <span class="v"><span id="r-points">0</span> <small>pts &#9728;</small></span>
+      </div>
+
+      <div class="res-sep"></div>
+
+      <div class="res" title="Points de recherche nocturnes">
+        <span class="ic">
+          <svg width="16" height="16" viewBox="0 0 16 16"><ellipse cx="8" cy="9" rx="3.2" ry="4.5" fill="#3a4a6a"/><rect x="6.5" y="3" width="3" height="2" fill="#2a3a55"/><circle cx="10" cy="6" r=".8" fill="#c9d4e8"/></svg>
+        </span>
+        <span class="v"><span id="r-nightpoints">0</span> <small>pts &#127769;</small></span>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="season" title="Saison en cours">
+        <span class="ic" id="season-icon">&#127804;</span>
+        <span class="label" id="season-name">printemps</span>
+        <span class="temp" id="season-temp">12&deg;C</span>
+        <span class="temp" id="weather-label" style="opacity:.75"></span>
+      </div>
+      <span class="time">J. <b id="time-day">1</b> &middot; <span id="time-hour">00:00</span></span>
+      <button id="daynight-pill" class="icon-btn" title="Basculer jour / nuit (N)"><span id="daynight-icon">&#9728;</span></button>
+      <button id="btn-audio" class="icon-btn" title="Activer la musique">&#9834;</button>
+      <button id="btn-help" class="icon-btn" title="Aide (H)">?</button>
+      <button id="btn-save" class="icon-btn" title="Sauvegarder"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 2 H10 L12 4 V12 H2 Z"/><rect x="4" y="2" width="6" height="3"/><rect x="4" y="8" width="6" height="4" fill="currentColor" opacity=".3"/></svg></button>
+    </div>
   </div>
 
-  <div id="quests">
+  <!-- ============ Rail droite ============ -->
+  <div class="leftrail">
+    <button class="rail-btn" data-panel="population" title="Population (P)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="7" r="3"/><path d="M5 18 C5 14 8 12 11 12 C14 12 17 14 17 18"/></svg>
+      <span class="lab">Pop.</span>
+      <span class="badge" id="rail-pop-badge">0</span>
+    </button>
+    <button class="rail-btn" data-panel="social" title="Social / Relations, a venir">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="8" r="2.5"/><circle cx="15" cy="8" r="2.5"/><path d="M4 17 C4 14.5 5.5 13 7 13 M18 17 C18 14.5 16.5 13 15 13 M9 8 H13" stroke-dasharray="2 2"/></svg>
+      <span class="lab">Social</span>
+    </button>
+    <button class="rail-btn" data-panel="quests" title="Quetes">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 3 H14 L17 6 V19 L11 16 L5 19 V6 Z"/></svg>
+      <span class="lab">Quêtes</span>
+    </button>
+    <button class="rail-btn" data-panel="techtree" title="Arbre des technologies (T)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="5" r="2"/><circle cx="5" cy="13" r="2"/><circle cx="11" cy="13" r="2"/><circle cx="17" cy="13" r="2"/><path d="M11 7 V11 M11 7 L5 11 M11 7 L17 11"/></svg>
+      <span class="lab">Tech</span>
+    </button>
+    <button class="rail-btn" data-panel="map" title="Mini-carte">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 5 L8 3 L14 5 L19 3 V17 L14 19 L8 17 L3 19 Z M8 3 V17 M14 5 V19"/></svg>
+      <span class="lab">Carte</span>
+    </button>
+  </div>
+
+  <!-- ============ Panneau population ============ -->
+  <aside class="pop-panel" id="popPanel">
+    <div class="pop-head">
+      <h3>Population</h3>
+      <span class="count"><span id="c-count">0</span> colons</span>
+      <button class="pop-close" title="Fermer">&times;</button>
+    </div>
+    <div class="village-switch">
+      <span class="small">Village</span>
+      <span class="chip on">La Souche</span>
+      <span class="chip" style="opacity:.45;cursor:not-allowed">+ Nouveau</span>
+      <span class="spacer"></span>
+    </div>
+    <div class="pop-list" id="colons-list"></div>
+    <div class="pop-foot">
+      <button>Vue complete</button>
+      <button>Affecter metiers</button>
+    </div>
+  </aside>
+
+  <!-- ============ Quetes (reutilise l'ID existant) ============ -->
+  <div id="quests" style="display:none">
     <h3>Quêtes</h3>
     <div id="quests-body"></div>
+  </div>
+
+  <!-- ============ Anciens IDs conserves (DOM cache pour compatibilite hud.js) ============ -->
+  <div style="display:none" aria-hidden="true">
+    <span id="fps">0</span>
+    <span id="jobs">0</span>
+    <span id="idle">0</span>
+    <span id="moving">0</span>
+    <span id="working">0</span>
+    <span id="talking">0</span>
+    <span id="c-trees">0</span>
+    <span id="c-rocks">0</span>
+    <span id="c-houses">0</span>
+    <span id="c-fields">0</span>
+    <span id="c-ores">0</span>
+    <span id="c-ores-detail"></span>
+    <span id="c-bushes">0</span>
+    <span id="c-research">0</span>
+    <span id="c-researchers">0</span>
+    <span id="stocks-line"></span>
+    <span id="techs-body"></span>
+    <span id="hud-tool">naviguer</span>
+    <span id="ore-sub">or</span>
+    <span id="colons-header"></span>
   </div>
 
   <!-- Ancien panneau #help-panel retire (B9) : references outils editeur obsoletes en mode jeu. L'aide active est #help-overlay style Clair Obscur ci-dessous. -->
@@ -571,30 +756,91 @@
   </div>
 
 
-  <div id="actionbar">
-    <div class="group colons">
-      <span class="group-label">ordres</span>
-      <button class="tool active" data-tool="nav">Naviguer<span class="key">1</span></button>
-      <button class="tool" data-tool="mine">Miner<span class="key">2</span></button>
-      <button class="tool" data-tool="build" title="Placer un bloc de terre ou de pierre puise dans les stocks">Placer bloc<span class="key">3</span></button>
+  <div id="actionbar" class="actionbar">
+    <div class="ab-tabs">
+      <button class="ab-tab active" data-tab="orders">
+        <span class="ico">&#9874;</span>
+        <span>Ordres</span>
+      </button>
+      <button class="ab-tab" data-tab="build">
+        <span class="ico">&#127959;</span>
+        <span>Construire</span>
+      </button>
     </div>
-    <div class="group construire">
-      <span class="group-label">construire</span>
-      <button class="tool" data-tool="house">Maison<span class="key">7</span></button>
-      <button class="tool" data-tool="research">Recherche<span class="key">0</span></button>
-      <button class="tool" data-tool="field">Champ<span class="key">8</span></button>
-      <button class="tool" data-tool="observatory" title="Promontoire d'observation, genere des points nocturnes la nuit">Promontoire<span class="key">P</span></button>
+
+    <div class="ab-body orders" id="ab-orders">
+      <button class="tool active" data-tool="nav">
+        <span class="ic">&#128400;</span>
+        <span class="nm">Naviguer</span>
+        <span class="kb">1</span>
+      </button>
+      <div class="sep"></div>
+      <button class="tool" data-tool="mine">
+        <span class="ic">&#9935;</span>
+        <span class="nm">Miner</span>
+        <span class="kb">2</span>
+      </button>
+      <button class="tool" data-tool="build" title="Placer un bloc de terre ou de pierre puise dans les stocks">
+        <span class="ic">&#129521;</span>
+        <span class="nm">Placer bloc</span>
+        <span class="kb">3</span>
+      </button>
     </div>
-    <div class="group godmod">
+
+    <div class="ab-body build" id="ab-build" style="display:none">
+      <button class="tool" data-tool="house">
+        <span class="ic">&#127968;</span>
+        <span class="nm">Maison</span>
+        <span class="kb">7</span>
+      </button>
+      <button class="tool" data-tool="research">
+        <span class="ic">&#128300;</span>
+        <span class="nm">Recherche</span>
+        <span class="kb">0</span>
+      </button>
+      <button class="tool" data-tool="field">
+        <span class="ic">&#127806;</span>
+        <span class="nm">Champ</span>
+        <span class="kb">8</span>
+      </button>
+      <button class="tool" data-tool="observatory" title="Promontoire d'observation, genere des points nocturnes la nuit">
+        <span class="ic">&#128508;</span>
+        <span class="nm">Promontoire</span>
+        <span class="kb">P</span>
+      </button>
+      <button class="tool" data-tool="cairn">
+        <span class="ic">&#128511;</span>
+        <span class="nm">Cairn</span>
+      </button>
+    </div>
+
+    <div class="ab-body godmod" id="ab-godmod">
       <span class="group-label">godmod</span>
-      <button class="tool" data-tool="forest">Forêt<span class="key">4</span></button>
-      <button class="tool" data-tool="rock">Rocher<span class="key">5</span></button>
-      <button class="tool" data-tool="ore">Filon<span class="sub" id="ore-sub">or</span><span class="key">6</span></button>
-      <button class="tool" data-tool="bush">Baies<span class="key">9</span></button>
-      <button class="tool" data-tool="erase">Effacer</button>
-    </div>
-    <div class="group controls">
-      <span class="group-label godmod-label">pinceau</span>
+      <button class="tool" data-tool="forest">
+        <span class="ic">&#127794;</span>
+        <span class="nm">Forêt</span>
+        <span class="kb">4</span>
+      </button>
+      <button class="tool" data-tool="rock">
+        <span class="ic">&#129704;</span>
+        <span class="nm">Rocher</span>
+        <span class="kb">5</span>
+      </button>
+      <button class="tool" data-tool="ore">
+        <span class="ic">&#128142;</span>
+        <span class="nm">Filon</span>
+        <span class="kb">6</span>
+      </button>
+      <button class="tool" data-tool="bush">
+        <span class="ic">&#129744;</span>
+        <span class="nm">Baies</span>
+        <span class="kb">9</span>
+      </button>
+      <button class="tool" data-tool="erase">
+        <span class="ic">&#128465;</span>
+        <span class="nm">Effacer</span>
+      </button>
+      <div class="sep"></div>
       <button class="brush active godmod-ctrl" data-brush="1">1</button>
       <button class="brush godmod-ctrl" data-brush="3">3</button>
       <button class="brush godmod-ctrl" data-brush="5">5</button>
