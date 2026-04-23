@@ -676,9 +676,22 @@ export class Colonist {
               removeJob(x, z, true)
               state.gameStats.minesCompleted++
             } else {
-              // Pas de cible mineable (ore/arbre/rocher/buisson) : annule le job.
-              // La terraformation de voxels terrain est réservée au tool "Niveler" (joueur).
+              // Voxel terrain nu : le mineur retire la couche du dessus.
+              const k = z * GRID + x
+              const top = state.cellTop[k]
+              if (top > MIN_STRATES && top > SHALLOW_WATER_LEVEL) {
+                const idx = state.instanceIndex[z * GRID + x] ? state.instanceIndex[z * GRID + x][top - 1] : -1
+                if (idx >= 0) {
+                  state.instanced.setMatrixAt(idx, HIDDEN_MATRIX)
+                  state.instanced.instanceMatrix.needsUpdate = true
+                  if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+                  state.cellTop[k] = top - 1
+                  incrStockForBiome(state.cellBiome[k])
+                  scheduleFlash(x, z)
+                }
+              }
               removeJob(x, z, true)
+              state.gameStats.minesCompleted++
             }
           }
           this.targetJob = null
