@@ -105,6 +105,19 @@ const WEATHER_LABEL = {
   heavy_rain: 'averse', snow: 'neige', heavy_snow: 'tempete de neige'
 }
 
+// Lot B perf : cache du noeud DOM et du dernier texte applique, pour eviter
+// document.getElementById + ecriture textContent a chaque frame.
+let _weatherLabelEl = null
+let _weatherLabelFetched = false
+let _lastWeatherText = null
+function getWeatherLabelEl() {
+  if (!_weatherLabelFetched) {
+    _weatherLabelEl = document.getElementById('weather-label')
+    _weatherLabelFetched = true
+  }
+  return _weatherLabelEl
+}
+
 export function tickWeather(dt) {
   _acc += dt
   if (_acc >= _changeIn) {
@@ -129,9 +142,13 @@ export function tickWeather(dt) {
   rMat.opacity += (cfg.rainOp - rMat.opacity) * Math.min(1, dt * 1.8)
   sMat.opacity += (cfg.snowOp - sMat.opacity) * Math.min(1, dt * 1.0)
 
-  // Icone meteo dans le HUD
-  const wEl = document.getElementById('weather-label')
-  if (wEl) wEl.textContent = WEATHER_LABEL[eff] || ''
+  // Icone meteo dans le HUD : cache DOM + ecriture seulement si le texte change.
+  const nextText = WEATHER_LABEL[eff] || ''
+  if (nextText !== _lastWeatherText) {
+    const wEl = getWeatherLabelEl()
+    if (wEl) wEl.textContent = nextText
+    _lastWeatherText = nextText
+  }
 
   // Draw range pour limiter le travail CPU
   const rN = Math.min(RAIN_N, cfg.rainN)
