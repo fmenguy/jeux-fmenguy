@@ -44,6 +44,10 @@ export const state = {
   },
   researchPoints: 0,
   researchTickAccum: 0,
+  // B19 : total cumule des points de recherche depenses (jamais decremente).
+  // Utilise pour la condition Cairn au lieu du solde courant, qui peut etre
+  // gele par B11 si le joueur a tout depense avant d atteindre 100.
+  totalResearchSpent: 0,
   nightPoints: 0,
   isNight: false,
   observatories: [],

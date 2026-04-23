@@ -70,6 +70,7 @@ export function unlockTech(id, refreshTechsPanel) {
   const costNum = (t.cost && typeof t.cost === 'object') ? (t.cost.research || 0) : (t.cost || 0)
   if (state.researchPoints < costNum) return
   state.researchPoints -= costNum
+  state.totalResearchSpent = (state.totalResearchSpent || 0) + costNum
   t.unlocked = true
   if (refreshTechsPanel) refreshTechsPanel()
   const el = document.getElementById('tech-' + id)

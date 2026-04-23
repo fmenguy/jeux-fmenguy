@@ -171,6 +171,7 @@ export function resetWorld(refreshHUD) {
   state.flashes.length = 0
   for (const k of STOCK_KEYS) state.stocks[k] = 0
   state.researchPoints = 0
+  state.totalResearchSpent = 0
   for (const id in state.techs) state.techs[id].unlocked = false
   clearAllPlacements()
   clearVegetation()
