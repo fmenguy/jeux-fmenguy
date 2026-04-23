@@ -4,6 +4,19 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 15) : Lot C -- B8bis, B14, B15, B16
+
+### B8bis -- suppression panneau save/load haut écran
+- `index.html` : suppression complete du bloc `#save-controls` (boutons Sauver / Charger / Nouvelle) en haut de l'écran. Faisait doublon avec le menu Échap. Le bouton disquette rapide `#btn-quicksave` (U8) reste.
+
+### B14/B15 -- fix TypeError classList null + bouton ? aide
+- `index.html` : correction des deux sélecteurs null-sûrs qui déclenchaient `TypeError: Cannot read classList of null` au chargement (ligne 1532) et au clic sur le bouton `?` (ligne 1514). Guard null ajouté avant chaque accès `.classList`. Le bouton `?` en bas à droite ouvre désormais l'aide correctement.
+
+### B16 -- son été synthétique via Web Audio API
+- `modules/audio.js` : son synthétique saison Été généré par Web Audio API (même approche que la fanfare Bronze). Remplace la référence manquante `audio/ete.mp3` (404). Cohérence avec les autres sons synthétiques du projet.
+
+---
+
 ## 2026-04-23 (session 15) : Lot B -- REVERT B10 + B17 + B18 + B19
 
 ### REVERT B10 -- desactivation auto-collecte colons
@@ -30,6 +43,17 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 - `index.html` : nouvelle classe `.tool.disabled-unique` (opacity 0.4, cursor not-allowed, filter grayscale, suppression des effets hover et active). Appliquee sur les boutons data-tool de la palette actionbar.
 - `modules/hud.js` : nouvelle fonction exportee `refreshUniqueBuildingsPalette()` appelee depuis `refreshHUD()`. Mapping `TOOL_TO_BUILDING_ID` (research -> hutte-du-sage, cairn -> cairn-pierre) et `INSTANCE_CHECKS` (lectures dediees de state.researchHouses et state.cairns). Helper `buildingIsUnique(id)` lit `BUILDINGS_DATA` pour valider le flag unique. Cohabite proprement avec la logique Lot B (placements.checkUniqueBuildingButtons) qui applique la meme classe depuis un tick lent.
 - Scope UI respecte : aucune modification de placements.js, interaction.js, data/*.json.
+
+---
+
+## 2026-04-23 (session 14) : Lot B -- B10, B11
+
+### B10 -- auto-collecte colons au repos (revert en session 15)
+- `modules/colonist.js` : ajout de `pickAutoCollect()` (rayon Manhattan 8, priorité LEISURE, jour uniquement). Les colons IDLE ciblaient rochers puis arbres. Désactivé en session 15 (voir REVERT B10) au profit du système 3 boutons (pioche/hache/baie) à venir.
+
+### B11 -- gel points de recherche si toutes techs débloquées
+- `modules/tech.js` : nouvelle fonction `hasPendingResearchableTech()`, filtre les techs de l'âge courant non débloquées dont les prérequis sont remplis.
+- `main.js` : accumulation des points de recherche gelée si `hasPendingResearchableTech()` retourne false.
 
 ---
 
