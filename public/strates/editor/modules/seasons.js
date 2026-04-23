@@ -78,7 +78,7 @@ if (state.season == null) {
 }
 
 let repaintAccum = 0
-const REPAINT_INTERVAL = 2.0 // toutes les 2s on met a jour les couleurs
+const REPAINT_INTERVAL = 0.25 // Lot B perf : chunker toutes les 250 ms (~8 appels = 2 s pour un cycle complet)
 
 const tmpCol = new THREE.Color()
 const tmpColB = new THREE.Color()
@@ -162,37 +162,48 @@ export function tintField(col) {
   return col
 }
 
-function repaintSaisonTerrain() {
+// Lot B perf : le repaint couvre GRID*GRID = 9216 cellules. Faire tout en une
+// passe toutes les 2s provoque un micro-freeze visible. On chunke en traitant
+// un petit budget de cellules par appel, avec un index persistant qui boucle
+// sur le terrain. Quand l'index atteint la fin, le cycle complet est termine.
+let _repaintIdx = 0
+const REPAINT_CHUNK = 1200 // cellules par appel, environ 8 appels pour couvrir 96x96
+
+function repaintSaisonTerrainChunk() {
   if (!state.instanced || !state.cellBiome) return
-  for (let z = 0; z < GRID; z++) {
-    for (let x = 0; x < GRID; x++) {
-      const idx = z * GRID + x
-      const biome = state.cellBiome[idx]
-      if (biome !== 'grass' && biome !== 'forest' && biome !== 'snow' && biome !== 'sand') continue
-      const top = state.cellTop[idx]
-      if (top <= 0) continue
-      const topIdx = topVoxelIndex(x, z)
-      if (topIdx < 0) continue
-      // base color selon biome + surface
-      const base = colorForLayer(biome, top - 1, top)
-      const surface = state.cellSurface[idx]
-      const c = surfaceColor(surface, base)
-      tmpCol.copy(c)
-      if (surface === 'field') {
-        tintField(tmpCol)
-        if (x % 2 === 0) tmpCol.offsetHSL(0, 0, -0.04)
-      } else {
-        tintBiomeTop(tmpCol, biome)
-        // micro jitter de position conserve
-        const jitter = (Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1
-        const j = 0.06 * (jitter - Math.floor(jitter) - 0.5)
-        tmpCol.offsetHSL(0, 0, j)
-      }
-      state.instanced.setColorAt(topIdx, tmpCol)
-      state.origColor[topIdx].copy(tmpCol)
+  const total = GRID * GRID
+  const end = Math.min(_repaintIdx + REPAINT_CHUNK, total)
+  let touched = false
+  for (let idx = _repaintIdx; idx < end; idx++) {
+    const biome = state.cellBiome[idx]
+    if (biome !== 'grass' && biome !== 'forest' && biome !== 'snow' && biome !== 'sand') continue
+    const top = state.cellTop[idx]
+    if (top <= 0) continue
+    const x = idx % GRID
+    const z = (idx / GRID) | 0
+    const topIdx = topVoxelIndex(x, z)
+    if (topIdx < 0) continue
+    // base color selon biome + surface
+    const base = colorForLayer(biome, top - 1, top)
+    const surface = state.cellSurface[idx]
+    const c = surfaceColor(surface, base)
+    tmpCol.copy(c)
+    if (surface === 'field') {
+      tintField(tmpCol)
+      if (x % 2 === 0) tmpCol.offsetHSL(0, 0, -0.04)
+    } else {
+      tintBiomeTop(tmpCol, biome)
+      // micro jitter de position conserve
+      const jitter = (Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1
+      const j = 0.06 * (jitter - Math.floor(jitter) - 0.5)
+      tmpCol.offsetHSL(0, 0, j)
     }
+    state.instanced.setColorAt(topIdx, tmpCol)
+    state.origColor[topIdx].copy(tmpCol)
+    touched = true
   }
-  if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+  _repaintIdx = end >= total ? 0 : end
+  if (touched && state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
 }
 
 export function tickSeasons(dt) {
@@ -203,16 +214,19 @@ export function tickSeasons(dt) {
     s.idx = (s.idx + 1) % SEASONS.length
     if (s.idx === 0) s.cyclesDone++
     s.justChangedSeason = SEASONS[s.idx].id
-    repaintAccum = REPAINT_INTERVAL // force repaint immediat
+    // Lot B perf : on relance un cycle complet depuis le debut, par chunks.
+    _repaintIdx = 0
+    repaintAccum = REPAINT_INTERVAL // force repaint immediat du premier chunk
   }
   repaintAccum += dt
   if (repaintAccum >= REPAINT_INTERVAL) {
     repaintAccum = 0
-    repaintSaisonTerrain()
+    repaintSaisonTerrainChunk()
   }
 }
 
 // force le repaint complet (utile au chargement d'une sauvegarde)
 export function forceSeasonRepaint() {
+  _repaintIdx = 0
   repaintAccum = REPAINT_INTERVAL * 2
 }
