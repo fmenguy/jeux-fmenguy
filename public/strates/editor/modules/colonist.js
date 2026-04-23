@@ -310,46 +310,47 @@ export class Colonist {
   // basse que les ordres joueur mais plus haute que la flanerie. Rayon
   // Manhattan 8 pour rester local au hameau. Cellules deja marquees par le
   // joueur (state.jobs) sont exclues pour eviter double-claim.
-  pickAutoCollect() {
-    const RADIUS = 8
-    const claimed = new Set()
-    for (const other of state.colonists) {
-      if (other === this) continue
-      if (other.targetJob && other.targetJob.auto) {
-        claimed.add(other.targetJob.x + ',' + other.targetJob.z)
-      }
-    }
-    let best = null, bestD = Infinity
-    for (const r of state.rocks) {
-      const d = Math.abs(r.x - this.x) + Math.abs(r.z - this.z)
-      if (d > RADIUS) continue
-      const k = r.x + ',' + r.z
-      if (state.jobs.has(k)) continue
-      if (claimed.has(k)) continue
-      if (d < bestD) { bestD = d; best = { x: r.x, z: r.z } }
-    }
-    if (techUnlocked('axe-stone')) {
-      for (const t of state.trees) {
-        if (t.growth != null && t.growth < 0.6) continue
-        const d = Math.abs(t.x - this.x) + Math.abs(t.z - this.z)
-        if (d > RADIUS) continue
-        const k = t.x + ',' + t.z
-        if (state.jobs.has(k)) continue
-        if (claimed.has(k)) continue
-        if (d < bestD) { bestD = d; best = { x: t.x, z: t.z } }
-      }
-    }
-    if (!best) return false
-    const approach = findApproach(this.x, this.z, best.x, best.z)
-    if (!approach) return false
-    this.targetJob = { x: best.x, z: best.z, claimedBy: this, auto: true }
-    this.path = approach.path
-    this.pathStep = 0
-    this.state = 'MOVING'
-    this.isWandering = false
-    this.updateTrail()
-    return true
-  }
+  // desactive - remplace par systeme 3 boutons (pioche/hache/baie)
+  // pickAutoCollect() {
+  //   const RADIUS = 8
+  //   const claimed = new Set()
+  //   for (const other of state.colonists) {
+  //     if (other === this) continue
+  //     if (other.targetJob && other.targetJob.auto) {
+  //       claimed.add(other.targetJob.x + ',' + other.targetJob.z)
+  //     }
+  //   }
+  //   let best = null, bestD = Infinity
+  //   for (const r of state.rocks) {
+  //     const d = Math.abs(r.x - this.x) + Math.abs(r.z - this.z)
+  //     if (d > RADIUS) continue
+  //     const k = r.x + ',' + r.z
+  //     if (state.jobs.has(k)) continue
+  //     if (claimed.has(k)) continue
+  //     if (d < bestD) { bestD = d; best = { x: r.x, z: r.z } }
+  //   }
+  //   if (techUnlocked('axe-stone')) {
+  //     for (const t of state.trees) {
+  //       if (t.growth != null && t.growth < 0.6) continue
+  //       const d = Math.abs(t.x - this.x) + Math.abs(t.z - this.z)
+  //       if (d > RADIUS) continue
+  //       const k = t.x + ',' + t.z
+  //       if (state.jobs.has(k)) continue
+  //       if (claimed.has(k)) continue
+  //       if (d < bestD) { bestD = d; best = { x: t.x, z: t.z } }
+  //     }
+  //   }
+  //   if (!best) return false
+  //   const approach = findApproach(this.x, this.z, best.x, best.z)
+  //   if (!approach) return false
+  //   this.targetJob = { x: best.x, z: best.z, claimedBy: this, auto: true }
+  //   this.path = approach.path
+  //   this.pathStep = 0
+  //   this.state = 'MOVING'
+  //   this.isWandering = false
+  //   this.updateTrail()
+  //   return true
+  // }
 
   pickHarvest() {
     const bush = findNearestBush(this.x, this.z, HARVEST_RADIUS)
@@ -488,12 +489,11 @@ export class Colonist {
         return
       }
       // Lot B, B10 : auto-collecte de base au repos (rochers, arbres si hache).
-      // Ne declenche que de jour. Priorite LEISURE, remplace la flanerie
-      // quand une ressource est proche.
-      if (!state.isNight && this.pickAutoCollect()) {
-        this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
-        return
-      }
+      // desactive - remplace par systeme 3 boutons (pioche/hache/baie)
+      // if (!state.isNight && this.pickAutoCollect()) {
+      //   this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
+      //   return
+      // }
       // Nuit : attirance vers le foyer le plus proche (feu de camp social).
       if (state.isNight && this.pickCampfire()) return
       this.wanderPause -= dt
