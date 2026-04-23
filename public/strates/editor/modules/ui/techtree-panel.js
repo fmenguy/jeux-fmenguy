@@ -673,7 +673,7 @@ function renderBranchDetail(brId) {
     })
   })
 
-  // Liens SVG orthogonaux
+  // Liens SVG orthogonaux — les coords cx/cy sont le CENTRE du nœud (transform:-50%,-50%)
   branchTechs.forEach(function(t) {
     const to = nodePos[t.id]
     if (!to) return
@@ -684,12 +684,27 @@ function renderBranchDetail(brId) {
       if (src.branch !== brId) return
       const from = nodePos[rid]
       if (!from) return
-      const x1 = from.x + from.w / 2 - 10
-      const y1 = from.y
-      const x2 = to.x - to.w / 2 + 10
-      const y2 = to.y
-      const midX = (x1 + x2) / 2
-      const d = 'M ' + x1 + ' ' + y1 + ' L ' + midX + ' ' + y1 + ' L ' + midX + ' ' + y2 + ' L ' + x2 + ' ' + y2
+      // Choisir le bord de sortie/entrée selon la direction dominante
+      const dx = to.x - from.x
+      const dy = to.y - from.y
+      let x1, y1, x2, y2, d
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        // Connexion principalement horizontale : sortie droite, entrée gauche
+        x1 = from.x + from.w / 2
+        y1 = from.y
+        x2 = to.x - to.w / 2
+        y2 = to.y
+        const midX = (x1 + x2) / 2
+        d = 'M ' + x1 + ' ' + y1 + ' L ' + midX + ' ' + y1 + ' L ' + midX + ' ' + y2 + ' L ' + x2 + ' ' + y2
+      } else {
+        // Connexion principalement verticale : sortie bas, entrée haut
+        x1 = from.x
+        y1 = from.y + from.h / 2
+        x2 = to.x
+        y2 = to.y - to.h / 2
+        const midY = (y1 + y2) / 2
+        d = 'M ' + x1 + ' ' + y1 + ' L ' + x1 + ' ' + midY + ' L ' + x2 + ' ' + midY + ' L ' + x2 + ' ' + y2
+      }
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
       path.setAttribute('d', d)
       const done = techUnlocked(t.id) && techUnlocked(rid)
