@@ -1154,8 +1154,8 @@
    ========================================================================== */
 .ttp-queue {
   position: absolute;
-  right: 360px;
-  bottom: 18px;
+  top: 70px;
+  right: 18px;
   z-index: 35;
   display: flex;
   align-items: center;
