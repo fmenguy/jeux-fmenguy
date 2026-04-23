@@ -74,33 +74,7 @@ export function removeAllJobsIn(cells) {
 // ---------------------------------------------------------------------------
 // Build jobs
 // ---------------------------------------------------------------------------
-const buildMarkerGeo = new THREE.PlaneGeometry(0.6, 0.6)
-const buildMarkerMat = new THREE.MeshBasicMaterial({ color: 0x66ff88, transparent: true, opacity: 0.85, depthWrite: false })
 
-export function tintBuildVoxel(x, z) {
-  const i = topVoxelIndex(x, z)
-  if (i < 0) return
-  tmpColor.copy(state.origColor[i]).lerp(new THREE.Color(0x88ff99), 0.55)
-  state.instanced.setColorAt(i, tmpColor)
-  if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
-}
-
-export function addBuildJob(x, z) {
-  const k = jobKey(x, z)
-  if (state.buildJobs.has(k)) return false
-  if (state.jobs.has(k)) return false
-  if (isCellOccupied(x, z)) return false
-  const top = state.cellTop[z * GRID + x]
-  if (top >= MAX_STRATES) return false
-  if (top <= SHALLOW_WATER_LEVEL) return false
-  state.buildJobs.set(k, { x, z, claimedBy: null })
-  tintBuildVoxel(x, z)
-  const m = new THREE.Mesh(buildMarkerGeo, buildMarkerMat)
-  m.position.set(x + 0.5, top + 0.8, z + 0.5)
-  markerGroup.add(m)
-  state.buildMarkers.set(k, m)
-  return true
-}
 
 export function removeBuildJob(x, z) {
   const k = jobKey(x, z)
