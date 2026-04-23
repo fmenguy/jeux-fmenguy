@@ -804,6 +804,28 @@
 }
 .ttp-tech.researching .nm { color: #cfe0ef; }
 
+/* Pulse halo sur la tech en cours de recherche (Feature 2) */
+.ttp-tech.ttp-research .card {
+  border-color: var(--vc);
+  box-shadow: 0 0 0 1px var(--vc),
+              0 0 22px color-mix(in srgb, var(--vc) 35%, transparent);
+}
+.ttp-tech.ttp-research::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 8px;
+  border: 1px solid var(--vc);
+  opacity: 0;
+  animation: ttp-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ttp-pulse {
+  0%   { opacity: 0.6; transform: scale(1); }
+  60%  { opacity: 0;   transform: scale(1.04); }
+  100% { opacity: 0;   transform: scale(1.04); }
+}
+
 /* Etat queued : bordure pointillee douce */
 .ttp-tech.queued .card {
   border-color: rgba(212,184,112,0.45);
