@@ -22,6 +22,7 @@ import { resetWorld } from './worldgen.js'
 import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
 import { openCharSheet, isCharSheetOpen } from './charsheet-ui.js'
 import { incrStockForBiome, totalBuildStock, consumeBuildStock } from './stocks.js'
+import { showHudToast } from './ui/research-popup.js'
 
 // ============================================================================
 // Curseur wireframe
@@ -460,6 +461,10 @@ function applyToolAtCell(cell) {
         const check = canMineCell(c.x, c.z)
         if (check.reason === 'tech' && check.requiredTech) {
           state.lastBlockedMineTech = { x: c.x, z: c.z, tech: check.requiredTech, t: performance.now() / 1000 }
+          if (!state.toolState.paintedThisStroke.has('blocked-tech-toast')) {
+            state.toolState.paintedThisStroke.add('blocked-tech-toast')
+            showHudToast('Il vous faut une meilleure technique pour extraire ça.', 2500)
+          }
         }
         continue
       }
