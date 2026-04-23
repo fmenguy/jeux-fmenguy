@@ -129,6 +129,11 @@ function serializeSnapshot() {
     ),
     researchPoints: state.researchPoints,
     researchTickAccum: state.researchTickAccum,
+    // Lot B : file de recherche
+    researchQueue: Array.isArray(state.researchQueue) ? state.researchQueue.slice() : [],
+    activeResearch: state.activeResearch
+      ? { id: state.activeResearch.id, progress: state.activeResearch.progress || 0 }
+      : null,
     totalResearchSpent: state.totalResearchSpent || 0,
     nightPoints: state.nightPoints || 0,
     isNight: !!state.isNight,
@@ -159,6 +164,8 @@ function clearEverything() {
   for (const k of STOCK_KEYS) state.stocks[k] = 0
   state.researchPoints = 0
   state.researchTickAccum = 0
+  state.researchQueue = []
+  state.activeResearch = null
   state.totalResearchSpent = 0
   state.nightPoints = 0
   state.isNight = false
@@ -246,6 +253,10 @@ function applySnapshot(data) {
   }
   state.researchPoints = data.researchPoints || 0
   state.researchTickAccum = data.researchTickAccum || 0
+  state.researchQueue = Array.isArray(data.researchQueue) ? data.researchQueue.slice() : []
+  state.activeResearch = (data.activeResearch && data.activeResearch.id)
+    ? { id: data.activeResearch.id, progress: data.activeResearch.progress || 0 }
+    : null
   state.totalResearchSpent = data.totalResearchSpent || 0
   state.nightPoints = data.nightPoints || 0
   state.isNight = !!data.isNight
