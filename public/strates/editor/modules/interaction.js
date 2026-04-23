@@ -4,8 +4,8 @@ import {
 } from './constants.js'
 import { state } from './state.js'
 import { prng } from './rng.js'
-import { scene, renderer, camera, controls, HIDDEN_MATRIX } from './scene.js'
-import { repaintCellSurface } from './terrain.js'
+import { scene, renderer, camera, controls, HIDDEN_MATRIX, tmpObj, tmpColor } from './scene.js'
+import { repaintCellSurface, colorForLayer } from './terrain.js'
 import {
   addTree, addRock, addOre, addHouse, addBush, addResearchHouse,
   assignResearcherToBuilding, removeTreesIn, removeRocksIn, removeHousesIn,
@@ -14,14 +14,14 @@ import {
   addObservatory, removeObservatoriesIn,
   isBuildingUniqueAndPlaced
 } from './placements.js'
-import { addJob, addBuildJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
+import { addJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell, techUnlocked, hasTreeAt } from './tech.js'
 import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
 import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
 import { openCharSheet, isCharSheetOpen } from './charsheet-ui.js'
-import { incrStockForBiome } from './stocks.js'
+import { incrStockForBiome, totalBuildStock, consumeBuildStock } from './stocks.js'
 
 // ============================================================================
 // Curseur wireframe
@@ -417,6 +417,40 @@ function cellsInBrush(cx, cz, brush) {
   return out
 }
 
+function buildAtCell(x, z) {
+  if (totalBuildStock() <= 0) return false
+  if (isCellOccupied(x, z)) return false
+  const k = z * GRID + x
+  const top = state.cellTop[k]
+  if (top >= MAX_STRATES) return false
+  if (top <= SHALLOW_WATER_LEVEL) return false
+  if (!consumeBuildStock()) return false
+  const biome = state.cellBiome[k]
+  const newY = top
+  const slot = state.nextFreeVoxelIdx++
+  tmpObj.position.set(x + 0.5, newY + 0.5, z + 0.5)
+  tmpObj.rotation.set(0, 0, 0)
+  tmpObj.scale.set(1, 1, 1)
+  tmpObj.updateMatrix()
+  state.instanced.setMatrixAt(slot, tmpObj.matrix)
+  const colTop = colorForLayer(biome, newY, newY + 1)
+  tmpColor.copy(colTop)
+  state.instanced.setColorAt(slot, tmpColor)
+  state.origColor[slot] = tmpColor.clone()
+  const oldTopIdx = state.instanceIndex[z * GRID + x][top - 1]
+  if (oldTopIdx != null) {
+    const under = colorForLayer(biome, top - 1, newY + 1)
+    tmpColor.copy(under)
+    state.instanced.setColorAt(oldTopIdx, tmpColor)
+    state.origColor[oldTopIdx] = tmpColor.clone()
+  }
+  state.instanceIndex[z * GRID + x][newY] = slot
+  state.cellTop[k] = newY + 1
+  state.instanced.instanceMatrix.needsUpdate = true
+  if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+  return true
+}
+
 function applyToolAtCell(cell) {
   const key = cell.z * GRID + cell.x
   const t = state.toolState.tool
@@ -463,8 +497,9 @@ function applyToolAtCell(cell) {
     const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
     for (const c of cells) {
       if (!toolAllowedOnCell('build', c.x, c.z)) continue
-      addBuildJob(c.x, c.z)
+      buildAtCell(c.x, c.z)
     }
+    refreshHUD()
     return
   }
   if (state.toolState.paintedThisStroke.has(key)) return
@@ -576,7 +611,7 @@ function applyToolToStrata(cells) {
   if (t === 'build') {
     for (const c of cells) {
       if (!toolAllowedOnCell('build', c.x, c.z)) continue
-      addBuildJob(c.x, c.z)
+      buildAtCell(c.x, c.z)
     }
     refreshHUD()
     return
