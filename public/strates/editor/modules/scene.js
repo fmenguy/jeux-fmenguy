@@ -59,7 +59,9 @@ skyU.sunPosition.value.copy(sunDir)
 export const sun = new THREE.DirectionalLight(0xfff2d9, 2.4)
 sun.position.set(60, 70, 40)
 sun.castShadow = true
-sun.shadow.mapSize.set(2048, 2048)
+// Lot B perf : 1024 au lieu de 2048 (4x moins de pixels a rasteriser/frame).
+// Qualite visuelle quasi identique a cette distance camera.
+sun.shadow.mapSize.set(1024, 1024)
 sun.shadow.camera.near = 1
 sun.shadow.camera.far = 200
 {
