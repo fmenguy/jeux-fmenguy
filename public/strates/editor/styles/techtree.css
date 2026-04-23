@@ -1157,7 +1157,7 @@
   right: 360px;
   bottom: 18px;
   z-index: 35;
-  display: none;
+  display: flex;
   align-items: center;
   gap: 12px;
   background: rgba(20, 18, 14, 0.92);
@@ -1167,7 +1167,7 @@
   padding: 8px 16px 8px 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
-#ttp-root.detail-mode .ttp-queue { display: flex; }
+#ttp-root.detail-mode .ttp-queue { display: none; }
 .ttp-queue .qh {
   display: flex;
   align-items: center;

@@ -153,7 +153,7 @@ export function initTechTreePanel() {
     '    </div>',
     '  </div>',
 
-    // File de recherche (visible en mode detail, position fixee en bas a droite)
+    // File de recherche (visible en mode global, masquee en mode detail)
     '  <div class="ttp-queue" id="ttp-queue">',
     '    <div class="qh">',
     '      <span class="hourglass">&#x29D6;</span>',
@@ -163,13 +163,13 @@ export function initTechTreePanel() {
     '    <div class="qlist" id="ttp-qlist"></div>',
     '  </div>',
 
-    // Age rail (bas)
-    '  <div class="ttp-agerail" id="ttp-agerail"></div>',
-
-    // Filtres (bas gauche)
+    // Filtres (bas gauche) - avant agerail comme dans la maquette
     '  <div class="ttp-filters-panel" id="ttp-filters">',
     '    <div class="title">Filtres branches</div>',
     '  </div>',
+
+    // Age rail (bas)
+    '  <div class="ttp-agerail" id="ttp-agerail"></div>',
 
     // Hint
     '  <div class="ttp-hint">Echap pour revenir, glisser pour panner, molette pour zoomer</div>',
