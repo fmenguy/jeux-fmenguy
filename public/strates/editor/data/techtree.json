@@ -28,9 +28,9 @@
       "requires": [],
       "unlocks": {
         "jobs":      ["mineur"],
-        "resources": ["stone"]
+        "resources": ["stone", "copper", "coal"]
       },
-      "description": "Permet le minage de la roche basique. Chaque frappe rapporte plus de pierre.",
+      "description": "Permet le minage de la roche basique. Chaque frappe rapporte plus de pierre. Révèle aussi les filons de cuivre et de charbon (non exploitables avant l'âge du Bronze).",
       "speech": ["Il faut une pioche pour casser ca."]
     },
     {
@@ -50,17 +50,17 @@
     },
     {
       "id": "spear-wood",
-      "name": "Arc",
+      "name": "Lance en bois",
       "age": 1,
       "branch": "outils",
-      "icon": "🏹",
+      "icon": "🪃",
       "cost": { "research": 5 },
       "requires": [],
       "unlocks": {
         "jobs":      ["chasseur"],
         "resources": ["raw-meat", "bone", "hide"]
       },
-      "description": "Arc de chasse basique. Débloque le métier Chasseur.",
+      "description": "Lance de chasse taillée au Foyer. Débloque le métier Chasseur.",
       "speech": ["On va pouvoir chasser maintenant."]
     },
     {
