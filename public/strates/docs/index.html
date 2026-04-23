@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strates · Docs internes</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, sans-serif;
+    background: #1a1610;
+    color: #e8dfc8;
+    min-height: 100vh;
+  }
+
+  /* ---- AUTH GATE ---- */
+  #gate {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #1a1610;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #gate-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+  }
+  #gate-logo {
+    font-size: 2.2rem;
+    letter-spacing: .05em;
+    color: #f59e0b;
+    font-weight: 700;
+  }
+  #gate-sub {
+    font-size: .9rem;
+    color: #9e8e6a;
+  }
+  #pw-input {
+    padding: 10px 16px;
+    border: 1px solid #3a3020;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #252015;
+    color: #e8dfc8;
+    outline: none;
+    width: 220px;
+    text-align: center;
+    letter-spacing: .1em;
+  }
+  #pw-input:focus { border-color: #f59e0b; }
+  #pw-btn {
+    padding: 9px 28px;
+    background: #f59e0b;
+    color: #1a1610;
+    border: none;
+    border-radius: 8px;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  #pw-btn:hover { background: #fbbf24; }
+  #pw-error {
+    color: #c0534a;
+    font-size: .85rem;
+    min-height: 1.2em;
+  }
+
+  /* ---- HUB ---- */
+  #hub {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 64px;
+    gap: 40px;
+  }
+  #hub.visible { display: flex; }
+
+  .hub-header { text-align: center; }
+  .hub-header h1 {
+    font-size: 1.8rem;
+    color: #f59e0b;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+  .hub-header p {
+    margin-top: 6px;
+    font-size: .9rem;
+    color: #7a6d52;
+  }
+
+  .hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .doc-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 24px 20px;
+    background: #232018;
+    border: 1px solid #2e2820;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .2s, background .2s, transform .15s;
+    cursor: pointer;
+  }
+  .doc-card:hover {
+    border-color: #f59e0b;
+    background: #2a2418;
+    transform: translateY(-2px);
+  }
+  .doc-card .icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+  .doc-card .label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e8dfc8;
+  }
+  .doc-card .desc {
+    font-size: .82rem;
+    color: #7a6d52;
+    line-height: 1.45;
+  }
+  .doc-card .tag {
+    font-size: .72rem;
+    font-weight: 600;
+    color: #f59e0b;
+    background: #2e2410;
+    border: 1px solid #3a2e14;
+    border-radius: 4px;
+    padding: 2px 7px;
+    width: fit-content;
+  }
+
+  .hub-back {
+    font-size: .82rem;
+    color: #5a5040;
+    text-decoration: none;
+  }
+  .hub-back:hover { color: #9e8e6a; }
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="gate">
+  <div id="gate-box">
+    <div id="gate-logo">STRATES</div>
+    <div id="gate-sub">Documents de conception internes</div>
+    <input id="pw-input" type="password" placeholder="Mot de passe" autofocus>
+    <button id="pw-btn">Entrer</button>
+    <div id="pw-error"></div>
+  </div>
+</div>
+
+<!-- HUB -->
+<div id="hub">
+  <div class="hub-header">
+    <h1>Strates · Docs</h1>
+    <p>Documents de conception et maquettes internes</p>
+  </div>
+
+  <div class="hub-grid">
+
+    <a class="doc-card" href="strates-mindmap.html" target="_blank">
+      <div class="icon">🗺️</div>
+      <div class="tag">Conception</div>
+      <div class="label">Mindmap général</div>
+      <div class="desc">Vue d'ensemble du jeu : âges, mécaniques, progression et vision long terme.</div>
+    </a>
+
+    <a class="doc-card" href="age-pierre-pilotage.html" target="_blank">
+      <div class="icon">🪨</div>
+      <div class="tag">Âge de Pierre</div>
+      <div class="label">Plan de pilotage</div>
+      <div class="desc">Détail des objectifs, ressources et étapes de l'âge 1.</div>
+    </a>
+
+    <a class="doc-card" href="strates-techtree.html" target="_blank">
+      <div class="icon">🔬</div>
+      <div class="tag">Tech Tree</div>
+      <div class="label">Arbre technologique</div>
+      <div class="desc">Toutes les technologies débloquables par âge et leurs dépendances.</div>
+    </a>
+
+    <a class="doc-card" href="hud-mockup.html" target="_blank">
+      <div class="icon">🖥️</div>
+      <div class="tag">UI / Mockup</div>
+      <div class="label">Maquette HUD</div>
+      <div class="desc">Interface joueur : HUD, panneaux de gestion et feedbacks visuels.</div>
+    </a>
+
+  </div>
+
+  <a class="hub-back" href="/strates/">← Retour à Strates</a>
+</div>
+
+<script>
+(function () {
+  var gate = document.getElementById('gate');
+  var hub  = document.getElementById('hub');
+  var input = document.getElementById('pw-input');
+  var btn   = document.getElementById('pw-btn');
+  var error = document.getElementById('pw-error');
+
+  function check() {
+    if (input.value === 'mengmengf') {
+      gate.remove();
+      hub.classList.add('visible');
+    } else {
+      error.textContent = 'Mot de passe incorrect.';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.addEventListener('click', check);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') check(); });
+})();
+</script>
+
+</body>
+</html>
