@@ -230,3 +230,59 @@ Exemples non exhaustifs :
 - Côte - pêche, sel, accès commerce maritime
 
 À lier avec le profil de génération de monde (Écran 2 ci-dessus) pour que chaque partie ait une identité distincte dès le spawn.
+
+## Retours session 14 - axes design ajoutés (2026-04-23)
+
+Retours issus du second test complet bout-en-bout, suivant `docs/strates/tests/test-plan.md`.
+
+### Méta-info gated derrière tech
+
+Les HUD avancés (température, saison, météo, toggle jour/nuit) sont cachés au démarrage. Une tech early "Observation" les débloque progressivement. Partie par défaut = plein jour, pas de saison affichée, météo neutre. Le joueur découvre le système au fur et à mesure. Arrivée très tôt dans la tech tree (1er ou 2e palier âge Pierre).
+
+### Agriculture repensée
+
+Supprimer le placement manuel de champs. La carte génère des zones fertiles distinctes (texture herbe dense ou terre sombre) et le joueur y pose plus tard des bâtiments agricoles (moulin, verger, champ de blé) qui exploitent la zone. Arrivée très tôt dans le jeu. Retire le bâtiment "Champ" de la palette actuelle.
+
+### Promontoire - rôle à définir
+
+Actuellement plaçable sans utilité visible. Soit définir une fonction gameplay (tour de guet, bonus visibilité, point de rallye colons), soit retirer du jeu en attendant.
+
+### Collecte auto par métier ou outils dédiés joueur
+
+Deux approches à arbitrer :
+- **Option A - Colons auto** : bûcheron récolte bois, mineur récolte pierre/filons, cueilleur récolte baies. Aucun ordre direct du joueur pour la récolte.
+- **Option B - Outils joueur dédiés** : 3 boutons d'ordre (pioche = blocs/filons, hache = arbres, baie = buissons). Sélection cadre + marqueurs colorés sur les cibles (point orange pour arbres marqués, violet pour baies).
+- **Option C (recommandée) - Hybride** : les colons font la récolte de base selon métier assigné. Le joueur peut prioriser via les 3 outils avec cadre de sélection.
+
+### Cairn placé par le joueur
+
+Au déclenchement (conditions remplies et bouton cliqué), le jeu entre en mode placement comme pour les autres bâtiments. Le joueur choisit l'emplacement du monument, la pose enclenche la cinématique. Retire la pose automatique actuelle.
+
+### Tech tree style Civilization / Endless Space
+
+Workflow cible :
+1. Le joueur ouvre le menu recherche et voit plusieurs options disponibles
+2. Il sélectionne une tech à rechercher
+3. Le colon chef (puis plus tard les savants) se rend au bâtiment Hutte du sage
+4. Progression visible de la recherche
+5. À la fin, pop-up "Recherche terminée : X" avec 3 choix de recherches suivantes
+6. Recyclage
+
+Les points de recherche ne doivent plus s'accumuler si toutes les techs disponibles sont débloquées.
+
+### Tech tree visuel
+
+- Titre de la tech visible sur la carte (pas que l'icône)
+- Coût en points de recherche affiché
+- Liens de dépendance proprement tracés (actuellement mal alignés)
+- Filtres par branche = surbrillance de la branche active + opacité réduite ou masquage des autres branches (toggle actuel non fonctionnel)
+
+### Nommage bâtiments et ordres
+
+- "Placer" → "Placer bloc" (clarifier, il s'agit de poser un bloc miné)
+- "Recherche" (bâtiment) → "Hutte du sage" ou "Laboratoire" (éviter confusion avec menu recherche)
+- Bâtiment recherche limité à 1 par partie au départ (puis évolutif plus tard avec un système de savants)
+
+### Sauvegarde rapide
+
+Placer un bouton disquette en bas à droite pour sauvegarde rapide en jeu, en attendant la refonte complète de l'UI.
