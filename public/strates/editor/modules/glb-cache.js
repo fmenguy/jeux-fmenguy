@@ -13,12 +13,14 @@ export const TREE_GLB_SCALE  = 0.38
 export const ROCK_GLB_SCALE  = 0.32
 export const HOUSE_GLB_SCALE = 0.50
 export const HUT_GLB_SCALE   = 0.45
+export const DEER_GLB_SCALE  = 0.28
 
 const MANIFEST = {
   tree:  'Pine Trees.glb',
   rock:  'Rock.glb',
   house: 'House.glb',
   hut:   'Hut.glb',
+  deer:  'Deer.glb',
 }
 
 const _cache = {}
