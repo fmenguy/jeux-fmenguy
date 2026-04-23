@@ -33,3 +33,6 @@ deploy.log
 
 # Claude Code
 .claude/
+
+#Assets
+public/strates/editor/assets/models/
