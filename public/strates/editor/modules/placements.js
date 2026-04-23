@@ -8,7 +8,7 @@ import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
-import { getModel, TREE_GLB_SCALE, ROCK_GLB_SCALE, HOUSE_GLB_SCALE } from './glb-cache.js'
+import { getModel, TREE_GLB_SCALE, ROCK_GLB_SCALE, HOUSE_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
 
 // ============================================================================
 // Arbres (trunk + leaf InstancedMesh)
@@ -447,6 +447,40 @@ export function findNearestBush(cx, cz, maxDist) {
 }
 
 // ============================================================================
+// Cerfs (decor statique GLB, pas de IA)
+// ============================================================================
+
+export function addDeer(gx, gz) {
+  const biome = state.cellBiome[gz * GRID + gx]
+  if (biome !== 'grass' && biome !== 'forest') return null
+  const top = state.cellTop[gz * GRID + gx]
+  if (top <= SHALLOW_WATER_LEVEL) return null
+  const model = getModel('deer')
+  if (!model) return null  // pas de fallback procedural pour les animaux
+  const rng = prng.rng
+  model.scale.setScalar(DEER_GLB_SCALE)
+  model.position.set(gx + 0.5 + (rng() - 0.5) * 0.6, top, gz + 0.5 + (rng() - 0.5) * 0.6)
+  model.rotation.y = rng() * Math.PI * 2
+  model.userData.type = 'deer'
+  model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+  scene.add(model)
+  const entry = { x: gx, z: gz, group: model }
+  state.deers.push(entry)
+  return entry
+}
+
+export function removeDeersIn(cells) {
+  if (!state.deers || !state.deers.length) return
+  const cellSet = new Set(cells.map(function(c) { return c.z * GRID + c.x }))
+  const toRemove = state.deers.filter(function(d) { return cellSet.has(d.z * GRID + d.x) })
+  const kept = state.deers.filter(function(d) { return !cellSet.has(d.z * GRID + d.x) })
+  if (kept.length === state.deers.length) return
+  for (const d of toRemove) { scene.remove(d.group) }
+  state.deers.length = 0
+  for (const d of kept) state.deers.push(d)
+}
+
+// ============================================================================
 // Maisons (Group Three)
 // ============================================================================
 function makeHouse() {
@@ -708,6 +742,7 @@ export function clearAllPlacements() {
   state.trees.length = 0; trunkMesh.count = 0; leafMesh.count = 0
   for (const r of state.rocks) { if (r.group) scene.remove(r.group) }
   state.rocks.length = 0; rockMesh.count = 0
+  if (state.deers) { for (const d of state.deers) { scene.remove(d.group) }; state.deers.length = 0 }
   state.ores.length = 0; oreRockMesh.count = 0; crystalMesh.count = 0
   state.bushes.length = 0; bushLeafMesh.count = 0; bushBerryMesh.count = 0
   for (let i = 0; i < state.cellOre.length; i++) state.cellOre[i] = null
