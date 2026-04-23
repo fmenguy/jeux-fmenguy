@@ -294,6 +294,7 @@ function unlockLocal(techId) {
   if (techStatus(tech) !== 'ready') return
   const cost = techCost(tech)
   state.researchPoints = Math.max(0, (state.researchPoints || 0) - cost)
+  state.totalResearchSpent = (state.totalResearchSpent || 0) + cost
   if (!state.techs[techId]) state.techs[techId] = {}
   state.techs[techId].unlocked = true
   state.techs[techId].name = tech.name

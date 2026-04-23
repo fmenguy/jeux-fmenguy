@@ -78,10 +78,12 @@ export function canBuildCairn(st) {
     missing.push('1 Chercheur assigne')
   }
 
-  // Condition : points de recherche
-  const pts = st.researchPoints || 0
+  // Condition : points de recherche cumulatifs depenses (B19).
+  // On lit totalResearchSpent, jamais le solde courant, pour eviter un
+  // blocage si B11 gele l accumulation avant que le joueur atteigne 100.
+  const pts = st.totalResearchSpent || 0
   if (pts < SEUILS.researchPoints) {
-    missing.push(`${pts}/${SEUILS.researchPoints} pts recherche`)
+    missing.push(`${pts}/${SEUILS.researchPoints} pts recherche depenses`)
   }
 
   // Condition : os (bypass si Chasseur pas livre)
@@ -128,7 +130,7 @@ export function getCairnProgress(st) {
   const hasResearcher = (st.researchHouses && st.researchHouses.some(r => r.assignedColonistId)) ? 1 : 0
   checks.push(hasResearcher)
 
-  const pts = st.researchPoints || 0
+  const pts = st.totalResearchSpent || 0
   checks.push(Math.min(1, pts / SEUILS.researchPoints))
 
   if (!DEV_SKIP_BONES) {
@@ -337,7 +339,7 @@ function _showCondTooltip() {
     { label: `${SEUILS.nourriture} nourriture`,        ok: getTotalFood(state) >= SEUILS.nourriture },
     { label: 'Hutte du sage',                          ok: !!(state.researchHouses && state.researchHouses.length > 0) },
     { label: '1 Chercheur assigne',                    ok: !!(state.researchHouses && state.researchHouses.some(r => r.assignedColonistId)) },
-    { label: `${SEUILS.researchPoints} pts recherche`, ok: (state.researchPoints || 0) >= SEUILS.researchPoints },
+    { label: `${SEUILS.researchPoints} pts recherche depenses`, ok: (state.totalResearchSpent || 0) >= SEUILS.researchPoints },
   ]
   if (!DEV_SKIP_BONES) {
     condDefs.push({ label: `${SEUILS.os} os`, ok: ((state.stocks && state.stocks.bone) || 0) >= SEUILS.os })
