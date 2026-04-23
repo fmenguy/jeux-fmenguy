@@ -1,10 +1,10 @@
 import * as THREE from 'three'
 import {
-  GRID, MAX_STRATES, SHALLOW_WATER_LEVEL, STRATA_MAX, ORE_KEYS, ORE_TYPES
+  GRID, MIN_STRATES, MAX_STRATES, SHALLOW_WATER_LEVEL, STRATA_MAX, ORE_KEYS, ORE_TYPES
 } from './constants.js'
 import { state } from './state.js'
 import { prng } from './rng.js'
-import { scene, renderer, camera, controls } from './scene.js'
+import { scene, renderer, camera, controls, HIDDEN_MATRIX } from './scene.js'
 import { repaintCellSurface } from './terrain.js'
 import {
   addTree, addRock, addOre, addHouse, addBush, addResearchHouse,
@@ -21,6 +21,7 @@ import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
 import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
 import { openCharSheet, isCharSheetOpen } from './charsheet-ui.js'
+import { incrStockForBiome } from './stocks.js'
 
 // ============================================================================
 // Curseur wireframe
@@ -137,9 +138,10 @@ export function labelOfTool(t) {
   if (t === 'ore') return 'filon (' + ORE_TYPES[state.toolState.oreType].label + ')'
   return ({
     nav: 'naviguer',
-    mine: 'miner',
+    mine: 'récolter ressources',
     hache: 'hache (abattre arbres)',
-    pick: 'pioche (miner roche)',
+    pick: 'pioche (extraire minerais)',
+    level: 'niveler terrain',
     build: 'placer un bloc',
     forest: 'planter une forêt',
     rock: 'poser un rocher',
@@ -315,7 +317,7 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keydown', (e) => {
   const map = {
-    '1': 'nav', '2': 'mine', '3': 'build',
+    '1': 'nav', '2': 'mine', '3': 'level', '4': 'build',
     '7': 'house', '0': 'research', '8': 'field',
     'p': 'observatory', 'P': 'observatory',
     ...(window.STRATES_MODE === 'sandbox' ? { '4': 'forest', '5': 'rock', '6': 'ore', '9': 'bush' } : {})
@@ -400,13 +402,12 @@ function toolAllowedOnCell(tool, x, z) {
   return true
 }
 
-function cellsInBrush(cx, cz, radius) {
-  if (radius === 1) return [{ x: cx, z: cz }]
+function cellsInBrush(cx, cz, brush) {
+  const r = Math.floor(brush / 2)
+  if (r === 0) return [{ x: cx, z: cz }]
   const out = []
-  const r = radius
   for (let dz = -r; dz <= r; dz++) {
     for (let dx = -r; dx <= r; dx++) {
-      if (dx * dx + dz * dz > r * r + 0.5) continue
       const x = cx + dx, z = cz + dz
       if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
       out.push({ x, z })
@@ -432,6 +433,29 @@ function applyToolAtCell(cell) {
       }
       addJob(c.x, c.z)
     }
+    return
+  }
+  if (t === 'level') {
+    // Terraformation directe par le joueur : retire 1 voxel top immédiatement, sans job colon.
+    // Protège les ores, les objets occupant la cellule, et les niveaux plancher/eau.
+    const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
+    let colorsDirty = false
+    for (const c of cells) {
+      const k = c.z * GRID + c.x
+      if (state.cellOre && state.cellOre[k]) continue
+      if (isCellOccupied(c.x, c.z)) continue
+      const top = state.cellTop[k]
+      if (top <= MIN_STRATES) continue
+      if (top <= SHALLOW_WATER_LEVEL) continue
+      const idx = state.instanceIndex[c.z * GRID + c.x] ? state.instanceIndex[c.z * GRID + c.x][top - 1] : -1
+      if (idx < 0) continue
+      state.instanced.setMatrixAt(idx, HIDDEN_MATRIX)
+      state.instanced.instanceMatrix.needsUpdate = true
+      state.cellTop[k] = top - 1
+      incrStockForBiome(state.cellBiome[k])
+      colorsDirty = true
+    }
+    if (colorsDirty && state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
     return
   }
   if (t === 'build') {
