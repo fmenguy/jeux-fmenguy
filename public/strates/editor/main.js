@@ -111,6 +111,30 @@ window.addEventListener('keydown', function(e) {
 
 state.lastJobTime = performance.now() / 1000
 
+const _resNameEl = document.getElementById('res-tech-name')
+const _resBarEl = document.getElementById('res-bar-fill')
+const _resPctEl = document.getElementById('res-tech-pct')
+
+function updateResearchWidget() {
+  if (!_resNameEl) return
+  const ar = state.activeResearch
+  if (!ar) {
+    const qLen = state.researchQueue ? state.researchQueue.length : 0
+    _resNameEl.textContent = qLen > 0 ? ('En file : ' + qLen + ' tech' + (qLen > 1 ? 's' : '')) : 'Aucune recherche'
+    if (_resBarEl) _resBarEl.style.width = '0%'
+    if (_resPctEl) _resPctEl.textContent = ''
+    return
+  }
+  const techEntry = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
+    ? TECH_TREE_DATA.techs.find(x => x.id === ar.id)
+    : null
+  const cost = techEntry ? ((techEntry.cost && techEntry.cost.research) || 0) : 0
+  const pct = cost > 0 ? Math.min(100, Math.floor(ar.progress / cost * 100)) : 0
+  if (_resNameEl) _resNameEl.textContent = techEntry ? techEntry.name : ar.id
+  if (_resBarEl) _resBarEl.style.width = pct + '%'
+  if (_resPctEl) _resPctEl.textContent = pct + '%'
+}
+
 const tmpColor = new THREE.Color()
 const clock = new THREE.Clock()
 const TARGET_FPS = 60
@@ -307,6 +331,7 @@ function tick(nowMs) {
   if (!tick._lastDynHUD || t - tick._lastDynHUD > 0.2) {
     tick._lastDynHUD = t
     updateDynHUD()
+    updateResearchWidget()
   }
   tickFps()
 
