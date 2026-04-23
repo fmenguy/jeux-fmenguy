@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Strates, plan de test interactif</title>
+<style>
+  :root {
+    --bg: #1a1510;
+    --panel: #261e14;
+    --panel-2: #2f2517;
+    --border: #3d2f1c;
+    --text: #e8dcc4;
+    --muted: #9a8a6a;
+    --accent: #d4a555;
+    --ok: #5c9b5c;
+    --wip: #c9a444;
+    --ko: #b35c5c;
+    --link: #8ab4d9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(180deg, #2a2014, #1a1510);
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  header h1 { margin: 0 0 4px 0; color: var(--accent); font-size: 22px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  .actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .actions button {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .actions button:hover { background: var(--border); }
+  main { max-width: 980px; margin: 0 auto; padding: 24px; }
+  section.step {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 18px;
+    padding: 18px 22px;
+  }
+  section.step h2 {
+    margin: 0 0 6px 0;
+    color: var(--accent);
+    font-size: 18px;
+  }
+  section.step h3 {
+    margin: 14px 0 4px 0;
+    font-size: 14px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  section.step p { margin: 0 0 10px 0; }
+  .status-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .status-row label {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--panel-2);
+    border: 1px solid transparent;
+  }
+  .status-row label:hover { border-color: var(--border); }
+  .status-row input[type=radio] { margin: 0; }
+  .status-row input[type=radio]:checked + span { font-weight: bold; }
+  .status-ok { color: var(--ok); }
+  .status-wip { color: var(--wip); }
+  .status-ko { color: var(--ko); }
+  textarea {
+    width: 100%;
+    margin-top: 10px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    min-height: 60px;
+    resize: vertical;
+  }
+  textarea:focus { outline: 1px solid var(--accent); }
+  .bugs-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-top: 24px;
+  }
+  .bugs-section h2 { color: var(--accent); margin-top: 0; }
+  .bugs-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 18px;
+  }
+  .bugs-section th, .bugs-section td {
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+    font-size: 13px;
+  }
+  .bugs-section th { color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+  .bug-id { color: var(--accent); font-weight: bold; white-space: nowrap; }
+  .bug-status { white-space: nowrap; }
+  .hors-scope {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-top: 24px;
+    font-size: 13px;
+  }
+  .hors-scope h2 { color: var(--accent); margin-top: 0; }
+  .hors-scope ul { columns: 2; column-gap: 30px; }
+  kbd {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .hl { color: var(--accent); }
+  footer { text-align: center; padding: 24px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Strates, plan de test interactif</h1>
+  <p>Coche l'état de chaque étape et note tes remarques. Les données sont conservées localement dans ton navigateur via localStorage.</p>
+  <div class="actions">
+    <button onclick="exportReport()">Exporter le rapport (JSON)</button>
+    <button onclick="copyReport()">Copier le rapport dans le presse-papier</button>
+    <button onclick="resetReport()">Tout réinitialiser</button>
+    <span id="copy-feedback" style="color: var(--ok); font-size: 12px; align-self: center;"></span>
+  </div>
+</header>
+
+<main id="steps">
+  <!-- Générées par JS -->
+</main>
+
+<section class="bugs-section">
+  <h2>Bugs connus</h2>
+  <h3 style="color: var(--muted); margin-top: 0; font-size: 13px;">Session 12 (corrigés session 13)</h3>
+  <table>
+    <tr><th>ID</th><th>Description</th><th>Statut</th></tr>
+    <tr><td class="bug-id">B1</td><td>Quête 20 baies bloquée à 19/20 quand un colon ramasse.</td><td class="bug-status status-ok">Corrigé</td></tr>
+    <tr><td class="bug-id">B2</td><td>Son fanfare transition Bronze désagréable.</td><td class="bug-status status-ok">Corrigé</td></tr>
+    <tr><td class="bug-id">B3</td><td>Cairn posé ne s'affiche pas visuellement.</td><td class="bug-status status-ok">Corrigé</td></tr>
+    <tr><td class="bug-id">B4</td><td>Tech tree âge 2 vide après transition, placeholder ajouté.</td><td class="bug-status status-ok">Corrigé</td></tr>
+    <tr><td class="bug-id">B5</td><td>Bouton Cairn reste actif après pose.</td><td class="bug-status status-ok">Corrigé</td></tr>
+    <tr><td class="bug-id">B6</td><td>Filtres branche tech tree XXL ne filtrent rien.</td><td class="bug-status status-ko">Régression (voir B13)</td></tr>
+    <tr><td class="bug-id">B7</td><td>Échap depuis tech tree ouvre le menu pause.</td><td class="bug-status status-ok">Corrigé</td></tr>
+  </table>
+
+  <h3 style="color: var(--muted); font-size: 13px;">Session 14 (nouveaux)</h3>
+  <table>
+    <tr><th>ID</th><th>Description</th><th>Statut</th></tr>
+    <tr><td class="bug-id">B8</td><td>Panneau sauver/charger/nouvelle chevauche le panneau quêtes.</td><td class="bug-status status-wip">Ouvert</td></tr>
+    <tr><td class="bug-id">B9</td><td>Aide en jeu mentionne l'outil éditeur alors qu'on est en mode jeu.</td><td class="bug-status status-wip">Ouvert</td></tr>
+    <tr><td class="bug-id">B10</td><td>Colons ne font rien sans ordre direct, pas d'auto-collecte au repos.</td><td class="bug-status status-wip">Ouvert</td></tr>
+    <tr><td class="bug-id">B11</td><td>Points de recherche continuent de s'accumuler même si toutes techs débloquées.</td><td class="bug-status status-wip">Ouvert</td></tr>
+    <tr><td class="bug-id">B12</td><td>Liens de dépendance tech tree mal alignés.</td><td class="bug-status status-wip">Ouvert</td></tr>
+    <tr><td class="bug-id">B13</td><td>Filtres branches tech tree ne filtrent rien (régression B6).</td><td class="bug-status status-wip">Ouvert</td></tr>
+  </table>
+</section>
+
+<section class="hors-scope">
+  <h2>Hors scope (à venir)</h2>
+  <p>Ne pas remonter ces éléments comme bugs, ils sont planifiés.</p>
+  <ul>
+    <li>Métiers complets (chapeau coloré, actions exclusives)</li>
+    <li>Écran création de partie (famille, monde)</li>
+    <li>Biomes distincts et ressources spécifiques</li>
+    <li>Cycle jour/nuit automatique et ciel nuit stylisé</li>
+    <li>Lumières dynamiques bâtiments la nuit</li>
+    <li>Palette construction avancée type Pharaoh</li>
+    <li>Filons visuellement identifiables</li>
+    <li>Code couleur des toits</li>
+    <li>Modèle colons revu</li>
+    <li>Cairn posé par le joueur (mode placement)</li>
+    <li>Tech tree workflow Civilization</li>
+    <li>Méta-info gated (tech Observation)</li>
+    <li>Agriculture repensée</li>
+    <li>Âges suivants (Fer à Espace)</li>
+    <li>Endgame changement de planète</li>
+    <li>Fog of war</li>
+    <li>Animaux et pêche</li>
+    <li>Fiche personnage colon</li>
+    <li>Besoins vitaux complets</li>
+    <li>Relations, couples, reproduction</li>
+    <li>Mini-map</li>
+    <li>Mode campagne et sandbox</li>
+  </ul>
+</section>
+
+<footer>Strates test-plan v2 · docs/strates/tests/test-plan.html</footer>
+
+<script>
+const STEPS = [
+  {
+    id: 1,
+    title: "Nouvelle partie",
+    action: "Depuis la landing <kbd>/strates/</kbd>, cliquer sur <span class='hl'>Nouvelle partie</span>. Le jeu se charge sans données résiduelles. État initial : âge 1 Pierre, quelques colons, ressources à zéro ou valeurs de départ.",
+    expected: "La map s'affiche en 3D, les colons bougent, aucune erreur console, le HUD affiche ressources et âge. Le panneau quêtes et le panneau sauvegarde ne se chevauchent pas (bug B8)."
+  },
+  {
+    id: 2,
+    title: "Construction base",
+    action: "Placer 3 à 5 bâtiments parmi <span class='hl'>Maison</span>, <span class='hl'>Recherche</span>, <span class='hl'>Champ</span>, <span class='hl'>Promontoire</span>.",
+    expected: "Chaque bâtiment s'affiche immédiatement. Feedback survol et placement OK. Compteurs ressources cohérents. 4 maisons collées fusionnent en manoir."
+  },
+  {
+    id: 3,
+    title: "Quêtes tutoriel",
+    action: "Vérifier le panneau quêtes au démarrage. Progresser sur une quête (collecte baies ou construction cairn).",
+    expected: "Quêtes déclenchées au bon moment, progression mise à jour, texte cohérent."
+  },
+  {
+    id: 4,
+    title: "Collecte ressources",
+    action: "Laisser les colons collecter sur quelques cycles sans leur donner d'ordre direct.",
+    expected: "Stocks Baies, Bois, Pierre augmentent progressivement. Colons se déplacent vers sources et reviennent au dépôt. Aucun colon bloqué. Compteur quête 20 baies à jour."
+  },
+  {
+    id: 5,
+    title: "Construction Cairn",
+    action: "Réunir les conditions (ressources, quêtes), cliquer sur le bouton Cairn.",
+    expected: "Bouton actif quand conditions remplies. Après clic, Cairn apparaît sur la map. Bouton grisé après la pose."
+  },
+  {
+    id: 6,
+    title: "Transition Bronze",
+    action: "Déclencher la transition après pose du Cairn.",
+    expected: "Cinématique fade noir, titre Âge du Bronze, fanfare supportable, retour fade. HUD passe à âge 2. Tech tree âge 2 affiche techs ou placeholder Techs à venir."
+  },
+  {
+    id: 7,
+    title: "Tech tree (touche T)",
+    action: "Ouvrir avec <kbd>T</kbd>. Tester pan, zoom, filtres branches, recherche texte, fermeture.",
+    expected: "Pan et zoom fluides. Filtres surbrillance branche active et masquent les autres. Liens dépendance bien alignés. Échap ferme le panneau sans ouvrir pause."
+  },
+  {
+    id: 8,
+    title: "Aide en jeu (touche H)",
+    action: "Ouvrir avec <kbd>H</kbd>. Naviguer dans les 7 rubriques. Fermer.",
+    expected: "7 rubriques (Caméra, Construire, Colons, Ressources, Technologies, Sauvegarder, Raccourcis). Caméra par défaut. Mots clés dorés, icônes. Jeu en pause. Fermeture H/Échap/Retour. Aucune référence au mode éditeur."
+  },
+  {
+    id: 9,
+    title: "Save / Reload",
+    action: "Sauvegarder, retourner à l'accueil, charger.",
+    expected: "Le jeu reprend exactement où il a été sauvegardé (âge, ressources, bâtiments, colons, cairn)."
+  }
+];
+
+const STORAGE_KEY = "strates-test-plan-v2";
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function renderSteps() {
+  const main = document.getElementById("steps");
+  const data = loadData();
+  main.innerHTML = STEPS.map(s => {
+    const d = data[s.id] || {};
+    const status = d.status || "";
+    const comment = d.comment || "";
+    return `
+      <section class="step" id="step-${s.id}">
+        <h2>${s.id}. ${s.title}</h2>
+        <h3>Action</h3>
+        <p>${s.action}</p>
+        <h3>Résultat attendu</h3>
+        <p>${s.expected}</p>
+        <div class="status-row">
+          <strong style="margin-right: 8px;">Statut :</strong>
+          <label>
+            <input type="radio" name="status-${s.id}" value="OK" ${status==="OK"?"checked":""} onchange="setStatus(${s.id}, 'OK')">
+            <span class="status-ok">✅ OK</span>
+          </label>
+          <label>
+            <input type="radio" name="status-${s.id}" value="WIP" ${status==="WIP"?"checked":""} onchange="setStatus(${s.id}, 'WIP')">
+            <span class="status-wip">⚠️ WIP</span>
+          </label>
+          <label>
+            <input type="radio" name="status-${s.id}" value="KO" ${status==="KO"?"checked":""} onchange="setStatus(${s.id}, 'KO')">
+            <span class="status-ko">❌ KO</span>
+          </label>
+          <label>
+            <input type="radio" name="status-${s.id}" value="" ${!status?"checked":""} onchange="setStatus(${s.id}, '')">
+            <span style="color: var(--muted);">⬜ non testé</span>
+          </label>
+        </div>
+        <textarea placeholder="Commentaires, bugs, captures à joindre..." onchange="setComment(${s.id}, this.value)">${comment}</textarea>
+      </section>
+    `;
+  }).join("");
+}
+
+function setStatus(id, status) {
+  const data = loadData();
+  data[id] = data[id] || {};
+  data[id].status = status;
+  saveData(data);
+}
+
+function setComment(id, comment) {
+  const data = loadData();
+  data[id] = data[id] || {};
+  data[id].comment = comment;
+  saveData(data);
+}
+
+function buildReport() {
+  const data = loadData();
+  const date = new Date().toISOString().slice(0,10);
+  let out = `# Rapport de test Strates\n\nDate : ${date}\n\n`;
+  STEPS.forEach(s => {
+    const d = data[s.id] || {};
+    const status = d.status || "non testé";
+    out += `## ${s.id}. ${s.title}\n\nStatut : ${status}\n\n`;
+    if (d.comment && d.comment.trim()) {
+      out += `Commentaire :\n${d.comment.trim()}\n\n`;
+    }
+  });
+  return out;
+}
+
+function exportReport() {
+  const report = buildReport();
+  const blob = new Blob([report], {type: "text/markdown"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `rapport-test-${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function copyReport() {
+  const report = buildReport();
+  navigator.clipboard.writeText(report).then(() => {
+    const el = document.getElementById("copy-feedback");
+    el.textContent = "Copié";
+    setTimeout(() => el.textContent = "", 2000);
+  });
+}
+
+function resetReport() {
+  if (confirm("Tout réinitialiser ? Les commentaires et statuts seront perdus.")) {
+    localStorage.removeItem(STORAGE_KEY);
+    renderSteps();
+  }
+}
+
+renderSteps();
+</script>
+</body>
+</html>
