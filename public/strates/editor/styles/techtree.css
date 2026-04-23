@@ -952,45 +952,67 @@
    FICHE DROITE (panneau tech detail)
    ========================================================================== */
 .ttp-fiche {
-  width: 340px;
-  flex-shrink: 0;
-  background: rgba(27, 25, 20, 0.96);
-  backdrop-filter: blur(12px);
-  border-left: 1px solid var(--ttp-rule);
-  display: flex;
-  flex-direction: column;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  display: none;
+  flex-direction: row;
+  align-items: stretch;
+  background: rgba(20, 18, 14, 0.97);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--ttp-rule);
+  z-index: 60;
   overflow: hidden;
   --vc: var(--ttp-rule);
 }
-.ttp-fiche-head {
-  padding: 18px 18px 14px;
-  border-bottom: 1px solid var(--ttp-rule);
+.ttp-fiche.has-tech { display: flex; }
+
+.ttp-fiche-left {
+  width: 220px;
+  flex-shrink: 0;
   display: flex;
+  align-items: center;
   gap: 12px;
-  align-items: flex-start;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--vc) 12%, transparent), transparent);
+  padding: 16px 18px;
+  border-right: 1px solid var(--ttp-rule);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--vc) 10%, transparent), transparent);
 }
-.ttp-fiche-head .ic { font-size: 32px; line-height: 1; }
-.ttp-fiche-head h3 {
+.ttp-fiche-left .ic { font-size: 34px; line-height: 1; flex-shrink: 0; }
+.ttp-fiche-left h3 {
   margin: 0;
   font-family: var(--ttp-serif);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 500;
-  line-height: 1.15;
+  line-height: 1.2;
   color: var(--ttp-ink);
 }
-.ttp-fiche-head .br {
+.ttp-fiche-left .br {
   font-family: var(--ttp-mono);
-  font-size: 9.5px;
+  font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--vc);
-  margin-top: 5px;
+  margin-top: 4px;
 }
+
 .ttp-fiche-body {
   flex: 1;
   overflow-y: auto;
-  padding: 0;
+  padding: 14px 16px;
+  border-right: 1px solid var(--ttp-rule);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ttp-fiche-meta {
+  width: 200px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 14px 14px;
+  border-right: 1px solid var(--ttp-rule);
 }
 .ttp-fsec {
   padding: 13px 18px;
@@ -1108,11 +1130,13 @@
 .ttp-unlock-list .u b { color: var(--ttp-ink); font-weight: 500; }
 
 .ttp-fiche-actions {
-  padding: 14px 18px;
+  width: 180px;
+  flex-shrink: 0;
+  padding: 16px 14px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 8px;
-  border-top: 1px solid var(--ttp-rule);
 }
 .ttp-fiche-btn {
   width: 100%;

@@ -140,15 +140,6 @@ export function initTechTreePanel() {
     '        </div>',
     '      </div>',
     '      <aside class="ttp-fiche" id="ttp-fiche">',
-    '        <div class="ttp-fiche-head">',
-    '          <span class="ic" id="ttp-fiche-ic">-</span>',
-    '          <div style="flex:1">',
-    '            <h3 id="ttp-fiche-name">Selectionne une technologie</h3>',
-    '            <div class="br" id="ttp-fiche-branch">-</div>',
-    '          </div>',
-    '        </div>',
-    '        <div class="ttp-fiche-body" id="ttp-fiche-body"></div>',
-    '        <div class="ttp-fiche-actions" id="ttp-fiche-actions"></div>',
     '      </aside>',
     '    </div>',
     '  </div>',
@@ -797,35 +788,18 @@ function selectTech(id) {
 }
 
 function renderFiche(tech) {
-  const head = document.getElementById('ttp-fiche')
-  if (!head) return
-  const ic = document.getElementById('ttp-fiche-ic')
-  const nm = document.getElementById('ttp-fiche-name')
-  const brLbl = document.getElementById('ttp-fiche-branch')
-  const body = document.getElementById('ttp-fiche-body')
-  const actions = document.getElementById('ttp-fiche-actions')
-  if (!ic || !nm || !body || !actions || !brLbl) return
+  const panel = document.getElementById('ttp-fiche')
+  if (!panel) return
 
   if (!tech) {
-    ic.textContent = '-'
-    nm.textContent = 'Selectionne une technologie'
-    brLbl.textContent = '-'
-    brLbl.style.color = ''
-    body.innerHTML = ''
-    actions.innerHTML = ''
-    head.style.setProperty('--vc', 'var(--ttp-rule)')
+    panel.classList.remove('has-tech')
+    panel.innerHTML = ''
     return
   }
 
   const branches = (TECH_TREE_DATA && TECH_TREE_DATA.branches) || []
   const br = branches.find(function(b) { return b.id === tech.branch })
   const vc = (br && br.color) || '#888'
-  head.style.setProperty('--vc', vc)
-
-  ic.textContent = tech.icon || '-'
-  nm.textContent = tech.name || tech.id
-  brLbl.textContent = (br && br.name) || tech.branch || ''
-  brLbl.style.color = vc
 
   const status = techStatus(tech)
   const cost = techCost(tech)
@@ -836,7 +810,7 @@ function renderFiche(tech) {
   const reqs = Array.isArray(tech.requires) ? tech.requires : []
   let reqsHtml = ''
   if (reqs.length) {
-    reqsHtml = '<div class="ttp-fsec"><h5>Prerequis</h5><div class="ttp-req-grid">' +
+    reqsHtml = '<div class="ttp-fsec" style="margin-bottom:6px"><h5 style="margin:0 0 4px">Prerequis</h5><div class="ttp-req-grid">' +
       reqs.map(function(rid) {
         const r = byId(rid)
         const ok = techUnlocked(rid)
@@ -853,7 +827,7 @@ function renderFiche(tech) {
       '</div></div>'
   }
 
-  // Debloque (jobs / buildings / resources)
+  // Debloque
   const unlocks = tech.unlocks || {}
   const unlockItems = []
   if (Array.isArray(unlocks.jobs)) unlocks.jobs.forEach(function(j) { unlockItems.push({ kind: 'Metier', label: j }) })
@@ -862,7 +836,7 @@ function renderFiche(tech) {
   if (Array.isArray(unlocks.tools)) unlocks.tools.forEach(function(r) { unlockItems.push({ kind: 'Outil', label: r }) })
   let unlocksHtml = ''
   if (unlockItems.length) {
-    unlocksHtml = '<div class="ttp-fsec"><h5>Debloque</h5><div class="ttp-unlock-list">' +
+    unlocksHtml = '<div class="ttp-fsec" style="margin-top:6px"><h5 style="margin:0 0 4px">Debloque</h5><div class="ttp-unlock-list">' +
       unlockItems.map(function(u) {
         return '<div class="u"><span class="dot">&#x25B8;</span><span>' +
                escapeHTML(u.kind) + ' <b>' + escapeHTML(u.label) + '</b></span></div>'
@@ -870,28 +844,36 @@ function renderFiche(tech) {
       '</div></div>'
   }
 
-  body.innerHTML =
-    '<div class="ttp-fsec"><h5>Cout</h5>' +
-    '  <div class="ttp-cost-row">' +
-    '    <div class="c">&#x2605; <b>' + cost + '</b> recherche</div>' +
+  const actionHtml = renderFicheAction(tech, status, cost)
+
+  panel.style.setProperty('--vc', vc)
+  panel.innerHTML =
+    '<div class="ttp-fiche-left">' +
+    '  <span class="ic" id="ttp-fiche-ic">' + escapeHTML(tech.icon || '-') + '</span>' +
+    '  <div>' +
+    '    <h3 id="ttp-fiche-name">' + escapeHTML(tech.name || tech.id) + '</h3>' +
+    '    <div class="br" id="ttp-fiche-branch" style="color:' + vc + '">' + escapeHTML((br && br.name) || tech.branch || '') + '</div>' +
     '  </div>' +
     '</div>' +
-    (desc ? '<div class="ttp-fsec"><h5>Description</h5><p class="ttp-desc">' + escapeHTML(desc) + '</p></div>' : '') +
-    (speech ? '<div class="ttp-fsec"><h5>Murmure</h5><p class="ttp-quote">' + escapeHTML(speech) + '</p></div>' : '') +
-    reqsHtml +
-    unlocksHtml
+    '<div class="ttp-fiche-body" id="ttp-fiche-body">' +
+    '  <div style="font-family:var(--ttp-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ttp-ink-3);margin-bottom:2px">Cout</div>' +
+    '  <div style="font-size:13px;color:var(--ttp-ink)">&#x2605; <b>' + cost + '</b> pts recherche</div>' +
+    (desc ? '<div style="font-size:12px;color:var(--ttp-ink-2);margin-top:6px;line-height:1.4">' + escapeHTML(desc) + '</div>' : '') +
+    (speech ? '<div style="font-size:11px;color:var(--ttp-ink-3);font-style:italic;margin-top:4px;line-height:1.35">' + escapeHTML(speech) + '</div>' : '') +
+    '</div>' +
+    '<div class="ttp-fiche-meta" id="ttp-fiche-meta">' + reqsHtml + unlocksHtml + '</div>' +
+    '<div class="ttp-fiche-actions" id="ttp-fiche-actions">' + actionHtml + '</div>'
 
-  // Bouton d action
-  actions.innerHTML = renderFicheAction(tech, status, cost)
-  const bq = actions.querySelector('[data-act="queue"]')
-  const bu = actions.querySelector('[data-act="unqueue"]')
-  const bc = actions.querySelector('[data-act="chain"]')
+  panel.classList.add('has-tech')
+
+  const bq = panel.querySelector('[data-act="queue"]')
+  const bu = panel.querySelector('[data-act="unqueue"]')
+  const bc = panel.querySelector('[data-act="chain"]')
   if (bq) bq.addEventListener('click', function() { queueLocal(tech.id) })
   if (bu) bu.addEventListener('click', function() { try { cancelResearch(tech.id) } catch (e) {} refreshTechTree() })
   if (bc) bc.addEventListener('click', function() { enqueueChain(tech.id); refreshTechTree() })
 
-  // Req-cards cliquables
-  body.querySelectorAll('.ttp-req-card').forEach(function(el) {
+  panel.querySelectorAll('.ttp-req-card').forEach(function(el) {
     el.addEventListener('click', function() { selectTech(el.dataset.req) })
   })
 }
