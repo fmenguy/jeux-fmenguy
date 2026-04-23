@@ -4,6 +4,16 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 14) : Lot B -- U7 consommation flag unique batiment
+
+### U7 -- bouton de pose grise pour batiment unique deja pose
+- `modules/placements.js` : nouvelles fonctions `countBuildingInstances(id)`, `isBuildingUniqueAndPlaced(id)` et `checkUniqueBuildingButtons()`. La premiere lit la map interne `UNIQUE_STATE_ARRAY_BY_BUILDING` (hutte-du-sage -> researchHouses, cairn-pierre -> cairns). La deuxieme combine `getBuildingById(id).unique === true` avec le comptage d instances dans state. La troisieme parcourt la map `UNIQUE_TOOL_TO_BUILDING` et applique la classe `disabled-unique` + `disabled=true` + pointer-events none sur le bouton correspondant quand le batiment est pose.
+- `modules/interaction.js` : guard `isBuildingUniqueAndPlaced('hutte-du-sage')` avant placement dans les deux branches `case 'research'` (pose simple et pose strata). Empeche la double pose meme si le bouton n est pas encore grise au moment du clic.
+- `main.js` : appel de `checkUniqueBuildingButtons()` a chaque tick lent (~1s), a cote de `checkCairnOverlay()`. Import ajoute depuis placements.js.
+- Scope respecte : aucune modification de `data/*.json`, ni de `modules/ui/*`, ni de `hud.js`. Le bouton Cairn garde son traitement propre dans `age-transitions.js` (cinematique + conditions cumulatives).
+
+---
+
 ## 2026-04-23 (session 14) : Lot C -- B8 B9 B12 B13 + U5 U8
 
 ### B8 -- save/load sans chevauchement panneau quetes
