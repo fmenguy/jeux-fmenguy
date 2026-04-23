@@ -8,11 +8,162 @@ import { SEASONS } from './seasons.js'
 // ============================================================================
 
 // Mapping saison -> chemin. Les fichiers absents sont ignores silencieusement.
+// B16 : la piste ete.mp3 n'existe pas, elle est remplacee par un ambient
+// synthetique genere via Web Audio API (cf. createSummerSyntheticAudio).
+const SYNTH_SUMMER = '__synth_summer__'
 const TRACKS = {
   spring: './audio/printemps.mp3',
-  summer: './audio/ete.mp3',
+  summer: SYNTH_SUMMER,
   autumn: './audio/automne.mp3',
   winter: './audio/hiver.mp3'
+}
+
+/**
+ * Cree un ambient synthetique "ete" via Web Audio API. Renvoie un objet
+ * compatible avec l'API minimale d'un HTMLAudioElement utilisee ici :
+ * src, volume, loop, preload, play(), pause(), addEventListener, remove.
+ *
+ * Ambiance ete : bourdon chaud (do3 + sol3) + arpege lumineux en do majeur
+ * (do4, mi4, sol4, la4) qui boucle lentement. Filtre passe-bas pour le
+ * cote chaleureux. Le tout module via un gain de sortie pilote par
+ * l'enveloppe du crossfade (audio.volume).
+ */
+function createSummerSyntheticAudio() {
+  const Ctx = window.AudioContext || window.webkitAudioContext
+  const api = {
+    src: SYNTH_SUMMER,
+    volume: 0,
+    loop: true,
+    preload: 'auto',
+    _listeners: {},
+    _ctx: null,
+    _master: null,
+    _nodes: [],
+    _interval: null,
+    _started: false,
+    _ready: false,
+    addEventListener: function (name, cb, opts) {
+      if (!this._listeners[name]) this._listeners[name] = []
+      this._listeners[name].push({ cb: cb, once: !!(opts && opts.once) })
+    },
+    _emit: function (name) {
+      const list = this._listeners[name]
+      if (!list) return
+      const keep = []
+      for (const l of list) {
+        try { l.cb({ type: name, target: this }) } catch (e) {}
+        if (!l.once) keep.push(l)
+      }
+      this._listeners[name] = keep
+    },
+    play: function () {
+      const self = this
+      return new Promise(function (resolve, reject) {
+        try {
+          if (!self._ctx) self._buildGraph()
+          if (self._ctx.state === 'suspended') self._ctx.resume().catch(function () {})
+          self._started = true
+          self._applyVolume()
+          resolve()
+        } catch (e) { reject(e) }
+      })
+    },
+    pause: function () {
+      this._started = false
+      if (this._master) {
+        try { this._master.gain.value = 0 } catch (e) {}
+      }
+    },
+    remove: function () {
+      this._started = false
+      if (this._interval) { clearInterval(this._interval); this._interval = null }
+      for (const n of this._nodes) {
+        try { if (n.stop) n.stop() } catch (e) {}
+        try { if (n.disconnect) n.disconnect() } catch (e) {}
+      }
+      this._nodes = []
+      if (this._ctx) {
+        try { this._ctx.close() } catch (e) {}
+        this._ctx = null
+      }
+    },
+    _applyVolume: function () {
+      if (!this._master) return
+      this._master.gain.value = this._started ? this.volume : 0
+    },
+    _buildGraph: function () {
+      if (!Ctx) throw new Error('AudioContext indisponible')
+      const ctx = new Ctx()
+      this._ctx = ctx
+      const master = ctx.createGain()
+      master.gain.value = 0
+      this._master = master
+
+      // Filtre passe-bas pour un grain chaud
+      const filter = ctx.createBiquadFilter()
+      filter.type = 'lowpass'
+      filter.frequency.value = 2200
+      filter.Q.value = 0.6
+      filter.connect(master)
+      master.connect(ctx.destination)
+
+      // Bourdons : do3 (130.81), sol3 (196.00) en sine pour le cote doux
+      const dronFreqs = [130.81, 196.00]
+      for (const f of dronFreqs) {
+        const osc = ctx.createOscillator()
+        osc.type = 'sine'
+        osc.frequency.value = f
+        const g = ctx.createGain()
+        g.gain.value = 0.08
+        // Leger vibrato pour eviter le son fige
+        const lfo = ctx.createOscillator()
+        lfo.type = 'sine'
+        lfo.frequency.value = 0.15 + Math.random() * 0.1
+        const lfoGain = ctx.createGain()
+        lfoGain.gain.value = 0.6
+        lfo.connect(lfoGain)
+        lfoGain.connect(osc.frequency)
+        osc.connect(g)
+        g.connect(filter)
+        osc.start()
+        lfo.start()
+        this._nodes.push(osc, g, lfo, lfoGain)
+      }
+
+      // Arpege lumineux : do4, mi4, sol4, la4, sol4, mi4 en boucle
+      const arp = [261.63, 329.63, 392.00, 440.00, 392.00, 329.63]
+      let step = 0
+      const self = this
+      this._interval = setInterval(function () {
+        if (!self._ctx || !self._started) return
+        const t = self._ctx.currentTime
+        const freq = arp[step % arp.length]
+        step++
+        const o = ctx.createOscillator()
+        o.type = 'triangle'
+        o.frequency.value = freq
+        const g = ctx.createGain()
+        g.gain.setValueAtTime(0, t)
+        g.gain.linearRampToValueAtTime(0.06, t + 0.08)
+        g.gain.linearRampToValueAtTime(0, t + 0.9)
+        o.connect(g)
+        g.connect(filter)
+        o.start(t)
+        o.stop(t + 1.0)
+      }, 900)
+
+      // Emet canplaythrough au prochain tick pour coller a l'API MP3
+      const self2 = this
+      setTimeout(function () { self2._ready = true; self2._emit('canplaythrough') }, 20)
+    }
+  }
+  // Proxy de volume : audio.js ecrit audio.volume = ..., on propage au master.
+  let _vol = 0
+  Object.defineProperty(api, 'volume', {
+    get: function () { return _vol },
+    set: function (v) { _vol = v; api._applyVolume() }
+  })
+  return api
 }
 
 const LOFI_MUTE_KEY = 'strates-audio-muted'
@@ -30,6 +181,9 @@ function getCurrentSeasonId() {
 }
 
 function createAudio(src) {
+  // B16 : si la piste est le tag synthetique, on instancie le generateur
+  // Web Audio API plutot qu'un Audio() pointant vers un fichier absent.
+  if (src === SYNTH_SUMMER) return createSummerSyntheticAudio()
   const a = new Audio()
   a.src = src
   a.loop = true
