@@ -896,10 +896,19 @@ export function isMineBlocked(x, z) {
   // Plus rien n'est "bloquant" au sens strict : tout peut etre designe, mais
   // la logique d'execution dans colonist detecte le contenu et agit en
   // consequence (abat arbre, ramasse rocher, extrait filon, recolte buisson,
-  // sinon mine le voxel). Seules les maisons et laboratoires restent
-  // intouchables car ce sont des constructions que le joueur efface
-  // explicitement avec Effacer.
-  return isHouseOn(x, z)
+  // sinon mine le voxel). Seules les constructions (maisons, laboratoires,
+  // promontoires, cairn) restent intouchables car ce sont des placements que
+  // le joueur efface explicitement avec Effacer. B17 : inclut toutes les
+  // fondations de batiments pour qu'un colon ne puisse miner le sol sous un
+  // batiment pose.
+  if (isHouseOn(x, z)) return true
+  if (state.observatories) {
+    for (const o of state.observatories) if (o.x === x && o.z === z) return true
+  }
+  if (state.cairns) {
+    for (const c of state.cairns) if (c.x === x && c.z === z) return true
+  }
+  return false
 }
 
 // Recolte complete d'un buisson quand on mine le voxel dessous : retire le
