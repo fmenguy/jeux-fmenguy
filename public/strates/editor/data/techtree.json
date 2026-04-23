@@ -20,7 +20,7 @@
   "techs": [
     {
       "id": "pick-stone",
-      "name": "Pioche en pierre",
+      "name": "Pioche",
       "age": 1,
       "branch": "outils",
       "icon": "⛏",
@@ -35,7 +35,7 @@
     },
     {
       "id": "axe-stone",
-      "name": "Hache en pierre",
+      "name": "Hache",
       "age": 1,
       "branch": "outils",
       "icon": "🪓",
@@ -50,7 +50,7 @@
     },
     {
       "id": "spear-wood",
-      "name": "Arc en bois",
+      "name": "Arc",
       "age": 1,
       "branch": "outils",
       "icon": "🏹",
