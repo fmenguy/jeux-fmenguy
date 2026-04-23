@@ -1294,7 +1294,7 @@
 .ttp-queue .qslot .x:hover { background: #c9442c; color: #fff; }
 .ttp-queue .qslot .tip {
   position: absolute;
-  bottom: calc(100% + 10px);
+  top: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--ttp-panel);
