@@ -2,19 +2,27 @@
 // Tech tree XXL (Lot C) - rendu d'un noeud (card tech) - maquette v2
 //
 // Structure DOM : .ttp-tech.<status> > .card > (.row + .cost + .lock|.check)
-// Etats : locked | available | ready | researching | done | teased.
+// Etats : locked | available | ready | researching | queued | done | teased.
+//
+// Integration file de recherche (Lot B) :
+//   - opts.onQueue(id)   : appele quand le joueur clique "Mettre en file"
+//   - opts.activeId      : id de la tech en cours (state.activeResearch.id)
+//   - opts.activeProgress: progression de la tech en cours (0..cost)
+//   - opts.queueIndex    : position 1-based dans la file, ou 0 si pas en file
 // ============================================================================
 
 /**
  * @param {object}  tech    Objet tech du JSON SPEC v1.
- * @param {string}  status  locked|available|ready|researching|done|teased.
- * @param {object=} opts    { onUnlock: (id) => void, cost: number, vc: string }
+ * @param {string}  status  locked|available|ready|researching|queued|done|teased.
+ * @param {object=} opts    Voir entete.
  * @returns {HTMLElement}
  */
 export function buildTechNode(tech, status, opts) {
   opts = opts || {}
   const isTeased = status === 'teased'
   const cost = typeof opts.cost === 'number' ? opts.cost : costOf(tech)
+  const activeProgress = typeof opts.activeProgress === 'number' ? opts.activeProgress : 0
+  const queueIndex = typeof opts.queueIndex === 'number' ? opts.queueIndex : 0
 
   const node = document.createElement('div')
   node.className = 'ttp-tech ' + status
@@ -26,7 +34,7 @@ export function buildTechNode(tech, status, opts) {
   node.dataset.age = String(tech.age || 1)
   if (opts.vc) node.style.setProperty('--vc', opts.vc)
 
-  // Corner indicator (check pour done, lock + missing count pour locked)
+  // Corner indicator
   let corner = ''
   if (status === 'done') {
     corner = '<div class="check">&#x2713;</div>'
@@ -43,13 +51,32 @@ export function buildTechNode(tech, status, opts) {
   let costHtml = ''
   if (status === 'teased') {
     costHtml = '<span>? pts</span>'
-  } else if (status === 'ready') {
+  } else if (status === 'researching') {
+    const pct = cost > 0 ? Math.min(100, Math.round((activeProgress / cost) * 100)) : 0
+    costHtml = '<span><b>' + Math.floor(activeProgress) + '</b>/' + cost + '</span>' +
+               '<button class="ttp-tech-unlock" disabled>En cours...</button>'
+    // La barre de progression sera injectee apres la card (voir plus bas)
+    void pct
+  } else if (status === 'queued') {
     costHtml = '<span><b>' + cost + '</b> pts</span>' +
-               '<button class="ttp-tech-unlock">Rechercher</button>'
+               '<button class="ttp-tech-unlock" disabled>En file (' + queueIndex + ')</button>'
+  } else if (status === 'ready' || status === 'available') {
+    costHtml = '<span><b>' + cost + '</b> pts</span>' +
+               '<button class="ttp-tech-unlock">Mettre en file &rarr;</button>'
   } else if (status === 'done') {
-    costHtml = '<span>Debloquee</span>'
+    costHtml = '<span class="ttp-tech-acquis">&#x2713; Acquis</span>'
+  } else if (status === 'locked') {
+    costHtml = (cost > 0 ? '<span><b>' + cost + '</b> pts</span>' : '<span>Gratuit</span>') +
+               '<button class="ttp-tech-unlock" disabled>Verrouille</button>'
   } else {
     costHtml = cost > 0 ? '<span><b>' + cost + '</b> pts</span>' : '<span>Gratuit</span>'
+  }
+
+  // Barre de progression pour la tech active
+  let progressBar = ''
+  if (status === 'researching' && cost > 0) {
+    const pct = Math.min(100, Math.max(0, (activeProgress / cost) * 100))
+    progressBar = '<div class="ttp-tech-bar"><i style="width:' + pct.toFixed(1) + '%"></i></div>'
   }
 
   node.innerHTML =
@@ -60,14 +87,17 @@ export function buildTechNode(tech, status, opts) {
     '    <div class="nm">' + escape(name) + '</div>' +
     '  </div>' +
     '  <div class="cost">' + costHtml + '</div>' +
+    progressBar +
     '</div>'
 
-  // Bouton Rechercher
+  // Bouton Mettre en file
   const btn = node.querySelector('.ttp-tech-unlock')
-  if (btn) {
+  if (btn && !btn.disabled) {
     btn.addEventListener('click', function(e) {
       e.stopPropagation()
-      if (typeof opts.onUnlock === 'function') opts.onUnlock(tech.id)
+      if (typeof opts.onQueue === 'function') opts.onQueue(tech.id)
+      // Retrocompat : certains appels historiques passaient onUnlock.
+      else if (typeof opts.onUnlock === 'function') opts.onUnlock(tech.id)
     })
   }
 
