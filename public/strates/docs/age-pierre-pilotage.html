@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Strates · Pilotage Âge de Pierre</title>
+<title>Strates · Pilotage Âge de Pierre · v0.3</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -213,26 +213,6 @@
 </style>
 </head>
 <body>
-<div id="pw-gate" style="position:fixed;inset:0;z-index:9999;background:#f4efe4;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;">
-  <div style="text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;">
-    <div style="font-size:1.1rem;color:#3a3026;font-weight:500;">Accès privé</div>
-    <input id="pw-input" type="password" placeholder="Mot de passe" autofocus
-      style="padding:8px 14px;border:1px solid #c9bfa6;border-radius:6px;font-size:1rem;background:#fff;outline:none;width:200px;">
-    <div id="pw-error" style="color:#a63d3d;font-size:0.85rem;min-height:1.2em;"></div>
-  </div>
-</div>
-<script>
-  (function(){
-    var gate = document.getElementById('pw-gate');
-    var input = document.getElementById('pw-input');
-    var error = document.getElementById('pw-error');
-    function check() {
-      if (input.value === 'mengmengf') { gate.remove(); }
-      else { error.textContent = 'Mot de passe incorrect.'; input.value = ''; input.focus(); }
-    }
-    input.addEventListener('keydown', function(e){ if (e.key === 'Enter') check(); });
-  })();
-</script>
 <div id="root"></div>
 
 <script type="text/babel" data-presets="react">
@@ -256,7 +236,8 @@ const TABS = [
 const STATUS_FROM_REPO = {
   done:    ['Grille voxel, chunks, A*', 'Pioche pierre (tech)', 'Hache pierre (tech)', 'Recherche (hutte + pts)', 'Cueillette baies', 'Placement maison + spawn 2 colons', 'Bulles contextuelles', 'Noms + genre + François chef', 'Quêtes initiales (3)', 'Sauvegarde localStorage', 'Saisons (palette, neige, pluie)', 'Cycle jour/nuit (toggle N)', 'Promontoire → points nocturnes', 'Feu de camp social (MVP)', 'Filon extraction (pioche gate)', 'Verticalité (strates 10)'],
   partial: ['Outils colons : seules pioche + hache (il manque pelle, faucille, canne)', 'Besoins vitaux (faim/sommeil à câbler)', 'Tech tree (4 techs linéaires = proto, arbre XXL à faire)', 'Métiers (pas d\'attribution de rôles côté UI)', 'Fog of war (désactivé temporairement)'],
-  missing: ['Monument "Cairn de pierre" (passage d\'âge)', 'Chasse (gibier → viande/os/peau)', 'Besoins faim + sans-abri câblés sur pop', 'UI tech tree XXL (scroll/zoom, branches)', 'JSON techtree/buildings/jobs/needs (data-driven âge 1)', 'Cinématique passage bronze', 'Tutoriel enchaîné premières 15 min', 'Totem (+1 moral)', 'Abri de fortune comme bâtiment distinct']
+  missing: ['Monument "Cairn de pierre" (passage d\'âge)', 'Chasse (gibier → viande/os/peau)', 'Besoins faim + sans-abri câblés sur pop', 'JSON techtree/buildings/jobs/needs (data-driven âge 1)', 'Cinématique passage bronze', 'Tutoriel enchaîné premières 15 min', 'Totem (+1 moral)', 'Abri de fortune comme bâtiment distinct'],
+  newlyDone: ['UI Tech tree XXL — vue globale constellation (7 branches en orbite) + vue détaillée Humankind (angles droits, pan/zoom bornés)', 'File de recherche en bulles (bas de page, 5 max, drag contraint)', 'Cross-branch badges (↗ Savoir, ↗ Outils, etc.) sur techs avec prérequis hors branche', 'Cadenas chiffré sur techs locked (🔒 + nb de prérequis manquants)', 'Bouton « Mettre le chemin en file » (chaîne topologique auto)', 'Popup unlock façon Endless Space (2 suggestions cliquables)']
 };
 
 const STRATES = {
@@ -412,7 +393,7 @@ function Header({ tab, setTab }) {
       </div>
       <div className="brandrow" style={{ marginTop: 4 }}>
         <div className="brand">STRATES · Âge I</div>
-        <div className="sub">plan de bataille pour livrer l'âge de pierre de bout en bout · v0.2 · aligné plan 7 quêtes</div>
+        <div className="sub">plan de bataille pour livrer l'âge de pierre de bout en bout · v0.3 · tech tree XXL livré · intégration HUD en cours</div>
       </div>
       <div className="tabs">
         {TABS.map(([id, name], i) => (
@@ -478,6 +459,14 @@ function OverviewTab() {
 
       <hr className="wavy"/>
 
+      <div className="callout" style={{ borderColor: 'var(--done)', background: '#e8f2e1' }}>
+        <span className="lbl" style={{ color: 'var(--done)' }}>✅ Livré aujourd'hui · v0.3</span>
+        <ul style={{ margin: '4px 0 0', paddingLeft: 18, fontSize: 13 }}>
+          {STATUS_FROM_REPO.newlyDone.map((x,i)=><li key={i}>{x}</li>)}
+        </ul>
+        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 6 }}>→ Source brute lisible : <span className="code">public/strates/techtree-v2.html</span>. Claude VSCode intègre le HUD (Lot C UI) en parallèle.</div>
+      </div>
+
       <h3 className="hh">État du repo <span className="sub">(branche <span className="code">strate</span>, lecture docs + changelog)</span></h3>
       <div className="grid-3">
         <div className="sketch-box">
@@ -511,7 +500,7 @@ function DefinitionTab() {
     { c: 'Les colons sans Cabane attribuée sont marqués SANS-ABRI (bulle + icône au-dessus), effet : productivité -30%.', s: 'todo' },
     { c: 'Le joueur peut cliquer un colon et voir sa fiche (nom, état, métier actif). Optionnel pour âge I : juste la bulle.', s: 'partial', note: 'bulles OK, fiche clic à faire ou repoussé' },
     { c: 'Les ressources de base (Bois / Pierre / Silex / Baies / Viande crue+cuite / Os / Peau) se récoltent via les 5 métiers (Bûcheron / Mineur / Cueilleur / Chasseur / Chercheur).', s: 'partial', note: 'manque Viande, Os, Peau, Silex + Chasseur + cuisson Foyer' },
-    { c: 'Le tech tree XXL est visible (panneau arbre scrollable/zoomable), affiche les 7 âges, seul l\'âge I est actif, le reste est teased en flou.', s: 'todo' },
+    { c: 'Le tech tree XXL est visible (panneau arbre scrollable/zoomable), affiche les 7 âges, seul l\'âge I est actif, le reste est teased en flou.', s: 'done', note: 'livré v0.3 — vue globale constellation + vue détaillée Humankind, pan/zoom bornés, teaser Bronze en colonne de droite' },
     { c: 'Au moins 4 techs âge I débloquables : Pioche pierre, Hache pierre, Pelle pierre, Cueillette améliorée.', s: 'partial', note: '2/4 faits' },
     { c: 'Les bâtiments âge I sont posables via désignation (mode jeu) : Abri, Cabane (req Foyer), Foyer (pivot), Hutte du sage (req Cabane), Promontoire (req Hutte), Champ, Totem.', s: 'partial', note: 'manque Abri, Foyer, Totem + chaîne de prereqs' },
     { c: 'Les 7 quêtes enchaînées couvrent le tutoriel (Q1→Q6 env. 15-20 min) et l\'objectif long terme (Q7 Cairn). Voir onglet Quêtes.', s: 'partial', note: '3 quêtes existent, 4 à ajouter + chaînage' },
@@ -849,7 +838,7 @@ function TicketsTab() {
     },
     {
       lot: 'lotC',
-      title: 'Lot C · UI Tech tree XXL',
+      title: 'Lot C · UI Tech tree XXL  ✅ LIVRÉ v0.3 (à intégrer au repo)',
       owner: 'Claude UI',
       files: ['modules/ui/techtree-panel.js (nouveau)', 'modules/ui/techtree-node.js (nouveau)', 'styles/techtree.css', 'index.html (bouton d\'ouverture)'],
       forbidden: ['data/*.json (lecture seule)', 'modules/jobs.js', 'modules/needs.js'],
