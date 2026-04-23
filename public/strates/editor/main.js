@@ -7,7 +7,7 @@ import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
 import { refreshBushBerries, countActiveResearchers, tickTreeGrowth, checkUniqueBuildingButtons } from './modules/placements.js'
-import { tryBlockedTechBubble, hasPendingResearchableTech } from './modules/tech.js'
+import { tryBlockedTechBubble, hasPendingResearchableTech, unlockTech, queueTech } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
 import { updateCameraPan } from './modules/camera-pan.js'
@@ -88,11 +88,20 @@ bindDayNightUI()
 refreshNightPointsHUD()
 initAgeTransitions()
 
-// Bouton Arbre des technologies (bouton flottant HUD, touche T)
+// Lot B : expose la file de recherche a l UI externe (Lot C, tech tree XXL).
+// L agent C appelle window.StratesResearch.queue(id) pour enfiler une tech
+// et ecoute les events strates:queueChanged / :researchStarted / :techComplete.
+try {
+  window.StratesResearch = {
+    queue: queueTech,
+    unlock: unlockTech
+  }
+} catch (e) { /* ignore */ }
+
+// Bouton Arbre des technologies (rail HUD, touche T)
 const btnTT = document.getElementById('btn-techtree') || document.getElementById('btn-techtree-float')
 if (btnTT) btnTT.addEventListener('click', toggleTechTree)
-const btnTTFloat = document.getElementById('btn-techtree-float')
-if (btnTTFloat) btnTTFloat.addEventListener('click', toggleTechTree)
+window.addEventListener('strates:toggleTechTree', toggleTechTree)
 
 // Touche T
 window.addEventListener('keydown', function(e) {
@@ -136,17 +145,60 @@ function tick(nowMs) {
   for (const [, m] of state.markers) m.lookAt(camera.position)
   for (const [, m] of state.buildMarkers) m.lookAt(camera.position)
 
-  // generation de points de recherche
-  // Lot B, B11 : l accumulation est gelee si aucune tech n est recherchable
-  // pour l age courant. Evite que researchPoints monte indefiniment alors
-  // que le joueur a tout debloque (toutes les techs disponibles faites).
+  // Lot B : file de recherche. La progression n avance que si une tech est
+  // active (state.activeResearch != null) ET qu au moins un chercheur est
+  // assigne. A la completion (progress >= cost), unlockTech est appelee puis
+  // la queue avance automatiquement. state.researchPoints est synchronise avec
+  // la progression de la tech active pour garder la compat HUD existante.
   state.researchTickAccum += dt
   if (state.researchTickAccum >= RESEARCH_TICK) {
     state.researchTickAccum -= RESEARCH_TICK
     const n = countActiveResearchers()
-    if (n > 0 && hasPendingResearchableTech()) {
-      state.researchPoints += n
+    if (n > 0 && state.activeResearch) {
+      state.activeResearch.progress += n
+      const techEntry = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
+        ? TECH_TREE_DATA.techs.find(x => x.id === state.activeResearch.id)
+        : null
+      const cost = techEntry ? ((techEntry.cost && techEntry.cost.research) || 0) : 0
+      if (cost > 0 && state.activeResearch.progress >= cost) {
+        const completedId = state.activeResearch.id
+        state.activeResearch = null
+        // Le cout a deja ete paye en temps (progression), pas en points stockes.
+        unlockTech(completedId, refreshTechsPanel, { alreadyPaid: true })
+        try {
+          window.dispatchEvent(new CustomEvent('strates:techComplete', {
+            detail: { id: completedId, tech: techEntry }
+          }))
+        } catch (e) { /* ignore */ }
+        // Avancer la file : si une autre tech est enfilee, elle devient active.
+        if (state.researchQueue && state.researchQueue.length > 0) {
+          const nextId = state.researchQueue.shift()
+          state.activeResearch = { id: nextId, progress: 0 }
+          try {
+            window.dispatchEvent(new CustomEvent('strates:researchStarted', { detail: { id: nextId } }))
+            window.dispatchEvent(new CustomEvent('strates:queueChanged'))
+          } catch (e) { /* ignore */ }
+        } else {
+          try { window.dispatchEvent(new CustomEvent('strates:queueChanged')) } catch (e) { /* ignore */ }
+        }
+      }
+      // Retrocompat : HUD researchPoints reflete la progression de la tech en cours.
+      state.researchPoints = state.activeResearch ? Math.floor(state.activeResearch.progress) : 0
+      if (hudRefs.rPointsEl) {
+        if (state.activeResearch) {
+          const ae = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
+            ? TECH_TREE_DATA.techs.find(x => x.id === state.activeResearch.id)
+            : null
+          const aeCost = ae ? ((ae.cost && ae.cost.research) || 0) : 0
+          hudRefs.rPointsEl.textContent = Math.floor(state.activeResearch.progress) + ' / ' + aeCost
+        } else {
+          hudRefs.rPointsEl.textContent = '0'
+        }
+      }
       refreshTechsPanel()
+    } else if (!state.activeResearch && hasPendingResearchableTech()) {
+      // Rien n est en cours mais des techs sont dispo : on n accumule pas,
+      // on attend que le joueur enfile une tech via queueTech.
     }
   }
 
@@ -231,7 +283,20 @@ function tick(nowMs) {
   if (hudRefs.rStoneEl) hudRefs.rStoneEl.textContent = state.resources.stone
   if (hudRefs.cBushesEl) hudRefs.cBushesEl.textContent = state.bushes.length
   refreshStocksLine()
-  if (hudRefs.rPointsEl) hudRefs.rPointsEl.textContent = state.researchPoints
+  // Lot B (file de recherche) : le HUD rPointsEl reflete la progression de
+  // la tech active, formatee "progress / cost". Si rien n est en recherche
+  // on affiche "0" au lieu de laisser trainer une ancienne valeur.
+  if (hudRefs.rPointsEl) {
+    if (state.activeResearch) {
+      const ae = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
+        ? TECH_TREE_DATA.techs.find(x => x.id === state.activeResearch.id)
+        : null
+      const aeCost = ae ? ((ae.cost && ae.cost.research) || 0) : 0
+      hudRefs.rPointsEl.textContent = Math.floor(state.activeResearch.progress) + ' / ' + aeCost
+    } else {
+      hudRefs.rPointsEl.textContent = '0'
+    }
+  }
 
   updateCameraPan(dt)
   controls.update()

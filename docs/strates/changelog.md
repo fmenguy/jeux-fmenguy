@@ -4,6 +4,25 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 15) : Lot B -- file de recherche (queueTech, activeResearch)
+
+### Mecanique
+- Les techs ne se debloquent plus instantanement quand `researchPoints` atteint le cout. Le joueur enfile une tech via `queueTech(id)`, la tech passe en `state.activeResearch = { id, progress }`, la progression monte de `n` (nombre de chercheurs actifs) toutes les `RESEARCH_TICK` secondes. A `progress >= cost`, `unlockTech` est appelee automatiquement et la file avance.
+- `state.researchQueue` (Array<string>) est FIFO, `state.activeResearch` est `null` quand rien n est en cours.
+
+### Fichiers
+- `modules/state.js` : ajout de `researchQueue: []` et `activeResearch: null`.
+- `modules/tech.js` : nouvelle fonction exportee `queueTech(id)` qui enfile ou demarre la recherche, `cancelResearch(id)` qui retire de la file ou annule l active. `unlockTech` accepte desormais un 3e arg `opts.alreadyPaid` pour que le chemin "completion depuis le tick moteur" ne rededuise pas le cout en points. Log des effets `unlocks.jobs` / `unlocks.buildings` (cablage reel dans un ticket dedie).
+- `main.js` : le tick `RESEARCH_TICK` incremente `state.activeResearch.progress` au lieu de `state.researchPoints`. A la completion, `unlockTech(id, refreshTechsPanel, { alreadyPaid: true })` + event `strates:techComplete`, puis avancement auto de la queue (`strates:researchStarted`). HUD `rPointsEl` affiche `progress / cost` tant qu une tech est active. Exposition `window.StratesResearch = { queue, unlock }` pour consommation externe.
+- `modules/colonist.js` : en `IDLE`, si `state.activeResearch != null`, que le colon `isChief` n a pas de `researchBuildingId` et qu une hutte du sage existe, il s auto-assigne a `state.researchHouses[0].id` et part en `MOVING` vers le batiment. Indispensable en debut de partie ou le chef est le seul colon disponible.
+- `modules/persistence.js` : serialisation et restauration de `researchQueue` et `activeResearch`, reset dans `clearEverything`.
+
+### Contrat API pour Lot C (UI tech tree XXL)
+- `window.dispatchEvent` de 3 events : `strates:queueChanged`, `strates:researchStarted { detail: { id } }`, `strates:techComplete { detail: { id, tech } }`.
+- `techtree-panel.js` importe deja `queueTech, cancelResearch` depuis `../tech.js` (session precedente Lot C) et lit `state.activeResearch`, `state.researchQueue` pour l affichage status (`researching`, `queued`).
+
+---
+
 ## 2026-04-23 (session 15) : Lot C -- B8bis, B14, B15, B16
 
 ### B8bis -- suppression panneau save/load haut écran

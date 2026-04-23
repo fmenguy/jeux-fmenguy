@@ -44,6 +44,13 @@ export const state = {
   },
   researchPoints: 0,
   researchTickAccum: 0,
+  // Lot B : file de recherche (SPEC v1)
+  // researchQueue = IDs de techs en attente, ordonnees FIFO.
+  // activeResearch = tech en cours d etude { id, progress } ou null si rien.
+  // La progression est incrementee de n (nb de chercheurs) toutes les RESEARCH_TICK.
+  // A la completion, unlockTech(id) est appelee et la queue avance automatiquement.
+  researchQueue: [],
+  activeResearch: null,
   // B19 : total cumule des points de recherche depenses (jamais decremente).
   // Utilise pour la condition Cairn au lieu du solde courant, qui peut etre
   // gele par B11 si le joueur a tout depense avant d atteindre 100.
