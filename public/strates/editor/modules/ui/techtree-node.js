@@ -26,6 +26,8 @@ export function buildTechNode(tech, status, opts) {
 
   const node = document.createElement('div')
   node.className = 'ttp-tech ' + status
+  // Pulse visuel supplementaire pour la tech en cours de recherche
+  if (status === 'researching') node.classList.add('ttp-research')
   // Anti-spoiler pour les teased : aucune info reelle dans le DOM.
   if (!isTeased) {
     node.dataset.id = tech.id
