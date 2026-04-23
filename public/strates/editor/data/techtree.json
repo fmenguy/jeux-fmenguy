@@ -50,10 +50,10 @@
     },
     {
       "id": "spear-wood",
-      "name": "Lance en bois",
+      "name": "Arc",
       "age": 1,
       "branch": "outils",
-      "icon": "🪃",
+      "icon": "🏹",
       "cost": { "research": 5 },
       "requires": [],
       "unlocks": {
