@@ -281,6 +281,7 @@ function tick(nowMs) {
   if (hudRefs.rBerriesEl) hudRefs.rBerriesEl.textContent = state.resources.berries
   if (hudRefs.rWoodEl) hudRefs.rWoodEl.textContent = state.resources.wood
   if (hudRefs.rStoneEl) hudRefs.rStoneEl.textContent = state.resources.stone
+  if (hudRefs.rBlocsEl) hudRefs.rBlocsEl.textContent = (state.stocks.stone || 0) + (state.stocks.dirt || 0)
   if (hudRefs.cBushesEl) hudRefs.cBushesEl.textContent = state.bushes.length
   refreshStocksLine()
   // Lot B (file de recherche) : le HUD rPointsEl reflete la progression de
