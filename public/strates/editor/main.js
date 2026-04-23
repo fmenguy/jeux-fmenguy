@@ -29,6 +29,7 @@ import { tickAllNeeds } from './modules/needs.js'
 import { TECH_TREE_DATA } from './modules/gamedata.js'
 import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions.js'
 import { loadModels } from './modules/glb-cache.js'
+import { initPopulationModal } from './modules/ui/population-modal.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -87,6 +88,7 @@ initTechTreeUI()
 initCharSheet()
 initHelpOverlay()
 initDayNight()
+initPopulationModal()
 bindDayNightUI()
 refreshNightPointsHUD()
 initAgeTransitions()
