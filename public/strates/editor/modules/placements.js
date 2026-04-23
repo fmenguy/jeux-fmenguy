@@ -8,6 +8,7 @@ import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
+import { getModel, TREE_GLB_SCALE } from './glb-cache.js'
 
 // ============================================================================
 // Arbres (trunk + leaf InstancedMesh)
@@ -35,6 +36,10 @@ scene.add(leafMesh)
 
 function applyTreeMatrix(t) {
   const s = t.targetScale * Math.max(0.08, t.growth)
+  if (t.group) {
+    t.group.scale.setScalar(s * TREE_GLB_SCALE)
+    return
+  }
   tmpObj.position.set(t.x + 0.5 + t.jx, t.top, t.z + 0.5 + t.jz)
   tmpObj.rotation.set(0, t.rot, 0)
   tmpObj.scale.setScalar(s)
@@ -52,14 +57,24 @@ export function addTree(gx, gz, opts) {
   const jz = (rng() - 0.5) * 0.6
   const scale = 0.8 + rng() * 0.5
   const rot = rng() * Math.PI * 2
-  const slot = state.trees.length
   const growing = opts && opts.growing
-  const entry = {
-    x: gx, z: gz,
-    slot, jx, jz, rot, top,
-    targetScale: scale,
-    growth: (opts && opts.growth != null) ? opts.growth : (growing ? 0.12 : 1)
+  const growth = (opts && opts.growth != null) ? opts.growth : (growing ? 0.12 : 1)
+
+  const model = getModel('tree')
+  if (model) {
+    model.scale.setScalar(scale * Math.max(0.08, growth) * TREE_GLB_SCALE)
+    model.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
+    model.rotation.y = rot
+    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+    scene.add(model)
+    const entry = { x: gx, z: gz, jx, jz, rot, top, targetScale: scale, growth, group: model }
+    state.trees.push(entry)
+    return entry
   }
+
+  // Fallback instanced procedural
+  const slot = state.trees.length
+  const entry = { x: gx, z: gz, slot, jx, jz, rot, top, targetScale: scale, growth }
   applyTreeMatrix(entry)
   tmpColor.setHSL(0.28 + (rng() - 0.5) * 0.06, 0.5 + rng() * 0.15, 0.32 + rng() * 0.1)
   leafMesh.setColorAt(slot, tmpColor)
@@ -75,8 +90,10 @@ export function addTree(gx, gz, opts) {
 export function removeTreesIn(cells) {
   if (!state.trees.length) return
   const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
+  const toRemove = state.trees.filter(t => cellSet.has(t.z * GRID + t.x))
   const kept = state.trees.filter(t => !cellSet.has(t.z * GRID + t.x))
   if (kept.length === state.trees.length) return
+  for (const t of toRemove) { if (t.group) scene.remove(t.group) }
   state.trees.length = 0
   trunkMesh.count = 0; leafMesh.count = 0
   for (const t of kept) addTree(t.x, t.z, { growth: t.growth })
@@ -84,16 +101,16 @@ export function removeTreesIn(cells) {
 
 // animation de pousse : chaque arbre avec growth < 1 grandit sur ~12 s
 export function tickTreeGrowth(dt) {
-  let changed = false
+  let instancedChanged = false
   const RATE = 1 / 12
   for (const t of state.trees) {
     if (t.growth < 1) {
       t.growth = Math.min(1, t.growth + dt * RATE)
       applyTreeMatrix(t)
-      changed = true
+      if (!t.group) instancedChanged = true
     }
   }
-  if (changed) {
+  if (instancedChanged) {
     trunkMesh.instanceMatrix.needsUpdate = true
     leafMesh.instanceMatrix.needsUpdate = true
   }
@@ -666,7 +683,9 @@ export function countActiveResearchers() {
 }
 
 export function clearAllPlacements() {
+  for (const t of state.trees) { if (t.group) scene.remove(t.group) }
   state.trees.length = 0; trunkMesh.count = 0; leafMesh.count = 0
+  for (const r of state.rocks) { if (r.group) scene.remove(r.group) }
   state.rocks.length = 0; rockMesh.count = 0
   state.ores.length = 0; oreRockMesh.count = 0; crystalMesh.count = 0
   state.bushes.length = 0; bushLeafMesh.count = 0; bushBerryMesh.count = 0
