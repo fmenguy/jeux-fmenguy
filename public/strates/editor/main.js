@@ -7,7 +7,7 @@ import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
 import { refreshBushBerries, countActiveResearchers, tickTreeGrowth } from './modules/placements.js'
-import { tryBlockedTechBubble } from './modules/tech.js'
+import { tryBlockedTechBubble, hasPendingResearchableTech } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
 import { updateCameraPan } from './modules/camera-pan.js'
@@ -137,11 +137,14 @@ function tick(nowMs) {
   for (const [, m] of state.buildMarkers) m.lookAt(camera.position)
 
   // generation de points de recherche
+  // Lot B, B11 : l accumulation est gelee si aucune tech n est recherchable
+  // pour l age courant. Evite que researchPoints monte indefiniment alors
+  // que le joueur a tout debloque (toutes les techs disponibles faites).
   state.researchTickAccum += dt
   if (state.researchTickAccum >= RESEARCH_TICK) {
     state.researchTickAccum -= RESEARCH_TICK
     const n = countActiveResearchers()
-    if (n > 0) {
+    if (n > 0 && hasPendingResearchableTech()) {
       state.researchPoints += n
       refreshTechsPanel()
     }
