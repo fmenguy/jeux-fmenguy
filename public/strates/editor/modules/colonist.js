@@ -472,6 +472,9 @@ export class Colonist {
             this.updateTrail()
             return
           }
+          // Chemin inaccessible : liberer l assignation pour permettre reassignation
+          if (building.assignedColonistId === this.id) building.assignedColonistId = null
+          this.researchBuildingId = null
         }
       }
       // Lot B (file de recherche) : le chef s auto-assigne a la hutte du sage
@@ -498,6 +501,8 @@ export class Colonist {
             return
           }
         }
+        // Chemin introuvable vers la hutte : annuler l auto-assignation du chef
+        this.researchBuildingId = null
       }
       // Lot B perf : la prise de decision (pickHarvest, pickJob, pickBuildJob)
       // appelle du pathfinding A* couteux. On throttle a ~3 Hz par colon pour
