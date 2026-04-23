@@ -100,6 +100,12 @@ export class Colonist {
     this.assignedBuildingId = null       // Cabane pour dormir, Hutte du sage pour bosser
     this.productivityMul = 1.0           // expose en lecture pour le cablage par placements.js et tech.js (post-Lot-B)
     this.wasAttacked = false             // flag pour le besoin Blesse
+    // Champs vus par la vue Population (population-modal.js)
+    this.hp    = 80
+    this.mor   = 70
+    this.faim  = 60
+    this.age   = Math.floor(18 + Math.random() * 28)  // 18-45
+    this.skills = {}
     initColonistNeeds(this)
     if (opts && opts.restore) {
       const r = opts.restore
@@ -111,6 +117,11 @@ export class Colonist {
       this.favorite = !!r.favorite
       if (typeof r.ty === 'number') this.ty = r.ty
       if (r.state) this.state = r.state
+      if (typeof r.hp    === 'number') this.hp    = r.hp
+      if (typeof r.mor   === 'number') this.mor   = r.mor
+      if (typeof r.faim  === 'number') this.faim  = r.faim
+      if (typeof r.age   === 'number') this.age   = r.age
+      if (r.skills && typeof r.skills === 'object') this.skills = r.skills
       // Lot B : restaure l assignation de bati si presente dans la save,
       // sinon suppose qu il y avait au moins une maison (la save implique
       // que le hameau initial a ete cree).
@@ -428,6 +439,7 @@ export class Colonist {
   update(dt) {
     this.applyGravity(dt)
     this.updateSpeech(dt)
+    this.faim = Math.max(0, this.faim - 0.5 * dt)
     if (this.state !== 'MOVING' && this.legL) {
       const k = Math.min(1, dt * 8)
       this.legL.rotation.x *= (1 - k)
