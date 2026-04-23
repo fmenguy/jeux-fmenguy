@@ -4,6 +4,29 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 15) : Lot C -- UI file de recherche (boutons etat, barre progression, popup completion)
+
+### Nouveaux etats de cards
+- `techtree-node.js` : bouton "Mettre en file &rarr;" pour les techs `ready` / `available`, disabled "En cours..." pour `researching` (+ barre de progression `.ttp-tech-bar` en bas de card), disabled "En file (N)" pour `queued`, disabled "Verrouille" pour `locked`, badge doré "&check; Acquis" pour `done`. Cost row affiche `progress/cost` en chiffres quand recherche active.
+- `techtree-panel.js` : `techStatus()` reconnait `researching` (tech == `state.activeResearch.id`) et `queued` (tech dans `state.researchQueue`). Helpers `activeResearchId`, `activeResearchProgress`, `queuePositionOf`. `queueLocal(id)` remplace `unlockLocal` et appelle `queueTech(id)` importee de `tech.js`.
+- `techtree.css` : styles pour `.ttp-tech.researching` (glow bleu, barre `.ttp-tech-bar` animee), `.ttp-tech.queued` (bordure dashed doree), bouton disabled, badge `.ttp-tech-acquis`.
+
+### Refresh dynamique
+- Ecoute des events `strates:researchStarted`, `strates:queueChanged`, `strates:techComplete` pour redessiner immediatement le tree.
+- Timer 2Hz (`setInterval 500ms`) quand le panneau est ouvert et qu une recherche est en cours, pour animer la barre sans refresh total permanent.
+- `renderConstellation()` ajoute la progression partielle de `activeResearch` dans la `.bar` de la branche concernee (done + fraction progress/cost).
+
+### Popup de completion
+- Nouveau module `modules/ui/research-popup.js`. Injecte (une seule fois) un element `#tech-complete-popup` + styles inline dans le head. Ecoute `strates:techComplete` et affiche un toast en bas au centre pendant 4s avec icone, nom, et liste des unlocks (jobs / buildings). Transitions fade-in/out 300ms, backdrop-filter blur, cohérent palette `--gold --panel --ink`. Installe automatiquement par `initTechTreePanel()`.
+
+### Fichiers modifies
+- `public/strates/editor/modules/ui/techtree-node.js`
+- `public/strates/editor/modules/ui/techtree-panel.js`
+- `public/strates/editor/styles/techtree.css`
+- `public/strates/editor/modules/ui/research-popup.js` (nouveau)
+
+---
+
 ## 2026-04-23 (session 15) : Lot B -- file de recherche (queueTech, activeResearch)
 
 ### Mecanique

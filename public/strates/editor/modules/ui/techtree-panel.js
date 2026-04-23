@@ -16,11 +16,14 @@ import { state } from '../state.js'
 import { TECH_TREE_DATA } from '../gamedata.js'
 import { refreshTechsPanel } from '../hud.js'
 import { buildTechNode } from './techtree-node.js'
+import { queueTech, cancelResearch } from '../tech.js'
+import { installResearchPopup } from './research-popup.js'
 
 let root = null
 let isOpen = false
 let dirty = false
 let currentBranch = null
+let refreshTimer = null
 
 // Etat pan + zoom de la vue detail
 const view = {
@@ -166,6 +169,49 @@ export function initTechTreePanel() {
 
   bindSearch()
   bindPanZoom()
+  bindResearchEvents()
+  try { installResearchPopup() } catch (e) { /* ignore */ }
+}
+
+// ─── File de recherche : events + refresh periodique ────────────────────────
+
+function bindResearchEvents() {
+  window.addEventListener('strates:researchStarted', function() { refreshTechTree() })
+  window.addEventListener('strates:queueChanged',    function() { refreshTechTree() })
+  window.addEventListener('strates:techComplete',    function() {
+    if (typeof refreshTechsPanel === 'function') refreshTechsPanel()
+    refreshTechTree()
+  })
+}
+
+// Refresh leger : redessine la constellation + la vue detail courante avec
+// les etats a jour (progression active, queue). Appele par les events file
+// et par un timer 2Hz tant que le panneau est ouvert et qu une recherche
+// est en cours (pour animer la barre).
+export function refreshTechTree() {
+  if (!root) return
+  renderTopbar()
+  renderConstellation()
+  if (root.classList.contains('detail-mode') && currentBranch) {
+    renderBranchDetail(currentBranch)
+  }
+}
+if (typeof window !== 'undefined') {
+  window.refreshTechTree = refreshTechTree
+}
+
+function startRefreshTimer() {
+  if (refreshTimer) return
+  refreshTimer = setInterval(function() {
+    if (!isOpen) return
+    // Rafraichit seulement si une recherche est en cours, sinon c est inutile.
+    if (state.activeResearch) refreshTechTree()
+  }, 500)
+}
+function stopRefreshTimer() {
+  if (!refreshTimer) return
+  clearInterval(refreshTimer)
+  refreshTimer = null
 }
 
 function bindSearch() {
@@ -248,6 +294,7 @@ export function openTechTreePanel() {
   root.classList.add('open')
   root.classList.remove('detail-mode')
   render()
+  startRefreshTimer()
 }
 export function closeTechTreePanel() {
   if (!root) return
@@ -255,6 +302,7 @@ export function closeTechTreePanel() {
   root.classList.remove('open')
   root.classList.remove('detail-mode')
   currentBranch = null
+  stopRefreshTimer()
 }
 export function toggleTechTreePanel() {
   if (!root) initTechTreePanel()
@@ -287,13 +335,32 @@ function techCost(tech) {
 function techUnlocked(id) {
   return !!(state.techs && state.techs[id] && state.techs[id].unlocked)
 }
+function activeResearchId() {
+  return state.activeResearch ? state.activeResearch.id : null
+}
+function activeResearchProgress() {
+  return state.activeResearch ? (state.activeResearch.progress || 0) : 0
+}
+function researchQueue() {
+  return Array.isArray(state.researchQueue) ? state.researchQueue : []
+}
+function queuePositionOf(id) {
+  const q = researchQueue()
+  const idx = q.indexOf(id)
+  return idx < 0 ? 0 : (idx + 1)
+}
 function techStatus(tech) {
   const currentAge = state.currentAge || 1
   if ((tech.age || 1) > currentAge) return 'teased'
   if (techUnlocked(tech.id)) return 'done'
+  if (activeResearchId() === tech.id) return 'researching'
+  if (researchQueue().indexOf(tech.id) >= 0) return 'queued'
   const reqs = Array.isArray(tech.requires) ? tech.requires : []
   const reqsMet = reqs.every(function(r) { return techUnlocked(r) })
   if (!reqsMet) return 'locked'
+  // Avec la file de recherche, le cout n est plus en points directs : toute
+  // tech aux prerequis remplis est enfilable. On garde 'ready' quand les
+  // points suffisent pour conserver le glow, sinon 'available'.
   return (state.researchPoints || 0) >= techCost(tech) ? 'ready' : 'available'
 }
 function byId(id) {
@@ -302,23 +369,17 @@ function byId(id) {
   return null
 }
 
-// Deblocage local : puise dans state.researchPoints, ne modifie pas data/*.json.
-function unlockLocal(techId) {
+// Enfile la tech dans la file de recherche (Lot B). Le deblocage effectif
+// sera declenche par le tick moteur quand activeResearch.progress >= cost.
+function queueLocal(techId) {
   const tech = byId(techId)
   if (!tech) return
-  if (techStatus(tech) !== 'ready') return
-  const cost = techCost(tech)
-  state.researchPoints = Math.max(0, (state.researchPoints || 0) - cost)
-  state.totalResearchSpent = (state.totalResearchSpent || 0) + cost
-  if (!state.techs[techId]) state.techs[techId] = {}
-  state.techs[techId].unlocked = true
-  state.techs[techId].name = tech.name
-  if (typeof refreshTechsPanel === 'function') refreshTechsPanel()
-  if (root.classList.contains('detail-mode')) {
-    renderBranchDetail(currentBranch)
-  }
-  renderConstellation()
-  renderTopbar()
+  const st = techStatus(tech)
+  if (st !== 'ready' && st !== 'available') return
+  try { queueTech(techId) } catch (e) { console.error('queueTech failed', e) }
+  // Le dispatch d evt 'strates:queueChanged' par tech.js relance le refresh,
+  // mais on refait un rendu immediat pour la reactivite visuelle.
+  refreshTechTree()
 }
 
 // ─── Render principal ───────────────────────────────────────────────────────
@@ -435,13 +496,28 @@ function renderConstellation() {
   if (gp) gp.textContent = doneG + '/' + totalG
 
   // Une carte par branche
+  const activeId = activeResearchId()
+  const activeProg = activeResearchProgress()
   branches.forEach(function(br) {
     const meta = BRANCH_META[br.id] || { ic: '•', pitch: '' }
     const pos = BRANCH_POS[br.id]
     if (!pos) return
     const list = techs.filter(function(t) { return t.branch === br.id })
     const done = list.filter(function(t) { return techUnlocked(t.id) })
-    const pct = list.length ? Math.round((done.length / list.length) * 100) : 0
+    // Progression visuelle : base = done / total, bonus si activeResearch
+    // appartient a cette branche, on ajoute la progression partielle.
+    let pct = 0
+    if (list.length) {
+      let score = done.length
+      if (activeId) {
+        const activeTech = list.find(function(t) { return t.id === activeId })
+        if (activeTech) {
+          const c = techCost(activeTech) || 1
+          score += Math.min(1, Math.max(0, activeProg / c))
+        }
+      }
+      pct = Math.round((score / list.length) * 100)
+    }
 
     const card = document.createElement('div')
     card.className = 'ttp-branch' + (active.size && !active.has(br.id) ? ' dimmed' : '')
@@ -585,7 +661,9 @@ function renderBranchDetail(brId) {
       const status = techStatus(t)
       const node = buildTechNode(t, status, {
         cost: techCost(t),
-        onUnlock: unlockLocal,
+        onQueue: queueLocal,
+        activeProgress: status === 'researching' ? activeResearchProgress() : 0,
+        queueIndex: status === 'queued' ? queuePositionOf(t.id) : 0,
         vc: br.color,
       })
       node.style.left = cx + 'px'

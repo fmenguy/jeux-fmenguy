@@ -796,7 +796,51 @@
 .ttp-tech.locked:hover { opacity: 0.85; }
 .ttp-tech.teased { opacity: 0.5; filter: blur(3px) saturate(0.3); pointer-events: none; }
 
-/* Bouton rechercher */
+/* Etat researching : glow bleu clair, barre de progression animee */
+.ttp-tech.researching .card {
+  border-color: #8fb4d6;
+  box-shadow: 0 0 0 1px #8fb4d6, 0 0 22px rgba(143,180,214,0.35);
+  background: linear-gradient(180deg, rgba(143,180,214,0.10), rgba(143,180,214,0.02));
+}
+.ttp-tech.researching .nm { color: #cfe0ef; }
+
+/* Etat queued : bordure pointillee douce */
+.ttp-tech.queued .card {
+  border-color: rgba(212,184,112,0.45);
+  border-style: dashed;
+  background: linear-gradient(180deg, rgba(212,184,112,0.04), rgba(27,25,20,0.4));
+}
+
+/* Barre de progression dans la card (researching) */
+.ttp-tech-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 0 0 5px 5px;
+  overflow: hidden;
+}
+.ttp-tech-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #6aa1c8, #a8c8e0);
+  box-shadow: 0 0 8px rgba(143,180,214,0.6);
+  transition: width 0.35s ease-out;
+}
+
+/* Badge "Acquis" */
+.ttp-tech-acquis {
+  color: var(--ttp-gold);
+  font-family: var(--ttp-mono);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Bouton rechercher / etats action */
 .ttp-tech-unlock {
   font-family: var(--ttp-mono);
   font-size: 10px;
@@ -812,7 +856,24 @@
   margin-left: auto;
   transition: all 0.12s;
 }
-.ttp-tech-unlock:hover { filter: brightness(1.1); }
+.ttp-tech-unlock:hover:not([disabled]) { filter: brightness(1.1); }
+.ttp-tech-unlock[disabled] {
+  cursor: not-allowed;
+  opacity: 0.85;
+  background: var(--ttp-panel-3);
+  border-color: var(--ttp-rule);
+  color: var(--ttp-ink-2);
+}
+.ttp-tech.researching .ttp-tech-unlock[disabled] {
+  color: #cfe0ef;
+  border-color: rgba(143,180,214,0.55);
+  background: rgba(143,180,214,0.12);
+}
+.ttp-tech.queued .ttp-tech-unlock[disabled] {
+  color: var(--ttp-gold);
+  border-color: rgba(212,184,112,0.45);
+  background: rgba(212,184,112,0.08);
+}
 
 /* Orthogonal links (SVG) */
 .ttp-links {
