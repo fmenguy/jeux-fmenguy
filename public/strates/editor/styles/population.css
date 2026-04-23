@@ -1,0 +1,425 @@
+/* ============================================================================
+   Vue Population v0.3 - Sprint 1 (Liste, Métiers, Compétences)
+   Variables partagées avec le thème global : --panel, --panel-2, --panel-3,
+   --rule, --ink, --ink-2, --ink-3, --gold, --gold-2, --mono, --serif
+   ============================================================================ */
+
+/* Agrandir le frame pour la vue complète */
+.pop-frame.pop-v2 {
+  width: min(1080px, 96vw);
+  height: min(720px, 90vh);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Header ---- */
+.pv2-head {
+  padding: 12px 18px 10px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.pv2-head h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--ink);
+}
+.pv2-head .pv2-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+.pv2-head .pv2-spacer { flex: 1; }
+.pv2-close {
+  background: transparent;
+  border: none;
+  color: var(--ink-3);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+}
+.pv2-close:hover { color: var(--ink); }
+
+/* ---- Tab bar ---- */
+.pv2-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+  padding: 0 18px;
+}
+.pv2-tab {
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color .12s, border-color .12s;
+  margin-bottom: -1px;
+}
+.pv2-tab:hover { color: var(--ink-2); }
+.pv2-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+/* ---- Body (tab content) ---- */
+.pv2-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  min-height: 0;
+}
+
+/* ============================================================
+   TAB LISTE
+   ============================================================ */
+.pv2-liste {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+}
+
+.pv2-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+.pv2-table-wrap::-webkit-scrollbar { width: 5px; }
+.pv2-table-wrap::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+.pv2-toolbar {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pv2-search {
+  flex: 1;
+  background: var(--panel-2);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 5px 10px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+}
+.pv2-search::placeholder { color: var(--ink-3); }
+.pv2-search:focus { border-color: var(--gold-2); }
+
+.pv2-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.pv2-table thead th {
+  padding: 7px 12px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.pv2-table thead th:hover { color: var(--ink-2); }
+.pv2-table thead th .sort-arrow { opacity: .4; margin-left: 4px; }
+.pv2-table thead th.sorted .sort-arrow { opacity: 1; color: var(--gold); }
+
+.pv2-table tbody tr {
+  border-bottom: 1px solid rgba(61,53,42,.4);
+  cursor: pointer;
+  transition: background .1s;
+}
+.pv2-table tbody tr:hover { background: rgba(212,184,112,.04); }
+.pv2-table tbody tr.selected { background: rgba(212,184,112,.08); }
+.pv2-table tbody td {
+  padding: 8px 12px;
+  vertical-align: middle;
+  color: var(--ink-2);
+}
+
+/* Portrait */
+.pv2-portrait {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--serif);
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+.pv2-portrait.m { background: linear-gradient(135deg, #2d4a6a, #1d3144); color: #9dc4e8; }
+.pv2-portrait.f { background: linear-gradient(135deg, #6a2d4a, #4a1d31); color: #e89dc8; }
+
+.pv2-name-cell { display: flex; align-items: center; gap: 8px; }
+.pv2-name { font-family: var(--serif); font-size: 13.5px; color: var(--ink); font-weight: 500; }
+.pv2-chief-star { color: var(--gold); font-size: 11px; }
+.pv2-gender { font-size: 10px; opacity: .6; }
+.pv2-gender.m { color: #9dc4e8; }
+.pv2-gender.f { color: #e89dc8; }
+
+/* State badge */
+.pv2-state {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  background: var(--panel-2);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.pv2-state.work { color: var(--grass); background: rgba(124,192,106,.08); }
+.pv2-state.research { color: #9dc4e8; background: rgba(157,196,232,.08); }
+.pv2-state.idle { color: var(--ink-3); }
+
+/* Stat bars */
+.pv2-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 80px;
+}
+.pv2-bar-row { display: flex; align-items: center; gap: 5px; }
+.pv2-bar-lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .06em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  width: 26px;
+  flex-shrink: 0;
+}
+.pv2-bar-track {
+  flex: 1;
+  height: 4px;
+  background: var(--panel-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.pv2-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .3s;
+}
+.pv2-bar-fill.hp   { background: #7cc06a; }
+.pv2-bar-fill.mor  { background: #d4b870; }
+.pv2-bar-fill.faim { background: #c08060; }
+
+/* Detail panel (right of table) */
+.pv2-detail {
+  width: 280px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--panel-2);
+}
+.pv2-detail::-webkit-scrollbar { width: 5px; }
+.pv2-detail::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+.pv2-detail-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  text-align: center;
+  padding: 20px;
+}
+.pv2-dhead {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.pv2-dname { font-family: var(--serif); font-size: 16px; color: var(--ink); font-weight: 500; margin-bottom: 2px; }
+.pv2-dmeta { font-family: var(--mono); font-size: 9.5px; color: var(--ink-3); letter-spacing: .08em; }
+.pv2-dsec { padding: 10px 16px; border-bottom: 1px solid rgba(61,53,42,.4); }
+.pv2-dsec-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+.pv2-dsec .pv2-bars { min-width: unset; }
+.pv2-dsec .pv2-bar-track { min-width: 80px; }
+
+/* ============================================================
+   TAB MÉTIERS
+   ============================================================ */
+.pv2-metiers {
+  width: 100%;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+.pv2-metiers::-webkit-scrollbar { width: 5px; }
+.pv2-metiers::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+.pv2-job-card {
+  background: var(--panel-2);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pv2-job-head { display: flex; align-items: center; gap: 10px; }
+.pv2-job-icon {
+  font-size: 24px;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  background: var(--panel-3);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pv2-job-label { font-family: var(--serif); font-size: 15px; color: var(--ink); font-weight: 500; }
+.pv2-job-req {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+.pv2-job-desc { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.4; }
+.pv2-job-assigned {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 24px;
+}
+.pv2-job-chip {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: var(--panel-3);
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+}
+.pv2-job-chip.chief { border-color: var(--gold-2); color: var(--gold); }
+.pv2-job-empty {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--ink-3);
+  font-style: italic;
+}
+.pv2-job-cap {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+.pv2-job-cap b { color: var(--gold); }
+
+/* ============================================================
+   TAB COMPÉTENCES
+   ============================================================ */
+.pv2-competences {
+  width: 100%;
+  overflow: auto;
+  padding: 14px 18px;
+}
+.pv2-competences::-webkit-scrollbar { width: 5px; height: 5px; }
+.pv2-competences::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+.pv2-skill-cat { margin-bottom: 20px; }
+.pv2-skill-cat-title {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--rule);
+}
+.pv2-skill-matrix {
+  overflow-x: auto;
+}
+.pv2-skill-table {
+  border-collapse: collapse;
+  font-size: 11px;
+  min-width: 400px;
+}
+.pv2-skill-table th {
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: center;
+  white-space: nowrap;
+}
+.pv2-skill-table th.col-name { text-align: left; }
+.pv2-skill-table td {
+  padding: 3px 6px;
+  text-align: center;
+  border: 1px solid rgba(61,53,42,.3);
+}
+.pv2-skill-table td.col-name {
+  text-align: left;
+  font-family: var(--serif);
+  font-size: 12px;
+  color: var(--ink-2);
+  border: none;
+  padding-right: 12px;
+  white-space: nowrap;
+}
+.pv2-skill-cell {
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--ink);
+  margin: 0 auto;
+}
