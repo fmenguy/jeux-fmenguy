@@ -1,5 +1,5 @@
 import { GRID, ORE_TECH, TECH_BUBBLE_COOLDOWN } from './constants.js'
-import { TECH_BUBBLE_LINES } from './gamedata.js'
+import { TECH_BUBBLE_LINES, TECH_TREE_DATA } from './gamedata.js'
 import { state } from './state.js'
 
 // ============================================================================
@@ -7,6 +7,29 @@ import { state } from './state.js'
 // ============================================================================
 
 export function techUnlocked(id) { return !!(state.techs[id] && state.techs[id].unlocked) }
+
+// Lot B, B11 : la generation de points de recherche doit se figer quand
+// aucune tech n est recherchable (available ou ready) pour l age courant
+// ou inferieur. Une tech est recherchable si non debloquee, d age <= age
+// courant, et tous ses prerequis debloques. Consommee par main.js pour
+// geler l accumulation de researchPoints.
+export function hasPendingResearchableTech() {
+  const data = TECH_TREE_DATA
+  if (!data || !Array.isArray(data.techs)) return true
+  const currentAge = state.currentAge || 1
+  for (const t of data.techs) {
+    if (!t || !t.id) continue
+    if ((t.age || 1) > currentAge) continue
+    if (techUnlocked(t.id)) continue
+    const reqs = Array.isArray(t.requires) ? t.requires : (t.req ? [t.req] : [])
+    let reqsMet = true
+    for (const r of reqs) {
+      if (!techUnlocked(r)) { reqsMet = false; break }
+    }
+    if (reqsMet) return true
+  }
+  return false
+}
 
 function hasTreeAt(x, z) {
   for (const t of state.trees) if (t.x === x && t.z === z) return true
