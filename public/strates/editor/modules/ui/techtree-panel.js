@@ -461,14 +461,43 @@ function buildLinksSVG(techs, nodePos, totalW, totalH) {
       if (!from || from.teased) return
       if (from.branchId && !branchVisible(from.branchId)) return
       const active = techUnlocked(reqId)
-      const x1 = from.x + from.w
-      const y1 = from.y + from.h / 2
-      const x2 = to.x
-      const y2 = to.y + to.h / 2
-      const midX = (x1 + x2) / 2
+
+      // B12, alignement propre des liens SVG sur les bords des cards.
+      // Par defaut, sortie au milieu du bord droit de la source, entree au
+      // milieu du bord gauche de la cible. Tangentes Bezier proportionnelles
+      // a la distance horizontale (tension 0.5) pour eviter les S-shapes
+      // disgracieuses. Cas particulier meme colonne (age identique) : on
+      // route par en bas ou en haut selon la position verticale relative.
+      const sameColumn = Math.abs((from.x + from.w / 2) - (to.x + to.w / 2)) < 4
+      let x1, y1, x2, y2, c1x, c1y, c2x, c2y
+
+      if (sameColumn) {
+        // Lien vertical dans la meme cellule (from au-dessus de to ou inverse)
+        const fromTop = from.y + from.h / 2 < to.y + to.h / 2
+        x1 = from.x + from.w / 2
+        y1 = fromTop ? (from.y + from.h) : from.y
+        x2 = to.x + to.w / 2
+        y2 = fromTop ? to.y : (to.y + to.h)
+        const gap = Math.max(8, Math.abs(y2 - y1) * 0.4)
+        c1x = x1; c1y = y1 + (fromTop ? gap : -gap)
+        c2x = x2; c2y = y2 + (fromTop ? -gap : gap)
+      } else {
+        // Lien horizontal d'une cellule source vers une cellule cible a droite
+        // (ou a gauche si prerequis dans un age superieur, rare). On ancre au
+        // bord vertical central de chaque card.
+        const leftToRight = to.x >= from.x + from.w - 1
+        x1 = leftToRight ? (from.x + from.w) : from.x
+        y1 = from.y + from.h / 2
+        x2 = leftToRight ? to.x : (to.x + to.w)
+        y2 = to.y + to.h / 2
+        const dx = Math.max(20, Math.abs(x2 - x1) * 0.5)
+        c1x = x1 + (leftToRight ? dx : -dx); c1y = y1
+        c2x = x2 + (leftToRight ? -dx : dx); c2y = y2
+      }
+
       const d = 'M ' + x1 + ' ' + y1 +
-                ' C ' + midX + ' ' + y1 +
-                ', ' + midX + ' ' + y2 +
+                ' C ' + c1x + ' ' + c1y +
+                ', ' + c2x + ' ' + c2y +
                 ', ' + x2 + ' ' + y2
       const path = document.createElementNS(xmlns, 'path')
       path.setAttribute('d', d)
