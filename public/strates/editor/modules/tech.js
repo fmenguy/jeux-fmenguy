@@ -31,7 +31,7 @@ export function hasPendingResearchableTech() {
   return false
 }
 
-function hasTreeAt(x, z) {
+export function hasTreeAt(x, z) {
   for (const t of state.trees) if (t.x === x && t.z === z) return true
   return false
 }

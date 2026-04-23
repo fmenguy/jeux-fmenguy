@@ -15,7 +15,7 @@ import {
   isBuildingUniqueAndPlaced
 } from './placements.js'
 import { addJob, addBuildJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
-import { canMineCell } from './tech.js'
+import { canMineCell, techUnlocked, hasTreeAt } from './tech.js'
 import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
@@ -126,11 +126,20 @@ const oreSubEl = document.getElementById('ore-sub')
 // init oreType dans toolState
 state.toolState.oreType = ORE_KEYS[0]
 
+export function refreshToolButtons() {
+  const btnHache = document.querySelector('.tool[data-tool="hache"]')
+  const btnPick = document.querySelector('.tool[data-tool="pick"]')
+  if (btnHache) btnHache.style.display = techUnlocked('axe-stone') ? '' : 'none'
+  if (btnPick) btnPick.style.display = techUnlocked('pick-stone') ? '' : 'none'
+}
+
 export function labelOfTool(t) {
   if (t === 'ore') return 'filon (' + ORE_TYPES[state.toolState.oreType].label + ')'
   return ({
     nav: 'naviguer',
     mine: 'miner',
+    hache: 'hache (abattre arbres)',
+    pick: 'pioche (miner roche)',
     build: 'placer un bloc',
     forest: 'planter une forêt',
     rock: 'poser un rocher',
@@ -374,6 +383,15 @@ function toolAllowedOnCell(tool, x, z) {
   if (!toolAllowedOnBiome(tool, biome)) return false
   if (tool === 'mine' && isMineBlocked(x, z)) return false
   if (tool === 'mine' && !canMineCell(x, z).ok) return false
+  if (tool === 'hache') {
+    if (!hasTreeAt(x, z)) return false
+    if (!canMineCell(x, z).ok) return false
+  }
+  if (tool === 'pick') {
+    if (biome !== 'rock' && biome !== 'snow') return false
+    if (isMineBlocked(x, z)) return false
+    if (!canMineCell(x, z).ok) return false
+  }
   if (tool === 'build') {
     if (isCellOccupied(x, z)) return false
     if (state.cellTop[z * GRID + x] >= MAX_STRATES) return false
@@ -402,12 +420,11 @@ function applyToolAtCell(cell) {
   const t = state.toolState.tool
   const rng = prng.rng
 
-  if (t === 'mine') {
+  if (t === 'mine' || t === 'hache' || t === 'pick') {
     const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
     for (const c of cells) {
-      if (isMineBlocked(c.x, c.z)) continue
-      const check = canMineCell(c.x, c.z)
-      if (!check.ok) {
+      if (!toolAllowedOnCell(t, c.x, c.z)) {
+        const check = canMineCell(c.x, c.z)
         if (check.reason === 'tech' && check.requiredTech) {
           state.lastBlockedMineTech = { x: c.x, z: c.z, tech: check.requiredTech, t: performance.now() / 1000 }
         }

@@ -14,7 +14,7 @@ import { updateCameraPan } from './modules/camera-pan.js'
 import {
   refreshHUD, refreshStocksLine, refreshTechsPanel, updateDynHUD, tickFps, hudRefs
 } from './modules/hud.js'
-import { setTool, setBrush } from './modules/interaction.js'
+import { setTool, setBrush, refreshToolButtons } from './modules/interaction.js'
 import { hasSave, loadGame, startAutoSave } from './modules/persistence.js'
 import { loadGameData } from './modules/gamedata.js'
 import { tickSeasons, currentSeason, forceSeasonRepaint } from './modules/seasons.js'
@@ -76,6 +76,7 @@ if (!isNewGame && pendingSlot && hasSave(pendingSlot) && loadGame(pendingSlot)) 
 buildVegetation()
 setTool('nav')
 setBrush(1)
+refreshToolButtons()
 refreshHUD()
 startNextQuest()
 startAutoSave(30)
@@ -332,6 +333,7 @@ function tick(nowMs) {
     tick._lastDynHUD = t
     updateDynHUD()
     updateResearchWidget()
+    refreshToolButtons()
   }
   tickFps()
 
