@@ -1503,36 +1503,22 @@
       })
     }
   </script>
-  <script>
-    (function () {
-      const panel = document.getElementById('help-panel')
-      const btnOpen = document.getElementById('btn-help')
-      const btnClose = document.getElementById('btn-help-close')
-      const hint = document.getElementById('help-hint')
-      const HINT_SEEN = 'strates-help-seen'
-      function open() {
-        panel.classList.remove('hidden')
-        if (hint) hint.classList.add('hidden')
-        try { localStorage.setItem(HINT_SEEN, '1') } catch (e) {}
-      }
-      function close() { panel.classList.add('hidden') }
-      if (btnOpen) btnOpen.addEventListener('click', open)
-      if (btnClose) btnClose.addEventListener('click', close)
-      window.addEventListener('keydown', (e) => {
-        const target = e.target
-        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
-        if (e.key === '?') { e.preventDefault(); open() }
-        if (e.key === 'Escape' && !panel.classList.contains('hidden')) close()
+  <script type="module">
+    // B14/B15 : l'ancien #help-panel a ete supprime (B9). On route le bouton ?
+    // et la touche ? vers l'overlay actif #help-overlay (module help-overlay.js).
+    // Tous les acces DOM sont proteges contre null pour eviter les TypeError.
+    import { openHelpOverlay, closeHelpOverlay, isHelpOverlayOpen } from './modules/help-overlay.js'
+    const btnOpen = document.getElementById('btn-help')
+    if (btnOpen) {
+      btnOpen.addEventListener('click', function () {
+        try { openHelpOverlay() } catch (e) { console.error('open help failed', e) }
       })
-      // masque le hint si deja vu
-      try { if (localStorage.getItem(HINT_SEEN) === '1' && hint) hint.classList.add('hidden') } catch (e) {}
-      // ouvre automatiquement au premier lancement apres quelques secondes
-      try {
-        if (!localStorage.getItem(HINT_SEEN)) {
-          setTimeout(() => { if (panel.classList.contains('hidden') && hint) hint.style.opacity = '1' }, 1500)
-        }
-      } catch (e) {}
-    })()
+    }
+    window.addEventListener('keydown', function (e) {
+      const target = e.target
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+      if (e.key === '?') { e.preventDefault(); try { openHelpOverlay() } catch (err) {} }
+    })
   </script>
 </body>
 </html>
