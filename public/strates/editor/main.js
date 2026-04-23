@@ -28,6 +28,7 @@ import { initDayNight, bindDayNightUI, tickDayNight, refreshNightPointsHUD } fro
 import { tickAllNeeds } from './modules/needs.js'
 import { TECH_TREE_DATA } from './modules/gamedata.js'
 import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions.js'
+import { loadModels } from './modules/glb-cache.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -36,6 +37,7 @@ import './modules/stocks.js'
 // ============================================================================
 
 await loadGameData()
+await loadModels()
 initQuestDefs()
 
 // Injecter les techs du JSON SPEC v1 dans state.techs (sans ecraser les existantes).
