@@ -4,6 +4,40 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 17) : Lot C -- pulse visuel tech en cours de recherche
+
+### Feature 2 de la maquette v2
+- `techtree-node.js` ajoute la classe `ttp-research` sur les nodes dont le status est `researching`, en plus de la classe `researching`.
+- `techtree.css` ajoute un pseudo-element `::before` sur `.ttp-tech.ttp-research` (inset -4px, border 1px couleur de branche, border-radius 8px), animé par `@keyframes ttp-pulse` (2.4s ease-in-out infinite, opacity 0.6 -> 0 et scale 1 -> 1.04). Le glow `--vc` sur la card est reconfirme pour que la couleur de branche reste visible.
+- Les Features 1 (branch header hexagonal) et 3 (vue constellation globale) etaient deja implementees dans les sessions precedentes.
+
+### Fichiers modifies
+- `public/strates/editor/modules/ui/techtree-node.js`
+- `public/strates/editor/styles/techtree.css`
+
+---
+
+## 2026-04-23 (session 16) : Lot C -- hover highlight prerequis, fiche droite, rail file de recherche
+
+### Hover highlight des prerequis
+- Survol d'une tech locked / available / ready : les prerequis passent en `.req-highlight` (halo pulsed or, animation `ttp-reqpulse`), les liens SVG correspondants en `.req-hi` (stroke or, glow), les autres techs en `.faded` (opacity 0.15, saturate 0.3).
+- Handlers `mouseenter` / `mouseleave` branchés sur chaque node lors de `renderBranchDetail`. Les `path` SVG exposent `data-from` / `data-to` pour le ciblage.
+
+### Fiche droite (340px)
+- Nouvel `aside.ttp-fiche` dans `.ttp-detail-view`, à droite du canvas. Header avec icone 32px, nom serif 20px, nom de branche coloré. Sections Cout, Description, Murmure (citation italique avec bordure gauche dorée), Prerequis (mini-cartes cliquables pour naviguer), Debloque (jobs / batiments / ressources / outils depuis `tech.unlocks`).
+- Pied de fiche : bouton contextuel (Debloque / Annuler la recherche / Retirer de la file / Ajouter a la file / Mettre le chemin en file).
+- Ouverture de branche auto-selectionne la première tech interessante (active > ready > first).
+
+### Rail file de recherche
+- Nouveau `div.ttp-queue` positionne en bas à droite (right: 360px pour cohabiter avec la fiche), visible uniquement en mode detail. Capacite 5 slots : tete = tech active (64px, bord doré, anneau SVG de progression), suivants = queue (54px bulles circulaires). Bouton × au hover pour retirer (via `cancelResearch`). Placeholders pointillés `+` pour slots vides. Click sur un slot sélectionne la tech correspondante.
+- "Mettre le chemin en file" : calcule recursivement l'ordre topologique des prerequis non debloqués et enfile jusqu'a QUEUE_MAX = 5.
+
+### Fichiers modifies
+- `public/strates/editor/modules/ui/techtree-panel.js`
+- `public/strates/editor/styles/techtree.css`
+
+---
+
 ## 2026-04-23 (session 15) : Lot C -- UI file de recherche (boutons etat, barre progression, popup completion)
 
 ### Nouveaux etats de cards
