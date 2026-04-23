@@ -470,10 +470,12 @@ function applyToolAtCell(cell) {
   if (t === 'level') {
     // Terraformation directe par le joueur : retire 1 voxel top immédiatement, sans job colon.
     // Protège les ores, les objets occupant la cellule, et les niveaux plancher/eau.
+    // paintedThisStroke garantit au plus 1 couche retirée par cellule par stroke (mousedown→mouseup).
     const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
     let colorsDirty = false
     for (const c of cells) {
       const k = c.z * GRID + c.x
+      if (state.toolState.paintedThisStroke.has('lv' + k)) continue
       if (state.cellOre && state.cellOre[k]) continue
       if (isCellOccupied(c.x, c.z)) continue
       const top = state.cellTop[k]
@@ -485,6 +487,7 @@ function applyToolAtCell(cell) {
       state.instanced.instanceMatrix.needsUpdate = true
       state.cellTop[k] = top - 1
       incrStockForBiome(state.cellBiome[k])
+      state.toolState.paintedThisStroke.add('lv' + k)
       colorsDirty = true
     }
     if (colorsDirty && state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
