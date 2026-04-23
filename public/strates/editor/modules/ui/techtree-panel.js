@@ -24,6 +24,8 @@ let isOpen = false
 let dirty = false
 let currentBranch = null
 let refreshTimer = null
+let selectedTechId = null
+const QUEUE_MAX = 5
 
 // Etat pan + zoom de la vue detail
 const view = {
@@ -137,7 +139,28 @@ export function initTechTreePanel() {
     '          <svg class="ttp-links" id="ttp-links" width="1800" height="900"></svg>',
     '        </div>',
     '      </div>',
+    '      <aside class="ttp-fiche" id="ttp-fiche">',
+    '        <div class="ttp-fiche-head">',
+    '          <span class="ic" id="ttp-fiche-ic">-</span>',
+    '          <div style="flex:1">',
+    '            <h3 id="ttp-fiche-name">Selectionne une technologie</h3>',
+    '            <div class="br" id="ttp-fiche-branch">-</div>',
+    '          </div>',
+    '        </div>',
+    '        <div class="ttp-fiche-body" id="ttp-fiche-body"></div>',
+    '        <div class="ttp-fiche-actions" id="ttp-fiche-actions"></div>',
+    '      </aside>',
     '    </div>',
+    '  </div>',
+
+    // File de recherche (visible en mode detail, position fixee en bas a droite)
+    '  <div class="ttp-queue" id="ttp-queue">',
+    '    <div class="qh">',
+    '      <span class="hourglass">&#x29D6;</span>',
+    '      <b>File</b>',
+    '      <span class="cnt" id="ttp-qcnt">0/5</span>',
+    '    </div>',
+    '    <div class="qlist" id="ttp-qlist"></div>',
     '  </div>',
 
     // Age rail (bas)
@@ -194,6 +217,12 @@ export function refreshTechTree() {
   renderConstellation()
   if (root.classList.contains('detail-mode') && currentBranch) {
     renderBranchDetail(currentBranch)
+    if (selectedTechId) {
+      renderFiche(byId(selectedTechId))
+      const card = root.querySelector('.ttp-tech[data-id="' + cssEscape(selectedTechId) + '"]')
+      if (card) card.classList.add('selected')
+    }
+    renderQueue()
   }
 }
 if (typeof window !== 'undefined') {
@@ -563,6 +592,17 @@ function openBranch(brId) {
 
   renderBranchDetail(brId)
   resetPan()
+
+  // Selection automatique d'une tech interessante pour remplir la fiche
+  const techs = (TECH_TREE_DATA && TECH_TREE_DATA.techs) || []
+  const list = techs.filter(function(t) { return t.branch === brId && (t.age || 1) === (state.currentAge || 1) })
+  const first =
+    list.find(function(t) { return activeResearchId() === t.id }) ||
+    list.find(function(t) { return techStatus(t) === 'ready' || techStatus(t) === 'available' }) ||
+    list[0]
+  if (first) selectTech(first.id)
+  else renderFiche(null)
+  renderQueue()
 }
 
 function closeBranch() {
@@ -572,6 +612,7 @@ function closeBranch() {
   if (sep) sep.style.display = 'none'
   if (cur) cur.style.display = 'none'
   currentBranch = null
+  selectedTechId = null
 }
 
 function renderBranchDetail(brId) {
@@ -668,6 +709,13 @@ function renderBranchDetail(brId) {
       })
       node.style.left = cx + 'px'
       node.style.top = cy + 'px'
+      // Selection + highlight des prerequis au survol
+      node.addEventListener('click', function(e) {
+        if (e.target.closest('.ttp-tech-unlock')) return
+        selectTech(t.id)
+      })
+      node.addEventListener('mouseenter', function() { highlightReqs(t.id) })
+      node.addEventListener('mouseleave', clearReqHighlight)
       canvas.appendChild(node)
       nodePos[t.id] = { x: cx, y: cy, w: 200, h: 110 }
     })
@@ -709,6 +757,8 @@ function renderBranchDetail(brId) {
       path.setAttribute('d', d)
       const done = techUnlocked(t.id) && techUnlocked(rid)
       path.setAttribute('class', 'ttp-link-line' + (done ? ' done' : ''))
+      path.dataset.to = t.id
+      path.dataset.from = rid
       links.appendChild(path)
     })
   })
@@ -719,6 +769,304 @@ function resetPan() {
   view.tx = 240
   view.ty = 0
   applyTransform()
+}
+
+// ─── Selection + fiche droite ────────────────────────────────────────────────
+
+function selectTech(id) {
+  selectedTechId = id
+  const t = byId(id)
+  if (!t) { renderFiche(null); return }
+  // Si la tech est dans une autre branche, basculer
+  if (t.branch && t.branch !== currentBranch) {
+    currentBranch = t.branch
+    const br = (TECH_TREE_DATA && TECH_TREE_DATA.branches || []).find(function(b) { return b.id === t.branch })
+    const sep = document.getElementById('ttp-crumb-sep')
+    const cur = document.getElementById('ttp-crumb-cur')
+    if (sep) sep.style.display = 'inline'
+    if (cur) { cur.style.display = 'inline'; cur.textContent = (br && br.name) || t.branch }
+    renderBranchDetail(t.branch)
+  }
+  // Marquer la card selectionnee
+  if (root) {
+    root.querySelectorAll('.ttp-tech.selected').forEach(function(el) { el.classList.remove('selected') })
+    const card = root.querySelector('.ttp-tech[data-id="' + cssEscape(id) + '"]')
+    if (card) card.classList.add('selected')
+  }
+  renderFiche(t)
+}
+
+function renderFiche(tech) {
+  const head = document.getElementById('ttp-fiche')
+  if (!head) return
+  const ic = document.getElementById('ttp-fiche-ic')
+  const nm = document.getElementById('ttp-fiche-name')
+  const brLbl = document.getElementById('ttp-fiche-branch')
+  const body = document.getElementById('ttp-fiche-body')
+  const actions = document.getElementById('ttp-fiche-actions')
+  if (!ic || !nm || !body || !actions || !brLbl) return
+
+  if (!tech) {
+    ic.textContent = '-'
+    nm.textContent = 'Selectionne une technologie'
+    brLbl.textContent = '-'
+    brLbl.style.color = ''
+    body.innerHTML = ''
+    actions.innerHTML = ''
+    head.style.setProperty('--vc', 'var(--ttp-rule)')
+    return
+  }
+
+  const branches = (TECH_TREE_DATA && TECH_TREE_DATA.branches) || []
+  const br = branches.find(function(b) { return b.id === tech.branch })
+  const vc = (br && br.color) || '#888'
+  head.style.setProperty('--vc', vc)
+
+  ic.textContent = tech.icon || '-'
+  nm.textContent = tech.name || tech.id
+  brLbl.textContent = (br && br.name) || tech.branch || ''
+  brLbl.style.color = vc
+
+  const status = techStatus(tech)
+  const cost = techCost(tech)
+  const speech = Array.isArray(tech.speech) ? tech.speech[0] : (tech.speech || '')
+  const desc = tech.description || ''
+
+  // Prerequis
+  const reqs = Array.isArray(tech.requires) ? tech.requires : []
+  let reqsHtml = ''
+  if (reqs.length) {
+    reqsHtml = '<div class="ttp-fsec"><h5>Prerequis</h5><div class="ttp-req-grid">' +
+      reqs.map(function(rid) {
+        const r = byId(rid)
+        const ok = techUnlocked(rid)
+        const crossBranch = r && r.branch !== tech.branch
+        const crossHtml = crossBranch
+          ? '<span class="bn">&#x2197; ' + escapeHTML((branches.find(function(b) { return b.id === r.branch }) || {}).name || r.branch) + '</span>'
+          : ''
+        return '<div class="ttp-req-card ' + (ok ? 'ok' : 'ko') + '" data-req="' + escapeHTML(rid) + '">' +
+               '<div class="chk">' + (ok ? '&#x2713;' : '&middot;') + '</div>' +
+               '<div class="tn">' + escapeHTML(r ? r.name : rid) + '</div>' +
+               crossHtml +
+               '</div>'
+      }).join('') +
+      '</div></div>'
+  }
+
+  // Debloque (jobs / buildings / resources)
+  const unlocks = tech.unlocks || {}
+  const unlockItems = []
+  if (Array.isArray(unlocks.jobs)) unlocks.jobs.forEach(function(j) { unlockItems.push({ kind: 'Metier', label: j }) })
+  if (Array.isArray(unlocks.buildings)) unlocks.buildings.forEach(function(b) { unlockItems.push({ kind: 'Batiment', label: b }) })
+  if (Array.isArray(unlocks.resources)) unlocks.resources.forEach(function(r) { unlockItems.push({ kind: 'Ressource', label: r }) })
+  if (Array.isArray(unlocks.tools)) unlocks.tools.forEach(function(r) { unlockItems.push({ kind: 'Outil', label: r }) })
+  let unlocksHtml = ''
+  if (unlockItems.length) {
+    unlocksHtml = '<div class="ttp-fsec"><h5>Debloque</h5><div class="ttp-unlock-list">' +
+      unlockItems.map(function(u) {
+        return '<div class="u"><span class="dot">&#x25B8;</span><span>' +
+               escapeHTML(u.kind) + ' <b>' + escapeHTML(u.label) + '</b></span></div>'
+      }).join('') +
+      '</div></div>'
+  }
+
+  body.innerHTML =
+    '<div class="ttp-fsec"><h5>Cout</h5>' +
+    '  <div class="ttp-cost-row">' +
+    '    <div class="c">&#x2605; <b>' + cost + '</b> recherche</div>' +
+    '  </div>' +
+    '</div>' +
+    (desc ? '<div class="ttp-fsec"><h5>Description</h5><p class="ttp-desc">' + escapeHTML(desc) + '</p></div>' : '') +
+    (speech ? '<div class="ttp-fsec"><h5>Murmure</h5><p class="ttp-quote">' + escapeHTML(speech) + '</p></div>' : '') +
+    reqsHtml +
+    unlocksHtml
+
+  // Bouton d action
+  actions.innerHTML = renderFicheAction(tech, status, cost)
+  const bq = actions.querySelector('[data-act="queue"]')
+  const bu = actions.querySelector('[data-act="unqueue"]')
+  const bc = actions.querySelector('[data-act="chain"]')
+  if (bq) bq.addEventListener('click', function() { queueLocal(tech.id) })
+  if (bu) bu.addEventListener('click', function() { try { cancelResearch(tech.id) } catch (e) {} refreshTechTree() })
+  if (bc) bc.addEventListener('click', function() { enqueueChain(tech.id); refreshTechTree() })
+
+  // Req-cards cliquables
+  body.querySelectorAll('.ttp-req-card').forEach(function(el) {
+    el.addEventListener('click', function() { selectTech(el.dataset.req) })
+  })
+}
+
+function renderFicheAction(tech, status, cost) {
+  if (status === 'done') {
+    return '<button class="ttp-fiche-btn done-btn" disabled>&#x2713; Debloque</button>'
+  }
+  if (status === 'researching') {
+    return '<button class="ttp-fiche-btn" data-act="unqueue">Annuler la recherche</button>'
+  }
+  if (status === 'queued') {
+    return '<button class="ttp-fiche-btn ghost" data-act="unqueue">- Retirer de la file</button>'
+  }
+  if (status === 'teased') {
+    return '<button class="ttp-fiche-btn" disabled>Age a venir</button>'
+  }
+  if (status === 'ready' || status === 'available') {
+    const queueFull = (researchQueue().length + (activeResearchId() ? 1 : 0)) >= QUEUE_MAX
+    if (queueFull) return '<button class="ttp-fiche-btn" disabled>File pleine</button>'
+    return '<button class="ttp-fiche-btn" data-act="queue">+ Ajouter a la file &middot; ' + cost + ' &#x2605;</button>'
+  }
+  // locked
+  return '<button class="ttp-fiche-btn" data-act="chain">&#x2933; Mettre le chemin en file</button>' +
+         '<button class="ttp-fiche-btn ghost" disabled style="margin-top:6px">Prerequis manquants</button>'
+}
+
+// ─── Highlight des prerequis au survol ──────────────────────────────────────
+
+function highlightReqs(techId) {
+  const t = byId(techId)
+  if (!t) return
+  const status = techStatus(t)
+  // Ne declencher que pour locked / available / ready (techs non encore debloquees)
+  if (status === 'done' || status === 'teased') return
+  const reqs = Array.isArray(t.requires) ? t.requires : []
+  const missing = reqs.filter(function(r) { return !techUnlocked(r) })
+  if (reqs.length === 0) return
+  if (!root) return
+  root.querySelectorAll('.ttp-tech').forEach(function(el) {
+    const id = el.dataset.id
+    if (!id) return
+    if (id === techId) {
+      el.classList.add('highlight')
+      return
+    }
+    if (missing.indexOf(id) >= 0 || (reqs.indexOf(id) >= 0 && techUnlocked(id))) {
+      el.classList.add('req-highlight', 'highlight')
+    } else {
+      el.classList.add('faded')
+    }
+  })
+  root.querySelectorAll('#ttp-links path').forEach(function(p) {
+    if (p.dataset.to === techId && reqs.indexOf(p.dataset.from) >= 0) {
+      p.classList.add('req-hi')
+    } else {
+      p.style.opacity = '0.1'
+    }
+  })
+}
+
+function clearReqHighlight() {
+  if (!root) return
+  root.querySelectorAll('.ttp-tech').forEach(function(el) {
+    el.classList.remove('req-highlight', 'faded', 'highlight')
+  })
+  root.querySelectorAll('#ttp-links path').forEach(function(p) {
+    p.classList.remove('req-hi')
+    p.style.opacity = ''
+  })
+}
+
+// ─── File de recherche (rail bas-droite) ────────────────────────────────────
+
+function renderQueue() {
+  const list = document.getElementById('ttp-qlist')
+  const cnt = document.getElementById('ttp-qcnt')
+  if (!list || !cnt) return
+  const active = state.activeResearch
+  const q = researchQueue()
+  // "File" = active en tete (si presente) puis queue
+  const items = []
+  if (active) items.push({ id: active.id, isCurrent: true })
+  q.forEach(function(id) { items.push({ id: id, isCurrent: false }) })
+
+  cnt.textContent = items.length + '/' + QUEUE_MAX
+  list.innerHTML = ''
+  if (items.length === 0) {
+    const empty = document.createElement('div')
+    empty.className = 'qempty'
+    empty.textContent = 'Aucune technologie en file'
+    list.appendChild(empty)
+  } else {
+    items.forEach(function(it) {
+      const t = byId(it.id)
+      if (!t) return
+      const cost = techCost(t) || 1
+      const slot = document.createElement('div')
+      slot.className = 'qslot' + (it.isCurrent ? ' current' : '')
+      slot.dataset.id = t.id
+      let ringHtml = ''
+      if (it.isCurrent) {
+        const prog = activeResearchProgress()
+        const pct = Math.min(1, Math.max(0, prog / cost))
+        const C = 2 * Math.PI * 30
+        const off = C * (1 - pct)
+        ringHtml =
+          '<div class="ring">' +
+          '  <svg viewBox="0 0 64 64">' +
+          '    <circle class="bg" cx="32" cy="32" r="30" fill="none"/>' +
+          '    <circle class="fg" cx="32" cy="32" r="30" fill="none" stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '"/>' +
+          '  </svg>' +
+          '</div>'
+      }
+      slot.innerHTML =
+        ringHtml +
+        '<span class="ic">' + escapeHTML(t.icon || '') + '</span>' +
+        '<div class="cost-pill">' + cost + '&#x2605;</div>' +
+        (it.isCurrent ? '' : '<button class="x" title="Retirer">&times;</button>') +
+        '<div class="tip">' + escapeHTML(t.name) + (it.isCurrent ? ' (en cours)' : '') + '</div>'
+      slot.addEventListener('click', function(e) {
+        if (e.target.closest('.x')) return
+        selectTech(t.id)
+      })
+      const xbtn = slot.querySelector('.x')
+      if (xbtn) {
+        xbtn.addEventListener('click', function(e) {
+          e.stopPropagation()
+          try { cancelResearch(t.id) } catch (err) {}
+          refreshTechTree()
+        })
+      }
+      list.appendChild(slot)
+    })
+  }
+  // Placeholders +
+  const remaining = Math.max(0, QUEUE_MAX - items.length)
+  for (let i = 0; i < remaining; i++) {
+    const add = document.createElement('div')
+    add.className = 'qadd'
+    add.textContent = '+'
+    list.appendChild(add)
+  }
+}
+
+// Calcule la chaine de prerequis non debloques en ordre topologique, puis
+// tente d'en enfiler autant que possible jusqu'a atteindre la tech cible.
+function enqueueChain(id) {
+  const chain = []
+  const visited = new Set()
+  function visit(tid) {
+    if (visited.has(tid)) return
+    visited.add(tid)
+    const t = byId(tid)
+    if (!t) return
+    if (techUnlocked(tid)) return
+    const reqs = Array.isArray(t.requires) ? t.requires : []
+    reqs.forEach(function(r) { visit(r) })
+    chain.push(tid)
+  }
+  visit(id)
+  // Filtrer ce qui n'est ni deja actif ni deja en file
+  const activeId = activeResearchId()
+  const q = researchQueue()
+  chain.forEach(function(tid) {
+    if (tid === activeId) return
+    if (q.indexOf(tid) >= 0) return
+    const curLen = researchQueue().length + (activeResearchId() ? 1 : 0)
+    if (curLen >= QUEUE_MAX) return
+    try { queueTech(tid) } catch (e) {}
+  })
+}
+
+function cssEscape(s) {
+  return String(s == null ? '' : s).replace(/["\\]/g, '\\$&')
 }
 
 // ─── Utils ───────────────────────────────────────────────────────────────────
