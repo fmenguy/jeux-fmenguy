@@ -4,6 +4,26 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 15) : Lot B -- REVERT B10 + B17 + B18 + B19
+
+### REVERT B10 -- desactivation auto-collecte colons
+- `modules/colonist.js` : `pickAutoCollect()` et son call site dans la machine a etat IDLE sont commentes avec la mention `desactive - remplace par systeme 3 boutons (pioche/hache/baie)`. Le code est conserve pour reprise ulterieure. Les colons IDLE ne collectent plus de ressources tout seuls, ils restent au repos ou flanent.
+
+### B17 -- protection fondation batiments contre minage
+- `modules/placements.js` : `isMineBlocked(x, z)` etend la protection au-dela de `isHouseOn` (qui couvrait deja houses, manors, researchHouses). Ajout de la verification sur `state.observatories` et `state.cairns` pour qu aucune fondation de batiment pose ne puisse etre minee. Les appels existants dans `interaction.js` (`toolAllowedOnCell`, `applyToolAtCell`, `applyToolToStrata`) rejettent deja le clic de minage quand `isMineBlocked` retourne true, ce qui assure le feedback visuel existant (curseur not-allowed).
+
+### B18 -- arbres animation recolte resolue par revert B10
+- Aucun code ne declenchait d animation de branches d arbre hors du chemin `pickAutoCollect` desactive. Seule la pousse progressive via `tickTreeGrowth` subsiste (growth < 1 sur 12 s). Commit de constat, bug resolu par le revert B10.
+
+### B19 -- condition Cairn sur total cumule depense
+- `modules/state.js` : nouveau champ `totalResearchSpent` (init 0, jamais decremente).
+- `modules/tech.js` (`unlockTech`) et `modules/ui/techtree-panel.js` (`unlockLocal`) : chaque deblocage incremente `state.totalResearchSpent += cost` en plus de decrementer le solde.
+- `modules/age-transitions.js` : `canBuildCairn`, `getCairnProgress` et le tooltip conditions lisent desormais `state.totalResearchSpent` au lieu du solde courant `state.researchPoints`. Le label devient "100 pts recherche depenses". Cause racine : B11 gele l accumulation quand toutes les techs dispo sont prises, le solde pouvait donc rester inferieur a 100 meme apres avoir depense plus de 100 pts.
+- `modules/persistence.js` : serialisation et restauration de `totalResearchSpent`, reset dans `clearEverything`.
+- `modules/worldgen.js` : reset de `totalResearchSpent` dans le reset monde.
+
+---
+
 ## 2026-04-23 (session 15) : Lot C -- U7 palette vignette grisee batiment unique
 
 ### U7 -- styles CSS + refresh HUD pour batiment unique deja pose
