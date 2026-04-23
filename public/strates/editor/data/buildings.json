@@ -61,8 +61,10 @@
       "cost": { "wood": 12, "stone": 8 },
       "requires": { "tech": ["basic-research"], "buildings": ["cabane"] },
       "provides": { "research_per_tick": 1 },
+      "unique": true,
       "activity": "day",
-      "description": "Lieu de savoir. Active le metier Chercheur, produit +1 point de recherche par tick."
+      "description": "Lieu de savoir. Active le metier Chercheur, produit +1 point de recherche par tick.",
+      "_note": "flag unique consomme par Lot B"
     },
     {
       "id": "champ",

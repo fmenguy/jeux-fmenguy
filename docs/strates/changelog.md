@@ -4,6 +4,15 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-04-23 (session 14) : Lot A -- U6 U7 hutte du sage flag unique
+
+### U6 U7 - Champs unique et _note sur la Hutte du sage
+- `buildings.json` : ajout de `"unique": true` et `"_note": "flag unique consomme par Lot B"` sur le batiment `hutte-du-sage`.
+- L'id `hutte-du-sage` etait deja correct depuis la session 11 (renommage precedemment fait). Aucune reference residuelle a un id `recherche` dans techtree.json, jobs.json ni gamedata.js.
+- Linter cross-fichiers non impacte : toutes les references croisees restent valides.
+
+---
+
 ## 2026-04-21 (session 13) : Lot C -- corrections bugs B4, B6, B7 + quick wins U1 U2 U3 U4
 
 ### B4 - Tech tree age II placeholder apres transition Bronze
