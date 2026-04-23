@@ -487,9 +487,8 @@
    ========================================================================== */
 .ttp-agerail {
   position: absolute;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 70px;
+  left: 22px;
   z-index: 15;
   display: flex;
   align-items: center;
