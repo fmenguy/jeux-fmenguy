@@ -8,7 +8,7 @@ import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
-import { getModel, TREE_GLB_SCALE } from './glb-cache.js'
+import { getModel, TREE_GLB_SCALE, ROCK_GLB_SCALE } from './glb-cache.js'
 
 // ============================================================================
 // Arbres (trunk + leaf InstancedMesh)
@@ -147,6 +147,20 @@ export function addRock(gx, gz) {
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return
   const rng = prng.rng
+
+  const model = getModel('rock')
+  if (model) {
+    const s = (0.7 + rng() * 0.5) * ROCK_GLB_SCALE
+    model.scale.setScalar(s)
+    model.position.set(gx + 0.5 + (rng() - 0.5) * 0.3, top, gz + 0.5 + (rng() - 0.5) * 0.3)
+    model.rotation.y = rng() * Math.PI * 2
+    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+    scene.add(model)
+    state.rocks.push({ x: gx, z: gz, group: model })
+    return model
+  }
+
+  // Fallback instanced procedural
   const baseX = gx + 0.5
   const baseZ = gz + 0.5
   const startIdx = rockMesh.count
@@ -155,18 +169,15 @@ export function addRock(gx, gz) {
   for (let k = 0; k < chunkCount; k++) {
     if (rockMesh.count >= ROCK_INSTANCE_CAP) break
     const i = rockMesh.count
-    // premier caillou au centre, les suivants en satellites
     const ang = rng() * Math.PI * 2
     const dist = k === 0 ? 0 : 0.18 + rng() * 0.22
     const cx = baseX + Math.cos(ang) * dist
     const cz = baseZ + Math.sin(ang) * dist
-    // tailles variees, base plus grosse, satellites plus petits
     const baseScale = k === 0 ? (0.85 + rng() * 0.35) : (0.5 + rng() * 0.35)
     const sx = baseScale
     const sz = baseScale * (0.85 + rng() * 0.3)
     const sy = baseScale * (0.55 + rng() * 0.25)
     const rotY = rng() * Math.PI * 2
-    // gris clair chaleureux, legere variation
     const g = 0.55 + rng() * 0.15
     placeRockChunk(i, cx, top, cz, sx, sy, sz, rotY, g)
     rockMesh.count = i + 1
@@ -181,8 +192,10 @@ export function addRock(gx, gz) {
 export function removeRocksIn(cells) {
   if (!state.rocks.length) return
   const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
+  const toRemove = state.rocks.filter(r => cellSet.has(r.z * GRID + r.x))
   const kept = state.rocks.filter(r => !cellSet.has(r.z * GRID + r.x))
   if (kept.length === state.rocks.length) return
+  for (const r of toRemove) { if (r.group) scene.remove(r.group) }
   state.rocks.length = 0
   rockMesh.count = 0
   for (const r of kept) addRock(r.x, r.z)
