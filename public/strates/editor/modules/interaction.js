@@ -7,7 +7,7 @@ import { prng } from './rng.js'
 import { scene, renderer, camera, controls, tmpObj, tmpColor } from './scene.js'
 import { repaintCellSurface, colorForLayer } from './terrain.js'
 import {
-  addTree, addRock, addOre, addHouse, addBush, addResearchHouse,
+  addTree, addRock, addOre, addHouse, addFoyer, addBush, addResearchHouse,
   assignResearcherToBuilding, removeTreesIn, removeRocksIn, removeHousesIn,
   removeResearchHousesIn, removeOresIn, removeBushesIn, removeManorsIn,
   checkManorMerge, isCellOccupied, isMineBlocked,
@@ -138,6 +138,11 @@ export function refreshToolButtons() {
     btnResearch.style.display = techUnlocked('basic-research') ? '' : 'none'
     btnResearch.classList.toggle('locked', state.researchHouses.length > 0)
   }
+  const btnFoyer = document.querySelector('.tool[data-tool="place-foyer"]')
+  if (btnFoyer) {
+    btnFoyer.style.display = techUnlocked('fire-mastery') ? '' : 'none'
+    btnFoyer.classList.toggle('locked', state.foyers.length > 0)
+  }
 }
 
 export function labelOfTool(t) {
@@ -153,6 +158,7 @@ export function labelOfTool(t) {
     house: 'poser une maison',
     research: 'poser un laboratoire',
     'place-research': 'placer hutte du sage',
+    'place-foyer': 'placer un foyer',
     field: 'tracer un champ',
     bush: 'poser un buisson',
     observatory: 'poser un promontoire',
@@ -544,6 +550,15 @@ function applyToolAtCell(cell) {
       }
       break
     }
+    case 'place-foyer': {
+      if (!techUnlocked('fire-mastery')) break
+      if (state.foyers.length > 0) break
+      const pfk = cell.z * GRID + cell.x
+      if (state.toolState.paintedThisStroke.has('pf' + pfk)) break
+      state.toolState.paintedThisStroke.add('pf' + pfk)
+      if (!isCellOccupied(cell.x, cell.z)) addFoyer(cell.x, cell.z)
+      break
+    }
     case 'bush':
       if (!isCellOccupied(cell.x, cell.z) && toolAllowedOnCell('bush', cell.x, cell.z)) addBush(cell.x, cell.z)
       break
@@ -669,6 +684,15 @@ function applyToolToStrata(cells) {
           const entry = addResearchHouse(c.x, c.z)
           if (entry) assignResearcherToBuilding(entry)
         }
+        break
+      }
+      case 'place-foyer': {
+        if (!techUnlocked('fire-mastery')) break
+        if (state.foyers.length > 0) break
+        const pfk2 = c.z * GRID + c.x
+        if (state.toolState.paintedThisStroke.has('pf' + pfk2)) break
+        state.toolState.paintedThisStroke.add('pf' + pfk2)
+        if (!isCellOccupied(c.x, c.z)) addFoyer(c.x, c.z)
         break
       }
       case 'bush':
