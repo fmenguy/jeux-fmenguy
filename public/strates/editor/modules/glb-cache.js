@@ -12,7 +12,7 @@ const BASE = new URL('../assets/models/fantaisy/', import.meta.url).href
 export const TREE_GLB_SCALE  = 0.40
 export const ROCK_GLB_SCALE  = 0.32
 export const HOUSE_GLB_SCALE = 2.00
-export const HUT_GLB_SCALE   = 1.80
+export const HUT_GLB_SCALE   = 2.40
 export const DEER_GLB_SCALE  = 0.50
 
 const MANIFEST = {

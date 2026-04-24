@@ -134,7 +134,10 @@ export function refreshToolButtons() {
   if (btnHache) btnHache.style.display = techUnlocked('axe-stone') ? '' : 'none'
   if (btnPick) btnPick.style.display = techUnlocked('pick-stone') ? '' : 'none'
   const btnResearch = document.querySelector('.tool[data-tool="place-research"]')
-  if (btnResearch) btnResearch.style.display = techUnlocked('basic-research') ? '' : 'none'
+  if (btnResearch) {
+    btnResearch.style.display = techUnlocked('basic-research') ? '' : 'none'
+    btnResearch.classList.toggle('locked', state.researchHouses.length > 0)
+  }
 }
 
 export function labelOfTool(t) {
