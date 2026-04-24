@@ -135,18 +135,6 @@
       "speech": ["Un toit minimal, mais c'est mieux que rien."]
     },
     {
-      "id": "oral-tradition",
-      "name": "Tradition orale",
-      "age": 1,
-      "branch": "savoir",
-      "icon": "📖",
-      "cost": { "research": 0 },
-      "requires": ["fire-mastery"],
-      "unlocks": {},
-      "description": "Transmission du savoir entre generations. Debloquee avec la Maitrise du feu. Tech gratuite.",
-      "speech": ["Les anciens nous ont tout appris."]
-    },
-    {
       "id": "basic-research",
       "name": "Recherche de base",
       "age": 1,
@@ -159,6 +147,18 @@
       },
       "description": "Organisation du savoir collectif. Debloque la Hutte du sage. Tech gratuite de depart.",
       "speech": ["Notre curiosite va nous mener loin."]
+    },
+    {
+      "id": "oral-tradition",
+      "name": "Tradition orale",
+      "age": 1,
+      "branch": "savoir",
+      "icon": "📖",
+      "cost": { "research": 0 },
+      "requires": ["fire-mastery"],
+      "unlocks": {},
+      "description": "Transmission du savoir entre generations. Debloquee avec la Maitrise du feu. Tech gratuite.",
+      "speech": ["Les anciens nous ont tout appris."]
     },
     {
       "id": "scouting",
