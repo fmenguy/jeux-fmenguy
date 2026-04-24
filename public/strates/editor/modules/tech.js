@@ -125,6 +125,19 @@ function _advanceQueue() {
 export function queueTech(id) {
   const t = state.techs[id]
   if (!t || t.unlocked) return
+  const techEntry = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
+    ? TECH_TREE_DATA.techs.find(x => x.id === id)
+    : null
+  const costObj = techEntry && techEntry.cost && typeof techEntry.cost === 'object' ? techEntry.cost : {}
+  const totalCost = Object.values(costObj).reduce((s, v) => s + v, 0)
+  if (totalCost === 0) {
+    unlockTech(id, null, { alreadyPaid: true })
+    try {
+      window.dispatchEvent(new CustomEvent('strates:techComplete', { detail: { id, tech: techEntry } }))
+      window.dispatchEvent(new CustomEvent('strates:queueChanged'))
+    } catch (e) { /* ignore */ }
+    return
+  }
   if (!state.researchQueue) state.researchQueue = []
   if (state.researchQueue.includes(id)) return
   if (state.activeResearch && state.activeResearch.id === id) return
