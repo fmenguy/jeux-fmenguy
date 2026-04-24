@@ -692,9 +692,12 @@
   transform: translate(-50%, -50%);
   cursor: pointer;
   z-index: 4;
-  transition: transform 0.15s;
+  transition: transform 0.15s ease;
 }
-.ttp-tech:hover { z-index: 10; }
+.ttp-tech:hover {
+  z-index: 10;
+  transform: translate(-50%, -50%) scale(1.06);
+}
 .ttp-tech .card {
   position: relative;
   height: 100%;
@@ -702,11 +705,10 @@
   border: 1.5px solid var(--ttp-rule);
   border-radius: 5px;
   padding: 12px 14px;
-  transition: all 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
   overflow: hidden;
 }
 .ttp-tech:hover .card {
-  transform: scale(1.03);
   border-color: var(--vc);
   box-shadow: 0 12px 30px rgba(0,0,0,0.5),
               0 0 0 1px color-mix(in srgb, var(--vc) 50%, transparent);
