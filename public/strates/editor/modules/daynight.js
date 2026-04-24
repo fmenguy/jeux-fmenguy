@@ -30,7 +30,8 @@ const DAY = {
   skyTurbidity: 6,
   skyRayleigh: 1.6,
   sunElev: 60,
-  sunAzim: 135
+  sunAzim: 135,
+  starsOpacity: 0
 }
 
 const NIGHT = {
@@ -45,8 +46,27 @@ const NIGHT = {
   skyTurbidity: 0.8,
   skyRayleigh: 0.15,
   sunElev: -10,
-  sunAzim: 215
+  sunAzim: 215,
+  starsOpacity: 1
 }
+
+// --- Champ d'etoiles ---
+const starsGeo = new THREE.BufferGeometry()
+;(function buildStars() {
+  const positions = new Float32Array(800 * 3)
+  for (let i = 0; i < 800; i++) {
+    const theta = Math.acos(2 * Math.random() - 1)
+    const phi = Math.random() * Math.PI * 2
+    positions[i * 3]     = 180 * Math.sin(theta) * Math.cos(phi)
+    positions[i * 3 + 1] = 180 * Math.cos(theta)
+    positions[i * 3 + 2] = 180 * Math.sin(theta) * Math.sin(phi)
+  }
+  starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+})()
+const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.4, sizeAttenuation: true, transparent: true, opacity: 0 })
+const stars = new THREE.Points(starsGeo, starsMat)
+stars.frustumCulled = false
+scene.add(stars)
 
 // --- Etat de la transition ------------------------------------------------
 const TRANSITION_DURATION = 1.5 // secondes
@@ -87,6 +107,7 @@ function applyAmbiance(k, from, to) {
   const azim = from.sunAzim + (to.sunAzim - from.sunAzim) * k
   sunDir.setFromSphericalCoords(1, THREE.MathUtils.degToRad(Math.max(1, 90 - Math.abs(elev))), THREE.MathUtils.degToRad(azim))
   skyU.sunPosition.value.copy(sunDir)
+  starsMat.opacity = from.starsOpacity + (to.starsOpacity - from.starsOpacity) * k
 }
 
 function modeParams(mode) {
