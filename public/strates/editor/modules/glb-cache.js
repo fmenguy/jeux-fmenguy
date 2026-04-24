@@ -9,18 +9,20 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 const BASE = new URL('../assets/models/fantaisy/', import.meta.url).href
 
 // Constantes de mise a l'echelle par type (ajuster selon les GLB)
-export const TREE_GLB_SCALE  = 0.40
-export const ROCK_GLB_SCALE  = 0.32
-export const HOUSE_GLB_SCALE = 2.00
-export const HUT_GLB_SCALE   = 2.40
-export const DEER_GLB_SCALE  = 0.50
+export const TREE_GLB_SCALE    = 0.40
+export const ROCK_GLB_SCALE    = 0.32
+export const HOUSE_GLB_SCALE   = 2.00
+export const HUT_GLB_SCALE     = 2.40
+export const DEER_GLB_SCALE    = 0.50
+export const BONFIRE_GLB_SCALE = 1.20
 
 const MANIFEST = {
-  tree:  'Pine.glb',
-  rock:  'Rock.glb',
-  house: 'House.glb',
-  hut:   'Hut.glb',
-  deer:  'Deer.glb',
+  tree:    'Pine.glb',
+  rock:    'Rock.glb',
+  house:   'House.glb',
+  hut:     'Hut.glb',
+  deer:    'Deer.glb',
+  bonfire: 'Bonfire.glb',
 }
 
 const _cache = {}

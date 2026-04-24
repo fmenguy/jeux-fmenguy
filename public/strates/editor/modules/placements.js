@@ -8,7 +8,7 @@ import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
-import { getModel, TREE_GLB_SCALE, ROCK_GLB_SCALE, HOUSE_GLB_SCALE, HUT_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
+import { getModel, TREE_GLB_SCALE, ROCK_GLB_SCALE, HOUSE_GLB_SCALE, HUT_GLB_SCALE, DEER_GLB_SCALE, BONFIRE_GLB_SCALE } from './glb-cache.js'
 
 // ============================================================================
 // Arbres (trunk + leaf InstancedMesh)
@@ -524,6 +524,45 @@ export function addHouse(gx, gz) {
   return true
 }
 
+// ============================================================================
+// Foyer (feu de camp)
+// ============================================================================
+function makeFoyer() {
+  const model = getModel('bonfire')
+  if (model) {
+    model.scale.setScalar(BONFIRE_GLB_SCALE)
+    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+    return model
+  }
+  // Fallback procedural
+  const g = new THREE.Group()
+  const logMat = new THREE.MeshStandardMaterial({ color: 0x6b3a1f, roughness: 0.95, flatShading: true })
+  const emberMat = new THREE.MeshStandardMaterial({ color: 0xd4620a, roughness: 0.7, flatShading: true, emissive: new THREE.Color(0x7a2a00), emissiveIntensity: 0.4 })
+  const flameMat = new THREE.MeshStandardMaterial({ color: 0xff8c00, roughness: 0.5, flatShading: true, emissive: new THREE.Color(0xff4400), emissiveIntensity: 0.6, transparent: true, opacity: 0.9 })
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.18, 8), logMat)
+  base.position.y = 0.09; base.castShadow = true; base.receiveShadow = true
+  g.add(base)
+  const embers = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.12, 6), emberMat)
+  embers.position.y = 0.24
+  g.add(embers)
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.45, 6), flameMat)
+  flame.position.y = 0.55
+  flame.castShadow = false
+  g.add(flame)
+  g.userData.flame = flame
+  return g
+}
+
+export function addFoyer(gx, gz) {
+  const top = state.cellTop[gz * GRID + gx]
+  if (top <= SHALLOW_WATER_LEVEL) return false
+  const g = makeFoyer()
+  g.position.set(gx + 0.5, top, gz + 0.5)
+  scene.add(g)
+  state.foyers.push({ x: gx, z: gz, group: g })
+  return true
+}
+
 export function removeHousesIn(cells) {
   if (!state.houses.length) return
   const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
@@ -753,6 +792,13 @@ export function clearAllPlacements() {
   for (const r of state.rocks) { if (r.group) scene.remove(r.group) }
   state.rocks.length = 0; rockMesh.count = 0
   if (state.deers) { for (const d of state.deers) { scene.remove(d.group) }; state.deers.length = 0 }
+  if (state.foyers) {
+    for (const f of state.foyers) {
+      scene.remove(f.group)
+      f.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+    }
+    state.foyers.length = 0
+  }
   state.ores.length = 0; oreRockMesh.count = 0; crystalMesh.count = 0
   state.bushes.length = 0; bushLeafMesh.count = 0; bushBerryMesh.count = 0
   for (let i = 0; i < state.cellOre.length; i++) state.cellOre[i] = null
