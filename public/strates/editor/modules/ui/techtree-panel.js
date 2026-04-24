@@ -223,15 +223,53 @@ if (typeof window !== 'undefined') {
 function startRefreshTimer() {
   if (refreshTimer) return
   refreshTimer = setInterval(function() {
-    if (!isOpen) return
-    // Rafraichit seulement si une recherche est en cours, sinon c est inutile.
-    if (state.activeResearch) refreshTechTree()
+    if (!isOpen || !state.activeResearch) return
+    tickProgressOnly()
   }, 500)
 }
 function stopRefreshTimer() {
   if (!refreshTimer) return
   clearInterval(refreshTimer)
   refreshTimer = null
+}
+
+// Mise a jour chirurgicale de la barre de progression et des compteurs,
+// sans reconstruire le DOM. Appelee par le timer 2Hz pendant la recherche.
+function tickProgressOnly() {
+  const ar = state.activeResearch
+  if (!ar) return
+  const data = TECH_TREE_DATA
+  const techs = (data && data.techs) || []
+  const activeTech = techs.find(function(t) { return t.id === ar.id })
+  const cost = techCost(activeTech)
+  const prog = ar.progress || 0
+
+  // Compteur de points de recherche dans la topbar
+  const pts = document.getElementById('ttp-pts')
+  if (pts) pts.textContent = String(Math.floor(prog))
+
+  // Barre de progression dans la card (vue detail)
+  if (root) {
+    const barI = root.querySelector('.ttp-tech.researching .ttp-tech-bar i')
+    if (barI && cost > 0) {
+      barI.style.width = Math.min(100, (prog / cost) * 100).toFixed(1) + '%'
+    }
+
+    // Arc de branche dans la constellation (--p CSS var)
+    if (activeTech && activeTech.branch) {
+      const branchTechs = techs.filter(function(t) {
+        return t.branch === activeTech.branch && (t.age || 1) === (state.currentAge || 1)
+      })
+      if (branchTechs.length) {
+        const doneCount = branchTechs.filter(function(t) { return techUnlocked(t.id) }).length
+        const c = techCost(activeTech) || 1
+        const score = doneCount + Math.min(1, Math.max(0, prog / c))
+        const pct = Math.round((score / branchTechs.length) * 100)
+        const arcI = root.querySelector('.ttp-branch[data-br="' + cssEscape(activeTech.branch) + '"] .bar i')
+        if (arcI) arcI.style.setProperty('--p', pct + '%')
+      }
+    }
+  }
 }
 
 function bindSearch() {
