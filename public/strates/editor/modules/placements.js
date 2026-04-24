@@ -558,8 +558,12 @@ export function addFoyer(gx, gz) {
   if (top <= SHALLOW_WATER_LEVEL) return false
   const g = makeFoyer()
   g.position.set(gx + 0.5, top, gz + 0.5)
+  const light = new THREE.PointLight(0xff6a1a, 3.0, 8)
+  light.position.set(0, 1.5, 0)
+  g.add(light)
   scene.add(g)
-  state.foyers.push({ x: gx, z: gz, group: g })
+  const entry = { x: gx, z: gz, group: g, light }
+  state.foyers.push(entry)
   return true
 }
 
@@ -1136,7 +1140,16 @@ export function checkUniqueBuildingButtons() {
 export function tickFoyers() {
   const t = Date.now()
   for (const f of state.foyers) {
-    const flame = f.group.userData.flame
+    // Fallback procedural : mesh stocke dans userData.flame
+    let flame = f.group.userData.flame
+    // GLB : chercher un mesh dont le nom contient fire/flame/embers
+    if (!flame) {
+      f.group.traverse(function(o) {
+        if (flame || !o.isMesh) return
+        const n = (o.name || '').toLowerCase()
+        if (n.includes('fire') || n.includes('flame') || n.includes('embers')) flame = o
+      })
+    }
     if (!flame) continue
     flame.scale.y = 1 + 0.15 * Math.sin(t * 0.006)
     flame.scale.x = 1 + 0.08 * Math.sin(t * 0.009)
