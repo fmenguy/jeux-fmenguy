@@ -1129,3 +1129,16 @@ export function checkUniqueBuildingButtons() {
     }
   }
 }
+
+// ============================================================================
+// Animation flamme (foyer fallback procedural uniquement)
+// ============================================================================
+export function tickFoyers() {
+  const t = Date.now()
+  for (const f of state.foyers) {
+    const flame = f.group.userData.flame
+    if (!flame) continue
+    flame.scale.y = 1 + 0.15 * Math.sin(t * 0.006)
+    flame.scale.x = 1 + 0.08 * Math.sin(t * 0.009)
+  }
+}
