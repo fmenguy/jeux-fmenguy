@@ -30,6 +30,14 @@ Exploration en salles thématiques avec particules, textures procédurales et pu
 - **Genre :** Exploration / Puzzle
 - **Dossier :** [`orbique/`](orbique/)
 
+### Strates
+God-game voxel 3D en temps réel. Guide une colonie de l'Âge de Pierre jusqu'à l'Âge de l'Espace : posez des bâtiments, gérez des colons avec besoins réels (faim, moral, compétences), débloquez des technologies via un arbre de recherche, et franchissez les âges en construisant un Cairn. Monde procédural avec cycle jour/nuit, météo saisonnière et modèles GLB (arbres, maisons, cerfs, foyer).
+
+- **Genre :** God-game / Simulation de colonie
+- **URL :** [jeux.fmenguy.fr/strates/](https://jeux.fmenguy.fr/strates/)
+- **Dossier :** [`public/strates/`](public/strates/)
+- **Moteur :** Three.js r168, voxels procéduraux, GLB via GLTFLoader
+
 ---
 
 ## Mini-jeux & Expériences
@@ -50,10 +58,11 @@ Tout le code est front-end, sans dépendance serveur.
 |-------------|-------|
 | HTML5 / CSS3 | Structure et styles, responsive mobile |
 | JavaScript (ES6+) | Logique de jeu, rendu Canvas, gestion d'état |
-| [Three.js](https://threejs.org) | Rendu 3D pour Achronia |
+| [Three.js](https://threejs.org) r168 | Rendu 3D voxel pour Strates (GLTFLoader, Web Audio) |
 | [p5.js](https://p5js.org) | Génératif / expérimental pour Zentel |
 | Canvas API | Rendu 2D natif (FDA, EcoSim, Orbique, Conway) |
-| Web Audio API | Ambiance sonore dans Forge des Âges |
+| Web Audio API | Ambiance sonore (FDA, Strates) |
+| GLB / GLTF | Modèles 3D (arbres, maisons, cerfs, foyer) dans Strates |
 
 Aucun framework, aucun bundler — du web natif.
 
@@ -80,6 +89,7 @@ jeux-fmenguy/
 ├── conway/           # Jeu de la Vie
 ├── ecosim/           # EcoSim
 ├── fps/              # Achronia (FPS Three.js)
+├── public/strates/   # Strates (god-game voxel)
 └── zentel/           # Zentel (p5.js)
 ```
 
