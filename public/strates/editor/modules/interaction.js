@@ -37,17 +37,14 @@ cursorMesh.visible = false
 scene.add(cursorMesh)
 
 // ============================================================================
-// Overlay sélection rectangulaire
+// Rectangle de sélection CSS
 // ============================================================================
-const rectOverlayGeo = new THREE.PlaneGeometry(1, 1)
-const rectOverlayMat = new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.25, depthTest: false, side: THREE.DoubleSide })
-const rectOverlayMesh = new THREE.Mesh(rectOverlayGeo, rectOverlayMat)
-rectOverlayMesh.rotation.x = -Math.PI / 2
-rectOverlayMesh.renderOrder = 997
-rectOverlayMesh.visible = false
-scene.add(rectOverlayMesh)
+const selRectEl = document.createElement('div')
+selRectEl.id = 'sel-rect'
+selRectEl.style.cssText = 'position:fixed;border:1.5px solid rgba(255,255,255,0.85);background:rgba(180,210,255,0.12);pointer-events:none;display:none;z-index:50;'
+document.body.appendChild(selRectEl)
 
-const selectionRect = { active: false, startX: 0, startZ: 0, endX: 0, endZ: 0 }
+const selectionRect = { active: false, startX: 0, startZ: 0, endX: 0, endZ: 0, screenX0: 0, screenY0: 0 }
 const RECT_SELECT_TOOLS = new Set(['mine', 'hache', 'pick'])
 
 function cellsInRect(x1, z1, x2, z2) {
@@ -63,20 +60,12 @@ function cellsInRect(x1, z1, x2, z2) {
   return out
 }
 
-function updateRectOverlay(x1, z1, x2, z2) {
-  const sx = Math.min(x1, x2), ex = Math.max(x1, x2)
-  const sz = Math.min(z1, z2), ez = Math.max(z1, z2)
-  let maxY = 0
-  for (let z = sz; z <= ez; z++) {
-    for (let x = sx; x <= ex; x++) {
-      if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
-      const top = state.cellTop[z * GRID + x]
-      if (top > maxY) maxY = top
-    }
-  }
-  rectOverlayMesh.position.set((sx + ex + 1) / 2, maxY + 0.05, (sz + ez + 1) / 2)
-  rectOverlayMesh.scale.set(ex - sx + 1, ez - sz + 1, 1)
-  rectOverlayMesh.visible = true
+function updateSelRectCSS(sx, sy, ex, ey) {
+  selRectEl.style.left   = Math.min(sx, ex) + 'px'
+  selRectEl.style.top    = Math.min(sy, ey) + 'px'
+  selRectEl.style.width  = Math.abs(ex - sx) + 'px'
+  selRectEl.style.height = Math.abs(ey - sy) + 'px'
+  selRectEl.style.display = ''
 }
 
 function applyToolToZone(cells, tool) {
@@ -828,7 +817,9 @@ dom.addEventListener('pointerdown', (e) => {
     selectionRect.startZ = cell.z
     selectionRect.endX = cell.x
     selectionRect.endZ = cell.z
-    updateRectOverlay(cell.x, cell.z, cell.x, cell.z)
+    selectionRect.screenX0 = e.clientX
+    selectionRect.screenY0 = e.clientY
+    updateSelRectCSS(e.clientX, e.clientY, e.clientX, e.clientY)
     return
   }
   state.toolState.isPainting = true
@@ -857,8 +848,8 @@ dom.addEventListener('pointermove', (e) => {
     if (hoverCell) {
       selectionRect.endX = hoverCell.x
       selectionRect.endZ = hoverCell.z
-      updateRectOverlay(selectionRect.startX, selectionRect.startZ, hoverCell.x, hoverCell.z)
     }
+    updateSelRectCSS(selectionRect.screenX0, selectionRect.screenY0, e.clientX, e.clientY)
     return
   }
   if (!state.toolState.isPainting) return
@@ -873,7 +864,7 @@ window.addEventListener('pointerup', (e) => {
   state.toolState.isPainting = false
   if (selectionRect.active && e.button === 0) {
     selectionRect.active = false
-    rectOverlayMesh.visible = false
+    selRectEl.style.display = 'none'
     const cells = cellsInRect(selectionRect.startX, selectionRect.startZ, selectionRect.endX, selectionRect.endZ)
     applyToolToZone(cells, state.toolState.tool)
   }
