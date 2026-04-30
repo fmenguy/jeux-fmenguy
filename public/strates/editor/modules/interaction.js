@@ -319,6 +319,12 @@ window.addEventListener('keydown', (e) => {
     if (cs && cs.classList.contains('open')) return
     const ho = document.getElementById('help-overlay')
     if (ho && ho.classList.contains('open')) return
+    const pp = document.getElementById('popPanel')
+    if (pp && pp.classList.contains('open')) {
+      pp.classList.remove('open')
+      document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'))
+      e.stopPropagation(); e.preventDefault(); return
+    }
 
     const sm = document.getElementById('save-menu')
     const pm = document.getElementById('pause-menu')
