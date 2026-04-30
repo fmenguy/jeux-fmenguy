@@ -36,6 +36,65 @@ cursorMesh.renderOrder = 999
 cursorMesh.visible = false
 scene.add(cursorMesh)
 
+// ============================================================================
+// Overlay sélection rectangulaire
+// ============================================================================
+const rectOverlayGeo = new THREE.PlaneGeometry(1, 1)
+const rectOverlayMat = new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.25, depthTest: false, side: THREE.DoubleSide })
+const rectOverlayMesh = new THREE.Mesh(rectOverlayGeo, rectOverlayMat)
+rectOverlayMesh.rotation.x = -Math.PI / 2
+rectOverlayMesh.renderOrder = 997
+rectOverlayMesh.visible = false
+scene.add(rectOverlayMesh)
+
+const selectionRect = { active: false, startX: 0, startZ: 0, endX: 0, endZ: 0 }
+const RECT_SELECT_TOOLS = new Set(['mine', 'hache', 'pick'])
+
+function cellsInRect(x1, z1, x2, z2) {
+  const sx = Math.min(x1, x2), ex = Math.max(x1, x2)
+  const sz = Math.min(z1, z2), ez = Math.max(z1, z2)
+  const out = []
+  for (let z = sz; z <= ez; z++) {
+    for (let x = sx; x <= ex; x++) {
+      if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
+      out.push({ x, z })
+    }
+  }
+  return out
+}
+
+function updateRectOverlay(x1, z1, x2, z2) {
+  const sx = Math.min(x1, x2), ex = Math.max(x1, x2)
+  const sz = Math.min(z1, z2), ez = Math.max(z1, z2)
+  let maxY = 0
+  for (let z = sz; z <= ez; z++) {
+    for (let x = sx; x <= ex; x++) {
+      if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
+      const top = state.cellTop[z * GRID + x]
+      if (top > maxY) maxY = top
+    }
+  }
+  rectOverlayMesh.position.set((sx + ex + 1) / 2, maxY + 0.05, (sz + ez + 1) / 2)
+  rectOverlayMesh.scale.set(ex - sx + 1, ez - sz + 1, 1)
+  rectOverlayMesh.visible = true
+}
+
+function applyToolToZone(cells, tool) {
+  let toastShown = false
+  for (const c of cells) {
+    if (!toolAllowedOnCell(tool, c.x, c.z)) {
+      const check = canMineCell(c.x, c.z)
+      if (check.reason === 'tech' && check.requiredTech) {
+        state.lastBlockedMineTech = { x: c.x, z: c.z, tech: check.requiredTech, t: performance.now() / 1000 }
+        if (!toastShown) { toastShown = true; showHudToast('Il vous faut une meilleure technique pour extraire ça.', 2500) }
+      }
+      continue
+    }
+    addJob(c.x, c.z)
+  }
+  refreshHUD()
+}
+
 function setCursorAt(cell) {
   if (!cell) { cursorMesh.visible = false; return }
   if (state.toolState.tool === 'nav') { cursorMesh.visible = false; return }
@@ -763,14 +822,24 @@ dom.addEventListener('pointerdown', (e) => {
     applyToolToStrata(cells)
     return
   }
+  if (RECT_SELECT_TOOLS.has(state.toolState.tool) && cell) {
+    selectionRect.active = true
+    selectionRect.startX = cell.x
+    selectionRect.startZ = cell.z
+    selectionRect.endX = cell.x
+    selectionRect.endZ = cell.z
+    updateRectOverlay(cell.x, cell.z, cell.x, cell.z)
+    return
+  }
   state.toolState.isPainting = true
   state.toolState.paintedThisStroke = new Set()
   if (cell) applyToolAtCell(cell)
 })
 
 dom.addEventListener('pointermove', (e) => {
+  let hoverCell = null
   if (state.toolState.tool !== 'nav') {
-    const hoverCell = pickCell(e.clientX, e.clientY)
+    hoverCell = pickCell(e.clientX, e.clientY)
     setCursorAt(hoverCell)
     if ((e.shiftKey || isShiftDown) && !state.toolState.isPainting) {
       showStrataPreview(hoverCell)
@@ -783,15 +852,32 @@ dom.addEventListener('pointermove', (e) => {
     cursorMesh.visible = false
     clearStrataPreview()
   }
+  if (selectionRect.active) {
+    if (!hoverCell) hoverCell = pickCell(e.clientX, e.clientY)
+    if (hoverCell) {
+      selectionRect.endX = hoverCell.x
+      selectionRect.endZ = hoverCell.z
+      updateRectOverlay(selectionRect.startX, selectionRect.startZ, hoverCell.x, hoverCell.z)
+    }
+    return
+  }
   if (!state.toolState.isPainting) return
   if (state.toolState.tool === 'nav') return
   if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory') return
-  const cell = pickCell(e.clientX, e.clientY)
+  const cell = hoverCell || pickCell(e.clientX, e.clientY)
   if (cell) applyToolAtCell(cell)
 })
 
 dom.addEventListener('pointerleave', () => { cursorMesh.visible = false; clearStrataPreview() })
-window.addEventListener('pointerup', () => { state.toolState.isPainting = false })
+window.addEventListener('pointerup', (e) => {
+  state.toolState.isPainting = false
+  if (selectionRect.active && e.button === 0) {
+    selectionRect.active = false
+    rectOverlayMesh.visible = false
+    const cells = cellsInRect(selectionRect.startX, selectionRect.startZ, selectionRect.endX, selectionRect.endZ)
+    applyToolToZone(cells, state.toolState.tool)
+  }
+})
 
 // Clic gauche bref sur un colon : ouvre la fiche personnage
 dom.addEventListener('pointerup', (e) => {
