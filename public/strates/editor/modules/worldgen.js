@@ -30,19 +30,20 @@ export function populateDefaultScene() {
     if (!isCellOccupied(x, z)) addHouse(x, z)
   }
 
+  // Arbres en clusters denses dans les forets
   let placed = 0
-  const targetTrees = 55
-  for (let tries = 0; tries < 3000 && placed < targetTrees; tries++) {
+  const targetTrees = 80
+  for (let tries = 0; tries < 5000 && placed < targetTrees; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     if (state.cellBiome[z * GRID + x] !== 'forest') continue
     if (isCellOccupied(x, z)) continue
     addTree(x, z)
     placed++
-    const clusterSize = 2 + Math.floor(rng() * 3)
+    const clusterSize = 3 + Math.floor(rng() * 4)
     for (let k = 0; k < clusterSize && placed < targetTrees; k++) {
-      const nx = x + Math.floor(rng() * 5) - 2
-      const nz = z + Math.floor(rng() * 5) - 2
+      const nx = x + Math.floor(rng() * 7) - 3
+      const nz = z + Math.floor(rng() * 7) - 3
       if (nx < 0 || nz < 0 || nx >= GRID || nz >= GRID) continue
       if (state.cellBiome[nz * GRID + nx] !== 'forest') continue
       if (isCellOccupied(nx, nz)) continue
@@ -51,36 +52,56 @@ export function populateDefaultScene() {
     }
   }
 
+  // Arbres epars en herbe (eloignes du spawn)
   let grassTrees = 0
-  const targetGrassTrees = 15
-  for (let tries = 0; tries < 800 && grassTrees < targetGrassTrees; tries++) {
+  const targetGrassTrees = 20
+  for (let tries = 0; tries < 1200 && grassTrees < targetGrassTrees; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     if (state.cellBiome[z * GRID + x] !== 'grass') continue
     if (isCellOccupied(x, z)) continue
     const dh = Math.abs(x - spawn.x) + Math.abs(z - spawn.z)
-    if (dh < 4) continue
+    if (dh < 6) continue
     addTree(x, z)
     grassTrees++
   }
 
+  // Rochers decoratifs (rock, snow, transitions herbe/roche)
   let rocksPlaced = 0
-  const targetRocks = 30
-  for (let tries = 0; tries < 1500 && rocksPlaced < targetRocks; tries++) {
+  const targetRocks = 40
+  for (let tries = 0; tries < 2000 && rocksPlaced < targetRocks; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     const biome = state.cellBiome[z * GRID + x]
     if (biome !== 'rock' && biome !== 'snow' && biome !== 'grass') continue
     if (isCellOccupied(x, z)) continue
-    if (biome === 'grass' && rng() > 0.25) continue
+    if (biome === 'grass' && rng() > 0.20) continue
     addRock(x, z)
     rocksPlaced++
   }
 
+  // Filons garantis : au moins 3 copper et 3 coal en biome rock/snow
+  const guaranteedOres = [
+    { type: 'ore-copper', min: 3 },
+    { type: 'ore-coal',   min: 3 }
+  ]
+  for (const { type, min } of guaranteedOres) {
+    let count = 0
+    for (let tries = 0; tries < 2000 && count < min; tries++) {
+      const x = Math.floor(rng() * GRID)
+      const z = Math.floor(rng() * GRID)
+      const biome = state.cellBiome[z * GRID + x]
+      if (biome !== 'rock' && biome !== 'snow') continue
+      if (isCellOccupied(x, z)) continue
+      addOre(x, z, type)
+      count++
+    }
+  }
+  // Filons supplementaires varies
   const ORE_SEEDS = ['ore-copper', 'ore-iron', 'ore-coal', 'ore-gold', 'ore-silver']
   let oresPlaced = 0
-  const targetOres = 10
-  for (let tries = 0; tries < 1200 && oresPlaced < targetOres; tries++) {
+  const targetOres = 8
+  for (let tries = 0; tries < 1500 && oresPlaced < targetOres; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     const biome = state.cellBiome[z * GRID + x]
@@ -91,9 +112,10 @@ export function populateDefaultScene() {
     oresPlaced++
   }
 
+  // Buissons a baies - minimum 25 en herbe et foret
   let bushPlaced = 0
-  const targetBushes = 14
-  for (let tries = 0; tries < 900 && bushPlaced < targetBushes; tries++) {
+  const targetBushes = 25
+  for (let tries = 0; tries < 2000 && bushPlaced < targetBushes; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     const biome = state.cellBiome[z * GRID + x]
