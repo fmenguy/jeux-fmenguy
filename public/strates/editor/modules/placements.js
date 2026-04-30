@@ -8,7 +8,7 @@ import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
-import { getModel, TREE_GLB_SCALE, ROCK_GLB_SCALE, HOUSE_GLB_SCALE, HUT_GLB_SCALE, DEER_GLB_SCALE, BONFIRE_GLB_SCALE } from './glb-cache.js'
+import { getModel, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
 
 // ============================================================================
 // Arbres (trunk + leaf InstancedMesh)
@@ -485,14 +485,6 @@ export function removeDeersIn(cells) {
 // ============================================================================
 function makeHouse() {
   const rng = prng.rng
-  const model = getModel('house')
-  if (model) {
-    model.scale.setScalar(HOUSE_GLB_SCALE)
-    model.rotation.y = Math.floor(rng() * 4) * Math.PI / 2
-    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-    return model
-  }
-  // Fallback procedural
   const g = new THREE.Group()
   const wallColors = [0xf2e6c9, 0xe6d2a8, 0xd9c79d]
   const roofColors = [0xb24e3a, 0xa04030, 0xc86a48]
@@ -528,13 +520,6 @@ export function addHouse(gx, gz) {
 // Foyer (feu de camp)
 // ============================================================================
 function makeFoyer() {
-  const model = getModel('bonfire')
-  if (model) {
-    model.scale.setScalar(BONFIRE_GLB_SCALE)
-    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-    return model
-  }
-  // Fallback procedural
   const g = new THREE.Group()
   const logMat = new THREE.MeshStandardMaterial({ color: 0x6b3a1f, roughness: 0.95, flatShading: true })
   const emberMat = new THREE.MeshStandardMaterial({ color: 0xd4620a, roughness: 0.7, flatShading: true, emissive: new THREE.Color(0x7a2a00), emissiveIntensity: 0.4 })
@@ -701,18 +686,8 @@ function makeResearchHouse() {
 export function addResearchHouse(gx, gz) {
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return null
-  const model = getModel('hut')
-  let g
-  if (model) {
-    model.scale.setScalar(HUT_GLB_SCALE)
-    model.position.set(gx + 0.5, top, gz + 0.5)
-    model.rotation.y = Math.random() * Math.PI * 2
-    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-    g = model
-  } else {
-    g = makeResearchHouse()
-    g.position.set(gx + 0.5, top, gz + 0.5)
-  }
+  const g = makeResearchHouse()
+  g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
   const entry = { id: state.researchBuildingNextId++, x: gx, z: gz, group: g, assignedColonistId: null }
   state.researchHouses.push(entry)
