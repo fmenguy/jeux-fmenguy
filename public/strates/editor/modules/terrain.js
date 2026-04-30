@@ -4,7 +4,7 @@ import {
   EDGE_DEEP_RING, EDGE_SHALLOW_RING, FALLOFF_SPAN, VOXEL, COL
 } from './constants.js'
 import { state } from './state.js'
-import { fbm } from './rng.js'
+import { fbm, prng } from './rng.js'
 import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
 
 // ============================================================================
@@ -110,10 +110,75 @@ export function surfaceColor(surface, fallback) {
   return fallback
 }
 
+// Creuse 1-2 rivieres par descente de gradient depuis les montagnes.
+// Modifie h en place avant que buildTerrain calcule cellTop.
+function carveRivers(h) {
+  const rng = prng.seedRand
+  const cx = GRID / 2, cz = GRID / 2
+  const RIVER_ELEV = SHALLOW_WATER_LEVEL - 0.3   // 1.3, s'arrondit a 1 = eau
+  const RIVER_EDGE_ELEV = SHALLOW_WATER_LEVEL     // cellules bordure legerement plus hautes
+
+  // Chercher des points de depart en altitude (montagne) eloignes du centre
+  const candidates = []
+  for (let z = 5; z < GRID - 5; z++) {
+    for (let x = 5; x < GRID - 5; x++) {
+      const dist = Math.abs(x - cx) + Math.abs(z - cz)
+      if (h[z * GRID + x] >= 5.0 && dist > 28) candidates.push([x, z])
+    }
+  }
+  if (candidates.length === 0) return
+
+  const riverCount = 1 + Math.floor(rng() * 2)
+  const used = new Set()
+  for (let r = 0; r < riverCount; r++) {
+    if (candidates.length === 0) break
+    const si = Math.floor(rng() * candidates.length)
+    let [x, z] = candidates.splice(si, 1)[0]
+
+    const maxLen = 28 + Math.floor(rng() * 18)
+    const visited = new Set()
+
+    for (let step = 0; step < maxLen; step++) {
+      if (x < 1 || z < 1 || x >= GRID - 1 || z >= GRID - 1) break
+      const k = z * GRID + x
+      if (h[k] <= SHALLOW_WATER_LEVEL) break
+
+      visited.add(k)
+      used.add(k)
+      h[k] = RIVER_ELEV
+
+      // Berge: creuser legerement 1 cellule adjacente (largeur de riviere)
+      if (rng() < 0.55) {
+        const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+        const s = sides[Math.floor(rng() * 4)]
+        const bx = x + s[0], bz = z + s[1]
+        if (bx >= 0 && bz >= 0 && bx < GRID && bz < GRID) {
+          const bk = bz * GRID + bx
+          if (!used.has(bk)) h[bk] = Math.min(h[bk], RIVER_EDGE_ELEV)
+        }
+      }
+
+      // Descendre vers le voisin le plus bas non visite
+      const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+      let bestH = Infinity, nx = -1, nz = -1
+      for (const [dx, dz] of dirs) {
+        const tx = x + dx, tz = z + dz
+        if (tx < 0 || tz < 0 || tx >= GRID || tz >= GRID) continue
+        const tk = tz * GRID + tx
+        if (visited.has(tk)) continue
+        if (h[tk] < bestH) { bestH = h[tk]; nx = tx; nz = tz }
+      }
+      if (nx < 0) break
+      x = nx; z = nz
+    }
+  }
+}
+
 export function buildTerrain() {
   const r = makeHeightmap()
   state.heightmap = r.h
   state.biomeNoise = r.bn
+  carveRivers(state.heightmap)
 
   state.cellTop = new Int16Array(GRID * GRID)
   state.cellBiome = new Array(GRID * GRID)
