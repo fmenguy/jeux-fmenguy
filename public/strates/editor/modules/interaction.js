@@ -49,7 +49,7 @@ selRectEl.style.cssText = 'position:fixed;border:1.5px solid rgba(255,255,255,0.
 document.body.appendChild(selRectEl)
 
 const selectionRect = { active: false, startX: 0, startZ: 0, endX: 0, endZ: 0 }
-const RECT_SELECT_TOOLS = new Set(['mine', 'hache', 'pick'])
+const RECT_SELECT_TOOLS = new Set(['mine', 'hache', 'pick', 'cancel-zone'])
 
 function cellsInRect(x1, z1, x2, z2) {
   const sx = Math.min(x1, x2), ex = Math.max(x1, x2)
@@ -125,6 +125,12 @@ function applyToolToZone(cells, tool) {
     try { window.dispatchEvent(new CustomEvent('strates:firstHarvestZone')) } catch (_) {}
   }
   refreshHUD()
+}
+
+function cancelJobsInRect(cells) {
+  let cancelled = 0
+  for (const c of cells) if (cancelJobAt(c.x, c.z, true)) cancelled++
+  if (cancelled > 0) refreshHUD()
 }
 
 function setCursorAt(cell) {
@@ -250,6 +256,7 @@ export function labelOfTool(t) {
     research: 'poser un laboratoire',
     'place-research': 'placer hutte du sage',
     'place-foyer': 'placer un foyer',
+    'cancel-zone': 'annuler récolte',
     field: 'tracer un champ',
     bush: 'poser un buisson',
     observatory: 'poser un promontoire',
@@ -824,20 +831,6 @@ function applyToolToStrata(cells) {
 const dom = renderer.domElement
 dom.addEventListener('contextmenu', (e) => e.preventDefault())
 
-// Intercepte le clic droit avant OrbitControls (phase capture) pour annuler
-// le drag de sélection et revenir en nav sans déclencher de pan caméra.
-dom.addEventListener('mousedown', function(e) {
-  if (e.button !== 2) return
-  if (!RECT_SELECT_TOOLS.has(state.toolState.tool)) return
-  e.stopPropagation()
-  e.preventDefault()
-  if (selectionRect.active) {
-    selectionRect.active = false
-    selRectEl.style.display = 'none'
-  }
-  setTool('nav')
-}, true)
-
 let isShiftDown = false
 window.addEventListener('keydown', (e) => { if (e.key === 'Shift') isShiftDown = true })
 window.addEventListener('keyup', (e) => {
@@ -882,6 +875,13 @@ dom.addEventListener('pointerdown', (e) => {
     selectionRect.startZ = cell.z
     selectionRect.endX = cell.x
     selectionRect.endZ = cell.z
+    if (state.toolState.tool === 'cancel-zone') {
+      selRectEl.style.border = '1.5px solid rgba(255,80,80,0.9)'
+      selRectEl.style.background = 'rgba(255,50,50,0.15)'
+    } else {
+      selRectEl.style.border = '1.5px solid rgba(255,255,255,0.85)'
+      selRectEl.style.background = 'rgba(180,210,255,0.12)'
+    }
     updateSelRectCSS(cell.x, cell.z, cell.x, cell.z)
     return
   }
@@ -929,7 +929,11 @@ window.addEventListener('pointerup', (e) => {
     selectionRect.active = false
     selRectEl.style.display = 'none'
     const cells = cellsInRect(selectionRect.startX, selectionRect.startZ, selectionRect.endX, selectionRect.endZ)
-    applyToolToZone(cells, state.toolState.tool)
+    if (state.toolState.tool === 'cancel-zone') {
+      cancelJobsInRect(cells)
+    } else {
+      applyToolToZone(cells, state.toolState.tool)
+    }
   }
 })
 
