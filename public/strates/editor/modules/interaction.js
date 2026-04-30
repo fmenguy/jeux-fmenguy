@@ -814,6 +814,20 @@ function applyToolToStrata(cells) {
 const dom = renderer.domElement
 dom.addEventListener('contextmenu', (e) => e.preventDefault())
 
+// Intercepte le clic droit avant OrbitControls (phase capture) pour annuler
+// le drag de sélection et revenir en nav sans déclencher de pan caméra.
+dom.addEventListener('mousedown', function(e) {
+  if (e.button !== 2) return
+  if (!RECT_SELECT_TOOLS.has(state.toolState.tool)) return
+  e.stopPropagation()
+  e.preventDefault()
+  if (selectionRect.active) {
+    selectionRect.active = false
+    selRectEl.style.display = 'none'
+  }
+  setTool('nav')
+}, true)
+
 let isShiftDown = false
 window.addEventListener('keydown', (e) => { if (e.key === 'Shift') isShiftDown = true })
 window.addEventListener('keyup', (e) => {
