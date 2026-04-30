@@ -151,14 +151,6 @@ export function initCharSheet() {
       if (panelEl && !panelEl.classList.contains('hidden')) refreshDynamic()
     }, 250)
   }
-  // Echap pour fermer
-  window.addEventListener('keydown', function(e) {
-    if (e.key !== 'Escape') return
-    if (!panelEl || panelEl.classList.contains('hidden')) return
-    // ne pas court-circuiter si une autre modale est au-dessus ? priorite : fiche
-    e.stopPropagation()
-    closeCharSheet()
-  }, true)
 }
 
 export function openCharSheet(colonist) {

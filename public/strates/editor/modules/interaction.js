@@ -20,7 +20,9 @@ import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
 import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
-import { openCharSheet, isCharSheetOpen } from './charsheet-ui.js'
+import { openCharSheet, isCharSheetOpen, closeCharSheet } from './charsheet-ui.js'
+import { closeHelpOverlay, isHelpOverlayOpen } from './help-overlay.js'
+import { closeTechTreePanel, closeBranch } from './ui/techtree-panel.js'
 import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
 
@@ -397,31 +399,39 @@ if (btnPauseSaves) btnPauseSaves.addEventListener('click', () => { closePauseMen
 const pauseMenu = document.getElementById('pause-menu')
 if (pauseMenu) pauseMenu.addEventListener('click', (e) => { if (e.target === pauseMenu) closePauseMenu() })
 
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    // Ne pas ouvrir le menu pause si un panneau plein ecran est deja ouvert.
-    // Les panneaux concernes (tech tree XXL, fiche colon, overlay d'aide)
-    // gerent eux-memes la fermeture sur Echap, via leurs propres listeners.
-    const ttp = document.getElementById('ttp-root')
-    if (ttp && ttp.classList.contains('open')) return
-    const cs = document.getElementById('char-panel')
-    if (cs && cs.classList.contains('open')) return
-    const ho = document.getElementById('help-overlay')
-    if (ho && ho.classList.contains('open')) return
-    const pp = document.getElementById('popPanel')
-    if (pp && pp.classList.contains('open')) {
-      pp.classList.remove('open')
-      document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'))
-      e.stopPropagation(); e.preventDefault(); return
-    }
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return
 
-    const sm = document.getElementById('save-menu')
-    const pm = document.getElementById('pause-menu')
-    if (sm && !sm.classList.contains('hidden')) { closeSaveMenu(); return }
-    if (pm && !pm.classList.contains('hidden')) { closePauseMenu(); return }
-    openPauseMenu()
+  const clearRail = () => document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'))
+
+  if (isCharSheetOpen()) {
+    closeCharSheet(); e.stopPropagation(); e.preventDefault(); return
   }
-})
+  if (isHelpOverlayOpen()) {
+    closeHelpOverlay(); e.stopPropagation(); e.preventDefault(); return
+  }
+  const qp = document.getElementById('quests')
+  if (qp && qp.classList.contains('open')) {
+    qp.classList.remove('open'); clearRail(); e.stopPropagation(); e.preventDefault(); return
+  }
+  const pp = document.getElementById('popPanel')
+  if (pp && pp.classList.contains('open')) {
+    pp.classList.remove('open'); clearRail(); e.stopPropagation(); e.preventDefault(); return
+  }
+  const ttp = document.getElementById('ttp-root')
+  if (ttp && ttp.classList.contains('open')) {
+    e.preventDefault()
+    if (ttp.classList.contains('detail-mode')) closeBranch()
+    else closeTechTreePanel()
+    return
+  }
+  const sm = document.getElementById('save-menu')
+  const pm = document.getElementById('pause-menu')
+  if (sm && !sm.classList.contains('hidden')) { closeSaveMenu(); return }
+  if (pm && !pm.classList.contains('hidden')) { closePauseMenu(); return }
+  openPauseMenu()
+}, true)
 
 window.addEventListener('keydown', (e) => {
   const map = {
