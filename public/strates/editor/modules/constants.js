@@ -50,6 +50,8 @@ export const COL = {
   rock: new THREE.Color('#a8a196'),
   rockDark: new THREE.Color('#8a8378'),
   snow: new THREE.Color('#f2f2ee'),
+  water: new THREE.Color('#5b9ec9'),
+  waterDark: new THREE.Color('#2a5a85'),
   dirt: new THREE.Color('#8c6a43'),
   field: new THREE.Color('#d9b755'),
   designate: new THREE.Color('#d6493a'),
