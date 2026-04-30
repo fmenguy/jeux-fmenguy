@@ -152,6 +152,8 @@ export class PopulationModal {
   _bindEvents() {
     // Délégation unique sur le panel
     this.panel.addEventListener('click', e => {
+      if (e.target.closest('.pop-close')) { this.close(); return }
+
       const tab = e.target.closest('.pv2-tab')
       if (tab) { this.setTab(tab.dataset.tab); return }
 
@@ -255,7 +257,6 @@ export class PopulationModal {
       '</div>' +
       '<div class="pv2-table-wrap">' +
       '<table class="pv2-table"><thead><tr>' +
-      '<th></th>' +
       th('name',  'Nom') +
       th('state', 'Activité') +
       th('job',   'Métier') +
@@ -264,14 +265,11 @@ export class PopulationModal {
       '</tr></thead><tbody>' +
       rows.map(c => {
         const sel = String(c.id) === String(this.selectedId)
+        const genderColor = c.gender === 'M' ? '#9dc4e8' : '#e89dc8'
         return '<tr data-cid="' + escH(c.id) + '" class="' + (sel ? 'selected' : '') + '">' +
-          '<td>' + portrait(c) + '</td>' +
           '<td class="pv2-name-cell">' +
-          '  ' + portrait(c) +
-          '  <span>' +
-          '    <span class="pv2-name">' + (c.chief ? '<span class="pv2-chief-star">★</span> ' : '') + escH(c.name) + '</span>' +
-          '    <span class="pv2-gender ' + c.gender.toLowerCase() + '">' + (c.gender === 'M' ? '♂' : '♀') + '</span>' +
-          '  </span>' +
+          '  <span class="pv2-name">' + (c.chief ? '<span class="pv2-chief-star">★</span> ' : '') + escH(c.name) + '</span>' +
+          '  <span class="pv2-gender ' + c.gender.toLowerCase() + '" style="color:' + genderColor + '">' + (c.gender === 'M' ? '♂' : '♀') + '</span>' +
           '</td>' +
           '<td>' + stateBadge(c.state) + '</td>' +
           '<td style="font-family:var(--mono);font-size:10.5px;color:var(--ink-3)">' + escH(c.job || '—') + '</td>' +
