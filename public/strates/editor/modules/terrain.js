@@ -28,6 +28,9 @@ export function makeHeightmap() {
   const h = new Float32Array(GRID * GRID)
   const bn = new Float32Array(GRID * GRID)
   const cx = GRID / 2
+  const cz = GRID / 2
+  const SPAWN_FLAT_RADIUS = 15
+  const SPAWN_FLAT_ELEV   = SHALLOW_WATER_LEVEL + 1.2  // ~2.8 → arrondi 3 = herbe
   for (let z = 0; z < GRID; z++) {
     for (let x = 0; x < GRID; x++) {
       const nx = x / GRID - 0.5
@@ -49,6 +52,14 @@ export function makeHeightmap() {
       } else {
         const falloff = smoothstep01(0, FALLOFF_SPAN, edgeDist - (EDGE_DEEP_RING + EDGE_SHALLOW_RING))
         elev = SHALLOW_WATER_LEVEL * (1 - falloff) + elev * falloff
+      }
+
+      // Terrain plat autour du spawn central (zone de village)
+      const dx = x - cx, dz2 = z - cz
+      const spawnDist = Math.sqrt(dx * dx + dz2 * dz2)
+      if (spawnDist < SPAWN_FLAT_RADIUS) {
+        const blend = spawnDist / SPAWN_FLAT_RADIUS
+        elev = SPAWN_FLAT_ELEV + (elev - SPAWN_FLAT_ELEV) * blend * blend
       }
 
       h[z * GRID + x] = elev
