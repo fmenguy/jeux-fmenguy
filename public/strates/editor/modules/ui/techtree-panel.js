@@ -172,15 +172,6 @@ export function initTechTreePanel() {
   root.querySelector('#ttp-close').addEventListener('click', closeTechTreePanel)
   root.querySelector('#ttp-back').addEventListener('click', closeBranch)
 
-  window.addEventListener('keydown', function(e) {
-    if (!isOpen) return
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      if (root.classList.contains('detail-mode')) closeBranch()
-      else closeTechTreePanel()
-    }
-  })
-
   bindSearch()
   bindPanZoom()
   bindResearchEvents()
@@ -635,7 +626,7 @@ function openBranch(brId) {
   renderQueue()
 }
 
-function closeBranch() {
+export function closeBranch() {
   root.classList.remove('detail-mode')
   const sep = document.getElementById('ttp-crumb-sep')
   const cur = document.getElementById('ttp-crumb-cur')
