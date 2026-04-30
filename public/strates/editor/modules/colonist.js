@@ -9,7 +9,7 @@ import {
   MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
 } from './gamedata.js'
 import { state } from './state.js'
-import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
+import { scene, camera, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
 import { topVoxelIndex, colorForLayer, isDeepWater } from './terrain.js'
 import { aStar, findApproach } from './pathfind.js'
 import { jobKey, removeJob } from './jobs.js'
