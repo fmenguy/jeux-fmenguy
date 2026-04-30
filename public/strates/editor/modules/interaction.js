@@ -46,7 +46,7 @@ selRectEl.id = 'sel-rect'
 selRectEl.style.cssText = 'position:fixed;border:1.5px solid rgba(255,255,255,0.85);background:rgba(180,210,255,0.12);pointer-events:none;display:none;z-index:50;'
 document.body.appendChild(selRectEl)
 
-const selectionRect = { active: false, startX: 0, startZ: 0, endX: 0, endZ: 0, screenX0: 0, screenY0: 0 }
+const selectionRect = { active: false, startX: 0, startZ: 0, endX: 0, endZ: 0 }
 const RECT_SELECT_TOOLS = new Set(['mine', 'hache', 'pick'])
 
 function cellsInRect(x1, z1, x2, z2) {
@@ -62,11 +62,37 @@ function cellsInRect(x1, z1, x2, z2) {
   return out
 }
 
-function updateSelRectCSS(sx, sy, ex, ey) {
-  selRectEl.style.left   = Math.min(sx, ex) + 'px'
-  selRectEl.style.top    = Math.min(sy, ey) + 'px'
-  selRectEl.style.width  = Math.abs(ex - sx) + 'px'
-  selRectEl.style.height = Math.abs(ey - sy) + 'px'
+function worldCornersToScreen(x1, z1, x2, z2) {
+  const sx = Math.min(x1, x2), ex = Math.max(x1, x2)
+  const sz = Math.min(z1, z2), ez = Math.max(z1, z2)
+  const ct = state.cellTop
+  const y = ct ? ((ct[sz * GRID + sx] || 2) + (ct[ez * GRID + ex] || 2)) / 2 : 2
+  const corners = [
+    new THREE.Vector3(sx,     y, sz),
+    new THREE.Vector3(ex + 1, y, sz),
+    new THREE.Vector3(ex + 1, y, ez + 1),
+    new THREE.Vector3(sx,     y, ez + 1),
+  ]
+  const w = renderer.domElement.clientWidth
+  const h = renderer.domElement.clientHeight
+  const pts = corners.map(v => {
+    const ndc = v.clone().project(camera)
+    return { x: (ndc.x + 1) / 2 * w, y: (1 - ndc.y) / 2 * h }
+  })
+  return {
+    left:   Math.min(...pts.map(p => p.x)),
+    top:    Math.min(...pts.map(p => p.y)),
+    right:  Math.max(...pts.map(p => p.x)),
+    bottom: Math.max(...pts.map(p => p.y))
+  }
+}
+
+function updateSelRectCSS(x1, z1, x2, z2) {
+  const bbox = worldCornersToScreen(x1, z1, x2, z2)
+  selRectEl.style.left   = bbox.left + 'px'
+  selRectEl.style.top    = bbox.top  + 'px'
+  selRectEl.style.width  = (bbox.right  - bbox.left) + 'px'
+  selRectEl.style.height = (bbox.bottom - bbox.top)  + 'px'
   selRectEl.style.display = ''
 }
 
@@ -832,9 +858,7 @@ dom.addEventListener('pointerdown', (e) => {
     selectionRect.startZ = cell.z
     selectionRect.endX = cell.x
     selectionRect.endZ = cell.z
-    selectionRect.screenX0 = e.clientX
-    selectionRect.screenY0 = e.clientY
-    updateSelRectCSS(e.clientX, e.clientY, e.clientX, e.clientY)
+    updateSelRectCSS(cell.x, cell.z, cell.x, cell.z)
     return
   }
   state.toolState.isPainting = true
@@ -864,7 +888,7 @@ dom.addEventListener('pointermove', (e) => {
       selectionRect.endX = hoverCell.x
       selectionRect.endZ = hoverCell.z
     }
-    updateSelRectCSS(selectionRect.screenX0, selectionRect.screenY0, e.clientX, e.clientY)
+    updateSelRectCSS(selectionRect.startX, selectionRect.startZ, selectionRect.endX, selectionRect.endZ)
     return
   }
   if (!state.toolState.isPainting) return
