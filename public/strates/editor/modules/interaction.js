@@ -12,7 +12,7 @@ import {
   removeResearchHousesIn, removeOresIn, removeBushesIn, removeManorsIn,
   checkManorMerge, isCellOccupied, isMineBlocked,
   addObservatory, removeObservatoriesIn,
-  isBuildingUniqueAndPlaced
+  isBuildingUniqueAndPlaced, isBushOn
 } from './placements.js'
 import { addJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell, techUnlocked, hasTreeAt } from './tech.js'
@@ -23,6 +23,8 @@ import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistenc
 import { openCharSheet, isCharSheetOpen } from './charsheet-ui.js'
 import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
+
+let firstHarvestDone = false
 
 // ============================================================================
 // Curseur wireframe
@@ -89,6 +91,10 @@ function applyToolToZone(cells, tool) {
       continue
     }
     addJob(c.x, c.z)
+  }
+  if (tool === 'mine' && !firstHarvestDone && cells.some(c => isBushOn(c.x, c.z))) {
+    firstHarvestDone = true
+    try { window.dispatchEvent(new CustomEvent('strates:firstHarvestZone')) } catch (_) {}
   }
   refreshHUD()
 }
