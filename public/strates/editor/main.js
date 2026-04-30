@@ -30,7 +30,7 @@ import { TECH_TREE_DATA } from './modules/gamedata.js'
 import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions.js'
 import { loadModels } from './modules/glb-cache.js'
 import { initPopulationModal } from './modules/ui/population-modal.js'
-import { initTutorial } from './modules/ui/tutorial.js'
+import { initTutoInvite, showTutoInvite } from './modules/ui/tutorial.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -93,7 +93,15 @@ initPopulationModal()
 bindDayNightUI()
 refreshNightPointsHUD()
 initAgeTransitions()
-initTutorial()
+initTutoInvite()
+
+const btnPauseTuto = document.getElementById('pause-tuto')
+if (btnPauseTuto) btnPauseTuto.addEventListener('click', () => {
+  // fermer le menu pause avant d'afficher la bulle
+  const pm = document.getElementById('pause-menu')
+  if (pm) pm.classList.add('hidden')
+  showTutoInvite()
+})
 
 // Lot B : expose la file de recherche a l UI externe (Lot C, tech tree XXL).
 // L agent C appelle window.StratesResearch.queue(id) pour enfiler une tech
