@@ -1,10 +1,42 @@
 import * as THREE from 'three'
 import {
+  GRID,
   CAMERA_KEY_FORWARD, CAMERA_KEY_BACKWARD, CAMERA_KEY_LEFT, CAMERA_KEY_RIGHT,
   CAMERA_KEY_ROTATE_LEFT, CAMERA_KEY_ROTATE_RIGHT
 } from './constants.js'
 import { state } from './state.js'
 import { camera, controls } from './scene.js'
+
+// Contraintes de deplacement camera
+const CAM_BORDER  = 6   // marge horizontale autour de la carte (unites)
+const CAM_ABOVE   = 3   // altitude min au-dessus du point le plus haut du terrain
+
+let _maxHeightCache = 5
+let _maxHeightTime  = 0
+
+function terrainMaxHeight() {
+  const now = performance.now()
+  if (now - _maxHeightTime < 2000) return _maxHeightCache
+  _maxHeightTime = now
+  if (!state.cellTop) return 5
+  let max = 0
+  for (let i = 0, len = state.cellTop.length; i < len; i++) {
+    if (state.cellTop[i] > max) max = state.cellTop[i]
+  }
+  _maxHeightCache = max
+  return max
+}
+
+export function clampCamera() {
+  const lo = -CAM_BORDER
+  const hi = GRID + CAM_BORDER
+  controls.target.x = THREE.MathUtils.clamp(controls.target.x, lo, hi)
+  controls.target.z = THREE.MathUtils.clamp(controls.target.z, lo, hi)
+  camera.position.x = THREE.MathUtils.clamp(camera.position.x, lo, hi)
+  camera.position.z = THREE.MathUtils.clamp(camera.position.z, lo, hi)
+  const minY = terrainMaxHeight() + CAM_ABOVE
+  if (camera.position.y < minY) camera.position.y = minY
+}
 
 // ============================================================================
 // Deplacement camera ZQSD / WASD
@@ -72,4 +104,5 @@ export function updateCameraPan(dt) {
 
   controls.target.add(camTmpMove)
   camera.position.add(camTmpMove)
+  clampCamera()
 }
