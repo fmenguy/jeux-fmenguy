@@ -73,8 +73,9 @@ export function biomeFor(x, z, topY) {
   const b = state.biomeNoise[z * GRID + x]
   if (topY >= 5) return 'snow'
   if (topY >= 4) return 'rock'
+  if (topY <= 1) return 'water'
   if (topY <= SHALLOW_WATER_LEVEL + 0.4) return 'sand'
-  if (b > 0.12) return 'forest'
+  if (b > 0.10) return 'forest'
   return 'grass'
 }
 
@@ -96,12 +97,13 @@ export function isAnyWater(x, z) {
 export function colorForLayer(biome, y, top) {
   const isTop = (y === top - 1)
   switch (biome) {
-    case 'snow': return isTop ? COL.snow : COL.rock
-    case 'rock': return isTop ? COL.rock : COL.rockDark
-    case 'sand': return isTop ? COL.sand : COL.sandDark
+    case 'snow':   return isTop ? COL.snow     : COL.rock
+    case 'rock':   return isTop ? COL.rock     : COL.rockDark
+    case 'sand':   return isTop ? COL.sand     : COL.sandDark
+    case 'water':  return isTop ? COL.water    : COL.waterDark
     case 'forest': return isTop ? COL.grassDark : COL.dirt
     case 'grass':
-    default: return isTop ? COL.grass : COL.dirt
+    default:       return isTop ? COL.grass    : COL.dirt
   }
 }
 
@@ -197,6 +199,26 @@ export function buildTerrain() {
       state.cellTop[z * GRID + x] = top
       state.cellBiome[z * GRID + x] = biomeFor(x, z, top)
       state.voxelCount += top
+    }
+  }
+
+  // Post-process : sable de rive (cellules non-eau a distance <= 2 d'une cellule eau)
+  for (let z = 0; z < GRID; z++) {
+    for (let x = 0; x < GRID; x++) {
+      const k = z * GRID + x
+      const bk = state.cellBiome[k]
+      if (bk === 'water' || bk === 'sand') continue
+      if (state.cellTop[k] > 3) continue
+      let near = false
+      outer: for (let dz = -2; dz <= 2; dz++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          if (Math.abs(dx) + Math.abs(dz) > 2) continue
+          const nx = x + dx, nz2 = z + dz
+          if (nx < 0 || nz2 < 0 || nx >= GRID || nz2 >= GRID) continue
+          if (state.cellBiome[nz2 * GRID + nx] === 'water') { near = true; break outer }
+        }
+      }
+      if (near) state.cellBiome[k] = 'sand'
     }
   }
 
