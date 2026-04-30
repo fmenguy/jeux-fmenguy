@@ -71,6 +71,15 @@ function updateSelRectCSS(sx, sy, ex, ey) {
 function applyToolToZone(cells, tool) {
   let toastShown = false
   for (const c of cells) {
+    if (tool === 'mine') {
+      if (!state.bushes.some(b => b.x === c.x && b.z === c.z)) continue
+    } else if (tool === 'hache') {
+      if (!state.trees.some(t => t.x === c.x && t.z === c.z)) continue
+    } else if (tool === 'pick') {
+      const hasRock = state.rocks.some(r => r.x === c.x && r.z === c.z)
+      const hasOre  = state.ores.some(o => o.x === c.x && o.z === c.z)
+      if (!hasRock && !hasOre) continue
+    }
     if (!toolAllowedOnCell(tool, c.x, c.z)) {
       const check = canMineCell(c.x, c.z)
       if (check.reason === 'tech' && check.requiredTech) {
