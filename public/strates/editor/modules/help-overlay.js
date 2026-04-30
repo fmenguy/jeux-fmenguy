@@ -92,12 +92,6 @@ export function initHelpOverlay() {
     if (e.key === 'h' || e.key === 'H') {
       e.preventDefault()
       toggleHelpOverlay()
-      return
     }
-    if (e.key === 'Escape' && isHelpOverlayOpen()) {
-      e.preventDefault()
-      e.stopPropagation()
-      closeHelpOverlay()
-    }
-  }, true)
+  })
 }
