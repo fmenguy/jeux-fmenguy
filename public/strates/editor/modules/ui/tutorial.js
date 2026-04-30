@@ -1,24 +1,32 @@
 // ============================================================================
-// tutorial.js — Onboarding 2 tutos séquentiels
+// tutorial.js — Onboarding 2 tutos séquentiels + bulle d'invitation différée
 //
-// Tuto 1 (7 étapes) : ouverture tech tree → branche Savoir → Recherche de
-//   base → fermeture tech tree → onglet Construire → Hutte du Sage → placement.
+// Flux normal :
+//   initTutoInvite() appelé au démarrage. Si aucun flag localStorage bloquant,
+//   démarre un timer 60s d'inactivité. Actions significatives (strates:* et clics
+//   actionbar) réinitialisent le timer. Au bout de 60s : bulle d'invitation.
+//
+// Bulle d'invitation :
+//   [▶ Lancer le tuto] → lance Tuto 1 puis Tuto 2.
+//   [✕] → pose localStorage['strates.tutoSkipped'], ne plus jamais afficher.
+//
+// showTutoInvite() : force l'affichage de la bulle, ignore les flags. Utile
+//   pour le bouton "Tutoriel" dans le menu pause.
+//
+// Tuto 1 (7 étapes) : tech tree → branche Savoir → Recherche de base →
+//   fermeture tech tree → onglet Construire → Hutte du Sage → placement.
 // Tuto 2 (4 étapes) : panel quêtes → onglet Récoltes → outil Récolter →
 //   première zone de récolte. Démarre 1.5s après la fin du Tuto 1.
-//
-// Avancement par clic délégué, événement custom, ou auto-avancement conditionnel.
-// Ne se relance pas si localStorage[storageKey] est défini.
 // ============================================================================
 
-// ─── Définitions des étapes ───────────────────────────────────────────────────
+// ─── Étapes ──────────────────────────────────────────────────────────────────
 
 // kind:
-//   'click'    — e.target.closest(clickSel) avance
-//   'event'    — window event(event) + filter avance
+//   'click'            — e.target.closest(clickSel) avance
+//   'event'            — window event(event) + filter avance
 //   'click-or-timeout' — click ou timeout (ms) avance
 //
-// autoWhen (optionnel) — () => bool, évalué toutes les 400ms. Si true, avance
-//   sans attendre le clic/event. Utile pour étapes dont la cible peut disparaître.
+// autoWhen (optionnel) — () => bool, évalué toutes les 400ms.
 
 const TUTO1_STEPS = [
   {
@@ -40,7 +48,7 @@ const TUTO1_STEPS = [
     label:    'Tuto 1 · 3/7',
     sel:      '.ttp-tech[data-id="basic-research"]',
     fallback: '#ttp-root',
-    text:     "Débloque la Recherche de base — c'est gratuit !",
+    text:     "Débloque la Recherche de base, c'est gratuit !",
     kind:     'event',
     event:    'strates:techComplete',
     filter:   e => e.detail && e.detail.id === 'basic-research',
@@ -48,10 +56,9 @@ const TUTO1_STEPS = [
   {
     label:    'Tuto 1 · 4/7',
     sel:      '#ttp-root',
-    text:     'Ferme l\'arbre tech avec Échap ou le bouton Retour',
+    text:     "Ferme l'arbre tech avec Échap ou le bouton Retour",
     kind:     'event',
     event:    'strates:techtreeClosed',
-    // auto-avancement si le panel est déjà fermé
     autoWhen: () => {
       const el = document.getElementById('ttp-root')
       return !el || !el.classList.contains('open')
@@ -95,14 +102,14 @@ const TUTO2_STEPS = [
   {
     label:    'Tuto 2 · 2/4',
     sel:      '.ab-tab[data-tab="recoltes"]',
-    text:     'Va dans l\'onglet Récoltes',
+    text:     "Va dans l'onglet Récoltes",
     kind:     'click',
     clickSel: '.ab-tab[data-tab="recoltes"]',
   },
   {
     label:    'Tuto 2 · 3/4',
     sel:      '[data-tool="mine"]',
-    text:     'Sélectionne l\'outil Récolter',
+    text:     "Sélectionne l'outil Récolter",
     kind:     'click',
     clickSel: '[data-tool="mine"]',
   },
@@ -130,6 +137,10 @@ function injectStyles() {
 }
 @keyframes tuto-flash-in {
   from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes tuto-invite-in {
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .tuto-ring {
@@ -217,6 +228,62 @@ function injectStyles() {
   animation: tuto-flash-in .3s ease-out;
   pointer-events: none;
 }
+.tuto-invite {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 9003;
+  background: #1c1a14;
+  border: 1px solid #c8a84b;
+  border-radius: 8px;
+  padding: 13px 15px 12px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  color: #e8dfc8;
+  box-shadow: 0 4px 24px rgba(0,0,0,.7);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: tuto-invite-in .3s ease-out;
+  min-width: 190px;
+}
+.tuto-invite-title {
+  font-size: 12px;
+  color: #c8a84b;
+  letter-spacing: .04em;
+}
+.tuto-invite-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tuto-invite-start {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #c8a84b;
+  border-radius: 4px;
+  color: #c8a84b;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  padding: 5px 10px;
+  cursor: pointer;
+  animation: tuto-pulse 1.4s ease-in-out infinite;
+  transition: background .15s;
+}
+.tuto-invite-start:hover { background: rgba(200,168,75,.12); }
+.tuto-invite-dismiss {
+  background: transparent;
+  border: none;
+  color: rgba(200,168,75,.45);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color .15s;
+  flex-shrink: 0;
+}
+.tuto-invite-dismiss:hover { color: #c8a84b; }
 `
   document.head.appendChild(s)
 }
@@ -230,7 +297,7 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
   let cleanupFn = null
   let timeoutId = null
 
-  const ring   = document.createElement('div')
+  const ring = document.createElement('div')
   ring.className = 'tuto-ring'
   document.body.appendChild(ring)
 
@@ -246,7 +313,6 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
     const step = steps[currentIdx]
     if (!step) return
 
-    // Auto-avancement conditionnel
     if (step.autoWhen && step.autoWhen()) { advance(); return }
 
     const el = getTarget(step)
@@ -265,7 +331,7 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
 
     const above = r.top - PAD >= 100
     bubble.className = 'tuto-bubble ' + (above ? 'arrow-bottom' : 'arrow-top')
-    bubble.style.left   = Math.max(8, r.left - PAD) + 'px'
+    bubble.style.left    = Math.max(8, r.left - PAD) + 'px'
     bubble.style.display = 'flex'
 
     if (above) {
@@ -338,7 +404,6 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
   const posTimer = setInterval(reposition, 400)
   window.addEventListener('resize', reposition)
 
-  // Bouton skip : partagé si fourni, sinon propre à ce tuto
   if (skipBtn) {
     skipBtn.onclick = () => { teardown(false); try { localStorage.setItem(storageKey, '1') } catch (e) {} }
   }
@@ -358,14 +423,11 @@ function showFlash(text) {
   setTimeout(() => el.remove(), 2000)
 }
 
-// ─── Point d'entrée ───────────────────────────────────────────────────────────
+// ─── Lancement des tutos (réutilisé par l'invite et le bouton manuel) ─────────
 
-export function initTutorial() {
-  try { if (localStorage.getItem('strates.tutoDone') && localStorage.getItem('strates.tuto2Done')) return } catch (e) {}
-
+function runTutorials() {
   injectStyles()
 
-  // Bouton skip unique visible pendant les deux tutos
   const skipBtn = document.createElement('button')
   skipBtn.className = 'tuto-skip'
   skipBtn.textContent = 'Passer le tuto'
@@ -376,7 +438,7 @@ export function initTutorial() {
       runTutorial(
         TUTO2_STEPS,
         'strates.tuto2Done',
-        () => showFlash("C'est parti !"),
+        () => { skipBtn.remove(); showFlash("C'est parti !") },
         skipBtn
       )
     }, 1500)
@@ -384,10 +446,92 @@ export function initTutorial() {
 
   try {
     if (localStorage.getItem('strates.tutoDone')) {
-      // Tuto 1 déjà fait, lancer tuto 2 directement
       startTuto2()
     } else {
       runTutorial(TUTO1_STEPS, 'strates.tutoDone', startTuto2, skipBtn)
     }
   } catch (e) {}
+}
+
+// ─── Bulle d'invitation ───────────────────────────────────────────────────────
+
+let inviteEl = null
+
+function removeInviteBubble() {
+  if (inviteEl) { inviteEl.remove(); inviteEl = null }
+}
+
+function showInviteBubble() {
+  stopInactivityTimer()
+  if (inviteEl) return
+  injectStyles()
+
+  inviteEl = document.createElement('div')
+  inviteEl.className = 'tuto-invite'
+  inviteEl.innerHTML =
+    '<div class="tuto-invite-title">&#128161; Tu débutes ?</div>' +
+    '<div class="tuto-invite-row">' +
+    '  <button class="tuto-invite-start">&#9654; Lancer le tuto</button>' +
+    '  <button class="tuto-invite-dismiss" title="Ne plus afficher">&#10005;</button>' +
+    '</div>'
+  document.body.appendChild(inviteEl)
+
+  inviteEl.querySelector('.tuto-invite-start').onclick = () => {
+    removeInviteBubble()
+    runTutorials()
+  }
+  inviteEl.querySelector('.tuto-invite-dismiss').onclick = () => {
+    removeInviteBubble()
+    try { localStorage.setItem('strates.tutoSkipped', '1') } catch (e) {}
+  }
+}
+
+// ─── Timer d'inactivité ───────────────────────────────────────────────────────
+
+const INACTIVITY_DELAY = 60_000
+const STRATES_EVENTS = [
+  'strates:buildingPlaced',
+  'strates:techComplete',
+  'strates:techtreeClosed',
+  'strates:firstHarvestZone',
+  'strates:toggleTechTree',
+  'strates:populationOpen',
+]
+
+let inactivityTimer = null
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer)
+  inactivityTimer = setTimeout(showInviteBubble, INACTIVITY_DELAY)
+}
+
+function stopInactivityTimer() {
+  clearTimeout(inactivityTimer)
+  inactivityTimer = null
+}
+
+// ─── Point d'entrée ───────────────────────────────────────────────────────────
+
+export function initTutoInvite() {
+  try {
+    if (localStorage.getItem('strates.tutoDone') && localStorage.getItem('strates.tuto2Done')) return
+    if (localStorage.getItem('strates.tutoSkipped')) return
+  } catch (e) {}
+
+  STRATES_EVENTS.forEach(ev => window.addEventListener(ev, resetInactivityTimer))
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.ab-tab') || e.target.closest('.tool') || e.target.closest('.rail-btn')) {
+      resetInactivityTimer()
+    }
+  }, true)
+
+  resetInactivityTimer()
+}
+
+// Force l'affichage de la bulle d'invitation, ignore les flags localStorage.
+// Appelé par le bouton "Tutoriel" du menu pause.
+export function showTutoInvite() {
+  injectStyles()
+  removeInviteBubble()
+  showInviteBubble()
 }
