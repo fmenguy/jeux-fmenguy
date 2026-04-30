@@ -6,11 +6,11 @@ import { state } from './modules/state.js'
 import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
-import { refreshBushBerries, countActiveResearchers, tickTreeGrowth, tickFoyers, checkUniqueBuildingButtons } from './modules/placements.js'
+import { refreshBushBerries, countActiveResearchers, tickTreeGrowth, tickFoyers, checkUniqueBuildingButtons, bushLeafMesh } from './modules/placements.js'
 import { tryBlockedTechBubble, hasPendingResearchableTech, unlockTech, queueTech } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
-import { updateCameraPan } from './modules/camera-pan.js'
+import { updateCameraPan, clampCamera } from './modules/camera-pan.js'
 import {
   refreshHUD, refreshStocksLine, refreshTechsPanel, updateDynHUD, tickFps, hudRefs
 } from './modules/hud.js'
@@ -170,6 +170,13 @@ function tick(nowMs) {
   const t = clock.elapsedTime
   waterMat.uniforms.uTime.value = t
   shallowMat.uniforms.uTime.value = t
+
+  if (!tick._bushDiagDone && t > 2) {
+    tick._bushDiagDone = true
+    if (state.bushes.length > 0 && bushLeafMesh.count === 0) {
+      console.warn('[diag] bushes placés (' + state.bushes.length + ') mais bushLeafMesh.count=0 — meshes invisibles')
+    }
+  }
 
   for (const [, m] of state.markers) m.lookAt(camera.position)
   for (const [, m] of state.buildMarkers) m.lookAt(camera.position)
@@ -331,6 +338,7 @@ function tick(nowMs) {
 
   updateCameraPan(dt)
   controls.update()
+  clampCamera()
   composer.render()
   // Lot B perf : HUD dynamique gate a 5 Hz (boucle O(colons) + string signature
   // couteuses a 60 Hz). Invisible pour le joueur, gros gain CPU.
