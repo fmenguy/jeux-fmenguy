@@ -361,6 +361,7 @@ export function closeTechTreePanel() {
   root.classList.remove('detail-mode')
   currentBranch = null
   stopRefreshTimer()
+  try { window.dispatchEvent(new CustomEvent('strates:techtreeClosed')) } catch (_) {}
 }
 export function toggleTechTreePanel() {
   if (!root) initTechTreePanel()
