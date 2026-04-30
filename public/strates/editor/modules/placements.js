@@ -716,6 +716,7 @@ export function addResearchHouse(gx, gz) {
   scene.add(g)
   const entry = { id: state.researchBuildingNextId++, x: gx, z: gz, group: g, assignedColonistId: null }
   state.researchHouses.push(entry)
+  try { window.dispatchEvent(new CustomEvent('strates:buildingPlaced', { detail: { type: 'research', id: entry.id } })) } catch (_) {}
   return entry
 }
 
