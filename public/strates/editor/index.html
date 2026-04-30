@@ -249,6 +249,8 @@
     .tool.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
     .tool.disabled-unique{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
     .tool.disabled-unique:hover{transform:none}
+    .cancel-zone-btn{color:#e74c3c;border-color:#e74c3c;font-weight:bold;margin-left:8px}
+    .cancel-zone-btn.active,.cancel-zone-btn:hover{background:#e74c3c;color:#fff}
 
     .sep{width:1px;background:var(--rule);margin:4px 6px;align-self:stretch}
     .group-label{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;padding:0 8px;display:flex;align-items:center;white-space:nowrap}
@@ -888,6 +890,7 @@
         <span class="ic">&#127993;</span>
         <span class="nm">Chasser</span>
       </button>
+      <button class="tool cancel-zone-btn" data-tool="cancel-zone" title="Annuler une zone de récolte">&#10005;</button>
     </div>
 
     <!-- Onglet Construire -->
