@@ -142,8 +142,8 @@ function serializeSnapshot() {
     observatories: (state.observatories || []).map(o => ({ x: o.x, z: o.z })),
     resources: { ...state.resources },
     gameStats: { ...state.gameStats },
-    questIndex: state.questIndex,
-    questCompletedAt: state.questCompletedAt,
+    questsCompleted: (state.questsCompleted || []).map(q => ({ id: q.id, title: q.title })),
+    questActiveId: state.questActive ? state.questActive.id : null,
     season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone },
     visited: state.visited ? Array.from(state.visited) : null,
     currentAge: state.currentAge || 1,
@@ -178,7 +178,9 @@ function clearEverything() {
   state.contextBubbles.lastCategoryTriggerAt.clear()
   state.contextBubbles.lastLineByCategory.clear()
   state.contextBubbles.fieldTriggerStartAt = -1
-  state.questIndex = 0
+  state.questsAvailable = []
+  state.questActive = null
+  state.questsCompleted = []
   resetQuestSig()
   // Lot D
   state.currentAge = 1
@@ -271,8 +273,9 @@ function applySnapshot(data) {
   if (data.gameStats) Object.assign(state.gameStats, data.gameStats)
 
   // quetes : on redemarre a l'index sauve
-  state.questIndex = data.questIndex || 0
-  state.questCompletedAt = data.questCompletedAt || -1
+  state.questsCompleted = Array.isArray(data.questsCompleted) ? data.questsCompleted : []
+  state.questActive = null
+  state.questsAvailable = []
   if (data.season) {
     state.season.idx = data.season.idx || 0
     state.season.elapsed = data.season.elapsed || 0
