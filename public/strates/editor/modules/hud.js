@@ -7,11 +7,20 @@ import { state } from './state.js'
 import { totalBuildStock } from './stocks.js'
 import { countActiveResearchers } from './placements.js'
 import { unlockTech } from './tech.js'
-import { BUILDINGS_DATA } from './gamedata.js'
+import { BUILDINGS_DATA, TECH_TREE_DATA } from './gamedata.js'
 
 // ============================================================================
 // HUD : stocks, techs, colons, compteurs, FPS
 // ============================================================================
+
+export function formatNum(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
+  if (n >= 1_000)     return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K'
+  return Math.floor(n).toString()
+}
+
+// Valeurs affichées interpolées (lerp) pour les ressources à mise à jour fréquente
+const _disp = { berries: 0, wood: 0, stone: 0, pts: 0 }
 
 const fpsEl = document.getElementById('fps')
 const jobsEl = document.getElementById('jobs')
@@ -57,7 +66,7 @@ export function refreshStocksLine() {
 }
 
 export function refreshTechsPanel() {
-  if (rPointsEl) rPointsEl.textContent = state.researchPoints
+  if (rPointsEl) rPointsEl.textContent = formatNum(state.researchPoints)
   if (!techsBodyEl) return
   const order = ['pick-stone', 'pick-bronze', 'pick-iron', 'pick-gold']
   const parts = ['<div class="tech-tree">']
@@ -124,14 +133,47 @@ export function refreshHUD() {
   if (cBushesEl) cBushesEl.textContent = state.bushes.length
   if (cResearchEl) cResearchEl.textContent = state.researchHouses.length
   if (cResearchersEl) cResearchersEl.textContent = countActiveResearchers()
-  if (rBerriesEl) rBerriesEl.textContent = state.resources.berries
-  if (rWoodEl) rWoodEl.textContent = state.resources.wood
-  if (rStoneEl) rStoneEl.textContent = state.resources.stone
-  if (rBlocsEl) rBlocsEl.textContent = totalBuildStock()
-  if (rNightPointsEl) rNightPointsEl.textContent = state.nightPoints
+  // Snap les valeurs interpolées pour éviter une animation depuis 0 (ex: chargement)
+  _disp.berries = state.resources.berries
+  _disp.wood    = state.resources.wood
+  _disp.stone   = state.resources.stone
+  _disp.pts     = state.activeResearch ? state.activeResearch.progress : 0
+  if (rBerriesEl) rBerriesEl.textContent = formatNum(state.resources.berries)
+  if (rWoodEl)    rWoodEl.textContent    = formatNum(state.resources.wood)
+  if (rStoneEl)   rStoneEl.textContent   = formatNum(state.resources.stone)
+  if (rBlocsEl)   rBlocsEl.textContent   = formatNum(totalBuildStock())
+  if (rNightPointsEl) rNightPointsEl.textContent = formatNum(state.nightPoints)
   refreshStocksLine()
   refreshTechsPanel()
   refreshUniqueBuildingsPalette()
+}
+
+// Appelé chaque frame : lerp vers les vraies valeurs, formatNum, mise à jour DOM.
+export function tickResourceAnim() {
+  const LERP = 0.08
+  _disp.berries += (state.resources.berries - _disp.berries) * LERP
+  _disp.wood    += (state.resources.wood    - _disp.wood)    * LERP
+  _disp.stone   += (state.resources.stone   - _disp.stone)   * LERP
+
+  if (rBerriesEl) rBerriesEl.textContent = formatNum(_disp.berries)
+  if (rWoodEl)    rWoodEl.textContent    = formatNum(_disp.wood)
+  if (rStoneEl)   rStoneEl.textContent   = formatNum(_disp.stone)
+  if (rBlocsEl)   rBlocsEl.textContent   = formatNum((state.stocks.stone || 0) + (state.stocks.dirt || 0))
+  if (cBushesEl)  cBushesEl.textContent  = state.bushes.length
+
+  if (rPointsEl) {
+    if (state.activeResearch) {
+      const ae = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
+        ? TECH_TREE_DATA.techs.find(x => x.id === state.activeResearch.id)
+        : null
+      const cost = ae ? ((ae.cost && ae.cost.research) || 0) : 0
+      _disp.pts += (state.activeResearch.progress - _disp.pts) * LERP
+      rPointsEl.textContent = formatNum(_disp.pts) + ' / ' + formatNum(cost)
+    } else {
+      _disp.pts = 0
+      rPointsEl.textContent = '0'
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------

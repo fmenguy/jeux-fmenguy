@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { state } from './state.js'
 import { scene, sun, hemi, sky, sunDir } from './scene.js'
-import { refreshHUD } from './hud.js'
+import { refreshHUD, formatNum } from './hud.js'
 
 // ============================================================================
 // Cycle jour/nuit (MVP C).
@@ -212,5 +212,5 @@ export function bindDayNightUI() {
 
 export function refreshNightPointsHUD() {
   const np = document.getElementById('r-nightpoints')
-  if (np) np.textContent = state.nightPoints
+  if (np) np.textContent = formatNum(state.nightPoints)
 }

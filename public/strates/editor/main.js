@@ -12,7 +12,8 @@ import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
 import { updateCameraPan, clampCamera } from './modules/camera-pan.js'
 import {
-  refreshHUD, refreshStocksLine, refreshTechsPanel, updateDynHUD, tickFps, hudRefs
+  refreshHUD, refreshStocksLine, refreshTechsPanel, updateDynHUD, tickFps, hudRefs,
+  tickResourceAnim
 } from './modules/hud.js'
 import { setTool, setBrush, refreshToolButtons } from './modules/interaction.js'
 import { hasSave, loadGame, startAutoSave } from './modules/persistence.js'
@@ -230,17 +231,6 @@ function tick(nowMs) {
       }
       // Retrocompat : HUD researchPoints reflete la progression de la tech en cours.
       state.researchPoints = state.activeResearch ? Math.floor(state.activeResearch.progress) : 0
-      if (hudRefs.rPointsEl) {
-        if (state.activeResearch) {
-          const ae = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
-            ? TECH_TREE_DATA.techs.find(x => x.id === state.activeResearch.id)
-            : null
-          const aeCost = ae ? ((ae.cost && ae.cost.research) || 0) : 0
-          hudRefs.rPointsEl.textContent = Math.floor(state.activeResearch.progress) + ' / ' + aeCost
-        } else {
-          hudRefs.rPointsEl.textContent = '0'
-        }
-      }
       refreshTechsPanel()
     } else if (!state.activeResearch && hasPendingResearchableTech()) {
       // Rien n est en cours mais des techs sont dispo : on n accumule pas,
@@ -325,26 +315,8 @@ function tick(nowMs) {
     checkUniqueBuildingButtons()
   }
 
-  if (hudRefs.rBerriesEl) hudRefs.rBerriesEl.textContent = state.resources.berries
-  if (hudRefs.rWoodEl) hudRefs.rWoodEl.textContent = state.resources.wood
-  if (hudRefs.rStoneEl) hudRefs.rStoneEl.textContent = state.resources.stone
-  if (hudRefs.rBlocsEl) hudRefs.rBlocsEl.textContent = (state.stocks.stone || 0) + (state.stocks.dirt || 0)
-  if (hudRefs.cBushesEl) hudRefs.cBushesEl.textContent = state.bushes.length
+  tickResourceAnim()
   refreshStocksLine()
-  // Lot B (file de recherche) : le HUD rPointsEl reflete la progression de
-  // la tech active, formatee "progress / cost". Si rien n est en recherche
-  // on affiche "0" au lieu de laisser trainer une ancienne valeur.
-  if (hudRefs.rPointsEl) {
-    if (state.activeResearch) {
-      const ae = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
-        ? TECH_TREE_DATA.techs.find(x => x.id === state.activeResearch.id)
-        : null
-      const aeCost = ae ? ((ae.cost && ae.cost.research) || 0) : 0
-      hudRefs.rPointsEl.textContent = Math.floor(state.activeResearch.progress) + ' / ' + aeCost
-    } else {
-      hudRefs.rPointsEl.textContent = '0'
-    }
-  }
 
   updateCameraPan(dt)
   controls.update()
