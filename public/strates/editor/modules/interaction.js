@@ -27,6 +27,7 @@ import { closeTechTreePanel, closeBranch } from './ui/techtree-panel.js'
 import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
 import { closeBuildingPanel, isBuildingPanelOpen } from './ui/building-panel.js'
+import { currentSeason } from './seasons.js'
 
 let firstHarvestDone = false
 
@@ -100,6 +101,10 @@ function updateSelPoly(x1, z1, x2, z2, isCancel) {
 
 function applyToolToZone(cells, tool) {
   let toastShown = false
+  if (tool === 'mine' && currentSeason().id === 'winter') {
+    if (!toastShown) { toastShown = true; showHudToast('Les buissons sont gelés en hiver, pas de baies.', 3000) }
+    return
+  }
   for (const c of cells) {
     if (tool === 'mine') {
       if (!state.bushes.some(b => b.x === c.x && b.z === c.z)) continue

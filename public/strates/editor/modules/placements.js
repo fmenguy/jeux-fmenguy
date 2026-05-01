@@ -1247,9 +1247,13 @@ export function isMineBlocked(x, z) {
 // buisson et renvoie 1 a 3 baies bonus. La recolte "normale" via pickHarvest
 // donne beaucoup plus (voir maxBerries sur addBush).
 export function grabBushAt(x, z) {
-  if (!isBushOn(x, z)) return 0
-  removeBushesIn([{ x, z }])
-  return 1 + Math.floor(Math.random() * 3)
+  const bush = state.bushes.find(b => b.x === x && b.z === z)
+  if (!bush || bush.berries <= 0) return 0
+  const picked = Math.min(bush.berries, 2 + Math.floor(Math.random() * 3))
+  bush.berries -= picked
+  refreshBushBerries(bush)
+  bush.regenTimer = 0
+  return picked
 }
 
 // ============================================================================
