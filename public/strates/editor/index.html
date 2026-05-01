@@ -1734,6 +1734,9 @@
         <button type="button" class="ho-menu-item" data-topic="construire">
           <span class="ho-menu-icon">&#128736;</span><span class="ho-menu-label">Construire</span>
         </button>
+        <button type="button" class="ho-menu-item" data-topic="recolte">
+          <span class="ho-menu-icon">&#9935;</span><span class="ho-menu-label">Récolte</span>
+        </button>
         <button type="button" class="ho-menu-item" data-topic="colons">
           <span class="ho-menu-icon">&#129485;</span><span class="ho-menu-label">Colons</span>
         </button>
@@ -1754,12 +1757,14 @@
       <div class="ho-content" id="ho-content">
         <!-- Caméra -->
         <section data-topic="camera">
-          <h3>Caméra</h3>
+          <h3>Caméra &amp; Navigation</h3>
           <ul class="ho-list">
-            <li><span class="ho-li-icon">&#128433;</span><span class="ho-li-text"><span class="hl">Clic droit</span> maintenu, pivoter la vue.</span></li>
-            <li><span class="ho-li-icon">&#128220;</span><span class="ho-li-text"><span class="hl">Molette</span>, zoom avant ou arrière.</span></li>
-            <li><span class="ho-li-icon">&#9000;</span><span class="ho-li-text"><span class="kbd">Z</span><span class="kbd">Q</span><span class="kbd">S</span><span class="kbd">D</span>, déplacer la vue.</span></li>
-            <li><span class="ho-li-icon">&#8634;</span><span class="ho-li-text"><span class="kbd">A</span> et <span class="kbd">E</span>, pivoter l'azimut gauche ou droite.</span></li>
+            <li><span class="ho-li-icon">&#128433;</span><span class="ho-li-text"><span class="hl">Clic droit maintenu</span> + glisser — pivoter la vue (mode Naviguer) ou déplacer la caméra.</span></li>
+            <li><span class="ho-li-icon">&#128269;</span><span class="ho-li-text"><span class="hl">Molette</span> — zoom avant ou arrière.</span></li>
+            <li><span class="ho-li-icon">&#9000;</span><span class="ho-li-text"><span class="kbd">Z</span><span class="kbd">Q</span><span class="kbd">S</span><span class="kbd">D</span> — déplacer la caméra.</span></li>
+            <li><span class="ho-li-icon">&#128260;</span><span class="ho-li-text"><span class="kbd">A</span> et <span class="kbd">E</span> — pivoter l'azimut gauche ou droite.</span></li>
+            <li><span class="ho-li-icon">&#129517;</span><span class="ho-li-text">En mode <span class="hl">Naviguer</span> (aucun outil actif), cliquer sur un colon ou bâtiment ouvre sa fiche.</span></li>
+            <li><span class="ho-li-icon">&#127769;</span><span class="ho-li-text">Touche <span class="kbd">N</span> — basculer le mode jour / nuit.</span></li>
           </ul>
         </section>
 
@@ -1771,6 +1776,18 @@
             <li><span class="ho-li-icon">&#128072;</span><span class="ho-li-text"><span class="hl">Clic gauche</span> sur le terrain, poser le bâtiment.</span></li>
             <li><span class="ho-li-icon">&#128262;</span><span class="ho-li-text"><span class="hl">4 bâtiments identiques</span> côte à côte, ils évoluent automatiquement.</span></li>
             <li><span class="ho-li-icon">&#9940;</span><span class="ho-li-text"><span class="hl">Clic droit</span>, annuler la sélection en cours.</span></li>
+          </ul>
+        </section>
+
+        <!-- Récolte -->
+        <section data-topic="recolte" hidden>
+          <h3>Récolte &amp; Sélection</h3>
+          <ul class="ho-list">
+            <li><span class="ho-li-icon">&#127834;</span><span class="ho-li-text"><span class="hl">Récolter</span> (baies) — glisser-déposer pour sélectionner une zone de buissons. Les colons récoltent automatiquement.</span></li>
+            <li><span class="ho-li-icon">&#129683;</span><span class="ho-li-text"><span class="hl">Hache</span> (arbres) — même principe : zone rectangulaire par clic-glisser. Idéal pour les forêts éparpillées.</span></li>
+            <li><span class="ho-li-icon">&#127993;</span><span class="ho-li-text"><span class="hl">Arc</span> (chasse) — sélection de zone identique, sur les animaux. Les chasseurs traquent les cibles dans la zone.</span></li>
+            <li><span class="ho-li-icon">&#9935;</span><span class="ho-li-text"><span class="hl">Pioche</span> (blocs) — <span class="hl">clic simple</span> pour un bloc, <span class="hl">clic maintenu + glisser</span> pour une sélection rectangulaire de blocs. <span class="kbd wide">Maj</span> + glisser fonctionne aussi.</span></li>
+            <li><span class="ho-li-icon">&#10005;</span><span class="ho-li-text"><span class="hl">Annuler une zone</span> — bouton <span class="hl">&#10005; rouge</span> dans la barre Récoltes. Dessiner une zone rouge par-dessus des tâches assignées pour les annuler.</span></li>
           </ul>
         </section>
 
@@ -1824,6 +1841,7 @@
             <li><span class="ho-li-icon">&#10067;</span><span class="ho-li-text"><span class="kbd">H</span>, cette page d'aide.</span></li>
             <li><span class="ho-li-icon">&#9208;</span><span class="ho-li-text"><span class="kbd wide">Échap</span>, menu pause.</span></li>
             <li><span class="ho-li-icon">&#9096;</span><span class="ho-li-text"><span class="kbd wide">Maj</span> + <span class="hl">clic</span>, sélection multiple.</span></li>
+            <li><span class="ho-li-icon">&#127769;</span><span class="ho-li-text"><span class="kbd">N</span>, basculer jour / nuit.</span></li>
           </ul>
         </section>
       </div>
