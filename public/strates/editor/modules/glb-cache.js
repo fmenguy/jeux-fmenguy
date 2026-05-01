@@ -16,7 +16,7 @@ export const DEER_GLB_SCALE = 0.50
 const MANIFEST = {
   tree: 'Pine.glb',
   rock: 'Rock.glb',
-  deer: 'Deer.glb',
+  // deer retire du GLB — fallback procedural elanc utilise
   // house, hut, bonfire retires — fallback procedural utilise
 }
 
