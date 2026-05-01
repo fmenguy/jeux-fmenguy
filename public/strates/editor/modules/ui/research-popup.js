@@ -87,6 +87,25 @@ const NOTIF_CSS = `
   transition: color 0.15s;
 }
 .ttp-notif .tn-close:hover { color: var(--ink, #ede3cc); }
+#ttp-close-all {
+  display: none;
+  align-self: flex-start;
+  background: rgba(27,25,20,0.92);
+  border: 1px solid rgba(212,184,112,0.45);
+  border-radius: 4px;
+  color: var(--gold, #d4b870);
+  font-family: var(--mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  padding: 4px 10px;
+  pointer-events: auto;
+  transition: background 0.15s, color 0.15s;
+}
+#ttp-close-all:hover {
+  background: rgba(212,184,112,0.12);
+  color: var(--ink, #ede3cc);
+}
 `
 
 function ensureContainer() {
@@ -99,7 +118,31 @@ function ensureContainer() {
   }
   const container = document.createElement('div')
   container.id = 'ttp-notifs'
+
+  const closeAll = document.createElement('button')
+  closeAll.id = 'ttp-close-all'
+  closeAll.textContent = '✕ Tout fermer'
+  closeAll.addEventListener('click', function() {
+    const notifs = container.querySelectorAll('.ttp-notif')
+    notifs.forEach(function(n) {
+      n.classList.remove('in')
+      n.classList.add('out')
+      setTimeout(function() { if (n.parentNode) n.parentNode.removeChild(n) }, 320)
+    })
+    setTimeout(updateCloseAllBtn, 350)
+  })
+  container.appendChild(closeAll)
+
   document.body.appendChild(container)
+}
+
+function updateCloseAllBtn() {
+  const container = document.getElementById('ttp-notifs')
+  if (!container) return
+  const btn = document.getElementById('ttp-close-all')
+  if (!btn) return
+  const count = container.querySelectorAll('.ttp-notif').length
+  btn.style.display = count >= 2 ? 'block' : 'none'
 }
 
 function findTech(id) {
@@ -127,7 +170,11 @@ function showNotif(id, tech) {
     '</span>' +
     '<button class="tn-close" title="Fermer">x</button>'
 
-  container.prepend(notif)
+  const btn = document.getElementById('ttp-close-all')
+  if (btn) container.insertBefore(notif, btn)
+  else container.prepend(notif)
+
+  updateCloseAllBtn()
 
   // slide-in
   requestAnimationFrame(function() {
@@ -137,7 +184,10 @@ function showNotif(id, tech) {
   notif.querySelector('.tn-close').addEventListener('click', function() {
     notif.classList.remove('in')
     notif.classList.add('out')
-    setTimeout(function() { if (notif.parentNode) notif.parentNode.removeChild(notif) }, 320)
+    setTimeout(function() {
+      if (notif.parentNode) notif.parentNode.removeChild(notif)
+      updateCloseAllBtn()
+    }, 320)
   })
 }
 
