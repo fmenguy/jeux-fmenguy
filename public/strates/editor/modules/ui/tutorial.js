@@ -462,6 +462,7 @@ function removeInviteBubble() {
 }
 
 function showInviteBubble() {
+  if (tutosDone()) { stopInactivityTimer(); return }
   stopInactivityTimer()
   if (inviteEl) return
   injectStyles()
@@ -500,8 +501,17 @@ const STRATES_EVENTS = [
 
 let inactivityTimer = null
 
+function tutosDone() {
+  try {
+    if (localStorage.getItem('strates.tutoSkipped')) return true
+    if (localStorage.getItem('strates.tutoDone') && localStorage.getItem('strates.tuto2Done')) return true
+  } catch (e) {}
+  return false
+}
+
 function resetInactivityTimer() {
   clearTimeout(inactivityTimer)
+  if (tutosDone()) { inactivityTimer = null; return }
   inactivityTimer = setTimeout(showInviteBubble, INACTIVITY_DELAY)
 }
 
