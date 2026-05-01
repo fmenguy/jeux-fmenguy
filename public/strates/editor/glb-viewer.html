@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLB Viewer - Fantaisy Assets</title>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+} }
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background: #111827; color: #e0e0f0; overflow: hidden; }
+body { display: flex; flex-direction: column; }
+
+#status-bar {
+  background: #0a1020; border-bottom: 1px solid #1e3a5f;
+  padding: 4px 14px; font-size: 11px; color: #4a90d9; flex-shrink: 0;
+}
+
+#main { display: flex; flex: 1; min-height: 0; }
+
+/* SIDEBAR */
+#sidebar {
+  width: 260px; min-width: 180px; display: flex; flex-direction: column;
+  background: #0f172a; border-right: 1px solid #1e3a5f; flex-shrink: 0; overflow: hidden;
+}
+#sidebar-header {
+  padding: 10px 9px 8px; background: #0a1020; border-bottom: 1px solid #1e3a5f;
+  display: flex; flex-direction: column; gap: 7px;
+}
+#sidebar-meta { display: flex; justify-content: space-between; align-items: center; }
+#sidebar-header h2 { font-size: 11px; font-weight: 700; color: #5ba4ff; text-transform: uppercase; letter-spacing: 0.12em; }
+#count { font-size: 11px; color: #3a5a80; }
+#search {
+  width: 100%; padding: 6px 8px; background: #141e35; border: 1px solid #1e3a5f;
+  border-radius: 4px; color: #c0d0f0; font-size: 12px; outline: none;
+}
+#search:focus { border-color: #3a80d8; }
+#search::placeholder { color: #2a4060; }
+#sort-row { display: flex; gap: 4px; }
+.sort-btn {
+  flex: 1; padding: 4px 4px; background: #141e35; border: 1px solid #1e3a5f;
+  border-radius: 4px; color: #4a6a90; font-size: 10px; cursor: pointer; text-align: center;
+  transition: background 0.1s, color 0.1s;
+}
+.sort-btn:hover { background: #1a2a50; color: #90b8e0; }
+.sort-btn.active { background: #0d2550; border-color: #2a60b0; color: #80c0ff; font-weight: 700; }
+
+#model-list { flex: 1; overflow-y: auto; padding: 4px 3px 10px; }
+#model-list::-webkit-scrollbar { width: 4px; }
+#model-list::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
+.cat-header { padding: 9px 7px 3px; font-size: 9px; font-weight: 700; color: #2a5080; text-transform: uppercase; letter-spacing: 0.14em; }
+.model-item {
+  padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: #7090b8;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid transparent;
+  transition: background 0.08s, color 0.08s;
+}
+.model-item:hover { background: #141e35; color: #b0d0f8; }
+.model-item.active { background: #0d2040; color: #70c0ff; border-color: #1a4a90; font-weight: 600; }
+.model-item .sfx { font-size: 10px; color: #2a4060; margin-left: 4px; }
+
+/* VIEWER */
+#viewer { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  background: #0a1020; border-bottom: 1px solid #1e3a5f; flex-wrap: wrap; flex-shrink: 0;
+}
+#model-title { flex: 1; font-size: 13px; font-weight: 600; color: #70b8ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sep { width: 1px; height: 16px; background: #1e3a5f; flex-shrink: 0; }
+.btn {
+  padding: 4px 10px; border-radius: 4px; border: 1px solid #1e3a6f; background: #101830;
+  color: #507098; font-size: 11px; cursor: pointer; transition: background 0.1s, color 0.1s;
+  white-space: nowrap; user-select: none;
+}
+.btn:hover { background: #182845; color: #90c0e0; }
+.btn.active { background: #0d2450; border-color: #2a60c0; color: #80c8ff; }
+#bg-selector { display: flex; gap: 5px; align-items: center; }
+.bg-dot { width: 15px; height: 15px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.1s; }
+.bg-dot.active { border-color: #70c0ff; }
+.bg-dot[data-bg="dark"]  { background: #080c14; }
+.bg-dot[data-bg="grey"]  { background: #404050; }
+.bg-dot[data-bg="light"] { background: #c8d0e4; }
+.bg-dot[data-bg="green"] { background: #1a3820; }
+
+/* CANVAS + ANIM PANEL */
+#view-area { flex: 1; display: flex; min-height: 0; }
+
+#canvas-wrap { flex: 1; position: relative; background: #080c14; min-height: 0; }
+canvas { display: block; width: 100% !important; height: 100% !important; }
+
+#loading {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; background: rgba(8,12,20,0.85);
+  z-index: 10; font-size: 13px; color: #4080a0; gap: 12px;
+}
+.spinner {
+  width: 32px; height: 32px; border: 3px solid #0d2040; border-top-color: #3070c8;
+  border-radius: 50%; animation: spin 0.65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading.hidden { display: none; }
+
+#welcome {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; font-size: 14px;
+  color: #2a3f5a; pointer-events: none;
+}
+#welcome .ico { font-size: 36px; opacity: 0.25; }
+#welcome.hidden { display: none; }
+
+#hint {
+  position: absolute; bottom: 12px; right: 14px; font-size: 10px; color: #1e3050;
+  line-height: 2; text-align: right; pointer-events: none;
+}
+
+/* ANIMATION PANEL */
+#anim-panel {
+  width: 200px; min-width: 160px; display: flex; flex-direction: column;
+  background: #0a1020; border-left: 1px solid #1e3a5f; flex-shrink: 0; overflow: hidden;
+}
+#anim-panel.hidden { display: none; }
+#anim-header {
+  padding: 8px 10px; background: #060e1a; border-bottom: 1px solid #1e3a5f;
+  font-size: 10px; font-weight: 700; color: #3a6a90; text-transform: uppercase; letter-spacing: 0.1em;
+  display: flex; justify-content: space-between; align-items: center;
+}
+#anim-speed-wrap { display: flex; align-items: center; gap: 5px; }
+#anim-speed { width: 50px; font-size: 10px; }
+#anim-controls {
+  display: flex; gap: 4px; padding: 7px 8px; border-bottom: 1px solid #1e3a5f; flex-wrap: wrap;
+}
+#anim-controls .btn { flex: 1; text-align: center; padding: 4px 4px; font-size: 10px; }
+#anim-list { flex: 1; overflow-y: auto; padding: 4px 4px 10px; }
+#anim-list::-webkit-scrollbar { width: 4px; }
+#anim-list::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
+.anim-item {
+  padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; color: #5a80a8;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid transparent;
+  transition: background 0.08s, color 0.08s;
+}
+.anim-item:hover { background: #141e35; color: #a0c8f0; }
+.anim-item.active { background: #0d2040; color: #70c0ff; border-color: #1a4a90; font-weight: 600; }
+.anim-item .anim-dur { float: right; font-size: 10px; color: #2a4060; }
+#no-anim { padding: 16px 10px; font-size: 11px; color: #2a4060; text-align: center; }
+
+#anim-progress-wrap { padding: 6px 8px; border-top: 1px solid #1e3a5f; }
+#anim-progress { width: 100%; cursor: pointer; accent-color: #3a80d8; }
+#anim-time { font-size: 10px; color: #3a5a80; text-align: center; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div id="status-bar">Chargement Three.js...</div>
+
+<div id="main">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <div id="sidebar-meta">
+        <h2>Fantaisy Assets</h2>
+        <span id="count"></span>
+      </div>
+      <input id="search" type="text" placeholder="Rechercher... (raccourci /)" autocomplete="off" spellcheck="false">
+      <div id="sort-row">
+        <button class="sort-btn active" data-sort="az">A-Z</button>
+        <button class="sort-btn" data-sort="za">Z-A</button>
+        <button class="sort-btn" data-sort="cat">Categorie</button>
+      </div>
+    </div>
+    <div id="model-list"></div>
+  </div>
+
+  <div id="viewer">
+    <div id="toolbar">
+      <span id="model-title">Selectionner un modele</span>
+      <div class="sep"></div>
+      <div id="bg-selector">
+        <div class="bg-dot active" data-bg="dark" title="Fond sombre"></div>
+        <div class="bg-dot" data-bg="grey" title="Fond gris"></div>
+        <div class="bg-dot" data-bg="light" title="Fond clair"></div>
+        <div class="bg-dot" data-bg="green" title="Fond vert"></div>
+      </div>
+      <div class="sep"></div>
+      <button class="btn" id="btn-rotate">Auto-rotation</button>
+      <button class="btn" id="btn-grid">Grille</button>
+      <button class="btn" id="btn-wire">Wireframe</button>
+      <button class="btn" id="btn-reset">Centrer</button>
+    </div>
+
+    <div id="view-area">
+      <div id="canvas-wrap">
+        <div id="loading" class="hidden">
+          <div class="spinner"></div>
+          <span id="loading-name"></span>
+        </div>
+        <div id="welcome">
+          <div class="ico">&#x2B1B;</div>
+          Cliquer sur un modele dans la liste
+        </div>
+        <div id="hint">
+          Glisser : orbite &nbsp;|&nbsp; Molette : zoom<br>
+          Clic droit : deplacer &nbsp;|&nbsp; haut/bas : naviguer
+        </div>
+      </div>
+
+      <!-- Panneau animations (droit) -->
+      <div id="anim-panel" class="hidden">
+        <div id="anim-header">
+          <span>Animations</span>
+          <div id="anim-speed-wrap">
+            <span style="font-size:9px;color:#2a4060">x</span>
+            <input id="anim-speed" type="number" min="0.1" max="3" step="0.1" value="1" title="Vitesse">
+          </div>
+        </div>
+        <div id="anim-controls">
+          <button class="btn active" id="btn-play">Jouer</button>
+          <button class="btn" id="btn-pause">Pause</button>
+          <button class="btn" id="btn-stop">Stop</button>
+        </div>
+        <div id="anim-list"><div id="no-anim">Aucune animation</div></div>
+        <div id="anim-progress-wrap">
+          <input id="anim-progress" type="range" min="0" max="1" step="0.001" value="0">
+          <div id="anim-time">0.00 / 0.00 s</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ===================== DONNEES =====================
+const MODELS_RAW = [
+  "Archery Building.glb",
+  "Archery Second Age Le.glb",
+  "Archery Towers-IA5qOjIAiT.glb",
+  "Archery Towers.glb",
+  "Archery Training Grounds-5dWpau7C3k.glb",
+  "Archery Training Grounds.glb",
+  "Barracks-UXCOwRBSxx.glb",
+  "Barracks-a1C1L8gJTX.glb",
+  "Barracks-dvlksXgxWc.glb",
+  "Barracks-lnyADheSvA.glb",
+  "Barracks-puD1kbV4kf.glb",
+  "Barracks.glb",
+  "Bonfire.glb",
+  "Business Building.glb",
+  "Cart.glb",
+  "Castle Fortress.glb",
+  "Castle Gate.glb",
+  "Castle-y15yE6kWLY.glb",
+  "Castle.glb",
+  "Chicken.glb",
+  "Cow (1).glb",
+  "Cow.glb",
+  "Crops.glb",
+  "Deer.glb",
+  "Dock-XViKoBh2UN.glb",
+  "Dock.glb",
+  "Docks.glb",
+  "Farm Dirt.glb",
+  "Farm-91wMLb9kKo.glb",
+  "Farm-O4wpTLSfIn.glb",
+  "Farm.glb",
+  "Fortress.glb",
+  "Gold Rocks.glb",
+  "Horse.glb",
+  "House (1).glb",
+  "House-RSwoYSLblu.glb",
+  "House-YlADpCJU8U.glb",
+  "House-k6tP5nFUd2.glb",
+  "House-nihGGju7DW.glb",
+  "House-oJJIRwv6Bo.glb",
+  "House-vZ1CLbWmSx.glb",
+  "House.glb",
+  "Houses-gEjAC1UvVU.glb",
+  "Houses-vCoDG5hFyI.glb",
+  "Houses.glb",
+  "Hut-4MJWbyd6vw.glb",
+  "Hut-wxi3kAu5ey.glb",
+  "Hut.glb",
+  "Huts.glb",
+  "Logs.glb",
+  "Market Stalls Compact.glb",
+  "Market Stalls-4ZAhRv2tLG.glb",
+  "Market Stalls-OLd8vu6lPL.glb",
+  "Market Stalls-PUZZ5F91OE.glb",
+  "Market Stalls.glb",
+  "Mine.glb",
+  "Mountain Group.glb",
+  "Mountain-XY4ej3Zg3I.glb",
+  "Mountain.glb",
+  "Mountains.glb",
+  "Pig.glb",
+  "Pine Trees.glb",
+  "Pine.glb",
+  "Port-4sE6lmhGPF.glb",
+  "Port.glb",
+  "Rat.glb",
+  "Resource Gold.glb",
+  "Rock-JmFMh7ztL9.glb",
+  "Rock-RtLRqYjfMs.glb",
+  "Rock.glb",
+  "Rocks.glb",
+  "Shack-HuzLJcbUd2.glb",
+  "Shack.glb",
+  "Sheep.glb",
+  "Shipping Port-rDX8W8uqip.glb",
+  "Shipping Port.glb",
+  "Small Farm.glb",
+  "Small Watch Tower.glb",
+  "Stone Tower-dJLAD6p90F.glb",
+  "Stone Tower.glb",
+  "Stone Wall Towers.glb",
+  "Stone Wall.glb",
+  "Storage House.glb",
+  "Storage Hut.glb",
+  "Storage shed-fkTsDdpQAA.glb",
+  "Storage shed.glb",
+  "Temple First Age Leve.glb",
+  "Temple-CE2Mn7lh6A.glb",
+  "Temple-nR264crTSr.glb",
+  "Temple-v36uJiErXS.glb",
+  "Temple.glb",
+  "Tower House.glb",
+  "Town Center Second Age.glb",
+  "Town Center-76GTkSh4KM.glb",
+  "Town Center-CoERW5nFdE.glb",
+  "Town Center-cuQuFJEIfH.glb",
+  "Town Center.glb",
+  "Trees cut-zhm3D5KKRh.glb",
+  "Trees cut.glb",
+  "Trees.glb",
+  "Village Market.glb",
+  "Wall Towers Door Seco.glb",
+  "Wall Towers.glb",
+  "Watch Tower-VJZZW37Vsk.glb",
+  "Watch Tower-cMxuj2gt7D.glb",
+  "Watch Tower.glb",
+  "Well.glb",
+  "Windmill-jpHoi9xDLG.glb",
+  "Windmill.glb",
+  "Wodden Temple.glb",
+  "Wonder First Age Leve.glb",
+  "Wood.glb",
+  "Wooden Encampment.glb",
+  "Wooden Fortress Gate.glb",
+  "Wooden Fortress.glb",
+  "Wooden Monument.glb",
+  "Wooden Wall-L0TxLurnES.glb",
+  "Wooden Wall.glb",
+  "Wooden house tower.glb",
+  "maison de science age medieval.glb",
+];
+
+const CATEGORIES = {
+  'Animaux':     ['Chicken','Cow','Deer','Horse','Pig','Rat','Sheep'],
+  'Militaire':   ['Archery','Barracks','Castle','Fortress','Watch Tower','Small Watch Tower','Stone Tower','Stone Wall','Wall Towers','Wooden Encampment','Wooden Fortress'],
+  'Habitations': ['House','Houses','Hut','Huts','Shack','Storage','Tower House','Wooden house'],
+  'Production':  ['Farm','Crops','Logs','Mine','Windmill','Wood','Bonfire','Cart','Well'],
+  'Commerce':    ['Market','Village Market','Business','Port','Dock','Docks','Shipping Port'],
+  'Monuments':   ['Temple','Wonder','Town Center','Wodden Temple','Wooden Monument','maison de science'],
+  'Nature':      ['Rock','Rocks','Gold Rocks','Mountain','Mountains','Pine','Trees','Resource Gold'],
+};
+const CATS_ORDER = ['Animaux','Militaire','Habitations','Production','Commerce','Monuments','Nature','Divers'];
+
+function getCategory(name) {
+  const base = name.replace('.glb','').toLowerCase();
+  for (const [cat, kws] of Object.entries(CATEGORIES))
+    if (kws.some(k => base.startsWith(k.toLowerCase()))) return cat;
+  return 'Divers';
+}
+function displayName(f) { return f.replace('.glb','').replace(/-[A-Za-z0-9]{8,}$/,'').trim(); }
+function hasSuffix(f)    { return /-[A-Za-z0-9]{8,}\.glb$/.test(f); }
+
+document.getElementById('status-bar').textContent =
+  'Three.js charge  |  ' + MODELS_RAW.length + ' modeles  |  Raccourci / pour chercher';
+
+const BASE_PATH = 'assets/models/fantaisy/';
+const BG_COLORS = { dark: 0x080c14, grey: 0x404050, light: 0xc8d0e4, green: 0x1a3820 };
+
+// ===================== THREE.JS =====================
+const canvasWrap  = document.getElementById('canvas-wrap');
+const loadingEl   = document.getElementById('loading');
+const loadingName = document.getElementById('loading-name');
+const welcomeEl   = document.getElementById('welcome');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+canvasWrap.appendChild(renderer.domElement);
+
+const scene  = new THREE.Scene();
+scene.background = new THREE.Color(BG_COLORS.dark);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 2000);
+camera.position.set(4, 4, 6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const sun = new THREE.DirectionalLight(0xfff0e0, 1.8);
+sun.position.set(6, 12, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 0.1; sun.shadow.camera.far = 200;
+sun.shadow.camera.left = sun.shadow.camera.bottom = -30;
+sun.shadow.camera.right = sun.shadow.camera.top   =  30;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0xaaccff, 0.5);
+fill.position.set(-5, 4, -6);
+scene.add(fill);
+
+const grid = new THREE.GridHelper(24, 24, 0x1a2a45, 0x0e1828);
+scene.add(grid);
+const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.ShadowMaterial({ opacity: 0.3 }));
+groundMesh.rotation.x = -Math.PI / 2;
+groundMesh.receiveShadow = true;
+scene.add(groundMesh);
+
+function onResize() {
+  const w = canvasWrap.clientWidth, h = canvasWrap.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(onResize).observe(canvasWrap);
+onResize();
+
+// ===================== ETAT =====================
+let currentModel = null;
+let autoRotate   = false;
+let gridOn       = true;
+let wireframeOn  = false;
+
+// Animation
+let mixer        = null;
+let currentClip  = null;
+let currentAction = null;
+let animClips    = [];
+let clock        = new THREE.Clock();
+let animPlaying  = true;
+let scrubbingProg = false;
+
+const loader = new GLTFLoader();
+
+// ===================== CAMERA FIT =====================
+function fitCamera(object) {
+  const box  = new THREE.Box3().setFromObject(object);
+  const size = box.getSize(new THREE.Vector3());
+  const ctr  = box.getCenter(new THREE.Vector3());
+  object.position.y -= box.min.y;
+  box.setFromObject(object);
+  box.getCenter(ctr);
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const dist   = Math.abs(maxDim / (2 * Math.tan((camera.fov * Math.PI / 180) / 2))) * 2.2;
+  camera.position.set(ctr.x + dist * 0.7, ctr.y + dist * 0.5, ctr.z + dist * 0.9);
+  controls.target.copy(ctr);
+  controls.update();
+}
+
+function applyWireframe(obj, state) {
+  obj.traverse(n => {
+    if (!n.isMesh) return;
+    const mats = Array.isArray(n.material) ? n.material : [n.material];
+    mats.forEach(m => { m.wireframe = state; });
+  });
+}
+
+// ===================== ANIMATIONS =====================
+const animPanel   = document.getElementById('anim-panel');
+const animListEl  = document.getElementById('anim-list');
+const noAnimEl    = document.getElementById('no-anim');
+const progressEl  = document.getElementById('anim-progress');
+const timeEl      = document.getElementById('anim-time');
+const speedInput  = document.getElementById('anim-speed');
+
+function fmt(s) { return s.toFixed(2); }
+
+function buildAnimList(clips) {
+  animClips = clips;
+  animListEl.innerHTML = '';
+
+  if (!clips.length) {
+    animListEl.appendChild(noAnimEl);
+    animPanel.classList.add('hidden');
+    return;
+  }
+
+  animPanel.classList.remove('hidden');
+  noAnimEl.remove();
+
+  clips.forEach((clip, i) => {
+    const item = document.createElement('div');
+    item.className = 'anim-item';
+    item.dataset.idx = i;
+    item.innerHTML = (i + 1) + '. ' + clip.name +
+      '<span class="anim-dur">' + fmt(clip.duration) + 's</span>';
+    item.addEventListener('click', () => playClip(i));
+    animListEl.appendChild(item);
+  });
+
+  // Jouer la premiere automatiquement
+  playClip(0);
+}
+
+function playClip(idx) {
+  if (!mixer || !animClips[idx]) return;
+
+  document.querySelectorAll('.anim-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+
+  if (currentAction) currentAction.stop();
+  currentClip   = animClips[idx];
+  currentAction = mixer.clipAction(currentClip);
+  currentAction.setEffectiveTimeScale(parseFloat(speedInput.value));
+  currentAction.reset().play();
+  animPlaying = true;
+  document.getElementById('btn-play').classList.add('active');
+  document.getElementById('btn-pause').classList.remove('active');
+  progressEl.max = currentClip.duration;
+  progressEl.value = 0;
+}
+
+function clearMixer() {
+  if (mixer) { mixer.stopAllAction(); mixer.uncacheRoot(currentModel); mixer = null; }
+  currentClip = null; currentAction = null; animClips = [];
+  animPanel.classList.add('hidden');
+}
+
+// ===================== CHARGEMENT =====================
+function loadModel(filename) {
+  welcomeEl.classList.add('hidden');
+  loadingEl.classList.remove('hidden');
+  loadingName.textContent = displayName(filename);
+  document.getElementById('model-title').textContent = displayName(filename);
+
+  if (currentModel) { clearMixer(); scene.remove(currentModel); currentModel = null; }
+
+  loader.load(
+    BASE_PATH + encodeURIComponent(filename),
+    (gltf) => {
+      currentModel = gltf.scene;
+      currentModel.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+      scene.add(currentModel);
+      fitCamera(currentModel);
+      if (wireframeOn) applyWireframe(currentModel, true);
+
+      // Animations
+      if (gltf.animations && gltf.animations.length) {
+        mixer = new THREE.AnimationMixer(currentModel);
+        buildAnimList(gltf.animations);
+      } else {
+        buildAnimList([]);
+      }
+
+      loadingEl.classList.add('hidden');
+    },
+    undefined,
+    (err) => {
+      console.error('Erreur GLB:', filename, err);
+      loadingEl.classList.add('hidden');
+      document.getElementById('model-title').textContent = displayName(filename) + ' - erreur';
+    }
+  );
+}
+
+// ===================== BOUCLE RENDER =====================
+(function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  if (mixer && animPlaying) {
+    mixer.update(delta);
+    if (currentAction && currentClip && !scrubbingProg) {
+      const t = currentAction.time % currentClip.duration;
+      progressEl.value = t;
+      timeEl.textContent = fmt(t) + ' / ' + fmt(currentClip.duration) + ' s';
+    }
+  }
+  if (autoRotate && currentModel) currentModel.rotation.y += 0.006;
+  controls.update();
+  renderer.render(scene, camera);
+})();
+
+// ===================== SIDEBAR =====================
+const modelListEl = document.getElementById('model-list');
+const searchInput = document.getElementById('search');
+const countEl     = document.getElementById('count');
+let currentSort   = 'az';
+let activeEl      = null;
+
+function getFilteredSorted(query) {
+  const q = query.toLowerCase().trim();
+  let list = MODELS_RAW.filter(m => displayName(m).toLowerCase().includes(q) || m.toLowerCase().includes(q));
+  if (currentSort === 'az')       list.sort((a, b) => displayName(a).localeCompare(displayName(b)));
+  else if (currentSort === 'za')  list.sort((a, b) => displayName(b).localeCompare(displayName(a)));
+  else list.sort((a, b) => {
+    const ca = getCategory(a), cb = getCategory(b);
+    if (ca !== cb) return CATS_ORDER.indexOf(ca) - CATS_ORDER.indexOf(cb);
+    return displayName(a).localeCompare(displayName(b));
+  });
+  return list;
+}
+
+function buildList() {
+  const list = getFilteredSorted(searchInput.value);
+  countEl.textContent = list.length + ' / ' + MODELS_RAW.length;
+  modelListEl.innerHTML = '';
+  activeEl = null;
+  let lastCat = null;
+  list.forEach(filename => {
+    if (currentSort === 'cat') {
+      const cat = getCategory(filename);
+      if (cat !== lastCat) {
+        lastCat = cat;
+        const h = document.createElement('div');
+        h.className = 'cat-header';
+        h.textContent = cat;
+        modelListEl.appendChild(h);
+      }
+    }
+    const item = document.createElement('div');
+    item.className = 'model-item';
+    item.dataset.file = filename;
+    const label = displayName(filename);
+    if (hasSuffix(filename)) {
+      const sfx = (filename.match(/-([A-Za-z0-9]{4,8})[A-Za-z0-9]*\.glb$/) || [])[1] || '';
+      item.innerHTML = label + '<span class="sfx">#' + sfx + '</span>';
+    } else {
+      item.textContent = label;
+    }
+    item.addEventListener('click', () => selectItem(item, filename));
+    modelListEl.appendChild(item);
+  });
+}
+
+function selectItem(item, filename) {
+  if (activeEl) activeEl.classList.remove('active');
+  activeEl = item;
+  item.classList.add('active');
+  loadModel(filename);
+}
+
+searchInput.addEventListener('input', buildList);
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentSort = this.dataset.sort;
+    buildList();
+  });
+});
+buildList();
+
+// ===================== TOOLBAR =====================
+document.getElementById('btn-rotate').addEventListener('click', function () {
+  autoRotate = !autoRotate;
+  this.classList.toggle('active', autoRotate);
+  if (autoRotate && currentModel) currentModel.rotation.y = 0;
+});
+document.getElementById('btn-grid').addEventListener('click', function () {
+  gridOn = !gridOn;
+  grid.visible = groundMesh.visible = gridOn;
+  this.classList.toggle('active', !gridOn);
+});
+document.getElementById('btn-wire').addEventListener('click', function () {
+  wireframeOn = !wireframeOn;
+  this.classList.toggle('active', wireframeOn);
+  if (currentModel) applyWireframe(currentModel, wireframeOn);
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (currentModel) fitCamera(currentModel);
+});
+document.querySelectorAll('.bg-dot').forEach(dot => {
+  dot.addEventListener('click', function () {
+    document.querySelectorAll('.bg-dot').forEach(d => d.classList.remove('active'));
+    this.classList.add('active');
+    scene.background = new THREE.Color(BG_COLORS[this.dataset.bg]);
+  });
+});
+
+// ===================== CONTROLES ANIMATION =====================
+document.getElementById('btn-play').addEventListener('click', function () {
+  if (!currentAction) return;
+  currentAction.paused = false;
+  animPlaying = true;
+  this.classList.add('active');
+  document.getElementById('btn-pause').classList.remove('active');
+});
+document.getElementById('btn-pause').addEventListener('click', function () {
+  if (!currentAction) return;
+  currentAction.paused = true;
+  animPlaying = false;
+  this.classList.add('active');
+  document.getElementById('btn-play').classList.remove('active');
+});
+document.getElementById('btn-stop').addEventListener('click', () => {
+  if (!currentAction) return;
+  currentAction.stop();
+  animPlaying = false;
+  progressEl.value = 0;
+  timeEl.textContent = '0.00 / ' + (currentClip ? fmt(currentClip.duration) : '0.00') + ' s';
+});
+
+speedInput.addEventListener('input', () => {
+  if (currentAction) currentAction.setEffectiveTimeScale(parseFloat(speedInput.value));
+});
+
+progressEl.addEventListener('mousedown', () => { scrubbingProg = true; });
+progressEl.addEventListener('input', () => {
+  if (!currentAction || !currentClip) return;
+  currentAction.paused = true;
+  currentAction.time   = parseFloat(progressEl.value);
+  mixer.update(0);
+  timeEl.textContent = fmt(parseFloat(progressEl.value)) + ' / ' + fmt(currentClip.duration) + ' s';
+});
+progressEl.addEventListener('mouseup', () => {
+  scrubbingProg = false;
+  if (currentAction) { currentAction.paused = !animPlaying; }
+});
+
+// ===================== CLAVIER =====================
+document.addEventListener('keydown', e => {
+  if (document.activeElement === searchInput) {
+    if (e.key === 'Escape') searchInput.blur();
+    return;
+  }
+  if (e.key === '/') { e.preventDefault(); searchInput.focus(); searchInput.select(); return; }
+  if (e.key === ' ') {
+    e.preventDefault();
+    if (!currentAction) return;
+    animPlaying = !animPlaying;
+    currentAction.paused = !animPlaying;
+    document.getElementById('btn-play').classList.toggle('active', animPlaying);
+    document.getElementById('btn-pause').classList.toggle('active', !animPlaying);
+    return;
+  }
+
+  const items = [...modelListEl.querySelectorAll('.model-item')];
+  if (!items.length) return;
+  let idx = activeEl ? items.indexOf(activeEl) : -1;
+  if      (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(idx + 1, items.length - 1); }
+  else if (e.key === 'ArrowUp')   { e.preventDefault(); idx = Math.max(idx - 1, 0); }
+  else return;
+  const target = items[idx];
+  selectItem(target, target.dataset.file);
+  target.scrollIntoView({ block: 'nearest' });
+});
+</script>
+</body>
+</html>
