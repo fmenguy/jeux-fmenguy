@@ -1,5 +1,5 @@
 // ============================================================================
-// tutorial.js — Onboarding 2 tutos séquentiels + bulle d'invitation différée
+// tutorial.js — Onboarding séquentiel + bulle d'invitation différée
 //
 // Flux normal :
 //   initTutoInvite() appelé au démarrage. Si aucun flag localStorage bloquant,
@@ -7,16 +7,14 @@
 //   actionbar) réinitialisent le timer. Au bout de 60s : bulle d'invitation.
 //
 // Bulle d'invitation :
-//   [▶ Lancer le tuto] → lance Tuto 1 puis Tuto 2.
+//   [▶ Lancer le tuto] → lance le Tuto (7 étapes).
 //   [✕] → pose localStorage['strates.tutoSkipped'], ne plus jamais afficher.
 //
 // showTutoInvite() : force l'affichage de la bulle, ignore les flags. Utile
 //   pour le bouton "Tutoriel" dans le menu pause.
 //
-// Tuto 1 (7 étapes) : tech tree → branche Savoir → Recherche de base →
-//   fermeture tech tree → onglet Construire → Hutte du Sage → placement.
-// Tuto 2 (4 étapes) : panel quêtes → onglet Récoltes → outil Récolter →
-//   première zone de récolte. Démarre 1.5s après la fin du Tuto 1.
+// Tuto (7 étapes) : intro → tech tree → branche Savoir → Recherche de base →
+//   bouton Retour → onglet Construire → placement Hutte du Sage.
 // ============================================================================
 
 // ─── Étapes ──────────────────────────────────────────────────────────────────
@@ -28,16 +26,25 @@
 //
 // autoWhen (optionnel) — () => bool, évalué toutes les 400ms.
 
-const TUTO1_STEPS = [
+const TUTO_STEPS = [
   {
-    label:    'Tuto 1 · 1/7',
+    label:     'Tuto · 1/7',
+    sel:       '#btn-open-techtree',
+    text:      'Bienvenue ! Voici ton village.',
+    kind:      'click-or-timeout',
+    clickSel:  '.tuto-bubble',
+    timeout:   3000,
+    ringGuard: () => false,
+  },
+  {
+    label:    'Tuto · 2/7',
     sel:      '#btn-open-techtree',
     text:     "Ouvre l'arbre des technologies",
     kind:     'click',
     clickSel: '#btn-open-techtree',
   },
   {
-    label:    'Tuto 1 · 2/7',
+    label:    'Tuto · 3/7',
     sel:      '.ttp-branch[data-br="savoir"]',
     fallback: '#ttp-root',
     text:     'Explore la branche Savoir',
@@ -45,7 +52,7 @@ const TUTO1_STEPS = [
     clickSel: '.ttp-branch[data-br="savoir"]',
   },
   {
-    label:    'Tuto 1 · 3/7',
+    label:    'Tuto · 4/7',
     sel:      '.ttp-tech[data-id="basic-research"]',
     fallback: '#ttp-root',
     text:     "Débloque la Recherche de base, c'est gratuit !",
@@ -54,9 +61,10 @@ const TUTO1_STEPS = [
     filter:   e => e.detail && e.detail.id === 'basic-research',
   },
   {
-    label:    'Tuto 1 · 4/7',
-    sel:      '#ttp-root',
-    text:     "Ferme l'arbre tech avec Échap ou le bouton Retour",
+    label:    'Tuto · 5/7',
+    sel:      '#ttp-back',
+    fallback: '#ttp-root',
+    text:     'Clique sur Retour pour revenir au jeu',
     kind:     'event',
     event:    'strates:techtreeClosed',
     autoWhen: () => {
@@ -65,71 +73,24 @@ const TUTO1_STEPS = [
     },
   },
   {
-    label:    'Tuto 1 · 5/7',
+    label:    'Tuto · 6/7',
     sel:      '.ab-tab[data-tab="build"]',
-    text:     'Ferme le tech tree, puis ouvre le menu Construire',
+    text:     'Ouvre le menu Construire',
     kind:     'click',
     clickSel: '.ab-tab[data-tab="build"]',
-    ringGuard: () => {
-      const ttp = document.getElementById('ttp-root')
-      return !ttp || !ttp.classList.contains('open')
+    autoWhen: () => {
+      const tab = document.querySelector('.ab-tab[data-tab="build"]')
+      return !!(tab && tab.classList.contains('active'))
     },
   },
   {
-    label:    'Tuto 1 · 6/7',
+    label:    'Tuto · 7/7',
     sel:      '[data-tool="place-research"]',
     fallback: '.ab-body#ab-build',
-    text:     'Clique sur Hutte du Sage',
-    kind:     'click',
-    clickSel: '[data-tool="place-research"]',
-  },
-  {
-    label:    'Tuto 1 · 7/7',
-    sel:      '#app',
-    text:     'Clique sur le terrain pour placer la Hutte du Sage',
+    text:     'Place la Hutte du Sage pour générer des points de recherche !',
     kind:     'event',
     event:    'strates:buildingPlaced',
     filter:   e => e.detail && e.detail.type === 'research',
-  },
-]
-
-const TUTO2_STEPS = [
-  {
-    label:    'Tuto 2 · 1/4',
-    sel:      '.rail-btn[data-panel="quests"]',
-    text:     'Ouvre le menu Quêtes',
-    kind:     'click',
-    clickSel: '.rail-btn[data-panel="quests"]',
-    autoWhen: () => {
-      const el = document.getElementById('quests')
-      return !!(el && el.classList.contains('open'))
-    },
-  },
-  {
-    label:    'Tuto 2 · 2/4',
-    sel:      '.qcard:has(.qcard-accept[data-qid="berries-75"])',
-    fallback: '#quests',
-    text:     'Accepte la quête "Récolte de baies"',
-    kind:     'event',
-    event:    'strates:questAccepted',
-    filter:   e => e.detail && e.detail.quest && e.detail.quest.id === 'berries-75',
-  },
-  {
-    label:    'Tuto 2 · 3/4',
-    sel:      '.ab-tab[data-tab="recoltes"]',
-    text:     "Va dans l'onglet Récoltes et clique-glisse sur des buissons",
-    kind:     'event',
-    event:    'strates:firstHarvestZone',
-    filter:   null,
-  },
-  {
-    label:    'Tuto 2 · 4/4',
-    sel:      '#app',
-    text:     'Les colons vont récolter !',
-    kind:     'click-or-timeout',
-    clickSel: '#app',
-    timeout:  2500,
-    ringGuard: () => false,
   },
 ]
 
@@ -432,23 +393,13 @@ function runTutorials() {
   stopInactivityTimer()
   removeInviteBubble()
 
-  function onTuto2Done() {
+  function onTutoDone() {
     isTutoActive = false
     showFlash("C'est parti !")
   }
 
-  function startTuto2() {
-    setTimeout(() => {
-      runTutorial(TUTO2_STEPS, 'strates.tuto2Done', onTuto2Done)
-    }, 1500)
-  }
-
   try {
-    if (localStorage.getItem('strates.tutoDone')) {
-      startTuto2()
-    } else {
-      runTutorial(TUTO1_STEPS, 'strates.tutoDone', startTuto2)
-    }
+    runTutorial(TUTO_STEPS, 'strates.tutoDone', onTutoDone)
   } catch (e) {}
 }
 
@@ -508,7 +459,7 @@ let inactivityTimer = null
 function tutosDone() {
   try {
     if (localStorage.getItem('strates.tutoSkipped')) return true
-    if (localStorage.getItem('strates.tutoDone') && localStorage.getItem('strates.tuto2Done')) return true
+    if (localStorage.getItem('strates.tutoDone')) return true
   } catch (e) {}
   return false
 }
