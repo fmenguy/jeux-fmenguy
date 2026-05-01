@@ -21,7 +21,7 @@ export function formatNum(n) {
 }
 
 // Valeurs affichées interpolées (lerp) pour les ressources à mise à jour fréquente
-const _disp = { berries: 0, wood: 0, stone: 0, pts: 0 }
+const _disp = { berries: 0, wood: 0, stone: 0, viande: 0, grain: 0 }
 
 const fpsEl = document.getElementById('fps')
 const jobsEl = document.getElementById('jobs')
@@ -46,8 +46,8 @@ const cCountEl = document.getElementById('c-count')
 const colonsListEl = document.getElementById('colons-list')
 const colonsHeaderEl = document.getElementById('colons-header')
 const stocksLineEl = document.getElementById('stocks-line')
-const rPointsEl = document.getElementById('r-points')
-const rNightPointsEl = document.getElementById('r-nightpoints')
+const rViandeEl = document.getElementById('r-viande')
+const rGrainEl  = document.getElementById('r-grain')
 const techsBodyEl = document.getElementById('techs-body')
 
 if (colonsHeaderEl) {
@@ -67,7 +67,6 @@ export function refreshStocksLine() {
 }
 
 export function refreshTechsPanel() {
-  if (rPointsEl) rPointsEl.textContent = formatNum(state.researchPoints)
   if (!techsBodyEl) return
   const order = ['pick-stone', 'pick-bronze', 'pick-iron', 'pick-gold']
   const parts = ['<div class="tech-tree">']
@@ -151,12 +150,14 @@ export function refreshHUD() {
   _disp.berries = state.resources.berries
   _disp.wood    = state.resources.wood
   _disp.stone   = state.resources.stone
-  _disp.pts     = state.activeResearch ? state.activeResearch.progress : 0
+  _disp.viande  = state.resources.viande || 0
+  _disp.grain   = state.resources.grain  || 0
   if (rBerriesEl) rBerriesEl.textContent = formatNum(state.resources.berries)
   if (rWoodEl)    rWoodEl.textContent    = formatNum(state.resources.wood)
   if (rStoneEl)   rStoneEl.textContent   = formatNum(state.resources.stone)
   if (rBlocsEl)   rBlocsEl.textContent   = formatNum(totalBuildStock())
-  if (rNightPointsEl) rNightPointsEl.textContent = formatNum(state.nightPoints)
+  if (rViandeEl)  rViandeEl.textContent  = formatNum(state.resources.viande || 0)
+  if (rGrainEl)   rGrainEl.textContent   = formatNum(state.resources.grain  || 0)
   refreshStocksLine()
   refreshTechsPanel()
   refreshUniqueBuildingsPalette()
@@ -168,26 +169,16 @@ export function tickResourceAnim() {
   _disp.berries += (state.resources.berries - _disp.berries) * LERP
   _disp.wood    += (state.resources.wood    - _disp.wood)    * LERP
   _disp.stone   += (state.resources.stone   - _disp.stone)   * LERP
+  _disp.viande  += ((state.resources.viande || 0) - _disp.viande) * LERP
+  _disp.grain   += ((state.resources.grain  || 0) - _disp.grain)  * LERP
 
   if (rBerriesEl) rBerriesEl.textContent = formatNum(_disp.berries)
   if (rWoodEl)    rWoodEl.textContent    = formatNum(_disp.wood)
   if (rStoneEl)   rStoneEl.textContent   = formatNum(_disp.stone)
   if (rBlocsEl)   rBlocsEl.textContent   = formatNum((state.stocks.stone || 0) + (state.stocks.dirt || 0))
   if (cBushesEl)  cBushesEl.textContent  = state.bushes.length
-
-  if (rPointsEl) {
-    if (state.activeResearch) {
-      const ae = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
-        ? TECH_TREE_DATA.techs.find(x => x.id === state.activeResearch.id)
-        : null
-      const cost = ae ? ((ae.cost && ae.cost.research) || 0) : 0
-      _disp.pts += (state.activeResearch.progress - _disp.pts) * LERP
-      rPointsEl.textContent = formatNum(_disp.pts) + ' / ' + formatNum(cost)
-    } else {
-      _disp.pts = 0
-      rPointsEl.textContent = '0'
-    }
-  }
+  if (rViandeEl)  rViandeEl.textContent  = formatNum(_disp.viande)
+  if (rGrainEl)   rGrainEl.textContent   = formatNum(_disp.grain)
 }
 
 // ----------------------------------------------------------------------------
@@ -312,7 +303,7 @@ export function tickFps() {
 
 // referentiels pour tick()
 export const hudRefs = {
-  rBerriesEl, rWoodEl, rStoneEl, rBlocsEl, cBushesEl, rPointsEl, rNightPointsEl
+  rBerriesEl, rWoodEl, rStoneEl, rBlocsEl, cBushesEl, rViandeEl, rGrainEl
 }
 
 // ============================================================================
