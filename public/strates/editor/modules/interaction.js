@@ -978,7 +978,15 @@ dom.addEventListener('pointerup', (e) => {
   if (dist2 > 20) return
   if (isCharSheetOpen()) return
   const col = pickColonist(e.clientX, e.clientY)
-  if (col) { openCharSheet(col); return }
+  if (col) {
+    if (techUnlocked('oral-tradition')) {
+      openCharSheet(col)
+    } else {
+      col.sayHint('Tu ne me connais pas encore...')
+      showHudToast('Débloque Tradition orale pour connaître tes villageois', 2500)
+    }
+    return
+  }
   if (state.toolState.tool === 'nav') {
     const cell = pickCell(e.clientX, e.clientY)
     if (cell) {
