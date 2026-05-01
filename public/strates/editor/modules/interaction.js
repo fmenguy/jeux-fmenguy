@@ -104,7 +104,8 @@ function applyToolToZone(cells, tool) {
     if (tool === 'mine') {
       if (!state.bushes.some(b => b.x === c.x && b.z === c.z)) continue
     } else if (tool === 'hache') {
-      if (!state.trees.some(t => t.x === c.x && t.z === c.z)) continue
+      const tree = state.trees.find(t => t.x === c.x && t.z === c.z)
+      if (!tree || tree.growth < 0.66) continue
     } else if (tool === 'pick') {
       const hasRock = state.rocks.some(r => r.x === c.x && r.z === c.z)
       const hasOre  = state.ores.some(o => o.x === c.x && o.z === c.z)
@@ -530,6 +531,8 @@ function toolAllowedOnCell(tool, x, z) {
   if (tool === 'mine' && !canMineCell(x, z).ok) return false
   if (tool === 'hache') {
     if (!hasTreeAt(x, z)) return false
+    const tree = state.trees.find(t => t.x === x && t.z === z)
+    if (!tree || tree.growth < 0.66) return false
     if (!canMineCell(x, z).ok) return false
   }
   if (tool === 'pick') {

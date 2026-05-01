@@ -34,8 +34,14 @@ leafMesh.frustumCulled = false
 leafMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_TREES * 3), 3)
 scene.add(leafMesh)
 
+function stageMultiplier(growth) {
+  if (growth < 0.33) return 0.25
+  if (growth < 0.66) return 0.55
+  return 1.0
+}
+
 function applyTreeMatrix(t) {
-  const s = t.targetScale * Math.max(0.08, t.growth)
+  const s = t.targetScale * stageMultiplier(t.growth)
   if (t.group) {
     t.group.scale.setScalar(s * TREE_GLB_SCALE)
     return
@@ -46,6 +52,11 @@ function applyTreeMatrix(t) {
   tmpObj.updateMatrix()
   trunkMesh.setMatrixAt(t.slot, tmpObj.matrix)
   leafMesh.setMatrixAt(t.slot, tmpObj.matrix)
+}
+
+export function isTreeMature(x, z) {
+  const t = state.trees.find(t => t.x === x && t.z === z)
+  return t != null && t.growth >= 0.66
 }
 
 export function addTree(gx, gz, opts) {
@@ -99,10 +110,10 @@ export function removeTreesIn(cells) {
   for (const t of kept) addTree(t.x, t.z, { growth: t.growth })
 }
 
-// animation de pousse : chaque arbre avec growth < 1 grandit sur ~12 s
+// animation de pousse : chaque arbre avec growth < 1 grandit sur ~480 s (8 min)
 export function tickTreeGrowth(dt) {
   let instancedChanged = false
-  const RATE = 1 / 12
+  const RATE = 1 / 480
   for (const t of state.trees) {
     if (t.growth < 1) {
       t.growth = Math.min(1, t.growth + dt * RATE)
