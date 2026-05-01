@@ -450,21 +450,75 @@ export function findNearestBush(cx, cz, maxDist) {
 // Cerfs (decor statique GLB, pas de IA)
 // ============================================================================
 
+function makeFallbackDeer() {
+  const g = new THREE.Group()
+  const bodyMat  = new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.88, flatShading: true })
+  const legMat   = new THREE.MeshStandardMaterial({ color: 0x6b4828, roughness: 0.92, flatShading: true })
+  const headMat  = new THREE.MeshStandardMaterial({ color: 0x9a6a42, roughness: 0.85, flatShading: true })
+  const antlerMat = new THREE.MeshStandardMaterial({ color: 0xc8a060, roughness: 0.75, flatShading: true })
+
+  // Corps
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.28, 0.34), bodyMat)
+  body.position.set(0, 0.46, 0); body.castShadow = true; body.receiveShadow = true
+  g.add(body)
+
+  // Cou + tête
+  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.20, 0.15), bodyMat)
+  neck.position.set(0, 0.62, 0.21); neck.castShadow = true
+  g.add(neck)
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.19, 0.24), headMat)
+  head.position.set(0, 0.74, 0.33); head.castShadow = true
+  g.add(head)
+
+  // Bois (2 petites barres)
+  for (const ox of [-0.06, 0.06]) {
+    const antler = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.04), antlerMat)
+    antler.position.set(ox, 0.88, 0.31); antler.castShadow = true
+    g.add(antler)
+  }
+
+  // 4 pattes
+  const legGeo = new THREE.BoxGeometry(0.09, 0.32, 0.09)
+  const legOffsets = [[-0.17, 0.16, 0.12], [0.17, 0.16, 0.12], [-0.17, 0.16, -0.12], [0.17, 0.16, -0.12]]
+  for (const [lx, ly, lz] of legOffsets) {
+    const leg = new THREE.Mesh(legGeo, legMat)
+    leg.position.set(lx, ly, lz); leg.castShadow = true; leg.receiveShadow = true
+    g.add(leg)
+  }
+
+  g.userData.type = 'deer'
+  return g
+}
+
 export function addDeer(gx, gz) {
   const biome = state.cellBiome[gz * GRID + gx]
   if (biome !== 'grass' && biome !== 'forest') return null
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return null
-  const model = getModel('deer')
-  if (!model) return null  // pas de fallback procedural pour les animaux
   const rng = prng.rng
-  model.scale.setScalar(DEER_GLB_SCALE)
-  model.position.set(gx + 0.5 + (rng() - 0.5) * 0.6, top, gz + 0.5 + (rng() - 0.5) * 0.6)
-  model.rotation.y = rng() * Math.PI * 2
-  model.userData.type = 'deer'
-  model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-  scene.add(model)
-  const entry = { x: gx, z: gz, group: model }
+  const jx = (rng() - 0.5) * 0.6
+  const jz = (rng() - 0.5) * 0.6
+  const rotY = rng() * Math.PI * 2
+
+  const model = getModel('deer')
+  if (model) {
+    model.scale.setScalar(DEER_GLB_SCALE)
+    model.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
+    model.rotation.y = rotY
+    model.userData.type = 'deer'
+    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+    scene.add(model)
+    const entry = { x: gx, z: gz, group: model }
+    state.deers.push(entry)
+    return entry
+  }
+
+  // Fallback procedural quand le GLB est absent ou en echec de chargement
+  const g = makeFallbackDeer()
+  g.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
+  g.rotation.y = rotY
+  scene.add(g)
+  const entry = { x: gx, z: gz, group: g }
   state.deers.push(entry)
   return entry
 }
@@ -475,7 +529,10 @@ export function removeDeersIn(cells) {
   const toRemove = state.deers.filter(function(d) { return cellSet.has(d.z * GRID + d.x) })
   const kept = state.deers.filter(function(d) { return !cellSet.has(d.z * GRID + d.x) })
   if (kept.length === state.deers.length) return
-  for (const d of toRemove) { scene.remove(d.group) }
+  for (const d of toRemove) {
+    scene.remove(d.group)
+    d.group.traverse(function(o) { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose() })
+  }
   state.deers.length = 0
   for (const d of kept) state.deers.push(d)
 }
@@ -876,7 +933,13 @@ export function clearAllPlacements() {
   state.trees.length = 0; trunkMesh.count = 0; leafMesh.count = 0
   for (const r of state.rocks) { if (r.group) scene.remove(r.group) }
   state.rocks.length = 0; rockMesh.count = 0
-  if (state.deers) { for (const d of state.deers) { scene.remove(d.group) }; state.deers.length = 0 }
+  if (state.deers) {
+    for (const d of state.deers) {
+      scene.remove(d.group)
+      d.group.traverse(function(o) { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose() })
+    }
+    state.deers.length = 0
+  }
   if (state.foyers) {
     for (const f of state.foyers) {
       scene.remove(f.group)
