@@ -33,6 +33,7 @@ import { loadModels } from './modules/glb-cache.js'
 import { initPopulationModal } from './modules/ui/population-modal.js'
 import { initBuildingPanel } from './modules/ui/building-panel.js'
 import { initTutoInvite, showTutoInvite } from './modules/ui/tutorial.js'
+import { isSandboxMode, activateSandbox } from './modules/sandbox.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -80,6 +81,7 @@ if (!isNewGame && pendingSlot && hasSave(pendingSlot) && loadGame(pendingSlot)) 
   populateDefaultScene()
 }
 buildVegetation()
+if (isSandboxMode()) activateSandbox()
 setTool('nav')
 setBrush(1)
 refreshToolButtons()
