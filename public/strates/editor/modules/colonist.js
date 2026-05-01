@@ -205,12 +205,12 @@ export class Colonist {
     this.bubble.renderOrder = 999
     this.group.add(this.bubble)
     this.labelCanvas = makeLabelCanvas()
-    const { bw: labelBw } = drawLabel(this.labelCanvas, this.name, this.gender, this.isChief)
+    drawLabel(this.labelCanvas, this.name, this.gender, this.isChief)
     this.labelTex = new THREE.CanvasTexture(this.labelCanvas)
     this.labelTex.minFilter = THREE.LinearFilter
     this.labelMat = new THREE.SpriteMaterial({ map: this.labelTex, transparent: true, depthTest: false, depthWrite: false })
     this.label = new THREE.Sprite(this.labelMat)
-    this.label.scale.set(Math.max(0.7, (labelBw / 512) * 2.7), 0.34, 1)
+    this.label.scale.set(1.4, 0.35, 1)
     this.label.position.set(0, 1.85, 0)
     this.label.visible = true
     this.label.renderOrder = 998
