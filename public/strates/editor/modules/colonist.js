@@ -692,7 +692,8 @@ export class Colonist {
           // Ordre de priorite : arbre > rocher > filon > buisson > voxel.
           // L'un ou l'autre est traite, jamais les deux en un coup, ce qui
           // force le joueur a sequencer les ordres (ramasser avant miner).
-          if (isTreeOn(x, z) && chopTreeAt(x, z)) {
+          const treeEntry = state.trees.find(t => t.x === x && t.z === z)
+          if (isTreeOn(x, z) && treeEntry && treeEntry.growth >= 0.66 && chopTreeAt(x, z)) {
             state.resources.wood++
             scheduleFlash(x, z)
             removeJob(x, z, true)
