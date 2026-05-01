@@ -1877,25 +1877,5 @@
       if (e.key === '?') { e.preventDefault(); try { openHelpOverlay() } catch (err) {} }
     })
   </script>
-  <script>
-if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-  const btn = document.createElement('button')
-  btn.textContent = '🗑 Reset'
-  btn.title = 'Vider le cache et recharger (dev uniquement)'
-  btn.style.cssText = `
-    position: fixed; bottom: 8px; left: 8px; z-index: 9999;
-    background: rgba(0,0,0,0.5); color: #aaa; border: 1px solid #555;
-    border-radius: 4px; padding: 4px 8px; font-size: 11px;
-    cursor: pointer; pointer-events: all;
-  `
-  btn.addEventListener('click', () => {
-    localStorage.clear()
-    location.reload()
-  })
-  btn.addEventListener('mouseenter', () => btn.style.background = 'rgba(180,40,40,0.7)')
-  btn.addEventListener('mouseleave', () => btn.style.background = 'rgba(0,0,0,0.5)')
-  document.body.appendChild(btn)
-}
-  </script>
 </body>
 </html>
