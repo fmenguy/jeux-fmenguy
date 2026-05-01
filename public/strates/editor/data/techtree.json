@@ -163,7 +163,7 @@
     {
       "id": "scouting",
       "name": "Eclaireur",
-      "age": 1,
+      "age": 2,
       "branch": "exploration",
       "icon": "👁",
       "cost": { "research": 8 },
