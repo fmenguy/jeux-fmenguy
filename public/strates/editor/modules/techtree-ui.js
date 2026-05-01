@@ -17,3 +17,5 @@ export function initTechTreeUI()  { initTechTreePanel() }
 export function openTechTree()    { openTechTreePanel() }
 export function closeTechTree()   { closeTechTreePanel() }
 export function toggleTechTree()  { toggleTechTreePanel() }
+
+export { refreshTechTreeAfterAgeChange } from './ui/techtree-panel.js'

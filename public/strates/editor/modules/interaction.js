@@ -116,8 +116,10 @@ function applyToolToZone(cells, tool) {
       const hasOre  = state.ores.some(o => o.x === c.x && o.z === c.z)
       const k = c.z * GRID + c.x
       const biome = state.cellBiome[k]
-      const hasRockTerrain = (biome === 'rock' || biome === 'snow') && !isCellOccupied(c.x, c.z)
-      if (!hasRock && !hasOre && !hasRockTerrain) continue
+      const isRocky = biome === 'rock' || biome === 'snow'
+      const hasRockTerrain = isRocky && !isCellOccupied(c.x, c.z)
+      const hasOtherTerrain = !isRocky && !isCellOccupied(c.x, c.z) && techUnlocked('shovel-stone')
+      if (!hasRock && !hasOre && !hasRockTerrain && !hasOtherTerrain) continue
     } else if (tool === 'hunt') {
       if (!state.deers.some(d => d.x === c.x && d.z === c.z)) continue
     }
@@ -546,7 +548,8 @@ function toolAllowedOnCell(tool, x, z) {
     if (!canMineCell(x, z).ok) return false
   }
   if (tool === 'pick') {
-    if (biome !== 'rock' && biome !== 'snow') return false
+    const isRocky = biome === 'rock' || biome === 'snow'
+    if (!isRocky && !techUnlocked('shovel-stone')) return false
     if (isMineBlocked(x, z)) return false
     if (!canMineCell(x, z).ok) return false
   }
@@ -810,8 +813,10 @@ function applyToolToStrata(cells) {
       const hasOre  = state.ores.some(o => o.x === c.x && o.z === c.z)
       const k = c.z * GRID + c.x
       const biome = state.cellBiome[k]
-      const hasRockTerrain = (biome === 'rock' || biome === 'snow') && !isCellOccupied(c.x, c.z)
-      if (!hasRock && !hasOre && !hasRockTerrain) continue
+      const isRocky = biome === 'rock' || biome === 'snow'
+      const hasRockTerrain = isRocky && !isCellOccupied(c.x, c.z)
+      const hasOtherTerrain = !isRocky && !isCellOccupied(c.x, c.z) && techUnlocked('shovel-stone')
+      if (!hasRock && !hasOre && !hasRockTerrain && !hasOtherTerrain) continue
       if (!toolAllowedOnCell('pick', c.x, c.z)) continue
       addJob(c.x, c.z)
     }
