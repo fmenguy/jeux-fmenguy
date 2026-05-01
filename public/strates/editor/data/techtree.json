@@ -156,8 +156,10 @@
       "icon": "📖",
       "cost": { "research": 0 },
       "requires": ["fire-mastery"],
-      "unlocks": {},
-      "description": "Transmission du savoir entre generations. Debloquee avec la Maitrise du feu. Tech gratuite.",
+      "unlocks": {
+        "features": ["colonist-charsheet"]
+      },
+      "description": "La tribu commence a se souvenir des noms, des histoires et des talents de chacun. Permet de consulter la fiche de chaque villageois en cliquant dessus.",
       "speech": ["Les anciens nous ont tout appris."]
     },
     {
