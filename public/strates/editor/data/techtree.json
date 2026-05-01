@@ -121,17 +121,17 @@
       "speech": ["Le feu est notre allie depuis toujours."]
     },
     {
-      "id": "shelter-basic",
-      "name": "Abri de fortune",
+      "id": "big-house",
+      "name": "Grosse maison",
       "age": 1,
       "branch": "construction",
       "icon": "🏚",
       "cost": { "research": 5 },
       "requires": [],
       "unlocks": {
-        "buildings": ["abri-fortune"]
+        "buildings": ["big-house"]
       },
-      "description": "Construction d'un abri rudimentaire contre les intemperies.",
+      "description": "Construction d'une grande demeure pour plusieurs villageois.",
       "speech": ["Un toit minimal, mais c'est mieux que rien."]
     },
     {

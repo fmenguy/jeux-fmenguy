@@ -14,17 +14,17 @@
       "description": "Coeur du camp. Permet la cuisson de la viande et le craft de la Hache, Pioche et Lance."
     },
     {
-      "id": "abri-fortune",
-      "name": "Abri de fortune",
+      "id": "big-house",
+      "name": "Grosse maison",
       "age": 1,
       "category": "habitation",
-      "size": "1x1",
+      "footprint": 4,
+      "capacity": 8,
       "cost": { "wood": 5 },
-      "requires": { "tech": ["shelter-basic"] },
-      "provides": { "pop": 1 },
-      "fusion": { "count": 2, "into": "cabane" },
+      "requires": { "tech": ["big-house"] },
+      "provides": { "pop": 8 },
       "activity": "both",
-      "description": "Premier abri basique. Population +1. Upgradable en Cabane (fusion 2 abris)."
+      "description": "Grande demeure pouvant accueillir 8 villageois."
     },
     {
       "id": "cabane",
