@@ -267,6 +267,12 @@ function tick(nowMs) {
 
   for (const c of state.colonists) c.update(dt)
 
+  if (state.deers) {
+    for (const d of state.deers) {
+      if (d.group.userData.mixer) d.group.userData.mixer.update(dt)
+    }
+  }
+
   // regen des baies
   for (const b of state.bushes) {
     if (b.berries < b.maxBerries) {

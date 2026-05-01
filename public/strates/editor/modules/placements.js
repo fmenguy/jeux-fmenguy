@@ -8,7 +8,7 @@ import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
-import { getModel, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
+import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
 
 // ============================================================================
 // Arbres (trunk + leaf InstancedMesh)
@@ -519,11 +519,30 @@ export function addDeer(gx, gz) {
   const jz = (rng() - 0.5) * 0.6
   const rotY = rng() * Math.PI * 2
 
+  const model = getModel('deer')
+  if (model) {
+    model.scale.setScalar(DEER_GLB_SCALE)
+    model.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
+    model.rotation.y = rotY
+    model.userData.type = 'deer'
+    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+    const clips = getModelClips('deer')
+    if (clips.length > 0) {
+      const mixer = new THREE.AnimationMixer(model)
+      mixer.clipAction(clips[0]).play()
+      model.userData.mixer = mixer
+    }
+    scene.add(model)
+    const entry = { x: gx, z: gz, group: model }
+    state.deers.push(entry)
+    return entry
+  }
+
+  // Fallback procedural si le GLB est absent ou en echec de chargement
   const g = makeFallbackDeer()
   g.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
   g.rotation.y = rotY
   scene.add(g)
-  console.log('[deer] placé en', gx, gz)
   const entry = { x: gx, z: gz, group: g }
   state.deers.push(entry)
   return entry
