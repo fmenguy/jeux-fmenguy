@@ -192,24 +192,7 @@ function injectStyles() {
   color: #c8a84b;
   opacity: .8;
 }
-.tuto-skip {
-  position: fixed;
-  bottom: 18px;
-  right: 18px;
-  z-index: 9002;
-  background: transparent;
-  border: 1px solid rgba(200,168,75,.3);
-  border-radius: 4px;
-  color: rgba(200,168,75,.5);
-  font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 9px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  cursor: pointer;
-  transition: color .15s, border-color .15s;
-}
-.tuto-skip:hover { color: #c8a84b; border-color: #c8a84b; }
+
 .tuto-flash {
   position: fixed;
   top: 50%;
@@ -428,19 +411,9 @@ function showFlash(text) {
 function runTutorials() {
   injectStyles()
 
-  const skipBtn = document.createElement('button')
-  skipBtn.className = 'tuto-skip'
-  skipBtn.textContent = 'Passer le tuto'
-  document.body.appendChild(skipBtn)
-
   function startTuto2() {
     setTimeout(() => {
-      runTutorial(
-        TUTO2_STEPS,
-        'strates.tuto2Done',
-        () => { skipBtn.remove(); showFlash("C'est parti !") },
-        skipBtn
-      )
+      runTutorial(TUTO2_STEPS, 'strates.tuto2Done', () => showFlash("C'est parti !"))
     }, 1500)
   }
 
@@ -448,7 +421,7 @@ function runTutorials() {
     if (localStorage.getItem('strates.tutoDone')) {
       startTuto2()
     } else {
-      runTutorial(TUTO1_STEPS, 'strates.tutoDone', startTuto2, skipBtn)
+      runTutorial(TUTO1_STEPS, 'strates.tutoDone', startTuto2)
     }
   } catch (e) {}
 }
