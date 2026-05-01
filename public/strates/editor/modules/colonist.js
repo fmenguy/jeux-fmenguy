@@ -862,6 +862,20 @@ export function spawnColonist(x, z, opts) {
   const id = state.colonists.length
   const c = new Colonist(id, x, z, opts)
   state.colonists.push(c)
+  // Assigner la maison la plus proche
+  let nearestHouse = null
+  let nearestDist = Infinity
+  for (const h of (state.houses || [])) {
+    const d = Math.abs(h.x - x) + Math.abs(h.z - z)
+    if (d < nearestDist) { nearestDist = d; nearestHouse = h }
+  }
+  if (nearestHouse) {
+    c.homeId = nearestHouse.id
+    if (!nearestHouse.residents) nearestHouse.residents = []
+    nearestHouse.residents.push(c.id)
+  } else {
+    c.homeId = null
+  }
   return c
 }
 
