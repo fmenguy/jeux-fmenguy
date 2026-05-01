@@ -452,40 +452,59 @@ export function findNearestBush(cx, cz, maxDist) {
 
 function makeFallbackDeer() {
   const g = new THREE.Group()
-  const bodyMat  = new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.88, flatShading: true })
-  const legMat   = new THREE.MeshStandardMaterial({ color: 0x6b4828, roughness: 0.92, flatShading: true })
-  const headMat  = new THREE.MeshStandardMaterial({ color: 0x9a6a42, roughness: 0.85, flatShading: true })
-  const antlerMat = new THREE.MeshStandardMaterial({ color: 0xc8a060, roughness: 0.75, flatShading: true })
+  const rust      = new THREE.MeshLambertMaterial({ color: 0xA0522D })
+  const darkBrown = new THREE.MeshLambertMaterial({ color: 0x5C3A1E })
+  const black     = new THREE.MeshLambertMaterial({ color: 0x111111 })
+  const amber     = new THREE.MeshLambertMaterial({ color: 0xC8860A })
+  const cream     = new THREE.MeshLambertMaterial({ color: 0xE8D5B0 })
+
+  function b(w, h, d, mat, x, y, z) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat)
+    m.position.set(x, y, z); m.castShadow = true; g.add(m)
+  }
+  function c(rt, rb, h, mat, x, y, z) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 8), mat)
+    m.position.set(x, y, z); m.castShadow = true; g.add(m)
+  }
 
   // Corps
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.28, 0.34), bodyMat)
-  body.position.set(0, 0.46, 0); body.castShadow = true; body.receiveShadow = true
-  g.add(body)
+  b(0.58, 0.38, 1.20, rust,       0,     0.92,  0)
+  // Cou
+  b(0.16, 0.44, 0.16, rust,       0,     1.22,  0.46)
+  // Tête
+  b(0.22, 0.22, 0.30, rust,       0,     1.50,  0.60)
+  // Museau
+  b(0.14, 0.10, 0.14, darkBrown,  0,     1.44,  0.74)
+  // Yeux
+  b(0.05, 0.05, 0.03, black,  0.09,     1.54,  0.70)
+  b(0.05, 0.05, 0.03, black, -0.09,     1.54,  0.70)
+  // Pattes (cylindres)
+  c(0.055, 0.07, 0.60, darkBrown,  0.24, 0.38,  0.38)
+  c(0.055, 0.07, 0.60, darkBrown, -0.24, 0.38,  0.38)
+  c(0.055, 0.07, 0.60, darkBrown,  0.24, 0.38, -0.36)
+  c(0.055, 0.07, 0.60, darkBrown, -0.24, 0.38, -0.36)
+  // Sabots
+  c(0.07, 0.07, 0.07, black,  0.24, 0.05,  0.38)
+  c(0.07, 0.07, 0.07, black, -0.24, 0.05,  0.38)
+  c(0.07, 0.07, 0.07, black,  0.24, 0.05, -0.36)
+  c(0.07, 0.07, 0.07, black, -0.24, 0.05, -0.36)
+  // Bois droite
+  c(0.03, 0.03, 0.38, amber,  0.10, 1.70, 0.56)
+  c(0.03, 0.03, 0.22, amber,  0.22, 1.84, 0.56)
+  c(0.03, 0.03, 0.18, amber,  0.08, 1.80, 0.56)
+  c(0.03, 0.03, 0.14, amber,  0.28, 1.74, 0.56)
+  // Bois gauche
+  c(0.03, 0.03, 0.38, amber, -0.10, 1.70, 0.56)
+  c(0.03, 0.03, 0.22, amber, -0.22, 1.84, 0.56)
+  c(0.03, 0.03, 0.18, amber, -0.08, 1.80, 0.56)
+  c(0.03, 0.03, 0.14, amber, -0.28, 1.74, 0.56)
+  // Manchons de bois (attaches aux bois)
+  b(0.05, 0.20, 0.04, rust,  0.22, 1.52, 0.56)
+  b(0.05, 0.20, 0.04, rust, -0.22, 1.52, 0.56)
+  // Queue
+  b(0.18, 0.18, 0.07, cream, 0, 1.0, -0.62)
 
-  // Cou + tête
-  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.20, 0.15), bodyMat)
-  neck.position.set(0, 0.62, 0.21); neck.castShadow = true
-  g.add(neck)
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.19, 0.24), headMat)
-  head.position.set(0, 0.74, 0.33); head.castShadow = true
-  g.add(head)
-
-  // Bois (2 petites barres)
-  for (const ox of [-0.06, 0.06]) {
-    const antler = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.04), antlerMat)
-    antler.position.set(ox, 0.88, 0.31); antler.castShadow = true
-    g.add(antler)
-  }
-
-  // 4 pattes
-  const legGeo = new THREE.BoxGeometry(0.09, 0.32, 0.09)
-  const legOffsets = [[-0.17, 0.16, 0.12], [0.17, 0.16, 0.12], [-0.17, 0.16, -0.12], [0.17, 0.16, -0.12]]
-  for (const [lx, ly, lz] of legOffsets) {
-    const leg = new THREE.Mesh(legGeo, legMat)
-    leg.position.set(lx, ly, lz); leg.castShadow = true; leg.receiveShadow = true
-    g.add(leg)
-  }
-
+  g.scale.setScalar(0.55)
   g.userData.type = 'deer'
   return g
 }
@@ -500,24 +519,11 @@ export function addDeer(gx, gz) {
   const jz = (rng() - 0.5) * 0.6
   const rotY = rng() * Math.PI * 2
 
-  const model = getModel('deer')
-  if (model) {
-    model.scale.setScalar(DEER_GLB_SCALE)
-    model.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
-    model.rotation.y = rotY
-    model.userData.type = 'deer'
-    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-    scene.add(model)
-    const entry = { x: gx, z: gz, group: model }
-    state.deers.push(entry)
-    return entry
-  }
-
-  // Fallback procedural quand le GLB est absent ou en echec de chargement
   const g = makeFallbackDeer()
   g.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
   g.rotation.y = rotY
   scene.add(g)
+  console.log('[deer] placé en', gx, gz)
   const entry = { x: gx, z: gz, group: g }
   state.deers.push(entry)
   return entry
