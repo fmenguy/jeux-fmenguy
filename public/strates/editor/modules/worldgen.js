@@ -215,5 +215,6 @@ export function resetWorld(refreshHUD) {
   state.questsCompleted = []
   resetQuestSig()
   startNextQuest()
+  try { window.dispatchEvent(new CustomEvent('strates:worldReset')) } catch (e) {}
   if (refreshHUD) refreshHUD()
 }

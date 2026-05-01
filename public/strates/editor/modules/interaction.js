@@ -224,21 +224,36 @@ const oreSubEl = document.getElementById('ore-sub')
 state.toolState.oreType = ORE_KEYS[0]
 
 export function refreshToolButtons() {
-  const btnHache = document.querySelector('.tool[data-tool="hache"]')
-  const btnPick = document.querySelector('.tool[data-tool="pick"]')
-  if (btnHache) btnHache.style.display = techUnlocked('axe-stone') ? '' : 'none'
-  if (btnPick) btnPick.style.display = techUnlocked('pick-stone') ? '' : 'none'
+  function setLocked(sel, locked) {
+    const btn = document.querySelector(sel)
+    if (!btn) return
+    btn.classList.toggle('locked', locked)
+    if (locked) btn.setAttribute('disabled', '') else btn.removeAttribute('disabled')
+  }
+
+  setLocked('.tool[data-tool="hache"]',      !techUnlocked('axe-stone'))
+  setLocked('.tool[data-tool="pick"]',        !techUnlocked('pick-stone'))
+  setLocked('.tool[data-tool="hunt"]',        !techUnlocked('bow-wood'))
+  setLocked('.tool[data-tool="field"]',       !techUnlocked('first-field'))
+  setLocked('.tool[data-tool="observatory"]', !techUnlocked('promontory'))
+  setLocked('.tool[data-tool="abri"]',        !techUnlocked('shelter-basic'))
+
   const btnResearch = document.querySelector('.tool[data-tool="place-research"]')
   if (btnResearch) {
-    btnResearch.style.display = techUnlocked('basic-research') ? '' : 'none'
-    btnResearch.classList.toggle('locked', state.researchHouses.length > 0)
+    const locked = !techUnlocked('basic-research') || state.researchHouses.length > 0
+    btnResearch.classList.toggle('locked', locked)
+    if (locked) btnResearch.setAttribute('disabled', '') else btnResearch.removeAttribute('disabled')
   }
   const btnFoyer = document.querySelector('.tool[data-tool="place-foyer"]')
   if (btnFoyer) {
-    btnFoyer.style.display = techUnlocked('fire-mastery') ? '' : 'none'
-    btnFoyer.classList.toggle('locked', state.foyers.length > 0)
+    const locked = !techUnlocked('fire-mastery') || state.foyers.length > 0
+    btnFoyer.classList.toggle('locked', locked)
+    if (locked) btnFoyer.setAttribute('disabled', '') else btnFoyer.removeAttribute('disabled')
   }
 }
+
+window.addEventListener('strates:techComplete', refreshToolButtons)
+window.addEventListener('strates:worldReset', refreshToolButtons)
 
 export function labelOfTool(t) {
   if (t === 'ore') return 'filon (' + ORE_TYPES[state.toolState.oreType].label + ')'
