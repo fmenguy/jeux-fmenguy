@@ -496,11 +496,12 @@ function stopInactivityTimer() {
 // ─── Point d'entrée ───────────────────────────────────────────────────────────
 
 export function initTutoInvite() {
-  try {
-    if (localStorage.getItem('strates.tutoDone') && localStorage.getItem('strates.tuto2Done')) return
-    if (localStorage.getItem('strates.tutoSkipped')) return
-  } catch (e) {}
+  if (tutosDone()) return
 
+  // Première visite : afficher le popup après 4s sans attendre l'inactivité
+  setTimeout(showInviteBubble, 4000)
+
+  // Timer d'inactivité 60s en secours (si le popup a été fermé sans répondre)
   STRATES_EVENTS.forEach(ev => window.addEventListener(ev, resetInactivityTimer))
   document.addEventListener('click', (e) => {
     if (e.target.closest('.ab-tab') || e.target.closest('.tool') || e.target.closest('.rail-btn')) {
