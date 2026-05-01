@@ -126,10 +126,9 @@ export function drawBubble(canvas, text, isHint) {
   return { bw, bh: canvasH }
 }
 
-// Label canvas : 512px pour accueillir les noms longs sans clipping
 export function makeLabelCanvas() {
   const c = document.createElement('canvas')
-  c.width = 512; c.height = 64
+  c.width = 256; c.height = 64
   return c
 }
 
