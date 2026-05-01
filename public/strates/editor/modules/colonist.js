@@ -566,12 +566,6 @@ export class Colonist {
         }
         if (state.jobs.size > 0) { if (this.pickJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK }; return } }
         if (state.buildJobs.size > 0) { if (this.pickBuildJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_BUILD_JOB, priority: PRIORITY.WORK }; return } }
-        // Activite exclusive jour : cueillette de baies (agriculture). La nuit
-        // les colons affectes a un buisson reviennent au repos.
-        if (!state.isNight && this.pickHarvest()) {
-          this.currentTask = { kind: TASK_KIND.HARVEST_BERRIES, priority: PRIORITY.LEISURE }
-          return
-        }
       }
       // Lot B, B10 : auto-collecte de base au repos (rochers, arbres si hache).
       // desactive - remplace par systeme 3 boutons (pioche/hache/baie)
