@@ -12,13 +12,26 @@
 import { state } from './state.js'
 import { playCinematic } from './cinematics.js'
 import { saveGame } from './persistence.js'
-import { getTechsForAge, getBuildingsForAge, getTotalFood } from './gamedata.js'
+import { getTechsForAge, getBuildingsForAge, getTotalFood, TECH_TREE_DATA } from './gamedata.js'
 import { addCairn, findFreeCellNear } from './placements.js'
 
 // ---------------------------------------------------------------------------
 // Flag dev : si true, la condition "os" est ignoree (Lot B Chasseur pas livre)
 // ---------------------------------------------------------------------------
 const DEV_SKIP_BONES = true
+
+// Calcul derive de l'etat reel : somme des couts de recherche des techs debloquees.
+// Plus fiable que state.totalResearchSpent qui peut etre mal incremente sur
+// certains chemins de deblocage (alreadyPaid, saves anciennes, debug).
+function totalResearchSpentComputed() {
+  const techs = (TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)) ? TECH_TREE_DATA.techs : []
+  return techs
+    .filter(t => state.techs[t.id] && state.techs[t.id].unlocked)
+    .reduce((sum, t) => {
+      const cost = t.cost && typeof t.cost === 'object' ? (t.cost.research || 0) : (t.cost || 0)
+      return sum + cost
+    }, 0)
+}
 
 // ---------------------------------------------------------------------------
 // Seuils des conditions (source : HTML pilotage v0.2, onglet "Passage au Bronze")
@@ -78,10 +91,10 @@ export function canBuildCairn(st) {
     missing.push('1 Chercheur assigne')
   }
 
-  // Condition : points de recherche cumulatifs depenses (B19).
-  // On lit totalResearchSpent, jamais le solde courant, pour eviter un
-  // blocage si B11 gele l accumulation avant que le joueur atteigne 100.
-  const pts = st.totalResearchSpent || 0
+  // Condition : points de recherche cumulatifs depenses.
+  // Valeur derivee des techs effectivement debloquees pour eviter
+  // les derives dues a des chemins qui n incrementaient pas totalResearchSpent.
+  const pts = totalResearchSpentComputed()
   if (pts < SEUILS.researchPoints) {
     missing.push(`${pts}/${SEUILS.researchPoints} pts recherche depenses`)
   }
@@ -130,7 +143,7 @@ export function getCairnProgress(st) {
   const hasResearcher = (st.researchHouses && st.researchHouses.some(r => r.assignedColonistId)) ? 1 : 0
   checks.push(hasResearcher)
 
-  const pts = st.totalResearchSpent || 0
+  const pts = totalResearchSpentComputed()
   checks.push(Math.min(1, pts / SEUILS.researchPoints))
 
   if (!DEV_SKIP_BONES) {
@@ -339,7 +352,7 @@ function _showCondTooltip() {
     { label: `${SEUILS.nourriture} nourriture`,        ok: getTotalFood(state) >= SEUILS.nourriture },
     { label: 'Hutte du sage',                          ok: !!(state.researchHouses && state.researchHouses.length > 0) },
     { label: '1 Chercheur assigne',                    ok: !!(state.researchHouses && state.researchHouses.some(r => r.assignedColonistId)) },
-    { label: `${SEUILS.researchPoints} pts recherche depenses`, ok: (state.totalResearchSpent || 0) >= SEUILS.researchPoints },
+    { label: `${SEUILS.researchPoints} pts recherche depenses`, ok: totalResearchSpentComputed() >= SEUILS.researchPoints },
   ]
   if (!DEV_SKIP_BONES) {
     condDefs.push({ label: `${SEUILS.os} os`, ok: ((state.stocks && state.stocks.bone) || 0) >= SEUILS.os })
