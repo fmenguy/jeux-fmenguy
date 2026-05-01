@@ -782,6 +782,27 @@ function applyToolToStrata(cells) {
     refreshHUD()
     return
   }
+  if (t === 'hache') {
+    for (const c of cells) {
+      const tree = state.trees.find(tr => tr.x === c.x && tr.z === c.z)
+      if (!tree || tree.growth < 0.66) continue
+      if (!toolAllowedOnCell('hache', c.x, c.z)) continue
+      addJob(c.x, c.z)
+    }
+    refreshHUD()
+    return
+  }
+  if (t === 'pick') {
+    for (const c of cells) {
+      const hasRock = state.rocks.some(r => r.x === c.x && r.z === c.z)
+      const hasOre  = state.ores.some(o => o.x === c.x && o.z === c.z)
+      if (!hasRock && !hasOre) continue
+      if (!toolAllowedOnCell('pick', c.x, c.z)) continue
+      addJob(c.x, c.z)
+    }
+    refreshHUD()
+    return
+  }
   if (t === 'build') {
     for (const c of cells) {
       if (!toolAllowedOnCell('build', c.x, c.z)) continue
