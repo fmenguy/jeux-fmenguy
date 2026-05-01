@@ -8,6 +8,7 @@ import { totalBuildStock } from './stocks.js'
 import { countActiveResearchers } from './placements.js'
 import { unlockTech } from './tech.js'
 import { BUILDINGS_DATA, TECH_TREE_DATA } from './gamedata.js'
+import { showHudToast } from './ui/research-popup.js'
 
 // ============================================================================
 // HUD : stocks, techs, colons, compteurs, FPS
@@ -107,9 +108,22 @@ export function refreshTechsPanel() {
     )
   }
   parts.push('</div>')
+  const noHutte = !state.researchHouses || state.researchHouses.length === 0
+  if (noHutte) {
+    parts.unshift(
+      '<div style="background:#3a2a0a;border:1px solid #c8860a;border-radius:6px;' +
+      'padding:10px 14px;margin-bottom:12px;color:#e8c87a;font-size:12px;text-align:center;">' +
+      '&#127963; Construisez la <strong>Hutte du Sage</strong> pour débloquer les recherches.' +
+      '</div>'
+    )
+  }
   techsBodyEl.innerHTML = parts.join('')
   techsBodyEl.querySelectorAll('button[data-tech]').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (!state.researchHouses || state.researchHouses.length === 0) {
+        showHudToast('Construisez d\'abord la Hutte du Sage pour débloquer des recherches.', 3000)
+        return
+      }
       const id = btn.getAttribute('data-tech')
       unlockTech(id, refreshTechsPanel)
     })
