@@ -220,9 +220,11 @@ export class Colonist {
   say(line, isHint) {
     this.lastLine = line
     this.lastLineHint = !!isHint
-    this._bubbleTruncated = null  // force redraw de la troncature au prochain tick
-    drawBubble(this.bubbleCanvas, line, !!isHint)
+    this._bubbleTruncated = null
+    const { bw } = drawBubble(this.bubbleCanvas, line, !!isHint)
     this.bubbleTex.needsUpdate = true
+    this._bubbleBaseW = Math.max(1.0, (bw / 512) * 2.8)
+    this.bubble.scale.set(this._bubbleBaseW, 0.75, 1)
     this.speechTimer = isHint ? 6.0 : 4.0
     this.bubble.visible = true
     this.bubbleMat.opacity = 1
@@ -246,12 +248,12 @@ export class Colonist {
 
     this.bubble.visible = true
 
-    // Scale inversement proportionnel à la distance, ancrage bas du sprite
-    const s = Math.min(3.0, Math.max(0.7, dist / 20))
-    this.bubble.scale.set(2.4 * s, 0.75 * s, 1)
+    // Scale proportionnel à la distance, ancrage bas du sprite
+    const zoomFactor = Math.max(0.6, Math.min(2.5, dist / 18))
+    const baseW = this._bubbleBaseW || 2.4
+    this.bubble.scale.set(baseW * zoomFactor, 0.75 * zoomFactor, 1)
     // Ajuste Y pour que le bas du sprite reste ancré au-dessus de la tête
-    // (centre du sprite = position.y, demi-hauteur = 0.375*s)
-    this.bubble.position.set(0, 2.375 + 0.375 * s, 0)
+    this.bubble.position.set(0, 2.375 + 0.375 * zoomFactor, 0)
 
     // Troncature au-delà de 25 unités : redraw uniquement au changement de seuil
     const truncate = dist > 25

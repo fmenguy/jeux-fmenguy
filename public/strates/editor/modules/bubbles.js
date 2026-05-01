@@ -76,6 +76,7 @@ export function drawBubble(canvas, text, isHint) {
   ctx.fillStyle = textCol
   ctx.font = bodyFont
   ctx.fillText(text, canvas.width / 2, by + bh / 2, canvas.width - padX * 2)
+  return { bw, bh }
 }
 
 export function makeLabelCanvas() {
