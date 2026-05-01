@@ -30,58 +30,106 @@ export function makeBubbleCanvas() {
 
 export function drawBubble(canvas, text, isHint) {
   const ctx = canvas.getContext('2d')
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  const padX = 22
-  const bodyFont = '500 30px system-ui, sans-serif'
+  const padX = 24
+  const padY = 16
+  const lineH = 36
+  const bodyFont = '500 28px system-ui, sans-serif'
+  const iconW = isHint ? 28 : 0
+  const maxTextW = canvas.width - padX * 2 - iconW
+
+  // Word wrapping
   ctx.font = bodyFont
-  const bMetrics = ctx.measureText(text)
-  const tw = Math.min(canvas.width - padX * 2, bMetrics.width)
-  const bw = tw + padX * 2
-  const bh = 64
-  const bx = (canvas.width - bw) / 2
+  const words = text.split(' ')
+  const lines = []
+  let cur = ''
+  for (const word of words) {
+    const candidate = cur ? cur + ' ' + word : word
+    if (cur && ctx.measureText(candidate).width > maxTextW) {
+      lines.push(cur)
+      cur = word
+    } else {
+      cur = candidate
+    }
+  }
+  if (cur) lines.push(cur)
+
+  // Largeur reelle de la bulle
+  let maxLW = 0
+  for (const l of lines) { const w = ctx.measureText(l).width; if (w > maxLW) maxLW = w }
+  const bw = Math.min(canvas.width - 8, maxLW + padX * 2 + iconW)
+
+  // Hauteur de la bulle selon le nombre de lignes
+  const bh = lines.length * lineH + padY * 2
   const by = 10
-  const r = 18
+  const tipH = 26
+  const canvasH = by + bh + tipH + 14
+
+  // Redimensionnement dynamique du canvas (remet le contexte a zero)
+  if (canvas.height !== canvasH) canvas.height = canvasH
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.font = bodyFont
+
+  const bx = (canvas.width - bw) / 2
+  const r = 16
   const fillCol = isHint ? '#dff0ff' : '#ffffff'
   const borderCol = isHint ? '#4a90e2' : 'rgba(0,0,0,0.15)'
   const textCol = isHint ? '#0d2947' : '#1a1f2a'
   const borderW = isHint ? 3 : 2
-  ctx.fillStyle = 'rgba(0,0,0,0.25)'
-  ctx.beginPath(); ctx.roundRect(bx + 3, by + 5, bw, bh, r); ctx.fill()
+
+  // Ombre portee
+  ctx.fillStyle = 'rgba(0,0,0,0.22)'
+  ctx.beginPath(); ctx.roundRect(bx + 3, by + 4, bw, bh, r); ctx.fill()
+
+  // Corps de la bulle
   ctx.fillStyle = fillCol
   ctx.strokeStyle = borderCol
   ctx.lineWidth = borderW
   ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill(); ctx.stroke()
+
+  // Queue triangulaire
   const cxp = canvas.width / 2
-  const tipY = by + bh + 18
+  const tipY = by + bh + tipH
   ctx.beginPath()
-  ctx.moveTo(cxp - 12, by + bh - 1)
-  ctx.lineTo(cxp + 12, by + bh - 1)
+  ctx.moveTo(cxp - 11, by + bh - 1)
+  ctx.lineTo(cxp + 11, by + bh - 1)
   ctx.lineTo(cxp, tipY)
   ctx.closePath()
   ctx.fillStyle = fillCol; ctx.fill()
   ctx.strokeStyle = borderCol; ctx.stroke()
+  // Masque la couture entre le rect et le triangle
   ctx.fillStyle = fillCol
-  ctx.fillRect(cxp - 11, by + bh - 3, 22, 3)
+  ctx.fillRect(cxp - 10, by + bh - 2, 20, 3)
+
+  // Pastille indicatrice pour les hints
   if (isHint) {
     ctx.fillStyle = '#ffd98a'
     ctx.beginPath()
-    ctx.arc(bx + 22, by + bh / 2, 9, 0, Math.PI * 2)
+    ctx.arc(bx + 20, by + bh / 2, 8, 0, Math.PI * 2)
     ctx.fill()
     ctx.strokeStyle = '#4a90e2'
     ctx.lineWidth = 2
     ctx.stroke()
   }
+
+  // Lignes de texte centrees
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillStyle = textCol
   ctx.font = bodyFont
-  ctx.fillText(text, canvas.width / 2, by + bh / 2, canvas.width - padX * 2)
-  return { bw, bh }
+  const textX = canvas.width / 2
+  const textStartY = by + padY + lineH / 2
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], textX, textStartY + i * lineH)
+  }
+
+  return { bw, bh: canvasH }
 }
 
+// Label canvas : 512px pour accueillir les noms longs sans clipping
 export function makeLabelCanvas() {
   const c = document.createElement('canvas')
-  c.width = 256; c.height = 64
+  c.width = 512; c.height = 64
   return c
 }
 
@@ -96,7 +144,7 @@ export function drawLabel(canvas, name, gender, isChief) {
   const symW = ctx.measureText(' ' + sym).width
   const totalW = starW + nameW + symW
   const padX = 14
-  const bw = totalW + padX * 2
+  const bw = Math.min(canvas.width - 8, totalW + padX * 2)
   const bh = 36
   const bx = (canvas.width - bw) / 2
   const by = (canvas.height - bh) / 2
@@ -116,4 +164,5 @@ export function drawLabel(canvas, name, gender, isChief) {
   ctx.fillText(name, startX + starW, midY)
   ctx.fillStyle = GENDER_COLORS[gender] || '#f3ecdd'
   ctx.fillText(' ' + sym, startX + starW + nameW, midY)
+  return { bw }
 }
