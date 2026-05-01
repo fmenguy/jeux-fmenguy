@@ -82,7 +82,7 @@ export const state = {
 
   // quests
   questsAvailable: [],
-  questActive: null,
+  questsActive: [],
   questsCompleted: [],
 
   // tools

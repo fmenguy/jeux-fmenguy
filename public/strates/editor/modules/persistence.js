@@ -143,7 +143,7 @@ function serializeSnapshot() {
     resources: { ...state.resources },
     gameStats: { ...state.gameStats },
     questsCompleted: (state.questsCompleted || []).map(q => ({ id: q.id, title: q.title })),
-    questActiveId: state.questActive ? state.questActive.id : null,
+    questsActiveIds: (state.questsActive || []).map(q => q.id),
     season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone },
     visited: state.visited ? Array.from(state.visited) : null,
     currentAge: state.currentAge || 1,
@@ -179,7 +179,7 @@ function clearEverything() {
   state.contextBubbles.lastLineByCategory.clear()
   state.contextBubbles.fieldTriggerStartAt = -1
   state.questsAvailable = []
-  state.questActive = null
+  state.questsActive = []
   state.questsCompleted = []
   resetQuestSig()
   // Lot D
@@ -274,7 +274,7 @@ function applySnapshot(data) {
 
   // quetes : on redemarre a l'index sauve
   state.questsCompleted = Array.isArray(data.questsCompleted) ? data.questsCompleted : []
-  state.questActive = null
+  state.questsActive = []
   state.questsAvailable = []
   if (data.season) {
     state.season.idx = data.season.idx || 0
