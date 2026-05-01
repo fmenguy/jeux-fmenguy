@@ -145,7 +145,7 @@ function serializeSnapshot() {
     gameStats: { ...state.gameStats },
     questsCompleted: (state.questsCompleted || []).map(q => ({ id: q.id, title: q.title })),
     questsActiveIds: (state.questsActive || []).map(q => q.id),
-    season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone },
+    season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone, year: state.season.year ?? 1 },
     visited: state.visited ? Array.from(state.visited) : null,
     currentAge: state.currentAge || 1,
     ageUnlockedAt: state.ageUnlockedAt || { 1: Date.now() },
@@ -282,6 +282,7 @@ function applySnapshot(data) {
     state.season.idx = data.season.idx || 0
     state.season.elapsed = data.season.elapsed || 0
     state.season.cyclesDone = data.season.cyclesDone || 0
+    state.season.year = data.season.year ?? (data.season.cyclesDone + 1) ?? 1
   }
   // Lot D : ages
   state.currentAge = data.currentAge || 1
