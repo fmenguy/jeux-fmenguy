@@ -97,33 +97,39 @@ const TUTO2_STEPS = [
   {
     label:    'Tuto 2 · 1/4',
     sel:      '.rail-btn[data-panel="quests"]',
-    fallback: '#quests',
-    text:     "Une quête t'attend : récolte des baies !",
-    kind:     'click-or-timeout',
+    text:     'Ouvre le menu Quêtes',
+    kind:     'click',
     clickSel: '.rail-btn[data-panel="quests"]',
-    timeout:  4000,
+    autoWhen: () => {
+      const el = document.getElementById('quests')
+      return !!(el && el.classList.contains('open'))
+    },
   },
   {
     label:    'Tuto 2 · 2/4',
-    sel:      '.ab-tab[data-tab="recoltes"]',
-    text:     "Va dans l'onglet Récoltes",
-    kind:     'click',
-    clickSel: '.ab-tab[data-tab="recoltes"]',
+    sel:      '.qcard:has(.qcard-accept[data-qid="berries-75"])',
+    fallback: '#quests',
+    text:     'Accepte la quête "Récolte de baies"',
+    kind:     'event',
+    event:    'strates:questAccepted',
+    filter:   e => e.detail && e.detail.quest && e.detail.quest.id === 'berries-75',
   },
   {
     label:    'Tuto 2 · 3/4',
-    sel:      '[data-tool="mine"]',
-    text:     "Sélectionne l'outil Récolter",
-    kind:     'click',
-    clickSel: '[data-tool="mine"]',
+    sel:      '.ab-tab[data-tab="recoltes"]',
+    text:     "Va dans l'onglet Récoltes et clique-glisse sur des buissons",
+    kind:     'event',
+    event:    'strates:firstHarvestZone',
+    filter:   null,
   },
   {
     label:    'Tuto 2 · 4/4',
     sel:      '#app',
-    text:     'Clique-glisse sur des buissons pour envoyer tes colons récolter',
-    kind:     'event',
-    event:    'strates:firstHarvestZone',
-    filter:   null,
+    text:     'Les colons vont récolter !',
+    kind:     'click-or-timeout',
+    clickSel: '#app',
+    timeout:  2500,
+    ringGuard: () => false,
   },
 ]
 
@@ -494,6 +500,7 @@ const STRATES_EVENTS = [
   'strates:firstHarvestZone',
   'strates:toggleTechTree',
   'strates:populationOpen',
+  'strates:questAccepted',
 ]
 
 let inactivityTimer = null
