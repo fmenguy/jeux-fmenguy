@@ -168,7 +168,7 @@ export function populateDefaultScene() {
     if (biome !== 'grass' && biome !== 'forest') continue
     if (isCellOccupied(x, z)) continue
     const dist = Math.abs(x - spawn.x) + Math.abs(z - spawn.z)
-    if (dist < 8) continue  // eviter le spawn du joueur
+    if (dist < 4) continue  // eviter le spawn du joueur
     if (addDeer(x, z)) deersPlaced++
   }
 }
