@@ -716,47 +716,7 @@ export function removeHousesIn(cells) {
 // Grosses maisons (big-house) : 4x4 cellules, placement manuel
 // ============================================================================
 function makeBigHouse() {
-  const rng = prng.rng
-  const g = new THREE.Group()
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0xd4c8a8, roughness: 0.88, flatShading: true })
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0x8b3a28, roughness: 0.82, flatShading: true })
-  const stoneMat = new THREE.MeshStandardMaterial({ color: 0xa09688, roughness: 0.92, flatShading: true })
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x7a5a35, roughness: 0.88, flatShading: true })
-
-  // Corps principal (large)
-  const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.0, 2.8), wallMat)
-  body.position.y = 1.0; body.castShadow = true; body.receiveShadow = true
-  g.add(body)
-
-  // Toit long
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.55, 1.6, 4), roofMat)
-  roof.position.y = 2.8; roof.rotation.y = Math.PI / 4
-  roof.castShadow = true; roof.receiveShadow = true
-  g.add(roof)
-
-  // Aile laterale
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 2.0), wallMat)
-  wing.position.set(1.8, 0.7, 0.4); wing.castShadow = true; wing.receiveShadow = true
-  g.add(wing)
-  const wingRoof = new THREE.Mesh(new THREE.ConeGeometry(1.3, 1.1, 4), roofMat)
-  wingRoof.position.set(1.8, 2.05, 0.4); wingRoof.rotation.y = Math.PI / 4
-  wingRoof.castShadow = true
-  g.add(wingRoof)
-
-  // Cheminées
-  for (const [cx, cz] of [[0.6, -0.3], [-0.5, 0.2]]) {
-    const ch = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.55, 0.22), stoneMat)
-    ch.position.set(cx, 2.9, cz); ch.castShadow = true
-    g.add(ch)
-  }
-
-  // Porche d'entrée
-  const porch = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.22, 0.65), woodMat)
-  porch.position.set(-1.1, 0.11, -1.5); porch.castShadow = true; porch.receiveShadow = true
-  g.add(porch)
-
-  g.rotation.y = Math.floor(rng() * 4) * Math.PI / 2
-  return g
+  return makeManor()
 }
 
 export function addBigHouse(gx, gz) {
