@@ -28,23 +28,14 @@
 
 const TUTO_STEPS = [
   {
-    label:     'Tuto · 1/7',
-    sel:       '#btn-open-techtree',
-    text:      'Bienvenue ! Voici ton village.',
-    kind:      'click-or-timeout',
-    clickSel:  '.tuto-bubble',
-    timeout:   3000,
-    ringGuard: () => false,
-  },
-  {
-    label:    'Tuto · 2/7',
+    label:    'Tuto · 1/6',
     sel:      '#btn-open-techtree',
     text:     "Ouvre l'arbre des technologies",
     kind:     'click',
     clickSel: '#btn-open-techtree',
   },
   {
-    label:    'Tuto · 3/7',
+    label:    'Tuto · 2/6',
     sel:      '.ttp-branch[data-br="savoir"]',
     fallback: '#ttp-root',
     text:     'Explore la branche Savoir',
@@ -52,7 +43,7 @@ const TUTO_STEPS = [
     clickSel: '.ttp-branch[data-br="savoir"]',
   },
   {
-    label:    'Tuto · 4/7',
+    label:    'Tuto · 3/6',
     sel:      '.ttp-tech[data-id="basic-research"]',
     fallback: '#ttp-root',
     text:     "Débloque la Recherche de base, c'est gratuit !",
@@ -61,7 +52,7 @@ const TUTO_STEPS = [
     filter:   e => e.detail && e.detail.id === 'basic-research',
   },
   {
-    label:    'Tuto · 5/7',
+    label:    'Tuto · 4/6',
     sel:      '#ttp-back',
     fallback: '#ttp-root',
     text:     'Clique sur Retour pour revenir au jeu',
@@ -73,7 +64,7 @@ const TUTO_STEPS = [
     },
   },
   {
-    label:    'Tuto · 6/7',
+    label:    'Tuto · 5/6',
     sel:      '.ab-tab[data-tab="build"]',
     text:     'Ouvre le menu Construire',
     kind:     'click',
@@ -84,7 +75,7 @@ const TUTO_STEPS = [
     },
   },
   {
-    label:    'Tuto · 7/7',
+    label:    'Tuto · 6/6',
     sel:      '[data-tool="place-research"]',
     fallback: '.ab-body#ab-build',
     text:     'Place la Hutte du Sage pour générer des points de recherche !',
