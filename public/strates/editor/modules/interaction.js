@@ -882,7 +882,9 @@ dom.addEventListener('pointerdown', (e) => {
     applyToolToStrata(cells)
     return
   }
-  if (RECT_SELECT_TOOLS.has(state.toolState.tool) && cell) {
+  const wantsRect = RECT_SELECT_TOOLS.has(state.toolState.tool) &&
+    (state.toolState.tool !== 'pick' || e.shiftKey)
+  if (wantsRect && cell) {
     selectionRect.active = true
     selectionRect.startX = cell.x
     selectionRect.startZ = cell.z
@@ -923,7 +925,7 @@ dom.addEventListener('pointermove', (e) => {
   }
   if (!state.toolState.isPainting) return
   if (state.toolState.tool === 'nav') return
-  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory') return
+  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory' || state.toolState.tool === 'pick') return
   const cell = hoverCell || pickCell(e.clientX, e.clientY)
   if (cell) applyToolAtCell(cell)
 })
