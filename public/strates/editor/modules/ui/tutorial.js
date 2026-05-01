@@ -67,9 +67,13 @@ const TUTO1_STEPS = [
   {
     label:    'Tuto 1 · 5/7',
     sel:      '.ab-tab[data-tab="build"]',
-    text:     'Ouvre le menu Construire',
+    text:     'Ferme le tech tree, puis ouvre le menu Construire',
     kind:     'click',
     clickSel: '.ab-tab[data-tab="build"]',
+    ringGuard: () => {
+      const ttp = document.getElementById('ttp-root')
+      return !ttp || !ttp.classList.contains('open')
+    },
   },
   {
     label:    'Tuto 1 · 6/7',
@@ -303,14 +307,19 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
 
     const r   = el.getBoundingClientRect()
     const PAD = 5
+    const showRing = !step.ringGuard || step.ringGuard()
 
-    ring.style.cssText = [
-      'top:'    + (r.top  - PAD) + 'px',
-      'left:'   + (r.left - PAD) + 'px',
-      'width:'  + (r.width  + PAD * 2) + 'px',
-      'height:' + (r.height + PAD * 2) + 'px',
-      'display:block',
-    ].join(';')
+    if (showRing) {
+      ring.style.cssText = [
+        'top:'    + (r.top  - PAD) + 'px',
+        'left:'   + (r.left - PAD) + 'px',
+        'width:'  + (r.width  + PAD * 2) + 'px',
+        'height:' + (r.height + PAD * 2) + 'px',
+        'display:block',
+      ].join(';')
+    } else {
+      ring.style.display = 'none'
+    }
 
     const above = r.top - PAD >= 100
     bubble.className = 'tuto-bubble ' + (above ? 'arrow-bottom' : 'arrow-top')
@@ -353,6 +362,8 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
       '<span>' + step.text + '</span>'
 
     reposition()
+    // Double rAF pour les éléments rendus de façon asynchrone (cartes tech avec animation)
+    requestAnimationFrame(() => requestAnimationFrame(reposition))
 
     if (cleanupFn) { cleanupFn(); cleanupFn = null }
     if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
