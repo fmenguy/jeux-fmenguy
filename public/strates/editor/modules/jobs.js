@@ -36,7 +36,7 @@ export function addJob(x, z) {
   if (state.jobs.has(k)) return
   const top = state.cellTop[z * GRID + x]
   if (top <= MIN_STRATES) return
-  if (top <= SHALLOW_WATER_LEVEL + 0.5) return
+  if (top <= SHALLOW_WATER_LEVEL) return
   const gate = canMineCell(x, z)
   if (!gate.ok) {
     if (gate.reason === 'tech') state.lastBlockedMineTech = { tech: gate.requiredTech, x, z, t: performance.now() / 1000 }
