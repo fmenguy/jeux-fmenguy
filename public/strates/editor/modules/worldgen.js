@@ -171,6 +171,7 @@ export function populateDefaultScene() {
     if (dist < 4) continue  // eviter le spawn du joueur
     if (addDeer(x, z)) deersPlaced++
   }
+  console.log('[deer] count in scene:', state.deers.length)
 }
 
 export function resetWorld(refreshHUD) {

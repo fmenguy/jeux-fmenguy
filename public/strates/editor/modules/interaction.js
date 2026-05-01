@@ -13,7 +13,7 @@ import {
   checkManorMerge, isCellOccupied, isMineBlocked,
   addObservatory, removeObservatoriesIn,
   isBuildingUniqueAndPlaced, isBushOn,
-  addBigHouse, removeBigHousesIn
+  addBigHouse, removeBigHousesIn, removeDeersIn
 } from './placements.js'
 import { addJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell, techUnlocked, hasTreeAt } from './tech.js'
@@ -58,7 +58,7 @@ selSvgEl.appendChild(selPolyEl)
 document.body.appendChild(selSvgEl)
 
 const selectionRect = { active: false, startX: 0, startZ: 0, endX: 0, endZ: 0 }
-const RECT_SELECT_TOOLS = new Set(['mine', 'hache', 'pick', 'cancel-zone'])
+const RECT_SELECT_TOOLS = new Set(['mine', 'hache', 'pick', 'hunt', 'cancel-zone'])
 
 function cellsInRect(x1, z1, x2, z2) {
   const sx = Math.min(x1, x2), ex = Math.max(x1, x2)
@@ -118,6 +118,8 @@ function applyToolToZone(cells, tool) {
       const biome = state.cellBiome[k]
       const hasRockTerrain = (biome === 'rock' || biome === 'snow') && !isCellOccupied(c.x, c.z)
       if (!hasRock && !hasOre && !hasRockTerrain) continue
+    } else if (tool === 'hunt') {
+      if (!state.deers.some(d => d.x === c.x && d.z === c.z)) continue
     }
     if (!toolAllowedOnCell(tool, c.x, c.z)) {
       const check = canMineCell(c.x, c.z)
@@ -548,6 +550,9 @@ function toolAllowedOnCell(tool, x, z) {
     if (isMineBlocked(x, z)) return false
     if (!canMineCell(x, z).ok) return false
   }
+  if (tool === 'hunt') {
+    if (!state.deers.some(d => d.x === x && d.z === z)) return false
+  }
   if (tool === 'build') {
     if (isCellOccupied(x, z)) return false
     if (state.cellTop[z * GRID + x] >= MAX_STRATES) return false
@@ -609,6 +614,10 @@ function applyToolAtCell(cell) {
   const t = state.toolState.tool
   const rng = prng.rng
 
+  if (t === 'hunt') {
+    if (state.deers.some(d => d.x === cell.x && d.z === cell.z)) addJob(cell.x, cell.z)
+    return
+  }
   if (t === 'mine' || t === 'hache' || t === 'pick') {
     if (t === 'mine' && currentSeason().id === 'winter') {
       showHudToast('Les buissons sont gelés en hiver, pas de baies.', 3000)
@@ -809,6 +818,14 @@ function applyToolToStrata(cells) {
     refreshHUD()
     return
   }
+  if (t === 'hunt') {
+    for (const c of cells) {
+      if (!state.deers.some(d => d.x === c.x && d.z === c.z)) continue
+      addJob(c.x, c.z)
+    }
+    refreshHUD()
+    return
+  }
   if (t === 'build') {
     for (const c of cells) {
       if (!toolAllowedOnCell('build', c.x, c.z)) continue
@@ -1000,7 +1017,7 @@ dom.addEventListener('pointermove', (e) => {
   }
   if (!state.toolState.isPainting) return
   if (state.toolState.tool === 'nav') return
-  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory' || state.toolState.tool === 'place-big-house') return
+  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory' || state.toolState.tool === 'place-big-house' || state.toolState.tool === 'hunt') return
   const cell = hoverCell || pickCell(e.clientX, e.clientY)
   if (cell) applyToolAtCell(cell)
 })
