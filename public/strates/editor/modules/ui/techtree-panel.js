@@ -856,7 +856,7 @@ function renderFiche(tech) {
   const reqs = Array.isArray(tech.requires) ? tech.requires : []
   let reqsHtml = ''
   if (reqs.length) {
-    reqsHtml = '<div class="ttp-fsec" style="margin-bottom:6px"><h5 style="margin:0 0 4px">Prerequis</h5><div class="ttp-req-grid">' +
+    reqsHtml = '<div class="ttp-fsec"><h5 style="margin:0 0 3px">Prerequis</h5><div class="ttp-req-grid">' +
       reqs.map(function(rid) {
         const r = byId(rid)
         const ok = techUnlocked(rid)
@@ -882,7 +882,7 @@ function renderFiche(tech) {
   if (Array.isArray(unlocks.tools)) unlocks.tools.forEach(function(r) { unlockItems.push({ kind: 'Outil', label: r }) })
   let unlocksHtml = ''
   if (unlockItems.length) {
-    unlocksHtml = '<div class="ttp-fsec" style="margin-top:6px"><h5 style="margin:0 0 4px">Debloque</h5><div class="ttp-unlock-list">' +
+    unlocksHtml = '<div class="ttp-fsec"><h5 style="margin:0 0 3px">Debloque</h5><div class="ttp-unlock-list">' +
       unlockItems.map(function(u) {
         return '<div class="u"><span class="dot">&#x25B8;</span><span>' +
                escapeHTML(u.kind) + ' <b>' + escapeHTML(u.label) + '</b></span></div>'
@@ -902,10 +902,10 @@ function renderFiche(tech) {
     '  </div>' +
     '</div>' +
     '<div class="ttp-fiche-body" id="ttp-fiche-body">' +
-    '  <div style="font-family:var(--ttp-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ttp-ink-3);margin-bottom:2px">Cout</div>' +
+    '  <div style="font-family:var(--ttp-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ttp-ink-3);margin-bottom:1px">Cout</div>' +
     '  <div style="font-size:13px;color:var(--ttp-ink)">&#x2605; <b>' + cost + '</b> pts recherche</div>' +
-    (desc ? '<div style="font-size:12px;color:var(--ttp-ink-2);margin-top:6px;line-height:1.4">' + escapeHTML(desc) + '</div>' : '') +
-    (speech ? '<div style="font-size:11px;color:var(--ttp-ink-3);font-style:italic;margin-top:4px;line-height:1.35">' + escapeHTML(speech) + '</div>' : '') +
+    (desc ? '<div style="font-size:12px;color:var(--ttp-ink-2);margin-top:2px;line-height:1.35">' + escapeHTML(desc) + '</div>' : '') +
+    (speech ? '<div style="font-size:11px;color:var(--ttp-ink-3);font-style:italic;margin-top:1px;line-height:1.3">' + escapeHTML(speech) + '</div>' : '') +
     '</div>' +
     '<div class="ttp-fiche-meta" id="ttp-fiche-meta">' + reqsHtml + unlocksHtml + '</div>' +
     '<div class="ttp-fiche-actions" id="ttp-fiche-actions">' + actionHtml + '</div>'
@@ -944,7 +944,7 @@ function renderFicheAction(tech, status, cost) {
   }
   // locked
   return '<button class="ttp-fiche-btn" data-act="chain">&#x2933; Mettre le chemin en file</button>' +
-         '<button class="ttp-fiche-btn ghost" disabled style="margin-top:6px">Prerequis manquants</button>'
+         '<button class="ttp-fiche-btn ghost" disabled>Prerequis manquants</button>'
 }
 
 // ─── Highlight des prerequis au survol ──────────────────────────────────────
