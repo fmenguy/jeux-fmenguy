@@ -312,6 +312,8 @@ function tick(nowMs) {
       if (sEl) sEl.textContent = cs.name
       if (sIcon) sIcon.textContent = icons[cs.id] || '\u{1F33F}'
     }
+    const yearEl = document.getElementById('time-year')
+    if (yearEl) yearEl.textContent = state.season.year ?? 1
   }
 
   updateQuests(t)
