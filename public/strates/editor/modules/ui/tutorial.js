@@ -361,8 +361,9 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
       '<span class="tuto-step-label">' + step.label + '</span>' +
       '<span>' + step.text + '</span>'
 
+    ring.style.display = 'none'
     reposition()
-    // Double rAF pour les éléments rendus de façon asynchrone (cartes tech avec animation)
+    ring.style.display = 'none'
     requestAnimationFrame(() => requestAnimationFrame(reposition))
 
     if (cleanupFn) { cleanupFn(); cleanupFn = null }
@@ -421,10 +422,18 @@ function showFlash(text) {
 
 function runTutorials() {
   injectStyles()
+  isTutoActive = true
+  stopInactivityTimer()
+  removeInviteBubble()
+
+  function onTuto2Done() {
+    isTutoActive = false
+    showFlash("C'est parti !")
+  }
 
   function startTuto2() {
     setTimeout(() => {
-      runTutorial(TUTO2_STEPS, 'strates.tuto2Done', () => showFlash("C'est parti !"))
+      runTutorial(TUTO2_STEPS, 'strates.tuto2Done', onTuto2Done)
     }, 1500)
   }
 
@@ -446,7 +455,7 @@ function removeInviteBubble() {
 }
 
 function showInviteBubble() {
-  if (tutosDone()) { stopInactivityTimer(); return }
+  if (tutosDone() || isTutoActive) { stopInactivityTimer(); return }
   stopInactivityTimer()
   if (inviteEl) return
   injectStyles()
@@ -470,6 +479,10 @@ function showInviteBubble() {
     try { localStorage.setItem('strates.tutoSkipped', '1') } catch (e) {}
   }
 }
+
+// ─── Flag d'activité tuto ─────────────────────────────────────────────────────
+
+let isTutoActive = false
 
 // ─── Timer d'inactivité ───────────────────────────────────────────────────────
 
@@ -495,7 +508,7 @@ function tutosDone() {
 
 function resetInactivityTimer() {
   clearTimeout(inactivityTimer)
-  if (tutosDone()) { inactivityTimer = null; return }
+  if (tutosDone() || isTutoActive) { inactivityTimer = null; return }
   inactivityTimer = setTimeout(showInviteBubble, INACTIVITY_DELAY)
 }
 
