@@ -97,7 +97,7 @@ export function initTechTreePanel() {
     // TOPBAR
     '  <div class="ttp-topbar">',
     '    <h1>Strates <small>Arbre</small></h1>',
-    '    <button class="ttp-btn-back" id="ttp-back">Retour</button>',
+    '    <button class="ttp-btn-back" id="ttp-back">&#8592; Retour</button>',
     '    <div class="ttp-crumb">',
     '      <span id="ttp-crumb-age">Age I, Pierre</span>',
     '      <span class="sep" id="ttp-crumb-sep" style="display:none">/</span>',
@@ -107,7 +107,7 @@ export function initTechTreePanel() {
     '    <div class="ttp-res">',
     '      <span><b id="ttp-pts">0</b> pts recherche</span>',
     '    </div>',
-    '    <button class="ttp-close" id="ttp-close" title="Fermer">X</button>',
+    '    <button class="ttp-close" id="ttp-close" title="Fermer">&#10005;</button>',
     '  </div>',
 
     // Recherche globale
@@ -170,7 +170,10 @@ export function initTechTreePanel() {
   document.body.appendChild(root)
 
   root.querySelector('#ttp-close').addEventListener('click', closeTechTreePanel)
-  root.querySelector('#ttp-back').addEventListener('click', closeBranch)
+  root.querySelector('#ttp-back').addEventListener('click', function() {
+    if (root.classList.contains('detail-mode')) closeBranch()
+    else closeTechTreePanel()
+  })
 
   bindSearch()
   bindPanZoom()
@@ -602,6 +605,9 @@ function openBranch(brId) {
   currentBranch = brId
   root.classList.add('detail-mode')
 
+  const backBtn = document.getElementById('ttp-back')
+  if (backBtn) backBtn.innerHTML = '&#8592; Retour'
+
   // Breadcrumb
   const data = TECH_TREE_DATA
   const br = (data && data.branches || []).find(function(b) { return b.id === brId })
@@ -628,6 +634,10 @@ function openBranch(brId) {
 
 export function closeBranch() {
   root.classList.remove('detail-mode')
+
+  const backBtn = document.getElementById('ttp-back')
+  if (backBtn) backBtn.innerHTML = 'Retour'
+
   const sep = document.getElementById('ttp-crumb-sep')
   const cur = document.getElementById('ttp-crumb-cur')
   if (sep) sep.style.display = 'none'
