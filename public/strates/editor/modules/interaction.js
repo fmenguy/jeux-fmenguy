@@ -41,12 +41,18 @@ cursorMesh.visible = false
 scene.add(cursorMesh)
 
 // ============================================================================
-// Rectangle de sélection CSS
+// Sélection SVG alignée sur la grille monde
 // ============================================================================
-const selRectEl = document.createElement('div')
-selRectEl.id = 'sel-rect'
-selRectEl.style.cssText = 'position:fixed;border:1.5px solid rgba(255,255,255,0.85);background:rgba(180,210,255,0.12);pointer-events:none;display:none;z-index:50;'
-document.body.appendChild(selRectEl)
+const _ns = 'http://www.w3.org/2000/svg'
+const selSvgEl = document.createElementNS(_ns, 'svg')
+selSvgEl.id = 'sel-svg'
+selSvgEl.setAttribute('style', 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;display:none;z-index:50;')
+const selPolyEl = document.createElementNS(_ns, 'polygon')
+selPolyEl.setAttribute('fill', 'rgba(100,160,255,0.15)')
+selPolyEl.setAttribute('stroke', 'white')
+selPolyEl.setAttribute('stroke-width', '1.5')
+selSvgEl.appendChild(selPolyEl)
+document.body.appendChild(selSvgEl)
 
 const selectionRect = { active: false, startX: 0, startZ: 0, endX: 0, endZ: 0 }
 const RECT_SELECT_TOOLS = new Set(['mine', 'hache', 'pick', 'cancel-zone'])
@@ -64,38 +70,30 @@ function cellsInRect(x1, z1, x2, z2) {
   return out
 }
 
-function worldCornersToScreen(x1, z1, x2, z2) {
+function updateSelPoly(x1, z1, x2, z2, isCancel) {
   const sx = Math.min(x1, x2), ex = Math.max(x1, x2)
   const sz = Math.min(z1, z2), ez = Math.max(z1, z2)
   const ct = state.cellTop
-  const y = ct ? ((ct[sz * GRID + sx] || 2) + (ct[ez * GRID + ex] || 2)) / 2 : 2
-  const corners = [
-    new THREE.Vector3(sx,     y, sz),
-    new THREE.Vector3(ex + 1, y, sz),
-    new THREE.Vector3(ex + 1, y, ez + 1),
-    new THREE.Vector3(sx,     y, ez + 1),
-  ]
-  const w = renderer.domElement.clientWidth
-  const h = renderer.domElement.clientHeight
-  const pts = corners.map(v => {
-    const ndc = v.clone().project(camera)
-    return { x: (ndc.x + 1) / 2 * w, y: (1 - ndc.y) / 2 * h }
-  })
-  return {
-    left:   Math.min(...pts.map(p => p.x)),
-    top:    Math.min(...pts.map(p => p.y)),
-    right:  Math.max(...pts.map(p => p.x)),
-    bottom: Math.max(...pts.map(p => p.y))
+  const y = ct ? ((ct[sz * GRID + sx] || 2) + (ct[ez * GRID + ex] || 2)) / 2 + 1 : 3
+  const w = window.innerWidth, h = window.innerHeight
+  const project = (wx, wy, wz) => {
+    const ndc = new THREE.Vector3(wx, wy, wz).project(camera)
+    return ((ndc.x + 1) / 2 * w) + ',' + ((-ndc.y + 1) / 2 * h)
   }
-}
-
-function updateSelRectCSS(x1, z1, x2, z2) {
-  const bbox = worldCornersToScreen(x1, z1, x2, z2)
-  selRectEl.style.left   = bbox.left + 'px'
-  selRectEl.style.top    = bbox.top  + 'px'
-  selRectEl.style.width  = (bbox.right  - bbox.left) + 'px'
-  selRectEl.style.height = (bbox.bottom - bbox.top)  + 'px'
-  selRectEl.style.display = ''
+  selPolyEl.setAttribute('points', [
+    project(sx,     y, sz),
+    project(ex + 1, y, sz),
+    project(ex + 1, y, ez + 1),
+    project(sx,     y, ez + 1),
+  ].join(' '))
+  if (isCancel) {
+    selPolyEl.setAttribute('fill', 'rgba(255,50,50,0.15)')
+    selPolyEl.setAttribute('stroke', 'rgba(255,80,80,0.9)')
+  } else {
+    selPolyEl.setAttribute('fill', 'rgba(100,160,255,0.15)')
+    selPolyEl.setAttribute('stroke', 'white')
+  }
+  selSvgEl.style.display = 'block'
 }
 
 function applyToolToZone(cells, tool) {
@@ -875,14 +873,7 @@ dom.addEventListener('pointerdown', (e) => {
     selectionRect.startZ = cell.z
     selectionRect.endX = cell.x
     selectionRect.endZ = cell.z
-    if (state.toolState.tool === 'cancel-zone') {
-      selRectEl.style.border = '1.5px solid rgba(255,80,80,0.9)'
-      selRectEl.style.background = 'rgba(255,50,50,0.15)'
-    } else {
-      selRectEl.style.border = '1.5px solid rgba(255,255,255,0.85)'
-      selRectEl.style.background = 'rgba(180,210,255,0.12)'
-    }
-    updateSelRectCSS(cell.x, cell.z, cell.x, cell.z)
+    updateSelPoly(cell.x, cell.z, cell.x, cell.z, state.toolState.tool === 'cancel-zone')
     return
   }
   state.toolState.isPainting = true
@@ -912,7 +903,7 @@ dom.addEventListener('pointermove', (e) => {
       selectionRect.endX = hoverCell.x
       selectionRect.endZ = hoverCell.z
     }
-    updateSelRectCSS(selectionRect.startX, selectionRect.startZ, selectionRect.endX, selectionRect.endZ)
+    updateSelPoly(selectionRect.startX, selectionRect.startZ, selectionRect.endX, selectionRect.endZ, state.toolState.tool === 'cancel-zone')
     return
   }
   if (!state.toolState.isPainting) return
@@ -927,7 +918,7 @@ window.addEventListener('pointerup', (e) => {
   state.toolState.isPainting = false
   if (selectionRect.active && e.button === 0) {
     selectionRect.active = false
-    selRectEl.style.display = 'none'
+    selSvgEl.style.display = 'none'
     const cells = cellsInRect(selectionRect.startX, selectionRect.startZ, selectionRect.endX, selectionRect.endZ)
     if (state.toolState.tool === 'cancel-zone') {
       cancelJobsInRect(cells)
