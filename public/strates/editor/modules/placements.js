@@ -504,7 +504,7 @@ function makeFallbackDeer() {
   // Queue
   b(0.18, 0.18, 0.07, cream, 0, 1.0, -0.62)
 
-  g.scale.setScalar(0.55)
+  g.scale.setScalar(0.7)
   g.userData.type = 'deer'
   return g
 }
