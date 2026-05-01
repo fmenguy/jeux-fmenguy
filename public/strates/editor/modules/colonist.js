@@ -205,12 +205,12 @@ export class Colonist {
     this.bubble.renderOrder = 999
     this.group.add(this.bubble)
     this.labelCanvas = makeLabelCanvas()
-    drawLabel(this.labelCanvas, this.name, this.gender, this.isChief)
+    const { bw: labelBw } = drawLabel(this.labelCanvas, this.name, this.gender, this.isChief)
     this.labelTex = new THREE.CanvasTexture(this.labelCanvas)
     this.labelTex.minFilter = THREE.LinearFilter
     this.labelMat = new THREE.SpriteMaterial({ map: this.labelTex, transparent: true, depthTest: false, depthWrite: false })
     this.label = new THREE.Sprite(this.labelMat)
-    this.label.scale.set(1.35, 0.34, 1)
+    this.label.scale.set(Math.max(0.7, (labelBw / 512) * 2.7), 0.34, 1)
     this.label.position.set(0, 1.85, 0)
     this.label.visible = true
     this.label.renderOrder = 998
@@ -221,10 +221,11 @@ export class Colonist {
     this.lastLine = line
     this.lastLineHint = !!isHint
     this._bubbleTruncated = null
-    const { bw } = drawBubble(this.bubbleCanvas, line, !!isHint)
+    const { bw, bh } = drawBubble(this.bubbleCanvas, line, !!isHint)
     this.bubbleTex.needsUpdate = true
     this._bubbleBaseW = Math.max(1.2, (bw / 512) * 3.2)
-    this.bubble.scale.set(this._bubbleBaseW, 0.75, 1)
+    this._bubbleBaseH = Math.max(0.4, (bh / 160) * 0.75)
+    this.bubble.scale.set(this._bubbleBaseW, this._bubbleBaseH, 1)
     this.speechTimer = isHint ? 6.0 : 4.0
     this.bubble.visible = true
     this.bubbleMat.opacity = 1
@@ -251,9 +252,10 @@ export class Colonist {
     // Scale proportionnel à la distance, ancrage bas du sprite
     const zoomFactor = Math.max(0.7, Math.min(2.2, dist / 16))
     const baseW = this._bubbleBaseW || 2.4
-    this.bubble.scale.set(baseW * zoomFactor, 0.75 * zoomFactor, 1)
+    const baseH = this._bubbleBaseH || 0.75
+    this.bubble.scale.set(baseW * zoomFactor, baseH * zoomFactor, 1)
     // Ajuste Y pour que le bas du sprite reste ancré au-dessus de la tête
-    this.bubble.position.set(0, 2.375 + 0.375 * zoomFactor, 0)
+    this.bubble.position.set(0, 2.375 + (baseH / 2) * zoomFactor, 0)
 
     // Troncature au-delà de 25 unités : redraw uniquement au changement de seuil
     const truncate = dist > 25
@@ -262,7 +264,9 @@ export class Colonist {
       const text = truncate && this.lastLine.length > 20
         ? this.lastLine.slice(0, 20) + '…'
         : this.lastLine
-      drawBubble(this.bubbleCanvas, text, !!this.lastLineHint)
+      const { bw: tw, bh: th } = drawBubble(this.bubbleCanvas, text, !!this.lastLineHint)
+      this._bubbleBaseW = Math.max(1.2, (tw / 512) * 3.2)
+      this._bubbleBaseH = Math.max(0.4, (th / 160) * 0.75)
       this.bubbleTex.needsUpdate = true
     }
 
