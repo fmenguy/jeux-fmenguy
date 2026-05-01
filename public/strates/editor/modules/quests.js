@@ -93,18 +93,23 @@ function resolveGoal(goal) {
 
 export function getAvailableQuests() {
   const doneIds = new Set((state.questsCompleted || []).map(q => q.id))
-  const activeId = state.questActive ? state.questActive.id : null
-  const pool = QUEST_CATALOG.filter(q => !doneIds.has(q.id) && q.id !== activeId)
-  state.questsAvailable = pool.slice(0, 3).map(q => ({ ...q, check: resolveGoal(q.goal) }))
+  const activeIds = new Set((state.questsActive || []).map(q => q.id))
+  const pool = QUEST_CATALOG.filter(q => !doneIds.has(q.id) && !activeIds.has(q.id))
+  const needed = 3 - (state.questsActive || []).length
+  state.questsAvailable = pool.slice(0, Math.max(0, needed + 3)).map(q => ({ ...q, check: resolveGoal(q.goal) }))
   try { window.dispatchEvent(new CustomEvent('strates:questsAvailable', { detail: { quests: state.questsAvailable } })) } catch (_) {}
 }
 
 export function acceptQuest(id) {
   const q = (state.questsAvailable || []).find(q => q.id === id)
   if (!q) return
-  state.questActive = { ...q, progress: 0, completed: false }
+  if (!state.questsActive) state.questsActive = []
+  if (state.questsActive.length >= 3) return
+  if (state.questsActive.some(a => a.id === id)) return
+  const active = { ...q, progress: 0, completed: false }
+  state.questsActive.push(active)
   state.questsAvailable = (state.questsAvailable || []).filter(x => x.id !== id)
-  try { window.dispatchEvent(new CustomEvent('strates:questAccepted', { detail: { quest: state.questActive } })) } catch (_) {}
+  try { window.dispatchEvent(new CustomEvent('strates:questAccepted', { detail: { quest: active } })) } catch (_) {}
   refreshHUD()
 }
 
@@ -117,17 +122,26 @@ function applyReward(reward) {
 }
 
 function checkQuestProgress() {
-  const q = state.questActive
-  if (!q || q.completed) return
-  const check = q.check || resolveGoal(q.goal)
-  const p = Math.min(q.goal.target, check())
-  state.questActive.progress = p
-  if (p >= q.goal.target) {
-    state.questActive.completed = true
-    applyReward(q.reward)
-    state.questsCompleted = [...(state.questsCompleted || []), { id: q.id, title: q.title }]
-    try { window.dispatchEvent(new CustomEvent('strates:questCompleted', { detail: { quest: state.questActive } })) } catch (_) {}
-    state.questActive = null
+  if (!state.questsActive || state.questsActive.length === 0) return
+  let anyCompleted = false
+  const stillActive = []
+  for (const q of state.questsActive) {
+    if (q.completed) continue
+    const check = q.check || resolveGoal(q.goal)
+    const p = Math.min(q.goal.target, check())
+    q.progress = p
+    if (p >= q.goal.target) {
+      q.completed = true
+      applyReward(q.reward)
+      state.questsCompleted = [...(state.questsCompleted || []), { id: q.id, title: q.title }]
+      try { window.dispatchEvent(new CustomEvent('strates:questCompleted', { detail: { quest: q } })) } catch (_) {}
+      anyCompleted = true
+    } else {
+      stillActive.push(q)
+    }
+  }
+  if (anyCompleted) {
+    state.questsActive = stillActive
     getAvailableQuests()
     refreshHUD()
   }
@@ -165,27 +179,27 @@ function rewardLabel(r) {
 }
 
 function buildSig() {
-  const q = state.questActive
+  const active = state.questsActive || []
   const avail = state.questsAvailable || []
   const done = state.questsCompleted || []
   return activeTab +
-    '|a:' + (q ? q.id + ':' + (q.progress || 0) : 'none') +
+    '|a:' + active.map(q => q.id + ':' + (q.progress || 0)).join(';') +
     '|v:' + avail.map(x => x.id).join(',') +
     '|d:' + done.length
 }
 
 function renderTabContent(body) {
-  const q = state.questActive
+  const active = state.questsActive || []
   const avail = state.questsAvailable || []
   const done = state.questsCompleted || []
 
   if (activeTab === 'available') {
-    if (avail.length === 0 && !q) {
+    if (avail.length === 0 && active.length === 0) {
       body.innerHTML = '<div class="qall-done">Toutes les quêtes sont complétées !</div>'
       return
     }
     if (avail.length === 0) {
-      body.innerHTML = '<div class="qactive-empty">Une quête est déjà en cours.</div>'
+      body.innerHTML = '<div class="qactive-empty">3 quêtes en cours, revenez après en avoir complété une.</div>'
       return
     }
     body.innerHTML = avail.map(x =>
@@ -193,7 +207,7 @@ function renderTabContent(body) {
         '<div class="qcard-title"><span class="qdot" style="background:' + x.color + '"></span>' + x.title + '</div>' +
         '<div class="qcard-desc">' + x.description + '</div>' +
         (rewardLabel(x.reward) ? '<div class="qcard-reward">' + rewardLabel(x.reward) + '</div>' : '') +
-        '<button class="qcard-accept" data-qid="' + x.id + '">Accepter</button>' +
+        (active.length < 3 ? '<button class="qcard-accept" data-qid="' + x.id + '">Accepter</button>' : '') +
       '</div>'
     ).join('')
     body.querySelectorAll('.qcard-accept').forEach(btn => {
@@ -208,18 +222,19 @@ function renderTabContent(body) {
   }
 
   if (activeTab === 'active') {
-    if (!q) {
+    if (active.length === 0) {
       body.innerHTML = '<div class="qactive-empty">Aucune quête en cours.<br>Acceptez-en une dans l\'onglet "À prendre".</div>'
       return
     }
-    const pct = Math.min(100, Math.round(((q.progress || 0) / q.goal.target) * 100))
-    body.innerHTML =
-      '<div class="qactive-card">' +
+    body.innerHTML = active.map(q => {
+      const pct = Math.min(100, Math.round(((q.progress || 0) / q.goal.target) * 100))
+      return '<div class="qactive-card">' +
         '<div class="qactive-title"><span class="qdot" style="background:' + q.color + '"></span>' + q.title + '</div>' +
         '<div class="qactive-desc">' + q.description + '</div>' +
         '<div class="qbar"><div class="qfill" style="width:' + pct + '%"></div></div>' +
         '<div class="qprog">' + (q.progress || 0) + ' / ' + q.goal.target + '</div>' +
       '</div>'
+    }).join('')
     return
   }
 
@@ -245,7 +260,7 @@ export function renderQuests() {
 
   const avail = state.questsAvailable || []
   const done = state.questsCompleted || []
-  const hasActive = !!state.questActive
+  const activeCount = (state.questsActive || []).length
 
   const badge = (n) => n > 0 ? '<span class="q-tab-badge">' + n + '</span>' : ''
 
@@ -253,7 +268,7 @@ export function renderQuests() {
     tabsBar.innerHTML =
       '<div class="q-tabs">' +
         '<button class="q-tab' + (activeTab === 'available' ? ' active' : '') + '" data-tab="available">À prendre' + badge(avail.length) + '</button>' +
-        '<button class="q-tab' + (activeTab === 'active' ? ' active' : '') + '" data-tab="active">En cours' + (hasActive ? badge(1) : '') + '</button>' +
+        '<button class="q-tab' + (activeTab === 'active' ? ' active' : '') + '" data-tab="active">En cours' + badge(activeCount) + '</button>' +
         '<button class="q-tab' + (activeTab === 'done' ? ' active' : '') + '" data-tab="done">Réalisées' + badge(done.length) + '</button>' +
       '</div>'
     tabsBar.querySelectorAll('.q-tab').forEach(btn => {
