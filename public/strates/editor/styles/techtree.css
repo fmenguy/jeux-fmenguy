@@ -114,7 +114,7 @@
   font-weight: 500;
 }
 .ttp-btn-back {
-  display: none;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
@@ -129,7 +129,6 @@
   text-transform: uppercase;
 }
 .ttp-btn-back:hover { color: var(--ttp-gold); border-color: var(--ttp-gold-2); }
-#ttp-root.detail-mode .ttp-btn-back { display: inline-flex; }
 
 .ttp-age-pill {
   display: flex;
