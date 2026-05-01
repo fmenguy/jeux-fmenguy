@@ -950,7 +950,18 @@ window.addEventListener('pointerup', (e) => {
   }
 })
 
-// Clic gauche bref sur un colon : ouvre la fiche personnage
+function findBuildingAtCell(x, z) {
+  for (const h of (state.houses || []))         if (h.x === x && h.z === z) return { building: h, type: 'house' }
+  for (const f of (state.foyers || []))         if (f.x === x && f.z === z) return { building: f, type: 'foyer' }
+  for (const r of (state.researchHouses || [])) if (r.x === x && r.z === z) return { building: r, type: 'research' }
+  for (const m of (state.manors || []))         if (m.x === x && m.z === z) return { building: m, type: 'manor' }
+  for (const o of (state.observatories || []))  if (o.x === x && o.z === z) return { building: o, type: 'observatory' }
+  for (const c of (state.cairns || []))         if (c.x === x && c.z === z) return { building: c, type: 'cairn' }
+  if (state.cellSurface && state.cellSurface[z * GRID + x] === 'field') return { building: { x, z }, type: 'field' }
+  return null
+}
+
+// Clic gauche bref : ouvre la fiche personnage (colon) ou dispatche buildingClicked (bâtiment)
 dom.addEventListener('pointerup', (e) => {
   if (e.button !== 0) return
   if (!lclickStart) return
@@ -963,7 +974,16 @@ dom.addEventListener('pointerup', (e) => {
   if (dist2 > 20) return
   if (isCharSheetOpen()) return
   const col = pickColonist(e.clientX, e.clientY)
-  if (col) openCharSheet(col)
+  if (col) { openCharSheet(col); return }
+  if (state.toolState.tool === 'nav') {
+    const cell = pickCell(e.clientX, e.clientY)
+    if (cell) {
+      const found = findBuildingAtCell(cell.x, cell.z)
+      if (found) {
+        try { window.dispatchEvent(new CustomEvent('strates:buildingClicked', { detail: found })) } catch (_) {}
+      }
+    }
+  }
 })
 
 // ---------------------------------------------------------------------------
