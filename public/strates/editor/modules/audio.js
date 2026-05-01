@@ -167,8 +167,8 @@ function createSummerSyntheticAudio() {
 }
 
 const LOFI_MUTE_KEY = 'strates-audio-muted'
-const TARGET_VOLUME = 0.55
-const FADE_SECONDS = 2.5
+const TARGET_VOLUME = 0.30
+const FADE_SECONDS = 3.0
 
 let muted = true
 let current = null
@@ -216,9 +216,15 @@ function crossfadeTo(season) {
   const prev = current
   const next = { season, audio: createAudio(src) }
   next.audio.addEventListener('error', () => {
-    // fichier absent, on abandonne silencieusement
-    if (current === next) current = null
-    next.audio.remove()
+    // fichier absent : fallback vers le synthetique ete si possible
+    if (current !== next) return
+    next.audio.remove?.()
+    const fallback = createSummerSyntheticAudio()
+    next.audio = fallback
+    fallback.addEventListener('canplaythrough', () => {
+      if (muted) return
+      fallback.play().catch(() => {})
+    }, { once: true })
   }, { once: true })
   next.audio.addEventListener('canplaythrough', () => {
     if (muted) return
@@ -288,8 +294,8 @@ export function tickAudio() {
 export function initAudio() {
   try {
     const s = localStorage.getItem(LOFI_MUTE_KEY)
-    muted = s !== '0' // par defaut muet
-  } catch (e) { muted = true }
+    muted = (s === '1') // par defaut actif
+  } catch (e) { muted = false }
 
   const btn = document.getElementById('btn-audio')
   if (btn) btn.addEventListener('click', () => toggleMute())
