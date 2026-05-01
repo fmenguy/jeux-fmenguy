@@ -81,9 +81,9 @@ export const state = {
   lastTechBubbleByTech: new Map(),
 
   // quests
-  questIndex: 0,
-  currentQuest: null,
-  questCompletedAt: -1,
+  questsAvailable: [],
+  questActive: null,
+  questsCompleted: [],
 
   // tools
   toolState: {
