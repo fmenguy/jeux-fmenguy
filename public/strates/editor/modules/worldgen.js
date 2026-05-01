@@ -200,6 +200,8 @@ export function resetWorld(refreshHUD) {
   buildVegetation()
   state.season.idx = 0
   state.season.elapsed = 0
+  state.season.cyclesDone = 0
+  state.season.year = 1
   state.lastJobTime = performance.now() / 1000
   state.resources.berries = 0
   state.resources.wood = 0

@@ -72,7 +72,8 @@ if (state.season == null) {
   state.season = {
     idx: 0,              // index saison courante
     elapsed: 0,          // secondes ecoulees dans la saison courante
-    cyclesDone: 0,       // compteur d'annees (pour stat)
+    cyclesDone: 0,       // cycles de 4 saisons completes
+    year: 1,             // annee affichee dans le HUD (commence a 1)
     justChangedSeason: null  // id de la nouvelle saison, lu par speech.js puis remis a null
   }
 }
@@ -212,7 +213,7 @@ export function tickSeasons(dt) {
   if (s.elapsed >= SEASON_DURATION) {
     s.elapsed -= SEASON_DURATION
     s.idx = (s.idx + 1) % SEASONS.length
-    if (s.idx === 0) s.cyclesDone++
+    if (s.idx === 0) { s.cyclesDone++; s.year = s.cyclesDone + 1 }
     s.justChangedSeason = SEASONS[s.idx].id
     // Lot B perf : on relance un cycle complet depuis le debut, par chunks.
     _repaintIdx = 0
