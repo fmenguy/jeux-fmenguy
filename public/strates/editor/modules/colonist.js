@@ -223,7 +223,7 @@ export class Colonist {
     this._bubbleTruncated = null
     const { bw } = drawBubble(this.bubbleCanvas, line, !!isHint)
     this.bubbleTex.needsUpdate = true
-    this._bubbleBaseW = Math.max(1.0, (bw / 512) * 2.8)
+    this._bubbleBaseW = Math.max(1.2, (bw / 512) * 3.2)
     this.bubble.scale.set(this._bubbleBaseW, 0.75, 1)
     this.speechTimer = isHint ? 6.0 : 4.0
     this.bubble.visible = true
@@ -249,7 +249,7 @@ export class Colonist {
     this.bubble.visible = true
 
     // Scale proportionnel à la distance, ancrage bas du sprite
-    const zoomFactor = Math.max(0.6, Math.min(2.5, dist / 18))
+    const zoomFactor = Math.max(0.7, Math.min(2.2, dist / 16))
     const baseW = this._bubbleBaseW || 2.4
     this.bubble.scale.set(baseW * zoomFactor, 0.75 * zoomFactor, 1)
     // Ajuste Y pour que le bas du sprite reste ancré au-dessus de la tête
