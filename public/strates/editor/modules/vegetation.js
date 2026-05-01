@@ -16,9 +16,9 @@ const MAX_FLOWERS = 1200
 const MAX_WHEAT = 4500
 
 // ---------- brins d'herbe ----------
-const grassGeo = new THREE.BoxGeometry(0.04, 0.22, 0.04)
+const grassGeo = new THREE.BoxGeometry(0.09, 0.22, 0.09)
 grassGeo.translate(0, 0.11, 0)
-const grassMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, flatShading: true })
+const grassMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, flatShading: true, side: THREE.DoubleSide })
 export const grassMesh = new THREE.InstancedMesh(grassGeo, grassMat, MAX_GRASS)
 grassMesh.castShadow = false
 grassMesh.receiveShadow = false
@@ -28,9 +28,9 @@ grassMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MA
 scene.add(grassMesh)
 
 // ---------- fleurs ----------
-const flowerGeo = new THREE.ConeGeometry(0.06, 0.12, 5)
-flowerGeo.translate(0, 0.22, 0)
-const flowerMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, flatShading: true })
+const flowerGeo = new THREE.ConeGeometry(0.11, 0.18, 5)
+flowerGeo.translate(0, 0.26, 0)
+const flowerMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, flatShading: true, side: THREE.DoubleSide })
 export const flowerMesh = new THREE.InstancedMesh(flowerGeo, flowerMat, MAX_FLOWERS)
 flowerMesh.castShadow = false
 flowerMesh.receiveShadow = false
@@ -104,7 +104,7 @@ export function buildVegetation() {
 
       // herbe : brins disperses, densite selon biome
       if (biome === 'grass' || biome === 'forest') {
-        const density = biome === 'grass' ? (0.20 + rng() * 0.2) : 0.10
+        const density = biome === 'grass' ? (0.12 + rng() * 0.12) : 0.06
         if (rng() < density) {
           const nBrins = 1 + Math.floor(rng() * 3)
           for (let i = 0; i < nBrins; i++) {
@@ -123,7 +123,7 @@ export function buildVegetation() {
           }
         }
         // fleurs clairsemees sur herbe
-        if (biome === 'grass' && rng() < 0.04) {
+        if (biome === 'grass' && rng() < 0.025) {
           if (flowerMesh.count >= MAX_FLOWERS) continue
           const px = x + rng() * 0.8 + 0.1
           const pz = z + rng() * 0.8 + 0.1
