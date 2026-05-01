@@ -211,7 +211,7 @@ export function resetWorld(refreshHUD) {
   state.contextBubbles.lastLineByCategory.clear()
   state.contextBubbles.fieldTriggerStartAt = -1
   state.questsAvailable = []
-  state.questActive = null
+  state.questsActive = []
   state.questsCompleted = []
   resetQuestSig()
   startNextQuest()
