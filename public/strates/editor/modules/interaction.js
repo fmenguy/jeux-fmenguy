@@ -607,8 +607,13 @@ function applyToolAtCell(cell) {
   const rng = prng.rng
 
   if (t === 'mine' || t === 'hache' || t === 'pick') {
+    if (t === 'mine' && currentSeason().id === 'winter') {
+      showHudToast('Les buissons sont gelés en hiver, pas de baies.', 3000)
+      return
+    }
     const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
     for (const c of cells) {
+      if (t === 'mine' && !state.bushes.some(b => b.x === c.x && b.z === c.z)) continue
       if (!toolAllowedOnCell(t, c.x, c.z)) {
         const check = canMineCell(c.x, c.z)
         if (check.reason === 'tech' && check.requiredTech) {
@@ -758,7 +763,12 @@ function applyToolToStrata(cells) {
   const t = state.toolState.tool
   state.toolState.paintedThisStroke = new Set()
   if (t === 'mine') {
+    if (currentSeason().id === 'winter') {
+      showHudToast('Les buissons sont gelés en hiver, pas de baies.', 3000)
+      return
+    }
     for (const c of cells) {
+      if (!state.bushes.some(b => b.x === c.x && b.z === c.z)) continue
       if (isMineBlocked(c.x, c.z)) continue
       const check = canMineCell(c.x, c.z)
       if (!check.ok) {
