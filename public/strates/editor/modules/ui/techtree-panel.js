@@ -520,11 +520,16 @@ function renderConstellation() {
   const branches = data.branches || []
   const techs = (data.techs || []).filter(function(t) { return (t.age || 1) === (state.currentAge || 1) })
 
+  // Branches ayant au moins une tech a l'age courant
+  const activeBranchIds = new Set()
+  techs.forEach(function(t) { if (t.branch) activeBranchIds.add(t.branch) })
+
   // Spokes (rayons centraux)
   const spokes = document.getElementById('ttp-spokes')
   if (spokes) {
     spokes.innerHTML = ''
     branches.forEach(function(br) {
+      if (!activeBranchIds.has(br.id)) return
       const p = BRANCH_POS[br.id]
       if (!p) return
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
@@ -548,10 +553,11 @@ function renderConstellation() {
   const gp = document.getElementById('ttp-global-progress')
   if (gp) gp.textContent = doneG + '/' + totalG
 
-  // Une carte par branche
+  // Une carte par branche (seulement si elle a des techs a l'age courant)
   const activeId = activeResearchId()
   const activeProg = activeResearchProgress()
   branches.forEach(function(br) {
+    if (!activeBranchIds.has(br.id)) return
     const meta = BRANCH_META[br.id] || { ic: '•', pitch: '' }
     const pos = BRANCH_POS[br.id]
     if (!pos) return
