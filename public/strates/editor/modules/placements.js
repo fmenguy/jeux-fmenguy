@@ -512,7 +512,7 @@ export function addHouse(gx, gz) {
   const g = makeHouse()
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
-  state.houses.push({ x: gx, z: gz, group: g })
+  state.houses.push({ x: gx, z: gz, group: g, id: state.houses.length, residents: [] })
   return true
 }
 
