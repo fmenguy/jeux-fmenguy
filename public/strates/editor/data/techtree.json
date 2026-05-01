@@ -24,7 +24,7 @@
       "age": 1,
       "branch": "outils",
       "icon": "⛏",
-      "cost": { "research": 5 },
+      "cost": { "research": 12 },
       "requires": [],
       "unlocks": {
         "jobs":      ["mineur"],
@@ -39,7 +39,7 @@
       "age": 1,
       "branch": "outils",
       "icon": "🪓",
-      "cost": { "research": 5 },
+      "cost": { "research": 12 },
       "requires": [],
       "unlocks": {
         "jobs":      ["bucheron"],
@@ -54,7 +54,7 @@
       "age": 1,
       "branch": "outils",
       "icon": "🏹",
-      "cost": { "research": 5 },
+      "cost": { "research": 12 },
       "requires": [],
       "unlocks": {
         "jobs":      ["chasseur"],
@@ -69,7 +69,7 @@
       "age": 1,
       "branch": "outils",
       "icon": "🪣",
-      "cost": { "research": 8 },
+      "cost": { "research": 15 },
       "requires": ["pick-stone"],
       "unlocks": {
         "jobs":      ["terrassier"],
@@ -84,7 +84,7 @@
       "age": 1,
       "branch": "agriculture",
       "icon": "🫐",
-      "cost": { "research": 8 },
+      "cost": { "research": 10 },
       "requires": [],
       "unlocks": {
         "resources": ["berries"]
@@ -98,7 +98,7 @@
       "age": 1,
       "branch": "agriculture",
       "icon": "🌾",
-      "cost": { "research": 10 },
+      "cost": { "research": 15 },
       "requires": [],
       "unlocks": {
         "buildings": ["champ"]
@@ -126,7 +126,7 @@
       "age": 1,
       "branch": "construction",
       "icon": "🏚",
-      "cost": { "research": 5 },
+      "cost": { "research": 12 },
       "requires": [],
       "unlocks": {
         "buildings": ["big-house"]
@@ -198,7 +198,7 @@
       "age": 1,
       "branch": "nocturne",
       "icon": "🔭",
-      "cost": { "research": 10, "night": 20 },
+      "cost": { "research": 12, "night": 20 },
       "requires": ["promontory"],
       "unlocks": {},
       "description": "Connaissance des cycles celestes. Reduit la duree de la nuit de 20 secondes.",
