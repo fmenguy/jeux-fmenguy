@@ -725,7 +725,9 @@ export class Colonist {
                   state.instanced.instanceMatrix.needsUpdate = true
                   if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
                   state.cellTop[k] = top - 1
-                  incrStockForBiome(state.cellBiome[k])
+                  const biomeHere = state.cellBiome[k]
+                  incrStockForBiome(biomeHere)
+                  if (biomeHere === 'rock' || biomeHere === 'snow') state.resources.stone++
                   scheduleFlash(x, z)
                 }
               }
