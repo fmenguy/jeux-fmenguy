@@ -228,7 +228,7 @@ export function refreshToolButtons() {
     const btn = document.querySelector(sel)
     if (!btn) return
     btn.classList.toggle('locked', locked)
-    if (locked) btn.setAttribute('disabled', '') else btn.removeAttribute('disabled')
+    if (locked) { btn.setAttribute('disabled', '') } else { btn.removeAttribute('disabled') }
   }
 
   setLocked('.tool[data-tool="hache"]',      !techUnlocked('axe-stone'))
@@ -242,13 +242,13 @@ export function refreshToolButtons() {
   if (btnResearch) {
     const locked = !techUnlocked('basic-research') || state.researchHouses.length > 0
     btnResearch.classList.toggle('locked', locked)
-    if (locked) btnResearch.setAttribute('disabled', '') else btnResearch.removeAttribute('disabled')
+    if (locked) { btnResearch.setAttribute('disabled', '') } else { btnResearch.removeAttribute('disabled') }
   }
   const btnFoyer = document.querySelector('.tool[data-tool="place-foyer"]')
   if (btnFoyer) {
     const locked = !techUnlocked('fire-mastery') || state.foyers.length > 0
     btnFoyer.classList.toggle('locked', locked)
-    if (locked) btnFoyer.setAttribute('disabled', '') else btnFoyer.removeAttribute('disabled')
+    if (locked) { btnFoyer.setAttribute('disabled', '') } else { btnFoyer.removeAttribute('disabled') }
   }
 }
 
