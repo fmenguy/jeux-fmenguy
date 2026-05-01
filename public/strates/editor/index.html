@@ -410,6 +410,11 @@
     .qcard-accept:hover {
       background: rgba(201,168,76,.22); border-color: rgba(201,168,76,.75);
     }
+    .qcard-accept[disabled] {
+      background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.1);
+      color: rgba(232,224,208,.25); cursor: not-allowed;
+    }
+    .qcard.qcard-locked { opacity: .55; }
 
     /* Quête active */
     .qactive-card {

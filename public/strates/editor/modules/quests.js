@@ -1,15 +1,15 @@
-import { state } from './state.js'
+﻿import { state } from './state.js'
 import { refreshHUD } from './hud.js'
 
 // ============================================================================
-// Catalogue de quêtes (hardcodé)
+// Catalogue de quetes (hardcode)
 // ============================================================================
 
 const QUEST_CATALOG = [
   {
     id: 'berries-75',
     title: 'Récolte de baies',
-    description: 'Récoltez 75 baies pour l\'hiver.',
+    description: "Récoltez 75 baies pour l'hiver.",
     goal: { type: 'stat', key: 'totalBerriesHarvested', target: 75 },
     reward: { researchPoints: 30 },
     color: '#8c5cc4'
@@ -41,14 +41,14 @@ const QUEST_CATALOG = [
   {
     id: 'foyer-1',
     title: 'Feu sacré',
-    description: 'Allumez un foyer au cœur du village.',
+    description: "Allumez un foyer au cœur du village.",
     goal: { type: 'foyer', target: 1 },
     reward: { researchPoints: 40 },
     color: '#ff8c00'
   },
   {
     id: 'berries-150',
-    title: 'Provisions d\'hiver',
+    title: "Provisions d'hiver",
     description: 'Récoltez 150 baies au total.',
     goal: { type: 'stat', key: 'totalBerriesHarvested', target: 150 },
     reward: { researchPoints: 50 },
@@ -92,24 +92,22 @@ function resolveGoal(goal) {
 // ============================================================================
 
 export function getAvailableQuests() {
-  const doneIds = new Set((state.questsCompleted || []).map(q => q.id))
-  const activeIds = new Set((state.questsActive || []).map(q => q.id))
+  const doneIds   = new Set((state.questsCompleted || []).map(q => q.id))
+  const activeIds = new Set((state.questsActive    || []).map(q => q.id))
   const pool = QUEST_CATALOG.filter(q => !doneIds.has(q.id) && !activeIds.has(q.id))
-  const needed = 3 - (state.questsActive || []).length
-  state.questsAvailable = pool.slice(0, Math.max(0, needed + 3)).map(q => ({ ...q, check: resolveGoal(q.goal) }))
+  state.questsAvailable = pool.slice(0, 3).map(q => ({ ...q, check: resolveGoal(q.goal) }))
   try { window.dispatchEvent(new CustomEvent('strates:questsAvailable', { detail: { quests: state.questsAvailable } })) } catch (_) {}
 }
 
 export function acceptQuest(id) {
-  const q = (state.questsAvailable || []).find(q => q.id === id)
-  if (!q) return
   if (!state.questsActive) state.questsActive = []
   if (state.questsActive.length >= 3) return
+  const q = (state.questsAvailable || []).find(q => q.id === id)
+  if (!q) return
   if (state.questsActive.some(a => a.id === id)) return
-  const active = { ...q, progress: 0, completed: false }
-  state.questsActive.push(active)
+  state.questsActive = [...state.questsActive, { ...q, progress: 0, completed: false }]
   state.questsAvailable = (state.questsAvailable || []).filter(x => x.id !== id)
-  try { window.dispatchEvent(new CustomEvent('strates:questAccepted', { detail: { quest: active } })) } catch (_) {}
+  try { window.dispatchEvent(new CustomEvent('strates:questAccepted', { detail: { quest: state.questsActive.find(a => a.id === id) } })) } catch (_) {}
   refreshHUD()
 }
 
@@ -124,34 +122,31 @@ function applyReward(reward) {
 function checkQuestProgress() {
   if (!state.questsActive || state.questsActive.length === 0) return
   let anyCompleted = false
-  const stillActive = []
-  for (const q of state.questsActive) {
-    if (q.completed) continue
+  state.questsActive = state.questsActive.map(q => {
+    if (q.completed) return q
     const check = q.check || resolveGoal(q.goal)
     const p = Math.min(q.goal.target, check())
-    q.progress = p
     if (p >= q.goal.target) {
-      q.completed = true
       applyReward(q.reward)
       state.questsCompleted = [...(state.questsCompleted || []), { id: q.id, title: q.title }]
       try { window.dispatchEvent(new CustomEvent('strates:questCompleted', { detail: { quest: q } })) } catch (_) {}
       anyCompleted = true
-    } else {
-      stillActive.push(q)
+      return null
     }
-  }
+    return { ...q, progress: p }
+  }).filter(Boolean)
+
   if (anyCompleted) {
-    state.questsActive = stillActive
     getAvailableQuests()
     refreshHUD()
   }
 }
 
 // ============================================================================
-// Compatibilité avec main.js et worldgen.js
+// Compatibilite avec main.js et worldgen.js
 // ============================================================================
 
-export function initQuestDefs() { /* catalogue hardcodé, rien à faire */ }
+export function initQuestDefs() { /* catalogue hardcode, rien a faire */ }
 export function startNextQuest() { getAvailableQuests() }
 
 export function updateQuests(_nowSec) {
@@ -179,9 +174,9 @@ function rewardLabel(r) {
 }
 
 function buildSig() {
-  const active = state.questsActive || []
-  const avail = state.questsAvailable || []
-  const done = state.questsCompleted || []
+  const active = state.questsActive   || []
+  const avail  = state.questsAvailable || []
+  const done   = state.questsCompleted || []
   return activeTab +
     '|a:' + active.map(q => q.id + ':' + (q.progress || 0)).join(';') +
     '|v:' + avail.map(x => x.id).join(',') +
@@ -189,9 +184,9 @@ function buildSig() {
 }
 
 function renderTabContent(body) {
-  const active = state.questsActive || []
-  const avail = state.questsAvailable || []
-  const done = state.questsCompleted || []
+  const active = state.questsActive   || []
+  const avail  = state.questsAvailable || []
+  const done   = state.questsCompleted || []
 
   if (activeTab === 'available') {
     if (avail.length === 0 && active.length === 0) {
@@ -199,18 +194,23 @@ function renderTabContent(body) {
       return
     }
     if (avail.length === 0) {
-      body.innerHTML = '<div class="qactive-empty">3 quêtes en cours, revenez après en avoir complété une.</div>'
+      body.innerHTML = '<div class="qactive-empty">Aucune quête disponible pour l\'instant.</div>'
       return
     }
-    body.innerHTML = avail.map(x =>
-      '<div class="qcard">' +
+    const activeIds = new Set(active.map(q => q.id))
+    const full = active.length >= 3
+    body.innerHTML = avail.map(x => {
+      const locked = full || activeIds.has(x.id)
+      return '<div class="qcard' + (locked ? ' qcard-locked' : '') + '">' +
         '<div class="qcard-title"><span class="qdot" style="background:' + x.color + '"></span>' + x.title + '</div>' +
         '<div class="qcard-desc">' + x.description + '</div>' +
         (rewardLabel(x.reward) ? '<div class="qcard-reward">' + rewardLabel(x.reward) + '</div>' : '') +
-        (active.length < 3 ? '<button class="qcard-accept" data-qid="' + x.id + '">Accepter</button>' : '') +
+        '<button class="qcard-accept" data-qid="' + x.id + '"' + (locked ? ' disabled' : '') + '>' +
+          (full ? 'Slots pleins' : 'Accepter') +
+        '</button>' +
       '</div>'
-    ).join('')
-    body.querySelectorAll('.qcard-accept').forEach(btn => {
+    }).join('')
+    body.querySelectorAll('.qcard-accept:not([disabled])').forEach(btn => {
       btn.addEventListener('click', () => {
         acceptQuest(btn.dataset.qid)
         activeTab = 'active'
@@ -223,7 +223,7 @@ function renderTabContent(body) {
 
   if (activeTab === 'active') {
     if (active.length === 0) {
-      body.innerHTML = '<div class="qactive-empty">Aucune quête en cours.<br>Acceptez-en une dans l\'onglet "À prendre".</div>'
+      body.innerHTML = '<div class="qactive-empty">Aucune quête en cours.<br>Choisissez des quêtes dans l\'onglet "À prendre".</div>'
       return
     }
     body.innerHTML = active.map(q => {
@@ -258,9 +258,9 @@ export function renderQuests() {
   if (sig === lastQuestSig) return
   lastQuestSig = sig
 
-  const avail = state.questsAvailable || []
-  const done = state.questsCompleted || []
-  const activeCount = (state.questsActive || []).length
+  const avail  = state.questsAvailable || []
+  const active = state.questsActive    || []
+  const done   = state.questsCompleted || []
 
   const badge = (n) => n > 0 ? '<span class="q-tab-badge">' + n + '</span>' : ''
 
@@ -268,8 +268,8 @@ export function renderQuests() {
     tabsBar.innerHTML =
       '<div class="q-tabs">' +
         '<button class="q-tab' + (activeTab === 'available' ? ' active' : '') + '" data-tab="available">À prendre' + badge(avail.length) + '</button>' +
-        '<button class="q-tab' + (activeTab === 'active' ? ' active' : '') + '" data-tab="active">En cours' + badge(activeCount) + '</button>' +
-        '<button class="q-tab' + (activeTab === 'done' ? ' active' : '') + '" data-tab="done">Réalisées' + badge(done.length) + '</button>' +
+        '<button class="q-tab' + (activeTab === 'active'    ? ' active' : '') + '" data-tab="active">En cours'   + badge(active.length) + '</button>' +
+        '<button class="q-tab' + (activeTab === 'done'      ? ' active' : '') + '" data-tab="done">Réalisées'   + badge(done.length) + '</button>' +
       '</div>'
     tabsBar.querySelectorAll('.q-tab').forEach(btn => {
       btn.addEventListener('click', () => {
