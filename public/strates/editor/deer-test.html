@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Deer — comparatif 3 styles</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #ccc; font: 13px monospace; }
+  h1 { text-align: center; padding: 12px; color: #e8c87a; font-size: 15px; letter-spacing: 1px; }
+  #grid { display: flex; gap: 0; width: 100vw; height: calc(100vh - 40px); }
+  .col { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #222; }
+  .col:last-child { border-right: none; }
+  .col-title { text-align: center; padding: 6px; background: #1a1a1a;
+    border-bottom: 1px solid #333; font-size: 12px; color: #a88; letter-spacing: 0.5px; }
+  canvas { display: block; }
+  #status { position: fixed; bottom: 8px; left: 0; right: 0; text-align: center;
+    font-size: 11px; color: #555; }
+</style>
+</head>
+<body>
+<h1>Deer — 3 styles procéduraux</h1>
+<div id="grid">
+  <div class="col"><div class="col-title">B — Voxel (blocs)</div><canvas id="c0"></canvas></div>
+  <div class="col"><div class="col-title">C — Low-poly arrondi</div><canvas id="c1"></canvas></div>
+  <div class="col"><div class="col-title">D — Élancé</div><canvas id="c2"></canvas></div>
+</div>
+<div id="status">chargement Three.js...</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+
+document.getElementById('status').textContent = 'Three.js chargé ✓   Clic + drag : rotation · Molette : zoom'
+
+const MAT = {
+  brown:     new THREE.MeshLambertMaterial({ color: 0x8B5E3C }),
+  darkBrown: new THREE.MeshLambertMaterial({ color: 0x5C3A1E }),
+  amber:     new THREE.MeshLambertMaterial({ color: 0xC8860A }),
+  black:     new THREE.MeshLambertMaterial({ color: 0x111111 }),
+  cream:     new THREE.MeshLambertMaterial({ color: 0xE8D5B0 }),
+  tan:       new THREE.MeshLambertMaterial({ color: 0xB8875A }),
+  rust:      new THREE.MeshLambertMaterial({ color: 0xA0522D }),
+}
+
+function box(w,h,d,mat,x,y,z,g) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat)
+  m.position.set(x,y,z); m.castShadow = true; g.add(m); return m
+}
+function cyl(rt,rb,h,mat,x,y,z,g) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,8), mat)
+  m.position.set(x,y,z); m.castShadow = true; g.add(m); return m
+}
+
+function makeDeerVoxel() {
+  const g = new THREE.Group()
+  const b = (w,h,d,mat,x,y,z) => box(w,h,d,mat,x,y,z,g)
+  b(0.72,0.44,1.1,  MAT.brown,     0,    0.86,  0)
+  b(0.52,0.18,0.88, MAT.cream,     0,    0.72,  0)
+  b(0.24,0.38,0.24, MAT.brown,     0,    1.16,  0.40)
+  b(0.30,0.30,0.38, MAT.brown,     0,    1.40,  0.58)
+  b(0.20,0.14,0.18, MAT.darkBrown, 0,    1.33,  0.74)
+  b(0.06,0.06,0.04, MAT.black,  0.10,   1.44,  0.68)
+  b(0.06,0.06,0.04, MAT.black, -0.10,   1.44,  0.68)
+  b(0.14,0.14,0.06, MAT.cream,     0,    1.40,  0.78)
+  b(0.13,0.44,0.13, MAT.darkBrown,  0.22,0.43,  0.34)
+  b(0.13,0.44,0.13, MAT.darkBrown, -0.22,0.43,  0.34)
+  b(0.13,0.44,0.13, MAT.darkBrown,  0.22,0.43, -0.32)
+  b(0.13,0.44,0.13, MAT.darkBrown, -0.22,0.43, -0.32)
+  b(0.14,0.08,0.14, MAT.black,  0.22,0.17, 0.34)
+  b(0.14,0.08,0.14, MAT.black, -0.22,0.17, 0.34)
+  b(0.14,0.08,0.14, MAT.black,  0.22,0.17,-0.32)
+  b(0.14,0.08,0.14, MAT.black, -0.22,0.17,-0.32)
+  b(0.14,0.14,0.08, MAT.cream,  0,0.98,-0.58)
+  const eL = b(0.06,0.16,0.04, MAT.brown,  0.20,1.42,0.52); eL.rotation.z =  0.35
+  const eR = b(0.06,0.16,0.04, MAT.brown, -0.20,1.42,0.52); eR.rotation.z = -0.35
+  b(0.04,0.28,0.04, MAT.amber,  0.09,1.64,0.52)
+  b(0.04,0.16,0.04, MAT.amber,  0.19,1.76,0.52)
+  b(0.04,0.12,0.04, MAT.amber,  0.07,1.72,0.52)
+  b(0.04,0.28,0.04, MAT.amber, -0.09,1.64,0.52)
+  b(0.04,0.16,0.04, MAT.amber, -0.19,1.76,0.52)
+  b(0.04,0.12,0.04, MAT.amber, -0.07,1.72,0.52)
+  return g
+}
+
+function makeDeerLowPoly() {
+  const g = new THREE.Group()
+  const b = (w,h,d,mat,x,y,z) => box(w,h,d,mat,x,y,z,g)
+  const c = (rt,rb,h,mat,x,y,z) => cyl(rt,rb,h,mat,x,y,z,g)
+  c(0.38,0.42,0.90, MAT.tan,       0,    0.86,  0)
+  c(0.14,0.18,0.36, MAT.tan,       0,    1.14,  0.36)
+  c(0.18,0.16,0.30, MAT.tan,       0,    1.38,  0.56)
+  c(0.10,0.12,0.16, MAT.darkBrown, 0,    1.32,  0.70)
+  b(0.06,0.06,0.04, MAT.black,  0.10,1.42,0.68)
+  b(0.06,0.06,0.04, MAT.black, -0.10,1.42,0.68)
+  c(0.07,0.09,0.44, MAT.tan,    0.22,0.43,  0.32)
+  c(0.07,0.09,0.44, MAT.tan,   -0.22,0.43,  0.32)
+  c(0.07,0.09,0.44, MAT.tan,    0.22,0.43, -0.30)
+  c(0.07,0.09,0.44, MAT.tan,   -0.22,0.43, -0.30)
+  c(0.08,0.08,0.08, MAT.black,  0.22,0.17, 0.32)
+  c(0.08,0.08,0.08, MAT.black, -0.22,0.17, 0.32)
+  c(0.08,0.08,0.08, MAT.black,  0.22,0.17,-0.30)
+  c(0.08,0.08,0.08, MAT.black, -0.22,0.17,-0.30)
+  c(0.025,0.025,0.28, MAT.amber,  0.09,1.64,0.52)
+  c(0.025,0.025,0.16, MAT.amber,  0.19,1.76,0.52)
+  c(0.025,0.025,0.12, MAT.amber,  0.07,1.72,0.52)
+  c(0.025,0.025,0.28, MAT.amber, -0.09,1.64,0.52)
+  c(0.025,0.025,0.16, MAT.amber, -0.19,1.76,0.52)
+  c(0.025,0.025,0.12, MAT.amber, -0.07,1.72,0.52)
+  c(0.04,0.04,0.14, MAT.tan,  0.20,1.42,0.52)
+  c(0.04,0.04,0.14, MAT.tan, -0.20,1.42,0.52)
+  return g
+}
+
+function makeDeerElance() {
+  const g = new THREE.Group()
+  const b = (w,h,d,mat,x,y,z) => box(w,h,d,mat,x,y,z,g)
+  const c = (rt,rb,h,mat,x,y,z) => cyl(rt,rb,h,mat,x,y,z,g)
+  b(0.58,0.38,1.20, MAT.rust,      0,    0.92,  0)
+  b(0.16,0.44,0.16, MAT.rust,      0,    1.22,  0.46)
+  b(0.22,0.22,0.30, MAT.rust,      0,    1.50,  0.60)
+  b(0.14,0.10,0.14, MAT.darkBrown, 0,    1.44,  0.74)
+  b(0.05,0.05,0.03, MAT.black,  0.09,1.54,0.70)
+  b(0.05,0.05,0.03, MAT.black, -0.09,1.54,0.70)
+  c(0.055,0.07,0.60, MAT.darkBrown,  0.24,0.38,  0.38)
+  c(0.055,0.07,0.60, MAT.darkBrown, -0.24,0.38,  0.38)
+  c(0.055,0.07,0.60, MAT.darkBrown,  0.24,0.38, -0.36)
+  c(0.055,0.07,0.60, MAT.darkBrown, -0.24,0.38, -0.36)
+  c(0.07,0.07,0.07, MAT.black,  0.24,0.05, 0.38)
+  c(0.07,0.07,0.07, MAT.black, -0.24,0.05, 0.38)
+  c(0.07,0.07,0.07, MAT.black,  0.24,0.05,-0.36)
+  c(0.07,0.07,0.07, MAT.black, -0.24,0.05,-0.36)
+  c(0.03,0.03,0.38, MAT.amber,  0.10,1.70,0.56)
+  c(0.03,0.03,0.22, MAT.amber,  0.22,1.84,0.56)
+  c(0.03,0.03,0.18, MAT.amber,  0.08,1.80,0.56)
+  c(0.03,0.03,0.14, MAT.amber,  0.28,1.74,0.56)
+  c(0.03,0.03,0.38, MAT.amber, -0.10,1.70,0.56)
+  c(0.03,0.03,0.22, MAT.amber, -0.22,1.84,0.56)
+  c(0.03,0.03,0.18, MAT.amber, -0.08,1.80,0.56)
+  c(0.03,0.03,0.14, MAT.amber, -0.28,1.74,0.56)
+  b(0.05,0.20,0.04, MAT.rust,  0.22,1.52,0.56)
+  b(0.05,0.20,0.04, MAT.rust, -0.22,1.52,0.56)
+  b(0.18,0.18,0.07, MAT.cream, 0,1.0,-0.62)
+  return g
+}
+
+function makeScene(canvas, deerFn, offsetY) {
+  const w = canvas.parentElement.clientWidth
+  const h = canvas.parentElement.clientHeight - 28
+  canvas.width = w; canvas.height = h
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+  renderer.setSize(w, h)
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+  renderer.shadowMap.enabled = true
+
+  const scene = new THREE.Scene()
+  scene.background = new THREE.Color(0x1e2d1a)
+  scene.fog = new THREE.Fog(0x1e2d1a, 14, 30)
+
+  const camera = new THREE.PerspectiveCamera(55, w/h, 0.1, 60)
+  camera.position.set(0, 2, 3.5)
+
+  const controls = new OrbitControls(camera, canvas)
+  controls.target.set(0, 0.9, 0)
+  controls.enableDamping = true
+  controls.update()
+
+  scene.add(new THREE.AmbientLight(0xffeedd, 0.65))
+  const sun = new THREE.DirectionalLight(0xfff5cc, 1.4)
+  sun.position.set(5, 8, 4)
+  sun.castShadow = true
+  scene.add(sun)
+
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 20),
+    new THREE.MeshLambertMaterial({ color: 0x3d6b35 })
+  )
+  ground.rotation.x = -Math.PI/2
+  ground.receiveShadow = true
+  scene.add(ground)
+
+  const deer = deerFn()
+  scene.add(deer)
+
+  let t = offsetY
+  function animate() {
+    requestAnimationFrame(animate)
+    t += 0.01
+    deer.rotation.y = Math.sin(t * 0.4) * 0.2
+    controls.update()
+    renderer.render(scene, camera)
+  }
+  animate()
+
+  return { renderer, camera }
+}
+
+const canvases = document.querySelectorAll('canvas')
+const scenes = [
+  makeScene(canvases[0], makeDeerVoxel, 0),
+  makeScene(canvases[1], makeDeerLowPoly, 2),
+  makeScene(canvases[2], makeDeerElance, 4),
+]
+
+window.addEventListener('resize', () => {
+  canvases.forEach((canvas, i) => {
+    const w = canvas.parentElement.clientWidth
+    const h = canvas.parentElement.clientHeight - 28
+    canvas.width = w; canvas.height = h
+    scenes[i].renderer.setSize(w, h)
+    scenes[i].camera.aspect = w/h
+    scenes[i].camera.updateProjectionMatrix()
+  })
+})
+</script>
+</body>
+</html>
