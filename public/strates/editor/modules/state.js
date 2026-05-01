@@ -26,6 +26,7 @@ export const state = {
   foyers: [],
   houses: [],
   manors: [],
+  bigHouses: [],
   researchHouses: [],
   researchBuildingNextId: 1,
 

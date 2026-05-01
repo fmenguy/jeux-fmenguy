@@ -12,7 +12,8 @@ import {
   removeResearchHousesIn, removeOresIn, removeBushesIn, removeManorsIn,
   checkManorMerge, isCellOccupied, isMineBlocked,
   addObservatory, removeObservatoriesIn,
-  isBuildingUniqueAndPlaced, isBushOn
+  isBuildingUniqueAndPlaced, isBushOn,
+  addBigHouse, removeBigHousesIn
 } from './placements.js'
 import { addJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell, techUnlocked, hasTreeAt } from './tech.js'
@@ -251,6 +252,8 @@ export function refreshToolButtons() {
     btnFoyer.classList.toggle('locked', locked)
     if (locked) { btnFoyer.setAttribute('disabled', '') } else { btnFoyer.removeAttribute('disabled') }
   }
+
+  setLocked('.tool[data-tool="place-big-house"]', !techUnlocked('big-house'))
 }
 
 window.addEventListener('strates:techComplete', refreshToolButtons)
@@ -271,6 +274,7 @@ export function labelOfTool(t) {
     'place-research': 'placer hutte du sage',
     'place-foyer': 'placer un foyer',
     'cancel-zone': 'annuler récolte',
+    'place-big-house': 'placer une grande maison',
     field: 'tracer un champ',
     bush: 'poser un buisson',
     observatory: 'poser un promontoire',
@@ -694,6 +698,17 @@ function applyToolAtCell(cell) {
     case 'observatory':
       if (!isCellOccupied(cell.x, cell.z)) addObservatory(cell.x, cell.z)
       break
+    case 'place-big-house': {
+      if (!techUnlocked('big-house')) break
+      const pbk = cell.z * GRID + cell.x
+      if (state.toolState.paintedThisStroke.has('pb' + pbk)) break
+      state.toolState.paintedThisStroke.add('pb' + pbk)
+      if (addBigHouse(cell.x, cell.z)) {
+        state.gameStats.housesPlaced++
+        spawnColonsAroundHouse(cell.x + 1, cell.z + 1, 4)
+      }
+      break
+    }
     case 'field': {
       const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
       for (const c of cells) {
@@ -712,6 +727,7 @@ function applyToolAtCell(cell) {
       removeRocksIn(cells)
       removeHousesIn(cells)
       removeManorsIn(cells)
+      removeBigHousesIn(cells)
       removeResearchHousesIn(cells)
       removeOresIn(cells)
       removeBushesIn(cells)
@@ -761,6 +777,7 @@ function applyToolToStrata(cells) {
     removeRocksIn(cells)
     removeHousesIn(cells)
     removeManorsIn(cells)
+    removeBigHousesIn(cells)
     removeResearchHousesIn(cells)
     removeOresIn(cells)
     removeBushesIn(cells)
@@ -830,6 +847,17 @@ function applyToolToStrata(cells) {
       case 'observatory':
         if (!isCellOccupied(c.x, c.z)) addObservatory(c.x, c.z)
         break
+      case 'place-big-house': {
+        if (!techUnlocked('big-house')) break
+        const pbk2 = c.z * GRID + c.x
+        if (state.toolState.paintedThisStroke.has('pb' + pbk2)) break
+        state.toolState.paintedThisStroke.add('pb' + pbk2)
+        if (addBigHouse(c.x, c.z)) {
+          state.gameStats.housesPlaced++
+          spawnColonsAroundHouse(c.x + 1, c.z + 1, 4)
+        }
+        break
+      }
       case 'field': {
         if (!toolAllowedOnCell('field', c.x, c.z)) break
         const k = c.z * GRID + c.x
@@ -927,7 +955,7 @@ dom.addEventListener('pointermove', (e) => {
   }
   if (!state.toolState.isPainting) return
   if (state.toolState.tool === 'nav') return
-  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory') return
+  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory' || state.toolState.tool === 'place-big-house') return
   const cell = hoverCell || pickCell(e.clientX, e.clientY)
   if (cell) applyToolAtCell(cell)
 })
@@ -959,6 +987,7 @@ function findBuildingAtCell(x, z) {
   for (const f of (state.foyers || []))         if (f.x === x && f.z === z) return { building: f, type: 'foyer' }
   for (const r of (state.researchHouses || [])) if (r.x === x && r.z === z) return { building: r, type: 'research' }
   for (const m of (state.manors || []))         if (m.x === x && m.z === z) return { building: m, type: 'manor' }
+  for (const b of (state.bigHouses || []))      if (x >= b.x && x < b.x + 4 && z >= b.z && z < b.z + 4) return { building: b, type: 'big-house' }
   for (const o of (state.observatories || []))  if (o.x === x && o.z === z) return { building: o, type: 'observatory' }
   for (const c of (state.cairns || []))         if (c.x === x && c.z === z) return { building: c, type: 'cairn' }
   if (state.cellSurface && state.cellSurface[z * GRID + x] === 'field') return { building: { x, z }, type: 'field' }

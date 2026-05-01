@@ -565,6 +565,111 @@ export function removeHousesIn(cells) {
 }
 
 // ============================================================================
+// Grosses maisons (big-house) : 4x4 cellules, placement manuel
+// ============================================================================
+function makeBigHouse() {
+  const rng = prng.rng
+  const g = new THREE.Group()
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xd4c8a8, roughness: 0.88, flatShading: true })
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x8b3a28, roughness: 0.82, flatShading: true })
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0xa09688, roughness: 0.92, flatShading: true })
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x7a5a35, roughness: 0.88, flatShading: true })
+
+  // Corps principal (large)
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.0, 2.8), wallMat)
+  body.position.y = 1.0; body.castShadow = true; body.receiveShadow = true
+  g.add(body)
+
+  // Toit long
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.55, 1.6, 4), roofMat)
+  roof.position.y = 2.8; roof.rotation.y = Math.PI / 4
+  roof.castShadow = true; roof.receiveShadow = true
+  g.add(roof)
+
+  // Aile laterale
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 2.0), wallMat)
+  wing.position.set(1.8, 0.7, 0.4); wing.castShadow = true; wing.receiveShadow = true
+  g.add(wing)
+  const wingRoof = new THREE.Mesh(new THREE.ConeGeometry(1.3, 1.1, 4), roofMat)
+  wingRoof.position.set(1.8, 2.05, 0.4); wingRoof.rotation.y = Math.PI / 4
+  wingRoof.castShadow = true
+  g.add(wingRoof)
+
+  // Cheminées
+  for (const [cx, cz] of [[0.6, -0.3], [-0.5, 0.2]]) {
+    const ch = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.55, 0.22), stoneMat)
+    ch.position.set(cx, 2.9, cz); ch.castShadow = true
+    g.add(ch)
+  }
+
+  // Porche d'entrée
+  const porch = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.22, 0.65), woodMat)
+  porch.position.set(-1.1, 0.11, -1.5); porch.castShadow = true; porch.receiveShadow = true
+  g.add(porch)
+
+  g.rotation.y = Math.floor(rng() * 4) * Math.PI / 2
+  return g
+}
+
+export function addBigHouse(gx, gz) {
+  // Vérifie toutes les 16 cellules du footprint 4x4
+  for (let dz = 0; dz < 4; dz++) {
+    for (let dx = 0; dx < 4; dx++) {
+      const cx = gx + dx, cz = gz + dz
+      if (cx < 0 || cz < 0 || cx >= GRID || cz >= GRID) return false
+      const top = state.cellTop[cz * GRID + cx]
+      if (top <= SHALLOW_WATER_LEVEL) return false
+      if (isCellOccupied(cx, cz)) return false
+    }
+  }
+  const tops = []
+  for (let dz = 0; dz < 4; dz++) {
+    for (let dx = 0; dx < 4; dx++) {
+      tops.push(state.cellTop[(gz + dz) * GRID + (gx + dx)])
+    }
+  }
+  const top = Math.max(...tops)
+  const g = makeBigHouse()
+  g.position.set(gx + 2, top, gz + 2)
+  scene.add(g)
+  state.bigHouses.push({ x: gx, z: gz, group: g })
+  return true
+}
+
+export function removeBigHousesIn(cells) {
+  if (!state.bigHouses || !state.bigHouses.length) return
+  const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
+  for (let i = state.bigHouses.length - 1; i >= 0; i--) {
+    const b = state.bigHouses[i]
+    let hit = false
+    outer: for (let dz = 0; dz < 4 && !hit; dz++) {
+      for (let dx = 0; dx < 4 && !hit; dx++) {
+        if (cellSet.has((b.z + dz) * GRID + (b.x + dx))) hit = true
+      }
+    }
+    if (hit) {
+      scene.remove(b.group)
+      b.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+      state.bigHouses.splice(i, 1)
+    }
+  }
+}
+
+export function addBigHouseFromSave(ox, oz) {
+  const tops = []
+  for (let dz = 0; dz < 4; dz++) {
+    for (let dx = 0; dx < 4; dx++) {
+      tops.push(state.cellTop[(oz + dz) * GRID + (ox + dx)])
+    }
+  }
+  const top = Math.max(...tops)
+  const g = makeBigHouse()
+  g.position.set(ox + 2, top, oz + 2)
+  scene.add(g)
+  state.bigHouses.push({ x: ox, z: oz, group: g })
+}
+
+// ============================================================================
 // Manoirs : fusion de 4 maisons en 2x2
 // ============================================================================
 function makeManor() {
@@ -787,6 +892,13 @@ export function clearAllPlacements() {
     h.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
   }
   state.houses.length = 0
+  if (state.bigHouses) {
+    for (const b of state.bigHouses) {
+      scene.remove(b.group)
+      b.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+    }
+    state.bigHouses.length = 0
+  }
   for (const m of state.manors) {
     scene.remove(m.group)
     m.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
@@ -894,6 +1006,11 @@ export function isCellOccupied(x, z) {
   for (const r of state.rocks) if (r.x === x && r.z === z) return true
   for (const h of state.houses) if (h.x === x && h.z === z) return true
   for (const m of state.manors) if ((x === m.x || x === m.x+1) && (z === m.z || z === m.z+1)) return true
+  if (state.bigHouses) {
+    for (const b of state.bigHouses) {
+      if (x >= b.x && x < b.x + 4 && z >= b.z && z < b.z + 4) return true
+    }
+  }
   for (const h of state.researchHouses) if (h.x === x && h.z === z) return true
   for (const b of state.bushes) if (b.x === x && b.z === z) return true
   if (state.observatories) {
@@ -992,6 +1109,11 @@ export function collectRockAt(x, z) {
 export function isHouseOn(x, z) {
   for (const h of state.houses) if (h.x === x && h.z === z) return true
   for (const m of state.manors) if ((x === m.x || x === m.x+1) && (z === m.z || z === m.z+1)) return true
+  if (state.bigHouses) {
+    for (const b of state.bigHouses) {
+      if (x >= b.x && x < b.x + 4 && z >= b.z && z < b.z + 4) return true
+    }
+  }
   for (const h of state.researchHouses) if (h.x === x && h.z === z) return true
   return false
 }
@@ -1012,7 +1134,7 @@ export function isMineBlocked(x, z) {
   // le joueur efface explicitement avec Effacer. B17 : inclut toutes les
   // fondations de batiments pour qu'un colon ne puisse miner le sol sous un
   // batiment pose.
-  if (isHouseOn(x, z)) return true
+  if (isHouseOn(x, z)) return true  // inclut bigHouses via isHouseOn
   if (state.observatories) {
     for (const o of state.observatories) if (o.x === x && o.z === z) return true
   }
