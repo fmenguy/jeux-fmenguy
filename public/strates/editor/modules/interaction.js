@@ -114,7 +114,10 @@ function applyToolToZone(cells, tool) {
     } else if (tool === 'pick') {
       const hasRock = state.rocks.some(r => r.x === c.x && r.z === c.z)
       const hasOre  = state.ores.some(o => o.x === c.x && o.z === c.z)
-      if (!hasRock && !hasOre) continue
+      const k = c.z * GRID + c.x
+      const biome = state.cellBiome[k]
+      const hasRockTerrain = (biome === 'rock' || biome === 'snow') && !isCellOccupied(c.x, c.z)
+      if (!hasRock && !hasOre && !hasRockTerrain) continue
     }
     if (!toolAllowedOnCell(tool, c.x, c.z)) {
       const check = canMineCell(c.x, c.z)
@@ -796,7 +799,10 @@ function applyToolToStrata(cells) {
     for (const c of cells) {
       const hasRock = state.rocks.some(r => r.x === c.x && r.z === c.z)
       const hasOre  = state.ores.some(o => o.x === c.x && o.z === c.z)
-      if (!hasRock && !hasOre) continue
+      const k = c.z * GRID + c.x
+      const biome = state.cellBiome[k]
+      const hasRockTerrain = (biome === 'rock' || biome === 'snow') && !isCellOccupied(c.x, c.z)
+      if (!hasRock && !hasOre && !hasRockTerrain) continue
       if (!toolAllowedOnCell('pick', c.x, c.z)) continue
       addJob(c.x, c.z)
     }
