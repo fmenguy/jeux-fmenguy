@@ -40,6 +40,16 @@ function stageMultiplier(growth) {
   return 1.0
 }
 
+// Identifie le stade discret d'un arbre (0, 1 ou 2) pour ne mettre a jour le
+// visuel qu'au franchissement d'un seuil et eviter une croissance visible en
+// continu, qui rendait la scene confuse (tous les arbres semblaient grandir
+// en temps reel).
+function growthStage(growth) {
+  if (growth < 0.33) return 0
+  if (growth < 0.66) return 1
+  return 2
+}
+
 function applyTreeMatrix(t) {
   const s = t.targetScale * stageMultiplier(t.growth)
   if (t.group) {
@@ -73,19 +83,21 @@ export function addTree(gx, gz, opts) {
 
   const model = getModel('tree')
   if (model) {
-    model.scale.setScalar(scale * Math.max(0.08, growth) * TREE_GLB_SCALE)
+    // Scale base sur stageMultiplier (par seuils) pour rester coherent avec
+    // tickTreeGrowth et eviter toute mise a jour continue de la scale GLB.
+    model.scale.setScalar(scale * stageMultiplier(growth) * TREE_GLB_SCALE)
     model.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
     model.rotation.y = rot
     model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
     scene.add(model)
-    const entry = { x: gx, z: gz, jx, jz, rot, top, targetScale: scale, growth, group: model }
+    const entry = { x: gx, z: gz, jx, jz, rot, top, targetScale: scale, growth, stage: growthStage(growth), group: model }
     state.trees.push(entry)
     return entry
   }
 
   // Fallback instanced procedural
   const slot = state.trees.length
-  const entry = { x: gx, z: gz, slot, jx, jz, rot, top, targetScale: scale, growth }
+  const entry = { x: gx, z: gz, slot, jx, jz, rot, top, targetScale: scale, growth, stage: growthStage(growth) }
   applyTreeMatrix(entry)
   tmpColor.setHSL(0.28 + (rng() - 0.5) * 0.06, 0.5 + rng() * 0.15, 0.32 + rng() * 0.1)
   leafMesh.setColorAt(slot, tmpColor)
@@ -102,21 +114,64 @@ export function removeTreesIn(cells) {
   if (!state.trees.length) return
   const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
   const toRemove = state.trees.filter(t => cellSet.has(t.z * GRID + t.x))
+  if (!toRemove.length) return
+
+  // 1) Retire chirurgicalement les arbres GLB cibles de la scene.
+  for (const t of toRemove) {
+    if (t.group) {
+      scene.remove(t.group)
+      t.group.traverse(o => {
+        if (o.geometry) o.geometry.dispose()
+        if (o.material) {
+          if (Array.isArray(o.material)) o.material.forEach(m => m.dispose())
+          else o.material.dispose()
+        }
+      })
+    }
+  }
+
+  // 2) Reconstitue la liste des arbres preserves.
   const kept = state.trees.filter(t => !cellSet.has(t.z * GRID + t.x))
-  if (kept.length === state.trees.length) return
-  for (const t of toRemove) { if (t.group) scene.remove(t.group) }
+
+  // 3) Si certains arbres preserves utilisaient le fallback instanced
+  // (sans group), il faut reattribuer les slots et remettre a jour les
+  // InstancedMesh trunk/leaf. Sinon (tout en GLB), rien a faire cote mesh.
+  const hasInstanced = kept.some(t => !t.group)
+  if (hasInstanced) {
+    trunkMesh.count = 0
+    leafMesh.count = 0
+    for (const t of kept) {
+      if (t.group) continue
+      const slot = trunkMesh.count
+      t.slot = slot
+      applyTreeMatrix(t)
+      trunkMesh.count = slot + 1
+      leafMesh.count = slot + 1
+    }
+    trunkMesh.instanceMatrix.needsUpdate = true
+    leafMesh.instanceMatrix.needsUpdate = true
+  }
+
   state.trees.length = 0
-  trunkMesh.count = 0; leafMesh.count = 0
-  for (const t of kept) addTree(t.x, t.z, { growth: t.growth })
+  for (const t of kept) state.trees.push(t)
 }
 
 // animation de pousse : chaque arbre avec growth < 1 grandit sur ~480 s (8 min)
+// La scale visuelle ne change qu'au franchissement d'un seuil de stade
+// (0 < 0.33 < 0.66 < 1), ce qui evite l'effet "tous les arbres grandissent en
+// temps reel". La valeur growth elle-meme continue d'avancer en continu pour
+// que isTreeMature() (>= 0.66) reste precis.
 export function tickTreeGrowth(dt) {
+  if (!state.trees.length) return
   let instancedChanged = false
   const RATE = 1 / 480
   for (const t of state.trees) {
-    if (t.growth < 1) {
-      t.growth = Math.min(1, t.growth + dt * RATE)
+    if (t.growth >= 1) continue
+    const before = t.stage != null ? t.stage : growthStage(t.growth)
+    t.growth = Math.min(1, t.growth + dt * RATE)
+    const after = growthStage(t.growth)
+    if (after !== before) {
+      t.stage = after
       applyTreeMatrix(t)
       if (!t.group) instancedChanged = true
     }
