@@ -31,6 +31,7 @@ import { TECH_TREE_DATA } from './modules/gamedata.js'
 import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions.js'
 import { loadModels } from './modules/glb-cache.js'
 import { initPopulationModal } from './modules/ui/population-modal.js'
+import { initBuildingPanel } from './modules/ui/building-panel.js'
 import { initTutoInvite, showTutoInvite } from './modules/ui/tutorial.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
@@ -88,6 +89,7 @@ startAutoSave(30)
 initAudio()
 initTechTreeUI()
 initCharSheet()
+initBuildingPanel()
 initHelpOverlay()
 initDayNight()
 initPopulationModal()

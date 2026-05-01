@@ -25,6 +25,7 @@ import { closeHelpOverlay, isHelpOverlayOpen } from './help-overlay.js'
 import { closeTechTreePanel, closeBranch } from './ui/techtree-panel.js'
 import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
+import { closeBuildingPanel, isBuildingPanelOpen } from './ui/building-panel.js'
 
 let firstHarvestDone = false
 
@@ -425,6 +426,9 @@ document.addEventListener('keydown', (e) => {
 
   const clearRail = () => document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'))
 
+  if (isBuildingPanelOpen()) {
+    closeBuildingPanel(); e.stopPropagation(); e.preventDefault(); return
+  }
   if (isCharSheetOpen()) {
     closeCharSheet(); e.stopPropagation(); e.preventDefault(); return
   }
