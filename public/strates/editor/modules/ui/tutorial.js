@@ -140,7 +140,7 @@ function injectStyles() {
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes tuto-invite-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .tuto-ring {
@@ -230,8 +230,8 @@ function injectStyles() {
 }
 .tuto-invite {
   position: fixed;
-  bottom: 18px;
-  right: 18px;
+  top: 80px;
+  left: 16px;
   z-index: 9003;
   background: #1c1a14;
   border: 1px solid #c8a84b;
