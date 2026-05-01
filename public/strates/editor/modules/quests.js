@@ -150,8 +150,9 @@ export function updateQuests(_nowSec) {
 
 const questsBodyEl = () => document.getElementById('quests-body')
 let lastQuestSig = ''
+let activeTab = 'available'
 
-export function resetQuestSig() { lastQuestSig = '' }
+export function resetQuestSig() { lastQuestSig = ''; activeTab = 'available' }
 
 function rewardLabel(r) {
   if (!r) return ''
@@ -163,51 +164,106 @@ function rewardLabel(r) {
   return parts.join(' · ')
 }
 
-export function renderQuests() {
-  const el = questsBodyEl()
-  if (!el) return
-
+function buildSig() {
   const q = state.questActive
   const avail = state.questsAvailable || []
+  const done = state.questsCompleted || []
+  return activeTab +
+    '|a:' + (q ? q.id + ':' + (q.progress || 0) : 'none') +
+    '|v:' + avail.map(x => x.id).join(',') +
+    '|d:' + done.length
+}
 
-  let sig
-  if (q) {
-    sig = 'active:' + q.id + ':' + (q.progress || 0) + ':' + (q.completed ? 'y' : 'n')
-  } else {
-    sig = 'avail:' + avail.map(x => x.id).join(',')
+function renderTabContent(body) {
+  const q = state.questActive
+  const avail = state.questsAvailable || []
+  const done = state.questsCompleted || []
+
+  if (activeTab === 'available') {
+    if (avail.length === 0 && !q) {
+      body.innerHTML = '<div class="qall-done">Toutes les quêtes sont complétées !</div>'
+      return
+    }
+    if (avail.length === 0) {
+      body.innerHTML = '<div class="qactive-empty">Une quête est déjà en cours.</div>'
+      return
+    }
+    body.innerHTML = avail.map(x =>
+      '<div class="qcard">' +
+        '<div class="qcard-title"><span class="qdot" style="background:' + x.color + '"></span>' + x.title + '</div>' +
+        '<div class="qcard-desc">' + x.description + '</div>' +
+        (rewardLabel(x.reward) ? '<div class="qcard-reward">' + rewardLabel(x.reward) + '</div>' : '') +
+        '<button class="qcard-accept" data-qid="' + x.id + '">Accepter</button>' +
+      '</div>'
+    ).join('')
+    body.querySelectorAll('.qcard-accept').forEach(btn => {
+      btn.addEventListener('click', () => {
+        acceptQuest(btn.dataset.qid)
+        activeTab = 'active'
+        lastQuestSig = ''
+        renderQuests()
+      })
+    })
+    return
   }
-  if (sig === lastQuestSig) return
-  lastQuestSig = sig
 
-  if (q) {
+  if (activeTab === 'active') {
+    if (!q) {
+      body.innerHTML = '<div class="qactive-empty">Aucune quête en cours.<br>Acceptez-en une dans l\'onglet "À prendre".</div>'
+      return
+    }
     const pct = Math.min(100, Math.round(((q.progress || 0) / q.goal.target) * 100))
-    el.innerHTML =
-      '<div class="quest' + (q.completed ? ' done' : '') + '">' +
-        '<div class="qtitle"><span class="qdot" style="background:' + q.color + '"></span>' + q.title + '</div>' +
-        '<div class="qdesc">' + q.description + '</div>' +
+    body.innerHTML =
+      '<div class="qactive-card">' +
+        '<div class="qactive-title"><span class="qdot" style="background:' + q.color + '"></span>' + q.title + '</div>' +
+        '<div class="qactive-desc">' + q.description + '</div>' +
         '<div class="qbar"><div class="qfill" style="width:' + pct + '%"></div></div>' +
         '<div class="qprog">' + (q.progress || 0) + ' / ' + q.goal.target + '</div>' +
       '</div>'
     return
   }
 
-  if (avail.length === 0) {
-    el.innerHTML = '<div class="qdone-msg">Toutes les quêtes sont complétées</div>'
-    return
+  if (activeTab === 'done') {
+    if (done.length === 0) {
+      body.innerHTML = '<div class="qdone-empty">Aucune quête complétée pour l\'instant.</div>'
+      return
+    }
+    body.innerHTML = done.map(x =>
+      '<div class="qdone-item"><span class="qdone-check">✓</span>' + x.title + '</div>'
+    ).join('')
+  }
+}
+
+export function renderQuests() {
+  const tabsBar = document.getElementById('quests-tabs-bar')
+  const body = questsBodyEl()
+  if (!body) return
+
+  const sig = buildSig()
+  if (sig === lastQuestSig) return
+  lastQuestSig = sig
+
+  const avail = state.questsAvailable || []
+  const done = state.questsCompleted || []
+  const hasActive = !!state.questActive
+
+  const badge = (n) => n > 0 ? '<span class="q-tab-badge">' + n + '</span>' : ''
+
+  if (tabsBar) {
+    tabsBar.innerHTML =
+      '<div class="q-tabs">' +
+        '<button class="q-tab' + (activeTab === 'available' ? ' active' : '') + '" data-tab="available">À prendre' + badge(avail.length) + '</button>' +
+        '<button class="q-tab' + (activeTab === 'active' ? ' active' : '') + '" data-tab="active">En cours' + (hasActive ? badge(1) : '') + '</button>' +
+        '<button class="q-tab' + (activeTab === 'done' ? ' active' : '') + '" data-tab="done">Réalisées' + badge(done.length) + '</button>' +
+      '</div>'
+    tabsBar.querySelectorAll('.q-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeTab = btn.dataset.tab
+        lastQuestSig = ''
+        renderQuests()
+      })
+    })
   }
 
-  el.innerHTML =
-    '<div class="qa-header">Choisissez une quête</div>' +
-    avail.map(x =>
-      '<div class="qa-item">' +
-        '<div class="qtitle"><span class="qdot" style="background:' + x.color + '"></span>' + x.title + '</div>' +
-        '<div class="qdesc">' + x.description + '</div>' +
-        '<div class="qreward">' + rewardLabel(x.reward) + '</div>' +
-        '<button class="qa-btn" data-qid="' + x.id + '">Accepter</button>' +
-      '</div>'
-    ).join('')
-
-  el.querySelectorAll('.qa-btn').forEach(btn => {
-    btn.addEventListener('click', () => acceptQuest(btn.dataset.qid))
-  })
+  renderTabContent(body)
 }
