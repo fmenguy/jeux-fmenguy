@@ -882,9 +882,7 @@ dom.addEventListener('pointerdown', (e) => {
     applyToolToStrata(cells)
     return
   }
-  const wantsRect = RECT_SELECT_TOOLS.has(state.toolState.tool) &&
-    (state.toolState.tool !== 'pick' || e.shiftKey)
-  if (wantsRect && cell) {
+  if (RECT_SELECT_TOOLS.has(state.toolState.tool) && cell) {
     selectionRect.active = true
     selectionRect.startX = cell.x
     selectionRect.startZ = cell.z
@@ -925,7 +923,7 @@ dom.addEventListener('pointermove', (e) => {
   }
   if (!state.toolState.isPainting) return
   if (state.toolState.tool === 'nav') return
-  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory' || state.toolState.tool === 'pick') return
+  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory') return
   const cell = hoverCell || pickCell(e.clientX, e.clientY)
   if (cell) applyToolAtCell(cell)
 })
@@ -939,6 +937,13 @@ window.addEventListener('pointerup', (e) => {
     const cells = cellsInRect(selectionRect.startX, selectionRect.startZ, selectionRect.endX, selectionRect.endZ)
     if (state.toolState.tool === 'cancel-zone') {
       cancelJobsInRect(cells)
+    } else if (state.toolState.tool === 'pick' &&
+               selectionRect.startX === selectionRect.endX &&
+               selectionRect.startZ === selectionRect.endZ) {
+      state.toolState.isPainting = true
+      state.toolState.paintedThisStroke = new Set()
+      applyToolAtCell({ x: selectionRect.startX, z: selectionRect.startZ })
+      state.toolState.isPainting = false
     } else {
       applyToolToZone(cells, state.toolState.tool)
     }
