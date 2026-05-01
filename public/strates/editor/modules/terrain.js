@@ -51,7 +51,8 @@ export function makeHeightmap() {
         elev = WATER_LEVEL + 0.1 + t * (SHALLOW_WATER_LEVEL - WATER_LEVEL - 0.2)
       } else {
         const falloff = smoothstep01(0, FALLOFF_SPAN, edgeDist - (EDGE_DEEP_RING + EDGE_SHALLOW_RING))
-        elev = SHALLOW_WATER_LEVEL * (1 - falloff) + elev * falloff
+        const f3 = falloff * falloff * falloff
+        elev = SHALLOW_WATER_LEVEL * (1 - f3) + elev * f3
       }
 
       // Terrain plat autour du spawn central (zone de village)
