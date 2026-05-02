@@ -296,6 +296,12 @@ function applySnapshot(data) {
     state.season.cyclesDone = data.season.cyclesDone || 0
     state.season.year = data.season.year ?? (data.season.cyclesDone + 1) ?? 1
   }
+  // fog of war : restaurer la carte d'exploration si presente dans la save
+  if (Array.isArray(data.visited) && data.visited.length === GRID * GRID) {
+    state.visited = Uint8Array.from(data.visited)
+  } else {
+    state.visited = null  // sera initialise par buildFog()
+  }
   // Lot D : ages
   state.currentAge = data.currentAge || 1
   state.ageUnlockedAt = data.ageUnlockedAt || { 1: Date.now() }
