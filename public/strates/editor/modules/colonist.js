@@ -842,9 +842,10 @@ export class Colonist {
             if (this._bowGroup) this._bowGroup.visible = false
             return
           }
-          const deerIdx = state.deers.indexOf(deerEntry)
-          state.deers.splice(deerIdx, 1)
-          if (deerEntry.group.parent) deerEntry.group.parent.remove(deerEntry.group)
+          deerEntry.dead = true
+          deerEntry.deadTimer = 4.0
+          deerEntry.group.rotation.x = Math.PI / 2
+          if (deerEntry.mixer) { deerEntry.mixer.stopAllAction(); deerEntry.mixer = null }
           state.resources['raw-meat'] = (state.resources['raw-meat'] || 0) + 2
           state.resources['bone']     = (state.resources['bone']     || 0) + 1
           state.resources['hide']     = (state.resources['hide']     || 0) + 1
