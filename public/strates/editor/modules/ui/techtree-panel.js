@@ -26,6 +26,7 @@ let currentBranch = null
 let refreshTimer = null
 let selectedTechId = null
 const QUEUE_MAX = 5
+let _viewedAge = 1
 
 // Etat pan + zoom de la vue detail
 const view = {
@@ -252,7 +253,7 @@ function tickProgressOnly() {
     // Arc de branche dans la constellation (--p CSS var)
     if (activeTech && activeTech.branch) {
       const branchTechs = techs.filter(function(t) {
-        return t.branch === activeTech.branch && (t.age || 1) === (state.currentAge || 1)
+        return t.branch === activeTech.branch && (t.age || 1) === _viewedAge
       })
       if (branchTechs.length) {
         const doneCount = branchTechs.filter(function(t) { return techUnlocked(t.id) }).length
@@ -343,6 +344,7 @@ export function openTechTreePanel() {
   if (!root) return
   isOpen = true
   dirty = false
+  _viewedAge = state.currentAge || 1
   root.classList.add('open')
   root.classList.remove('detail-mode')
   render()
@@ -367,6 +369,7 @@ export function toggleTechTreePanel() {
 // ─── Hook Lot D : refresh apres transition d'age ────────────────────────────
 
 export function refreshTechTreeAfterAgeChange(age) {
+  _viewedAge = state.currentAge || age || 1
   if (isOpen) {
     render()
   } else {
@@ -453,7 +456,7 @@ function renderTopbar() {
   if (pts) pts.textContent = String(state.researchPoints || 0)
   const data = TECH_TREE_DATA
   const ages = (data && data.ages) || []
-  const curAge = state.currentAge || 1
+  const curAge = _viewedAge
   const curAgeObj = ages.find(function(a) { return a.id === curAge }) || ages[0]
   const ageName = (curAgeObj && (curAgeObj.name || curAgeObj.label)) || 'Pierre'
   const an = document.getElementById('ttp-age-name')
@@ -500,9 +503,12 @@ function renderAgeRail() {
   ages.forEach(function(a) {
     const d = document.createElement('div')
     const unlocked = a.unlocked || a.id <= curAge
-    d.className = 'dot' + (a.id === curAge ? ' active' : (unlocked ? '' : ' locked'))
+    d.className = 'dot' + (a.id === _viewedAge ? ' active' : (unlocked ? '' : ' locked'))
     d.title = 'Age ' + roman(a.id) + (a.name ? ', ' + a.name : '')
     d.textContent = roman(a.id)
+    if (unlocked) {
+      d.addEventListener('click', function() { _viewedAge = a.id; render() })
+    }
     rail.appendChild(d)
   })
 }
@@ -518,7 +524,7 @@ function renderConstellation() {
   const data = TECH_TREE_DATA
   if (!data) return
   const branches = data.branches || []
-  const techs = (data.techs || []).filter(function(t) { return (t.age || 1) === (state.currentAge || 1) })
+  const techs = (data.techs || []).filter(function(t) { return (t.age || 1) === _viewedAge })
 
   // Branches ayant au moins une tech a l'age courant
   const activeBranchIds = new Set()
@@ -628,7 +634,7 @@ function openBranch(brId) {
 
   // Selection automatique d'une tech interessante pour remplir la fiche
   const techs = (TECH_TREE_DATA && TECH_TREE_DATA.techs) || []
-  const list = techs.filter(function(t) { return t.branch === brId && (t.age || 1) === (state.currentAge || 1) })
+  const list = techs.filter(function(t) { return t.branch === brId && (t.age || 1) === _viewedAge })
   const first =
     list.find(function(t) { return activeResearchId() === t.id }) ||
     list.find(function(t) { return techStatus(t) === 'ready' || techStatus(t) === 'available' }) ||
@@ -690,11 +696,12 @@ function renderBranchDetail(brId) {
 
   // Colonnes d'age (Age I, Age II teaser)
   const curAge = state.currentAge || 1
-  const visibleAges = ages.slice(0, Math.max(curAge + 1, 2)).slice(0, AGES_PER_VIEW * 4)
-  // Afficher l'age courant + un teaser
+  const viewAge = _viewedAge
+  const visibleAges = ages.slice(0, Math.max(viewAge + 1, 2)).slice(0, AGES_PER_VIEW * 4)
+  // Afficher l'age visionne + un teaser
   const ageCols = []
   ages.forEach(function(a, idx) {
-    if (idx >= 2 && a.id > curAge + 1) return
+    if (idx >= 2 && a.id > viewAge + 1) return
     if (idx > 3) return
     ageCols.push(a)
   })
