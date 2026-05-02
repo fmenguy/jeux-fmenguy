@@ -6,7 +6,7 @@ import { prng, mulberry32, rebuildPerm } from './rng.js'
 import { buildTerrain, revealAround } from './terrain.js'
 import {
   addHouse, addTree, addRock, addOre, addBush,
-  isCellOccupied, clearAllPlacements, addDeer
+  isCellOccupied, clearAllPlacements, addDeer, applyFogToAllVegetation
 } from './placements.js'
 import { spawnColonist, clearColonists, findSpawn } from './colonist.js'
 import { startNextQuest, resetQuestSig } from './quests.js'
@@ -161,6 +161,11 @@ export function populateDefaultScene() {
     if (addDeer(x, z)) deersPlaced++
   }
   console.log('[deer] count in scene:', state.deers.length)
+
+  // Applique le fog a toute la vegetation avant la revelation initiale.
+  // Tout ce qui est hors zone revelee part en noir (group.visible = false
+  // pour les GLB, couleur noire pour les InstancedMesh).
+  applyFogToAllVegetation()
 
   // Revelation initiale : cercle de rayon 12 autour du spawn central.
   // Effectuee apres le placement de toutes les entites pour que les colons
