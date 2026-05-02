@@ -132,12 +132,13 @@
       "name": "Champ de ble",
       "age": 2,
       "category": "alimentation",
-      "size": "1x1",
-      "cost": { "wood": 3, "stone": 2 },
+      "size": "2x2",
+      "cost": { "wood": 4, "stone": 2 },
       "requires": { "tech": ["wheat-field"] },
-      "provides": { "food_per_tick": 0 },
+      "provides": { "grain_per_tick": 0.08 },
+      "fertility_required": true,
       "activity": "day",
-      "description": "Stub age 2. Champ de ble domestique. Debloque le metier Agriculteur."
+      "description": "Culture de ble sur terrain fertile. Produit du grain transformable en farine puis en pain. Occupe 4 cases en carre."
     },
     {
       "id": "grenier",
