@@ -201,8 +201,11 @@ function repaintSaisonTerrainChunk() {
       tmpCol.offsetHSL(0, 0, j)
       if (state.cellFertile && state.cellFertile[idx]) tmpCol.lerp(_FERTILE_TINT, 0.55)
     }
-    state.instanced.setColorAt(topIdx, tmpCol)
+    // Toujours mettre a jour origColor (couleur de reference pour la revelation).
     state.origColor[topIdx].copy(tmpCol)
+    // Fog of war : ne pas ecraser le noir des cellules non revelees.
+    if (state.cellRevealed && !state.cellRevealed[idx]) continue
+    state.instanced.setColorAt(topIdx, tmpCol)
     touched = true
   }
   _repaintIdx = end >= total ? 0 : end
