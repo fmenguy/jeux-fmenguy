@@ -91,7 +91,10 @@ export function populateDefaultScene() {
       const x = Math.floor(rng() * GRID)
       const z = Math.floor(rng() * GRID)
       const biome = state.cellBiome[z * GRID + x]
-      if (biome !== 'rock' && biome !== 'snow') continue
+      const cellTop = state.cellTop[z * GRID + x]
+      const isRocky = biome === 'rock' || biome === 'snow'
+      const isSurface = (biome === 'grass' || biome === 'forest') && cellTop >= 3
+      if (!isRocky && !isSurface) continue
       if (isCellOccupied(x, z)) continue
       addOre(x, z, type)
       count++
@@ -111,6 +114,7 @@ export function populateDefaultScene() {
     addOre(x, z, type)
     oresPlaced++
   }
+  console.log('[ores] placed:', state.ores.length)
 
   // Buissons a baies - minimum 25 en herbe et foret
   let bushPlaced = 0
