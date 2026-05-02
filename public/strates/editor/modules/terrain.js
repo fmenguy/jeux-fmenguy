@@ -39,9 +39,9 @@ export function makeHeightmap() {
       const nz = z / GRID - 0.5
       const hill = Math.max(0, 1 - (nx * nx + nz * nz) * 3.2)
       const valley = Math.max(0, 0.7 - Math.abs((x - cx * 0.7) / (GRID * 0.18)))
-      const base = fbm(x * 0.045, z * 0.045, 5)
-      const ridges = Math.abs(fbm(x * 0.085 + 12, z * 0.085 + 8, 4))
-      const peak = Math.pow(Math.max(0, fbm(x * 0.025 + 50, z * 0.025 + 50, 2)), 2) * 4
+      const base = fbm(x * 0.028, z * 0.028, 5)
+      const ridges = Math.abs(fbm(x * 0.053 + 12, z * 0.053 + 8, 4))
+      const peak = Math.pow(Math.max(0, fbm(x * 0.016 + 50, z * 0.016 + 50, 2)), 2) * 4
       let elev = 0.6 + base * 1.8 + hill * 3.4 - valley * 1.4 + ridges * 1.4 + peak
       elev += Math.max(0, (x - GRID * 0.7) / GRID) * 4.0
 
@@ -66,7 +66,7 @@ export function makeHeightmap() {
       }
 
       h[z * GRID + x] = elev
-      bn[z * GRID + x] = fbm(x * 0.08 + 100, z * 0.08 + 100, 3)
+      bn[z * GRID + x] = fbm(x * 0.05 + 100, z * 0.05 + 100, 3)
     }
   }
   return { h, bn }
@@ -347,7 +347,7 @@ export function computeFertileCells() {
       const k = z * GRID + x
       const biome = state.cellBiome[k]
       if (biome !== 'grass' && biome !== 'forest') continue
-      const fn = fbm(x * 0.04 + 500.0, z * 0.04 + 500.0, 3)
+      const fn = fbm(x * 0.025 + 500.0, z * 0.025 + 500.0, 3)
       if (fn > 0.07) state.cellFertile[k] = 1
     }
   }

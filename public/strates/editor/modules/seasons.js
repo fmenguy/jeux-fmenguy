@@ -169,7 +169,7 @@ export function tintField(col) {
 // un petit budget de cellules par appel, avec un index persistant qui boucle
 // sur le terrain. Quand l'index atteint la fin, le cycle complet est termine.
 let _repaintIdx = 0
-const REPAINT_CHUNK = 1200 // cellules par appel, environ 8 appels pour couvrir 96x96
+const REPAINT_CHUNK = 3000 // cellules par appel, environ 22 appels pour couvrir 256x256
 
 function repaintSaisonTerrainChunk() {
   if (!state.instanced || !state.cellBiome) return

@@ -4,7 +4,7 @@ import * as THREE from 'three'
 // Constantes globales du prototype Strates
 // ============================================================================
 
-export const GRID = 160
+export const GRID = 256
 export const MAX_STRATES = 10
 export const MIN_STRATES = 1
 export const WATER_LEVEL = 1.0

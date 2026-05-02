@@ -12,6 +12,7 @@ import { spawnColonist, clearColonists, findSpawn } from './colonist.js'
 import { startNextQuest, resetQuestSig } from './quests.js'
 import { scene } from './scene.js'
 import { clearVegetation, buildVegetation } from './vegetation.js'
+import { clearFog, buildFog } from './fog.js'
 
 // ============================================================================
 // Scene par defaut : hameau, arbres, rochers, filons, baies, champs, colons
@@ -32,8 +33,8 @@ export function populateDefaultScene() {
 
   // Arbres en clusters denses dans les forets
   let placed = 0
-  const targetTrees = 80
-  for (let tries = 0; tries < 5000 && placed < targetTrees; tries++) {
+  const targetTrees = 200
+  for (let tries = 0; tries < 12000 && placed < targetTrees; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     if (state.cellBiome[z * GRID + x] !== 'forest') continue
@@ -54,8 +55,8 @@ export function populateDefaultScene() {
 
   // Arbres epars en herbe (eloignes du spawn)
   let grassTrees = 0
-  const targetGrassTrees = 20
-  for (let tries = 0; tries < 1200 && grassTrees < targetGrassTrees; tries++) {
+  const targetGrassTrees = 50
+  for (let tries = 0; tries < 3000 && grassTrees < targetGrassTrees; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     if (state.cellBiome[z * GRID + x] !== 'grass') continue
@@ -68,8 +69,8 @@ export function populateDefaultScene() {
 
   // Rochers decoratifs (rock, snow, transitions herbe/roche)
   let rocksPlaced = 0
-  const targetRocks = 40
-  for (let tries = 0; tries < 2000 && rocksPlaced < targetRocks; tries++) {
+  const targetRocks = 100
+  for (let tries = 0; tries < 5000 && rocksPlaced < targetRocks; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     const biome = state.cellBiome[z * GRID + x]
@@ -82,8 +83,8 @@ export function populateDefaultScene() {
 
   // Filons garantis : au moins 3 copper et 3 coal en biome rock/snow
   const guaranteedOres = [
-    { type: 'ore-copper', min: 3 },
-    { type: 'ore-coal',   min: 3 }
+    { type: 'ore-copper', min: 7 },
+    { type: 'ore-coal',   min: 7 }
   ]
   for (const { type, min } of guaranteedOres) {
     let count = 0
@@ -103,8 +104,8 @@ export function populateDefaultScene() {
   // Filons supplementaires varies
   const ORE_SEEDS = ['ore-copper', 'ore-iron', 'ore-coal', 'ore-gold', 'ore-silver']
   let oresPlaced = 0
-  const targetOres = 8
-  for (let tries = 0; tries < 1500 && oresPlaced < targetOres; tries++) {
+  const targetOres = 20
+  for (let tries = 0; tries < 4000 && oresPlaced < targetOres; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     const biome = state.cellBiome[z * GRID + x]
@@ -118,8 +119,8 @@ export function populateDefaultScene() {
 
   // Buissons a baies - minimum 25 en herbe et foret
   let bushPlaced = 0
-  const targetBushes = 25
-  for (let tries = 0; tries < 2000 && bushPlaced < targetBushes; tries++) {
+  const targetBushes = 64
+  for (let tries = 0; tries < 5000 && bushPlaced < targetBushes; tries++) {
     const x = Math.floor(rng() * GRID)
     const z = Math.floor(rng() * GRID)
     const biome = state.cellBiome[z * GRID + x]
@@ -187,6 +188,8 @@ export function resetWorld(refreshHUD) {
   buildTerrain()
   populateDefaultScene()
   buildVegetation()
+  clearFog()
+  buildFog()
   state.season.idx = 0
   state.season.elapsed = 0
   state.season.cyclesDone = 0
