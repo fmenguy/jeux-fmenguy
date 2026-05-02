@@ -32,6 +32,7 @@ import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions
 import { loadModels } from './modules/glb-cache.js'
 import { initPopulationModal } from './modules/ui/population-modal.js'
 import { initBuildingPanel } from './modules/ui/building-panel.js'
+import { initCellTooltip } from './modules/ui/cell-tooltip.js'
 import { initTutoInvite, showTutoInvite } from './modules/ui/tutorial.js'
 import { isSandboxMode, activateSandbox } from './modules/sandbox.js'
 // stocks.js import initialise state.stocks[k] = 0
@@ -92,6 +93,7 @@ initAudio()
 initTechTreeUI()
 initCharSheet()
 initBuildingPanel()
+initCellTooltip()
 initHelpOverlay()
 initDayNight()
 initPopulationModal()
