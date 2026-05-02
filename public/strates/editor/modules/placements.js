@@ -577,6 +577,7 @@ function makeFallbackDeer() {
 }
 
 export function addDeer(gx, gz) {
+  console.log('[deer] addDeer called at', gx, gz)
   const biome = state.cellBiome[gz * GRID + gx]
   if (biome !== 'grass' && biome !== 'forest') return null
   const top = state.cellTop[gz * GRID + gx]
