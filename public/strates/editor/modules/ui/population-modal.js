@@ -422,19 +422,18 @@ export class PopulationModal {
 
   _htmlJobAssignPanel(jd, colonists) {
     const skillName = JOB_SKILL[jd.id]
-    const rows = colonists.map(c => {
+    const disponibles = colonists.filter(c => !c.profession || c.profession === jd.id)
+    const rows = disponibles.map(c => {
       const isCurrent = c.profession === jd.id
-      const otherJob = !isCurrent && c.profession ? jobLabelOf(c.profession) : null
       const lvl = skillName ? skillLevelOf(c._raw, skillName) : 0
       const lvlTxt = lvl > 0 ? '<span class="pv2-assign-lvl">Niv.' + lvl + '</span>' : ''
-      const meta = otherJob ? '<span class="pv2-assign-meta">(' + escH(otherJob) + ')</span>' : ''
       const action = isCurrent ? 'remove' : 'assign'
       const btnLabel = isCurrent ? 'Retirer' : 'Assigner'
       const btnCls = 'pv2-job-action' + (isCurrent ? ' remove' : '')
       return '<div class="pv2-assign-row' + (isCurrent ? ' current' : '') + '">' +
         '<span class="pv2-assign-name">' +
           (c.chief ? '<span class="pv2-chief-star">★</span> ' : '') +
-          escH(c.name) + ' ' + meta + ' ' + lvlTxt +
+          escH(c.name) + ' ' + lvlTxt +
         '</span>' +
         '<button class="' + btnCls + '" data-action="' + action + '" data-job-id="' + escH(jd.id) + '" data-cid="' + escH(c.id) + '">' +
           escH(btnLabel) +
@@ -442,7 +441,7 @@ export class PopulationModal {
         '</div>'
     }).join('')
 
-    const body = colonists.length
+    const body = disponibles.length
       ? rows
       : '<div class="pv2-assign-empty">Aucun colon disponible.</div>'
 
