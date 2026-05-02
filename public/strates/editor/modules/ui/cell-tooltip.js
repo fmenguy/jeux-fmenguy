@@ -33,6 +33,18 @@ const CSS = `
   margin-right: 4px;
 }
 .cell-tooltip-icon { display: inline-block; margin-right: 3px; }
+@keyframes cell-info-pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+#btn-cell-info.actif {
+  background: rgba(212,184,112,0.25);
+  box-shadow: 0 0 6px rgba(212,184,112,0.4);
+}
+#btn-cell-info.pulse {
+  animation: cell-info-pulse 0.15s ease-out;
+}
 `
 
 const BIOME_INFO = {
@@ -62,21 +74,14 @@ export function isCellTooltipEnabled() { return _enabled }
 
 export function initCellTooltip() {
   const btn = document.getElementById('btn-cell-info')
-  if (btn) {
-    btn.addEventListener('click', function() {
-      _enabled = !_enabled
-      btn.classList.toggle('active', _enabled)
-      if (!_enabled) hideCellTooltip()
-    })
-  }
-}
-
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCellTooltip, { once: true })
-  } else {
-    initCellTooltip()
-  }
+  if (!btn) return
+  btn.addEventListener('click', function() {
+    _enabled = !_enabled
+    btn.classList.toggle('actif', _enabled)
+    btn.classList.add('pulse')
+    btn.addEventListener('animationend', function() { btn.classList.remove('pulse') }, { once: true })
+    if (!_enabled) hideCellTooltip()
+  })
 }
 
 function ensureDom() {
