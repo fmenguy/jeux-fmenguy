@@ -243,8 +243,7 @@ export class PopulationModal {
     } else {
       raw.profession = jobId
     }
-    // Refermer le sous-panneau et rafraîchir l'affichage
-    this.openJobId = null
+    // Garder le sous-panneau ouvert pour permettre d'assigner plusieurs colons a la suite
     this._renderBody()
   }
 
