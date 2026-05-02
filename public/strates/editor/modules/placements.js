@@ -7,6 +7,7 @@ import { state } from './state.js'
 import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
 import { repaintCellSurface, setOnCellRevealed, revealAround } from './terrain.js'
+import { showHudToast } from './ui/research-popup.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
 import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
@@ -1423,7 +1424,12 @@ export function addObservatory(gx, gz) {
   scene.add(g)
   const entry = { x: gx, z: gz, group: g }
   state.observatories.push(entry)
-  revealAround(gx, gz, 20)
+  const alt = top ?? 3
+  const BASE_RADIUS = 20
+  const HEIGHT_BONUS = Math.max(0, alt - 3) * 2
+  const radius = Math.min(35, BASE_RADIUS + HEIGHT_BONUS)
+  revealAround(gx, gz, radius)
+  showHudToast(`Promontoire érigé, vision ${radius} cases`, 3000)
   return entry
 }
 
