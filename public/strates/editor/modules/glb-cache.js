@@ -12,7 +12,7 @@ const BASE = new URL('../assets/models/fantaisy/', import.meta.url).href
 // Constantes de mise a l'echelle par type (ajuster selon les GLB)
 export const TREE_GLB_SCALE = 0.40
 export const ROCK_GLB_SCALE = 0.32
-export const DEER_GLB_SCALE = 30.0
+export const DEER_GLB_SCALE = 0.5
 
 const MANIFEST = {
   tree: 'Pine.glb',
@@ -49,7 +49,15 @@ export function loadModels() {
 export function modelsReady() { return _ready }
 
 export function getModel(key) {
-  if (!_cache[key]) return null
+  if (!_cache[key]) {
+    if (key === 'deer') console.log('[deer] cache miss for key deer, _cache keys:', Object.keys(_cache))
+    return null
+  }
+  if (key === 'deer') {
+    let mc = 0
+    _cache[key].traverse(function(o) { if (o.isMesh) mc++ })
+    console.log('[deer] cache hit, source meshes:', mc)
+  }
   return _cache[key].clone(true)
 }
 
