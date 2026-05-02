@@ -589,7 +589,7 @@ export function addDeer(gx, gz) {
   const jz = (rng() - 0.5) * 0.4
   const rotY = rng() * Math.PI * 2
 
-  const model = getModel('deer')
+  const model = null // GLB Deer.glb : materiaux transparents, forcage fallback procedural
   if (model) {
     model.scale.setScalar(DEER_GLB_SCALE)
     // Offset Y fixe : le pivot du GLB est typiquement au centre du mesh.
