@@ -588,10 +588,26 @@ export function addDeer(gx, gz) {
   const model = getModel('deer')
   if (model) {
     model.scale.setScalar(DEER_GLB_SCALE)
-    model.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
+    // Offset Y : le pivot du GLB est souvent au centre du mesh, pas aux pieds.
+    // DEER_GLB_SCALE * 0.3 leve le groupe pour que les sabots affleurent le sol.
+    model.position.set(gx + 0.5 + jx, top + DEER_GLB_SCALE * 0.3, gz + 0.5 + jz)
     model.rotation.y = rotY
     model.userData.type = 'deer'
-    model.traverse(function(o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+    model.traverse(function(o) {
+      if (o.isMesh) {
+        o.castShadow = true
+        o.receiveShadow = true
+        o.frustumCulled = false
+        const mats = Array.isArray(o.material) ? o.material : [o.material]
+        for (const mat of mats) {
+          if (!mat) continue
+          mat.transparent = false
+          mat.opacity = 1
+          mat.visible = true
+          mat.needsUpdate = true
+        }
+      }
+    })
     const clips = getModelClips('deer')
     if (clips.length > 0) {
       const mixer = new THREE.AnimationMixer(model)
@@ -599,6 +615,8 @@ export function addDeer(gx, gz) {
       model.userData.mixer = mixer
     }
     scene.add(model)
+    model.updateMatrixWorld(true)
+    console.log('[deer] addDeer GLB pos:', model.position.x.toFixed(1), model.position.y.toFixed(1), model.position.z.toFixed(1))
     const entry = { x: gx, z: gz, group: model }
     state.deers.push(entry)
     return entry
@@ -608,7 +626,9 @@ export function addDeer(gx, gz) {
   const g = makeFallbackDeer()
   g.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
   g.rotation.y = rotY
+  g.traverse(function(o) { if (o.isMesh) o.frustumCulled = false })
   scene.add(g)
+  console.log('[deer] addDeer fallback pos:', g.position.x.toFixed(1), g.position.y.toFixed(1), g.position.z.toFixed(1))
   const entry = { x: gx, z: gz, group: g }
   state.deers.push(entry)
   return entry
