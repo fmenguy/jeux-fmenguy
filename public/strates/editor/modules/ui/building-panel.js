@@ -6,6 +6,13 @@
 // ============================================================================
 
 import { state } from '../state.js'
+import { repaintCellSurface } from '../terrain.js'
+import { showHudToast } from './research-popup.js'
+import {
+  removeHousesIn, removeManorsIn, removeBigHousesIn,
+  removeResearchHousesIn, removeObservatoriesIn
+} from '../placements.js'
+import { refreshHUD } from '../hud.js'
 
 const CSS = `
 #bp-panel {
@@ -91,6 +98,27 @@ const CSS = `
 .bp-resident-gender { color: #a8c9ff; font-size: 13px; }
 .bp-resident-gender.F { color: #ffb6cf; }
 .bp-empty { color: rgba(199,185,140,0.5); font-style: italic; font-size: 12px; }
+.bp-footer {
+  padding: 10px 18px 14px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.bp-destroy-btn {
+  width: 100%;
+  padding: 9px 0;
+  background: rgba(180,40,40,0.18);
+  border: 1px solid rgba(200,60,60,0.45);
+  border-radius: 7px;
+  color: #ff8080;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.15s, color 0.15s;
+}
+.bp-destroy-btn:hover {
+  background: rgba(200,50,50,0.35);
+  color: #ffaaaa;
+}
 `
 
 const BUILDING_META = {
@@ -100,13 +128,30 @@ const BUILDING_META = {
   research:    { icon: '🔬', name: 'Hutte du Sage', desc: 'Génère des points de recherche chaque tick.' },
   field:       { icon: '🌾', name: 'Champ',         desc: 'Champ cultivé. Produit des ressources agricoles.' },
   observatory: { icon: '🔭', name: 'Promontoire',   desc: 'Génère des points nocturnes quand la nuit tombe.' },
+  'big-house': { icon: '🏯', name: 'Grande maison', desc: 'Demeure spacieuse pouvant accueillir 8 villageois.' },
+  cairn:       { icon: '🪨', name: 'Cairn',         desc: 'Monument rituel de passage à l\'âge du Bronze.' },
 }
+
+// Coûts de construction (source : buildings.json). Sert au remboursement 50%.
+const BUILDING_COSTS = {
+  house:       { wood: 10, stone: 5 },
+  foyer:       { stone: 8, wood: 3 },
+  'big-house': { wood: 5 },
+  research:    { wood: 12, stone: 8 },
+  observatory: { stone: 5 },
+  manor:       {},
+}
+
+// Types non destructibles
+const NON_DESTRUCTIBLE = new Set(['cairn', 'field'])
 
 const HOUSE_CAPACITY = 2
 const MANOR_CAPACITY = 6
 
 let panelEl = null
 let bodyEl  = null
+let _currentType     = null
+let _currentBuilding = null
 
 function ensureDom() {
   if (panelEl) return
@@ -127,10 +172,82 @@ function ensureDom() {
       '<h3 class="bp-title" id="bp-title">Bâtiment</h3>' +
       '<button class="bp-close-btn" id="bp-close-btn" title="Fermer (Échap)">✕</button>' +
     '</div>' +
-    '<div class="bp-body" id="bp-body"></div>'
+    '<div class="bp-body" id="bp-body"></div>' +
+    '<div class="bp-footer" id="bp-footer">' +
+      '<button class="bp-destroy-btn" id="bp-destroy-btn">🔨 Détruire</button>' +
+    '</div>'
   document.body.appendChild(panelEl)
   document.getElementById('bp-close-btn').addEventListener('click', closeBuildingPanel)
+  document.getElementById('bp-destroy-btn').addEventListener('click', () => {
+    if (_currentType && _currentBuilding) destroyBuilding(_currentType, _currentBuilding)
+  })
   bodyEl = document.getElementById('bp-body')
+}
+
+function destroyBuilding(type, building) {
+  // Rembourser 50% du coût
+  const cost = BUILDING_COSTS[type] || {}
+  for (const [res, qty] of Object.entries(cost)) {
+    const refund = Math.floor(qty * 0.5)
+    if (refund > 0) state.resources[res] = (state.resources[res] || 0) + refund
+  }
+
+  const cell = [{ x: building.x, z: building.z }]
+
+  switch (type) {
+    case 'house':
+      removeHousesIn(cell)
+      repaintCellSurface(building.x, building.z)
+      break
+
+    case 'manor':
+      removeManorsIn(cell)
+      for (let dz = 0; dz < 2; dz++) {
+        for (let dx = 0; dx < 2; dx++) repaintCellSurface(building.x + dx, building.z + dz)
+      }
+      break
+
+    case 'foyer': {
+      const idx = state.foyers.findIndex(f => f.x === building.x && f.z === building.z)
+      if (idx !== -1) {
+        const f = state.foyers[idx]
+        if (f.group) {
+          f.group.removeFromParent()
+          f.group.traverse(o => {
+            if (o.material) o.material.dispose()
+            if (o.geometry) o.geometry.dispose()
+          })
+        }
+        state.foyers.splice(idx, 1)
+      }
+      repaintCellSurface(building.x, building.z)
+      break
+    }
+
+    case 'big-house':
+      removeBigHousesIn(cell)
+      for (let dz = 0; dz < 4; dz++) {
+        for (let dx = 0; dx < 4; dx++) repaintCellSurface(building.x + dx, building.z + dz)
+      }
+      break
+
+    case 'research':
+      removeResearchHousesIn(cell)
+      repaintCellSurface(building.x, building.z)
+      break
+
+    case 'observatory':
+      removeObservatoriesIn(cell)
+      repaintCellSurface(building.x, building.z)
+      break
+
+    default:
+      return
+  }
+
+  refreshHUD()
+  closeBuildingPanel()
+  showHudToast('Bâtiment détruit, ressources récupérées', 3000)
 }
 
 function colonistById(id) {
@@ -222,10 +339,14 @@ export function initBuildingPanel() {
 
 export function openBuildingPanel(type, building) {
   ensureDom()
+  _currentType     = type
+  _currentBuilding = building
   const meta = BUILDING_META[type] || { icon: '🏗', name: type }
   document.getElementById('bp-icon').textContent  = meta.icon
   document.getElementById('bp-title').textContent = meta.name
   bodyEl.innerHTML = buildContent(type, building)
+  const footerEl = document.getElementById('bp-footer')
+  if (footerEl) footerEl.style.display = NON_DESTRUCTIBLE.has(type) ? 'none' : 'block'
   panelEl.classList.remove('hidden')
   // Forcer un redémarrage de l'animation slide-in
   panelEl.style.animation = 'none'
@@ -235,6 +356,8 @@ export function openBuildingPanel(type, building) {
 
 export function closeBuildingPanel() {
   if (panelEl) panelEl.classList.add('hidden')
+  _currentType     = null
+  _currentBuilding = null
 }
 
 export function isBuildingPanelOpen() {
