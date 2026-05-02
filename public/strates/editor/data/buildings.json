@@ -109,7 +109,7 @@
       "age": 1,
       "category": "nocturne",
       "size": "1x1",
-      "cost": { "stone": 15, "wood": 5 },
+      "cost": { "stone": 5 },
       "requires": { "tech": ["promontory"], "buildings": ["hutte-du-sage"] },
       "provides": { "night_points_per_tick": 1 },
       "activity": "night",
