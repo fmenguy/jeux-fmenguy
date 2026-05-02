@@ -4,7 +4,7 @@ import { rebuildTerrainFromState, repaintCellSurface, computeFertileCells } from
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
   addManorFromSave, addBigHouseFromSave, clearAllPlacements, isCellOccupied, addObservatory,
-  addCairn, addWheatField
+  addCairn, addWheatField, addDeer
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
@@ -152,7 +152,8 @@ function serializeSnapshot() {
     currentAge: state.currentAge || 1,
     ageUnlockedAt: state.ageUnlockedAt || { 1: Date.now() },
     achievements: Array.isArray(state.achievements) ? state.achievements.slice() : [],
-    cairns: (state.cairns || []).map(c => ({ x: c.x, z: c.z }))
+    cairns: (state.cairns || []).map(c => ({ x: c.x, z: c.z })),
+    deers: (state.deers || []).map(d => ({ x: d.x, z: d.z }))
   }
 }
 
@@ -304,6 +305,11 @@ function applySnapshot(data) {
   if (Array.isArray(data.cairns)) {
     for (const c of data.cairns) {
       addCairn(c.x, c.z)
+    }
+  }
+  if (Array.isArray(data.deers)) {
+    for (const d of data.deers) {
+      addDeer(d.x, d.z)
     }
   }
   startNextQuest()
