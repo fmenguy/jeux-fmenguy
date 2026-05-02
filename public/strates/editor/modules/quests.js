@@ -213,7 +213,6 @@ function renderTabContent(body) {
     body.querySelectorAll('.qcard-accept:not([disabled])').forEach(btn => {
       btn.addEventListener('click', () => {
         acceptQuest(btn.dataset.qid)
-        activeTab = 'active'
         lastQuestSig = ''
         renderQuests()
       })
