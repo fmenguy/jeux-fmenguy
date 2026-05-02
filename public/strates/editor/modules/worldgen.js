@@ -3,7 +3,7 @@ import {
 } from './constants.js'
 import { state } from './state.js'
 import { prng, mulberry32, rebuildPerm } from './rng.js'
-import { buildTerrain } from './terrain.js'
+import { buildTerrain, revealAround } from './terrain.js'
 import {
   addHouse, addTree, addRock, addOre, addBush,
   isCellOccupied, clearAllPlacements, addDeer
@@ -161,6 +161,12 @@ export function populateDefaultScene() {
     if (addDeer(x, z)) deersPlaced++
   }
   console.log('[deer] count in scene:', state.deers.length)
+
+  // Revelation initiale : cercle de rayon 12 autour du spawn central.
+  // Effectuee apres le placement de toutes les entites pour que les colons
+  // voient immediatement leur zone de depart.
+  const cx = Math.floor(GRID / 2), cz = Math.floor(GRID / 2)
+  revealAround(cx, cz, 12)
 }
 
 export function resetWorld(refreshHUD) {
