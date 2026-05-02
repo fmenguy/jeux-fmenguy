@@ -64,7 +64,7 @@ export const state = {
   nightPoints: 0,
   isNight: false,
   observatories: [],
-  resources: { berries: 0, wood: 0, stone: 0, viande: 0, grain: 0, silex: 0 },
+  resources: { berries: 0, wood: 0, stone: 0, viande: 0, 'raw-meat': 0, bone: 0, grain: 0, silex: 0 },
   gameStats: { housesPlaced: 0, minesCompleted: 0, totalBerriesHarvested: 0 },
 
   // colons
