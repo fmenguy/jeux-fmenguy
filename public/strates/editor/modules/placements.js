@@ -1051,6 +1051,62 @@ export function clearAllPlacements() {
 }
 
 // ============================================================================
+// Champs de ble (Age du Bronze, 2x2 cellules)
+// Necessite des cellules fertiles (state.cellFertile[k] === 1) et libres.
+// ============================================================================
+function makeWheatField() {
+  const g = new THREE.Group()
+  const soilMat  = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.95, flatShading: true })
+  const wheatMat = new THREE.MeshStandardMaterial({ color: 0xd9b14a, roughness: 0.85, flatShading: true })
+  const soil = new THREE.Mesh(new THREE.BoxGeometry(2, 0.08, 2), soilMat)
+  soil.position.y = 0.04
+  soil.receiveShadow = true
+  g.add(soil)
+  // Quelques touffes de ble pour le visuel
+  const rng = prng.rng
+  for (let i = 0; i < 14; i++) {
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 5), wheatMat)
+    cone.position.set((rng() - 0.5) * 1.7, 0.25, (rng() - 0.5) * 1.7)
+    cone.castShadow = true
+    g.add(cone)
+  }
+  return g
+}
+
+/**
+ * Place un champ de ble 2x2 dont l'origine est la cellule (gx, gz).
+ * Verifie : cellules dans la grille, fertiles, libres, hors eau.
+ * Retourne true en cas de succes, false sinon.
+ */
+export function addWheatField(gx, gz) {
+  // Verifie le footprint 2x2
+  for (let dz = 0; dz < 2; dz++) {
+    for (let dx = 0; dx < 2; dx++) {
+      const cx = gx + dx, cz = gz + dz
+      if (cx < 0 || cz < 0 || cx >= GRID || cz >= GRID) return false
+      const k = cz * GRID + cx
+      const top = state.cellTop[k]
+      if (top <= SHALLOW_WATER_LEVEL) return false
+      if (isCellOccupied(cx, cz)) return false
+      if (!state.cellFertile || state.cellFertile[k] !== 1) return false
+    }
+  }
+  const tops = []
+  for (let dz = 0; dz < 2; dz++) {
+    for (let dx = 0; dx < 2; dx++) {
+      tops.push(state.cellTop[(gz + dz) * GRID + (gx + dx)])
+    }
+  }
+  const top = Math.max(...tops)
+  const g = makeWheatField()
+  g.position.set(gx + 1, top, gz + 1)
+  scene.add(g)
+  if (!state.wheatFields) state.wheatFields = []
+  state.wheatFields.push({ x: gx, z: gz, group: g })
+  return true
+}
+
+// ============================================================================
 // Cairn de pierre (monument de passage a l'Age du Bronze)
 // Empilement de 4 blocs pierre grise formes d'une colonne.
 // ============================================================================
