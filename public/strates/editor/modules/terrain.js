@@ -11,6 +11,8 @@ import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
 // Terrain : heightmap, voxels instancies, eau, helpers.
 // ============================================================================
 
+const FERTILE_TINT = new THREE.Color(0xd4a843)
+
 const boxGeo = new THREE.BoxGeometry(VOXEL, VOXEL, VOXEL)
 const baseMat = new THREE.MeshStandardMaterial({
   vertexColors: false,
@@ -186,6 +188,7 @@ export function buildTerrain() {
   state.cellTop = new Int16Array(GRID * GRID)
   state.cellBiome = new Array(GRID * GRID)
   state.cellSurface = new Array(GRID * GRID).fill(null)
+  state.cellFertile = new Uint8Array(GRID * GRID)
   state.cellOre = new Array(GRID * GRID).fill(null)
   state.instanceIndex.length = 0
   for (let i = 0; i < GRID * GRID; i++) state.instanceIndex.push([])
@@ -222,6 +225,9 @@ export function buildTerrain() {
       if (near) state.cellBiome[k] = 'sand'
     }
   }
+
+  // Zones fertiles : herbe ou foret avec biomeNoise faible OU proche de l eau/sable
+  computeFertileCells()
 
   if (state.instanced) {
     scene.remove(state.instanced)
@@ -323,6 +329,38 @@ export function rebuildTerrainFromState() {
   scene.add(state.instanced)
 }
 
+// Calcule l'indicateur cellFertile pour chaque cellule.
+// Une cellule est fertile si son biome est 'grass' ou 'forest' ET
+// (biomeNoise < 0.4 OU distance Manhattan <= 3 d une cellule eau ou sable).
+export function computeFertileCells() {
+  if (!state.cellFertile || state.cellFertile.length !== GRID * GRID) {
+    state.cellFertile = new Uint8Array(GRID * GRID)
+  } else {
+    state.cellFertile.fill(0)
+  }
+  for (let z = 0; z < GRID; z++) {
+    for (let x = 0; x < GRID; x++) {
+      const k = z * GRID + x
+      const biome = state.cellBiome[k]
+      if (biome !== 'grass' && biome !== 'forest') continue
+      const noiseLow = state.biomeNoise[k] < 0.4
+      let nearWaterOrSand = false
+      if (!noiseLow) {
+        outer: for (let dz = -3; dz <= 3; dz++) {
+          for (let dx = -3; dx <= 3; dx++) {
+            if (Math.abs(dx) + Math.abs(dz) > 3) continue
+            const nx = x + dx, nz = z + dz
+            if (nx < 0 || nz < 0 || nx >= GRID || nz >= GRID) continue
+            const nb = state.cellBiome[nz * GRID + nx]
+            if (nb === 'water' || nb === 'sand') { nearWaterOrSand = true; break outer }
+          }
+        }
+      }
+      if (noiseLow || nearWaterOrSand) state.cellFertile[k] = 1
+    }
+  }
+}
+
 export function topVoxelIndex(x, z) {
   const top = state.cellTop[z * GRID + x]
   if (top <= 0) return -1
@@ -331,9 +369,10 @@ export function topVoxelIndex(x, z) {
 
 export function repaintCellSurface(x, z) {
   const top = state.cellTop[z * GRID + x]
-  const biome = state.cellBiome[z * GRID + x]
+  const k = z * GRID + x
+  const biome = state.cellBiome[k]
   const baseC = colorForLayer(biome, top - 1, top)
-  const surface = state.cellSurface[z * GRID + x]
+  const surface = state.cellSurface[k]
   const c = surfaceColor(surface, baseC)
   tmpColor.copy(c)
   if (surface === 'field') {
@@ -342,6 +381,9 @@ export function repaintCellSurface(x, z) {
     const jitter = (Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1
     const j = 0.06 * (jitter - Math.floor(jitter) - 0.5)
     tmpColor.offsetHSL(0, 0, j)
+    if (state.cellFertile && state.cellFertile[k]) {
+      tmpColor.lerp(FERTILE_TINT, 0.28)
+    }
   }
   const i = topVoxelIndex(x, z)
   if (i < 0) return
