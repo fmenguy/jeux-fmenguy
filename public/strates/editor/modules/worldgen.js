@@ -3,7 +3,7 @@ import {
 } from './constants.js'
 import { state } from './state.js'
 import { prng, mulberry32, rebuildPerm } from './rng.js'
-import { buildTerrain, repaintCellSurface } from './terrain.js'
+import { buildTerrain } from './terrain.js'
 import {
   addHouse, addTree, addRock, addOre, addBush,
   isCellOccupied, clearAllPlacements, addDeer
@@ -122,27 +122,6 @@ export function populateDefaultScene() {
     if (biome !== 'grass' && biome !== 'forest') continue
     if (isCellOccupied(x, z)) continue
     if (addBush(x, z)) bushPlaced++
-  }
-
-  const FIELD_PATCHES = [
-    { cx: spawn.x + 4, cz: spawn.z + 2, w: 3, h: 2 },
-    { cx: spawn.x - 5, cz: spawn.z + 3, w: 2, h: 3 },
-    { cx: spawn.x + 1, cz: spawn.z + 5, w: 4, h: 2 }
-  ]
-  for (const patch of FIELD_PATCHES) {
-    for (let dz = 0; dz < patch.h; dz++) {
-      for (let dx = 0; dx < patch.w; dx++) {
-        const x = patch.cx + dx
-        const z = patch.cz + dz
-        if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
-        if (state.cellBiome[z * GRID + x] !== 'grass') continue
-        if (isCellOccupied(x, z)) continue
-        const k = z * GRID + x
-        if (state.cellSurface[k]) continue
-        state.cellSurface[k] = 'field'
-        repaintCellSurface(x, z)
-      }
-    }
   }
 
   for (let i = 0; i < 5; i++) {
