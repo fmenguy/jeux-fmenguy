@@ -364,21 +364,30 @@ function _consumeCairnResources() {
 // ---------------------------------------------------------------------------
 
 function _showCondTooltip() {
+  // Re-fetch si null (init appelé avant DOM complet)
+  if (!_condTooltip) _condTooltip = document.getElementById('cairn-conditions-tooltip')
   if (!_condTooltip) return
-  const { missing } = canBuildCairn(state)
 
-  // Construire la liste
+  const pop    = (state.colonists || []).length
+  const bois   = (state.resources && state.resources.wood)  || 0
+  const pierre = (state.resources && state.resources.stone) || 0
+  const nourr  = getTotalFood(state)
+  const hasLab = !!(state.researchHouses && state.researchHouses.length > 0)
+  const hasRes = !!(state.researchHouses && state.researchHouses.some(r => r.assignedColonistId))
+  const pts    = totalResearchSpentComputed()
+
   const condDefs = [
-    { label: `${SEUILS.population} villageois loges`, ok: (state.colonists || []).length >= SEUILS.population },
-    { label: `${SEUILS.bois} bois en stock`,          ok: ((state.resources && state.resources.wood) || 0) >= SEUILS.bois },
-    { label: `${SEUILS.pierre} pierre en stock`,       ok: ((state.resources && state.resources.stone) || 0) >= SEUILS.pierre },
-    { label: `${SEUILS.nourriture} nourriture`,        ok: getTotalFood(state) >= SEUILS.nourriture },
-    { label: 'Hutte du sage',                          ok: !!(state.researchHouses && state.researchHouses.length > 0) },
-    { label: '1 Chercheur assigne',                    ok: !!(state.researchHouses && state.researchHouses.some(r => r.assignedColonistId)) },
-    { label: `${SEUILS.researchPoints} pts recherche depenses`, ok: totalResearchSpentComputed() >= SEUILS.researchPoints },
+    { label: `Villageois : ${pop} / ${SEUILS.population}`,           ok: pop    >= SEUILS.population },
+    { label: `🪵 Bois : ${bois} / ${SEUILS.bois}`,                   ok: bois   >= SEUILS.bois },
+    { label: `🪨 Pierre : ${pierre} / ${SEUILS.pierre}`,             ok: pierre >= SEUILS.pierre },
+    { label: `🍇 Nourriture : ${nourr} / ${SEUILS.nourriture}`,      ok: nourr  >= SEUILS.nourriture },
+    { label: 'Hutte du sage construite',                               ok: hasLab },
+    { label: 'Chercheur assigné',                                      ok: hasRes },
+    { label: `🔬 Recherche : ${pts} / ${SEUILS.researchPoints} pts`, ok: pts    >= SEUILS.researchPoints },
   ]
   if (!DEV_SKIP_BONES) {
-    condDefs.push({ label: `${SEUILS.os} os`, ok: ((state.stocks && state.stocks.bone) || 0) >= SEUILS.os })
+    const os = (state.stocks && state.stocks.bone) || 0
+    condDefs.push({ label: `🦴 Os : ${os} / ${SEUILS.os}`, ok: os >= SEUILS.os })
   }
 
   const list = document.getElementById('cairn-cond-list')
@@ -386,7 +395,7 @@ function _showCondTooltip() {
     list.innerHTML = condDefs.map(c => `
       <div class="cond-row">
         <span class="cond-dot ${c.ok ? 'ok' : 'ko'}"></span>
-        <span class="cond-text ${c.ok ? 'ok' : ''}">${c.label}</span>
+        <span class="cond-text ${c.ok ? 'ok' : ''}">${c.ok ? '✅' : '❌'} ${c.label}</span>
       </div>
     `).join('')
   }
