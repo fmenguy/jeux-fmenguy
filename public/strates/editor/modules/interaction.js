@@ -28,6 +28,7 @@ import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
 import { closeBuildingPanel, isBuildingPanelOpen } from './ui/building-panel.js'
 import { currentSeason } from './seasons.js'
+import { confirmCairnPlacement, cancelCairnPlacement } from './age-transitions.js'
 
 let firstHarvestDone = false
 
@@ -440,6 +441,11 @@ if (pauseMenu) pauseMenu.addEventListener('click', (e) => { if (e.target === pau
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return
+
+  if (state.cairnPlacementMode) {
+    cancelCairnPlacement()
+    e.stopPropagation(); e.preventDefault(); return
+  }
 
   const clearRail = () => document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'))
 
@@ -976,6 +982,10 @@ dom.addEventListener('pointerdown', (e) => {
   if (state.toolState.tool === 'nav') return
   if (isCharSheetOpen()) return
   const cell = pickCell(e.clientX, e.clientY)
+  if (state.cairnPlacementMode && cell) {
+    confirmCairnPlacement(cell.x, cell.z)
+    return
+  }
   if (e.shiftKey && cell) {
     const cells = computeStrata(cell.x, cell.z)
     applyToolToStrata(cells)
