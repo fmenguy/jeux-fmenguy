@@ -4,7 +4,6 @@ import {
   GRID, WATER_LEVEL, SHALLOW_WATER_LEVEL
 } from './constants.js'
 import { state } from './state.js'
-import { totalBuildStock } from './stocks.js'
 import { countActiveResearchers } from './placements.js'
 import { unlockTech } from './tech.js'
 import { BUILDINGS_DATA, TECH_TREE_DATA } from './gamedata.js'
@@ -42,7 +41,6 @@ const rBerriesEl = document.getElementById('r-berries')
 const rWoodEl = document.getElementById('r-wood')
 const rStoneEl = document.getElementById('r-stone')
 const rSilexEl = document.getElementById('r-silex')
-const rBlocsEl = document.getElementById('r-blocs')
 const cCountEl = document.getElementById('c-count')
 const colonsListEl = document.getElementById('colons-list')
 const colonsHeaderEl = document.getElementById('colons-header')
@@ -158,7 +156,6 @@ export function refreshHUD() {
   if (rWoodEl)    rWoodEl.textContent    = formatNum(state.resources.wood)
   if (rStoneEl)   rStoneEl.textContent   = formatNum(state.resources.stone)
   if (rSilexEl)   rSilexEl.textContent   = formatNum(state.resources.silex || 0)
-  if (rBlocsEl)   rBlocsEl.textContent   = formatNum(totalBuildStock())
   if (rViandeEl)  rViandeEl.textContent  = formatNum(state.resources.viande || 0)
   if (rGrainEl)   rGrainEl.textContent   = formatNum(state.resources.grain  || 0)
   refreshStocksLine()
@@ -180,7 +177,6 @@ export function tickResourceAnim() {
   if (rWoodEl)    rWoodEl.textContent    = formatNum(_disp.wood)
   if (rStoneEl)   rStoneEl.textContent   = formatNum(_disp.stone)
   if (rSilexEl)   rSilexEl.textContent   = formatNum(_disp.silex)
-  if (rBlocsEl)   rBlocsEl.textContent   = formatNum((state.stocks.stone || 0) + (state.stocks.dirt || 0))
   if (cBushesEl)  cBushesEl.textContent  = state.bushes.length
   if (rViandeEl)  rViandeEl.textContent  = formatNum(_disp.viande)
   if (rGrainEl)   rGrainEl.textContent   = formatNum(_disp.grain)
@@ -308,7 +304,7 @@ export function tickFps() {
 
 // referentiels pour tick()
 export const hudRefs = {
-  rBerriesEl, rWoodEl, rStoneEl, rBlocsEl, cBushesEl, rViandeEl, rGrainEl
+  rBerriesEl, rWoodEl, rStoneEl, cBushesEl, rViandeEl, rGrainEl
 }
 
 // ============================================================================
