@@ -32,6 +32,7 @@ import { currentSeason } from './seasons.js'
 import { confirmCairnPlacement, cancelCairnPlacement } from './age-transitions.js'
 
 let firstHarvestDone = false
+let _tooltipThrottle = 0
 
 // ============================================================================
 // Curseur wireframe
@@ -1022,10 +1023,16 @@ dom.addEventListener('pointermove', (e) => {
     cursorMesh.visible = false
     clearStrataPreview()
   }
-  if (hoverCell) {
-    showCellTooltip(hoverCell.x, hoverCell.z, e.clientX, e.clientY)
-  } else {
-    hideCellTooltip()
+  {
+    const now = performance.now()
+    if (now - _tooltipThrottle >= 80) {
+      _tooltipThrottle = now
+      if (hoverCell) {
+        showCellTooltip(hoverCell.x, hoverCell.z, e.clientX, e.clientY)
+      } else {
+        hideCellTooltip()
+      }
+    }
   }
   if (selectionRect.active) {
     if (!hoverCell) hoverCell = pickCell(e.clientX, e.clientY)
@@ -1184,12 +1191,18 @@ dom.addEventListener('pointermove', (e) => {
     if (hoveredColonist) hoveredColonist.label.visible = true
   }
   // Tooltip de cellule (masque si on survole un colon ou hors grille)
-  if (best) {
-    hideCellTooltip()
-  } else {
-    const cell = pickCell(e.clientX, e.clientY)
-    if (cell) showCellTooltip(cell.x, cell.z, e.clientX, e.clientY)
-    else hideCellTooltip()
+  {
+    const now = performance.now()
+    if (now - _tooltipThrottle >= 80) {
+      _tooltipThrottle = now
+      if (best) {
+        hideCellTooltip()
+      } else {
+        const cell = pickCell(e.clientX, e.clientY)
+        if (cell) showCellTooltip(cell.x, cell.z, e.clientX, e.clientY)
+        else hideCellTooltip()
+      }
+    }
   }
 })
 dom.addEventListener('pointerleave', () => {
