@@ -256,42 +256,17 @@ export function initAgeTransitions() {
 }
 
 function _injectCairnButton() {
+  // Le cairn n'est plus expose dans la barre d'outils.
+  // Il se declenche via startCairnPlacement() depuis les conditions d'age.
+  // Nettoyage defensif : retire un eventuel groupe "monument" deja injecte
+  // et tout bouton data-tool="cairn" residuel dans la barre.
   const actionbar = document.getElementById('actionbar')
   if (!actionbar) return
-
-  // Cherche si le groupe "monument" existe deja
-  let monumentGroup = actionbar.querySelector('.group.monument')
-  if (!monumentGroup) {
-    monumentGroup = document.createElement('div')
-    monumentGroup.className = 'group monument'
-    monumentGroup.style.borderColor = 'rgba(255, 196, 80, 0.45)'
-    monumentGroup.innerHTML = '<span class="group-label" style="color:#ffd98a">Monument</span>'
-    actionbar.appendChild(monumentGroup)
-  }
-
-  if (monumentGroup.querySelector('[data-tool="cairn"]')) return
-
-  _cairnBtn = document.createElement('button')
-  _cairnBtn.className = 'tool'
-  _cairnBtn.dataset.tool = 'cairn'
-  _cairnBtn.title = 'Poser le Cairn de pierre (passage au Bronze)'
-  _cairnBtn.innerHTML = 'Cairn<span class="key">C</span>'
-  _cairnBtn.style.borderColor = 'rgba(255, 196, 80, 0.35)'
-
-  _cairnBtn.addEventListener('click', _onCairnClick)
-  _cairnBtn.addEventListener('mouseenter', _showCondTooltip)
-  _cairnBtn.addEventListener('mouseleave', _hideCondTooltip)
-
-  monumentGroup.appendChild(_cairnBtn)
-
-  // Touche raccourci C
-  window.addEventListener('keydown', (e) => {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return
-    if (e.key === 'c' || e.key === 'C') {
-      e.preventDefault()
-      _onCairnClick()
-    }
-  })
+  const monumentGroup = actionbar.querySelector('.group.monument')
+  if (monumentGroup) monumentGroup.remove()
+  const stale = actionbar.querySelector('[data-tool="cairn"]')
+  if (stale) stale.remove()
+  _cairnBtn = null
 }
 
 function _onCairnClick() {
