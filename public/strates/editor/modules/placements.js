@@ -593,19 +593,14 @@ export function addDeer(gx, gz) {
     model.position.set(gx + 0.5 + jx, top + DEER_GLB_SCALE * 0.3, gz + 0.5 + jz)
     model.rotation.y = rotY
     model.userData.type = 'deer'
+    const _diagMat = new THREE.MeshBasicMaterial({ color: 0xff0000 })
     model.traverse(function(o) {
+      o.visible = true
       if (o.isMesh) {
         o.castShadow = true
         o.receiveShadow = true
         o.frustumCulled = false
-        const mats = Array.isArray(o.material) ? o.material : [o.material]
-        for (const mat of mats) {
-          if (!mat) continue
-          mat.transparent = false
-          mat.opacity = 1
-          mat.visible = true
-          mat.needsUpdate = true
-        }
+        o.material = _diagMat
       }
     })
     const clips = getModelClips('deer')
