@@ -118,6 +118,24 @@
       "category": "minerai",
       "source": "Filons (non exploitables age I)",
       "usage": "Age Bronze uniquement"
+    },
+    {
+      "id": "grain",
+      "name": "Grain",
+      "icon": "🌾",
+      "age": 2,
+      "category": "nourriture",
+      "source": "Champ de ble (Agriculteur)",
+      "usage": "Nourriture age Bronze, stockage Grenier"
+    },
+    {
+      "id": "bronze-tools",
+      "name": "Outils bronze",
+      "icon": "⚒️",
+      "age": 2,
+      "category": "materiau",
+      "source": "Forge (Forgeron)",
+      "usage": "Amelioration rendement metiers age Bronze"
     }
   ]
 }

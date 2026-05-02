@@ -56,6 +56,28 @@ const BUILDING_NAMES = {
 }
 
 let tipEl = null
+let _enabled = false
+
+export function isCellTooltipEnabled() { return _enabled }
+
+export function initCellTooltip() {
+  const btn = document.getElementById('btn-cell-info')
+  if (btn) {
+    btn.addEventListener('click', function() {
+      _enabled = !_enabled
+      btn.classList.toggle('active', _enabled)
+      if (!_enabled) hideCellTooltip()
+    })
+  }
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCellTooltip, { once: true })
+  } else {
+    initCellTooltip()
+  }
+}
 
 function ensureDom() {
   if (tipEl) return
@@ -99,6 +121,7 @@ function describeContent(gx, gz) {
 }
 
 export function showCellTooltip(gx, gz, screenX, screenY) {
+  if (!_enabled) return
   ensureDom()
   if (gx < 0 || gz < 0 || gx >= GRID || gz >= GRID) {
     hideCellTooltip()
