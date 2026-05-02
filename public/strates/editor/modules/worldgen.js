@@ -207,6 +207,8 @@ export function resetWorld(refreshHUD) {
   state.resources.berries = 0
   state.resources.wood = 0
   state.resources.stone = 0
+  state.resources.silex = 0
+  state.stocks.silex = 0
   state.gameStats.housesPlaced = 0
   state.gameStats.minesCompleted = 0
   state.gameStats.totalBerriesHarvested = 0
