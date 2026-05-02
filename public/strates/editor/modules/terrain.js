@@ -347,12 +347,12 @@ export function computeFertileCells() {
       const k = z * GRID + x
       const biome = state.cellBiome[k]
       if (biome !== 'grass' && biome !== 'forest') continue
-      const noiseLow = state.biomeNoise[k] < 0.4
+      const noiseLow = state.biomeNoise[k] < 0.15
       let nearWaterOrSand = false
       if (!noiseLow) {
-        outer: for (let dz = -3; dz <= 3; dz++) {
-          for (let dx = -3; dx <= 3; dx++) {
-            if (Math.abs(dx) + Math.abs(dz) > 3) continue
+        outer: for (let dz = -2; dz <= 2; dz++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            if (Math.abs(dx) + Math.abs(dz) > 2) continue
             const nx = x + dx, nz = z + dz
             if (nx < 0 || nz < 0 || nx >= GRID || nz >= GRID) continue
             const nb = state.cellBiome[nz * GRID + nx]
