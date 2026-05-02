@@ -609,12 +609,6 @@ export function addDeer(gx, gz) {
       }
     })
     console.log('[deer] meshes found in traverse:', meshCount)
-    const clips = getModelClips('deer')
-    if (clips.length > 0) {
-      const mixer = new THREE.AnimationMixer(model)
-      mixer.clipAction(clips[0]).play()
-      model.userData.mixer = mixer
-    }
     scene.add(model)
     model.updateMatrixWorld(true)
     console.log('[deer] addDeer GLB pos:', model.position.x.toFixed(1), model.position.y.toFixed(1), model.position.z.toFixed(1), 'scale:', DEER_GLB_SCALE)
@@ -626,11 +620,17 @@ export function addDeer(gx, gz) {
       g.rotation.y = rotY
       g.traverse(function(o) { if (o.isMesh) o.frustumCulled = false })
       scene.add(g)
-      const entry = { x: gx, z: gz, group: g }
+      const entry = { x: gx, z: gz, group: g, mixer: null, tx: gx, tz: gz, waitTimer: 60 + Math.random() * 120, speed: 0.012 + Math.random() * 0.006 }
       state.deers.push(entry)
       return entry
     }
-    const entry = { x: gx, z: gz, group: model }
+    const glbClips = getModelClips('deer')
+    let glbMixer = null
+    if (glbClips.length > 0) {
+      glbMixer = new THREE.AnimationMixer(model)
+      glbMixer.clipAction(glbClips[0]).play()
+    }
+    const entry = { x: gx, z: gz, group: model, mixer: glbMixer, tx: gx, tz: gz, waitTimer: 60 + Math.random() * 120, speed: 0.012 + Math.random() * 0.006 }
     state.deers.push(entry)
     return entry
   }
@@ -642,9 +642,90 @@ export function addDeer(gx, gz) {
   g.traverse(function(o) { if (o.isMesh) o.frustumCulled = false })
   scene.add(g)
   console.log('[deer] addDeer fallback style D pos:', g.position.x.toFixed(1), g.position.y.toFixed(1), g.position.z.toFixed(1))
-  const entry = { x: gx, z: gz, group: g }
+  const entry = { x: gx, z: gz, group: g, mixer: null, tx: gx, tz: gz, waitTimer: 60 + Math.random() * 120, speed: 0.012 + Math.random() * 0.006 }
   state.deers.push(entry)
   return entry
+}
+
+const _deerTmpVec = new THREE.Vector3()
+
+export function tickDeer(dt) {
+  if (!state.deers || !state.deers.length) return
+  const rng = Math.random
+  for (const d of state.deers) {
+    if (d.mixer) d.mixer.update(dt)
+
+    if (d.waitTimer > 0) {
+      d.waitTimer -= dt * 60
+      // bob procedural au repos
+      if (!d.mixer) {
+        const top = state.cellTop[Math.round(d.tz) * GRID + Math.round(d.tx)] || 1
+        d.group.position.y = top + Math.sin(Date.now() * 0.003 + d.x) * 0.03
+      }
+      continue
+    }
+
+    // Fuite si colon a moins de 3 cellules
+    let fleeDx = 0, fleeDz = 0
+    if (state.colonists && state.colonists.length) {
+      for (const c of state.colonists) {
+        const cdx = d.group.position.x - c.group.position.x
+        const cdz = d.group.position.z - c.group.position.z
+        const dist2 = cdx * cdx + cdz * cdz
+        if (dist2 < 9) { fleeDx += cdx; fleeDz += cdz }
+      }
+    }
+
+    const px = d.group.position.x, pz = d.group.position.z
+    const tx = d.tx + 0.5, tz = d.tz + 0.5
+    const dx = tx - px, dz = tz - pz
+    const dist = Math.sqrt(dx * dx + dz * dz)
+
+    if (dist < 0.1) {
+      // Nouvelle cible
+      let attempts = 0, nx, nz
+      const radius = 4 + Math.floor(rng() * 5)
+      do {
+        const angle = rng() * Math.PI * 2
+        nx = Math.round(d.x + Math.cos(angle) * radius)
+        nz = Math.round(d.z + Math.sin(angle) * radius)
+        attempts++
+      } while (attempts < 20 && (
+        nx < 0 || nz < 0 || nx >= GRID || nz >= GRID ||
+        (state.cellBiome[nz * GRID + nx] !== 'grass' && state.cellBiome[nz * GRID + nx] !== 'forest') ||
+        isCellOccupied(nx, nz)
+      ))
+      if (attempts < 20) { d.tx = nx; d.tz = nz; d.x = nx; d.z = nz }
+      d.waitTimer = 60 + rng() * 120
+      continue
+    }
+
+    // Fuite : recalcule la target si fuite active
+    if (fleeDx !== 0 || fleeDz !== 0) {
+      const flen = Math.sqrt(fleeDx * fleeDx + fleeDz * fleeDz)
+      const fnx = Math.round(px + (fleeDx / flen) * 8)
+      const fnz = Math.round(pz + (fleeDz / flen) * 8)
+      if (fnx >= 0 && fnz >= 0 && fnx < GRID && fnz < GRID) {
+        d.tx = fnx; d.tz = fnz
+      }
+    }
+
+    // Deplacement
+    _deerTmpVec.set(tx, d.group.position.y, tz)
+    d.group.position.lerp(_deerTmpVec, d.speed)
+    d.group.rotation.y = Math.atan2(dx, dz)
+
+    // Animations GLB
+    if (d.mixer) {
+      const clips = getModelClips('deer')
+      if (!d._walkAction && clips.length > 0) {
+        d._walkAction = d.mixer.clipAction(clips[0])
+        d._idleAction = clips.length > 1 ? d.mixer.clipAction(clips[1]) : null
+      }
+      if (d._walkAction && !d._walkAction.isRunning()) d._walkAction.play()
+      if (d._idleAction && d._idleAction.isRunning()) d._idleAction.stop()
+    }
+  }
 }
 
 export function removeDeersIn(cells) {
