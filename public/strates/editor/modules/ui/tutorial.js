@@ -17,6 +17,8 @@
 //   bouton Retour → onglet Construire → placement Hutte du Sage.
 // ============================================================================
 
+import { state } from '../state.js'
+
 // ─── Étapes ──────────────────────────────────────────────────────────────────
 
 // kind:
@@ -82,6 +84,7 @@ const TUTO_STEPS = [
     kind:     'event',
     event:    'strates:buildingPlaced',
     filter:   e => e.detail && e.detail.type === 'research',
+    autoWhen: () => !!(state.researchHouses && state.researchHouses.length > 0),
   },
 ]
 
@@ -468,8 +471,17 @@ function stopInactivityTimer() {
 
 // ─── Point d'entrée ───────────────────────────────────────────────────────────
 
+function isPartieAvancee() {
+  return (
+    (state.researchHouses && state.researchHouses.length > 0) ||
+    (state.colonists && state.colonists.length > 5) ||
+    (state.currentAge && state.currentAge > 1)
+  )
+}
+
 export function initTutoInvite() {
   if (tutosDone()) return
+  if (isPartieAvancee()) return
 
   // Première visite : afficher le popup après 4s sans attendre l'inactivité
   setTimeout(showInviteBubble, 4000)
