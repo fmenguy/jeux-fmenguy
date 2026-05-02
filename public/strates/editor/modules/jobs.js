@@ -42,7 +42,7 @@ export function addJob(x, z) {
     if (gate.reason === 'tech') state.lastBlockedMineTech = { tech: gate.requiredTech, x, z, t: performance.now() / 1000 }
     return
   }
-  state.jobs.set(k, { x, z, claimedBy: null })
+  state.jobs.set(k, { x, z, claimedBy: null, kind: state.toolState?.tool ?? null })
   state.lastJobTime = performance.now() / 1000
   tintTopVoxel(x, z)
   const m = new THREE.Mesh(markerGeo, markerMat)

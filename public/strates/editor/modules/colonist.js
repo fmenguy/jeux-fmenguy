@@ -3,7 +3,7 @@ import {
   GRID, MIN_STRATES, MAX_STRATES, WATER_LEVEL, SHALLOW_WATER_LEVEL,
   COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
   GENDER_SYMBOLS, GENDER_COLORS,
-  CHIEF_COLOR, COL, ORE_TO_STOCK
+  CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK
 } from './constants.js'
 import {
   MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
@@ -28,6 +28,14 @@ import { NEEDS_DATA } from './gamedata.js'
 import { PRIORITY, TASK_KIND } from './tasks.js'
 
 export const COLONIST_COLORS = [0xffcf6b, 0x6bd0ff, 0xff8a8a, 0xb78aff, 0x8aff9c, 0xffa07a, 0x98ddca]
+
+function _randSkill() { return Math.floor(Math.random() * 5) + 1 }
+const PROFESSION_TO_KIND = {
+  bucheron:  'hache',
+  mineur:    'pick',
+  cueilleur: 'mine',
+  chasseur:  'hunt'
+}
 
 function pickUniqueName(gender, usedSet) {
   const pool = gender === 'M' ? MALE_NAMES : FEMALE_NAMES
@@ -105,7 +113,16 @@ export class Colonist {
     this.mor   = 70
     this.faim  = 60
     this.age   = Math.floor(18 + Math.random() * 28)  // 18-45
-    this.skills = {}
+    this.profession = null
+    this.skills = {
+      gathering: _randSkill(),
+      logging:   _randSkill(),
+      mining:    _randSkill(),
+      research:  _randSkill(),
+      hunting:   _randSkill(),
+      building:  _randSkill()
+    }
+    this.researchXpTimer = 0
     initColonistNeeds(this)
     if (opts && opts.restore) {
       const r = opts.restore
@@ -121,7 +138,8 @@ export class Colonist {
       if (typeof r.mor   === 'number') this.mor   = r.mor
       if (typeof r.faim  === 'number') this.faim  = r.faim
       if (typeof r.age   === 'number') this.age   = r.age
-      if (r.skills && typeof r.skills === 'object') this.skills = r.skills
+      if (r.skills && typeof r.skills === 'object') Object.assign(this.skills, r.skills)
+      if (r.profession !== undefined) this.profession = r.profession
       // Lot B : restaure l assignation de bati si presente dans la save,
       // sinon suppose qu il y avait au moins une maison (la save implique
       // que le hameau initial a ete cree).
@@ -311,6 +329,31 @@ export class Colonist {
   }
 
   pickJob() {
+    // Premiere passe : preferencer les jobs du type correspondant a la profession
+    if (this.profession && PROFESSION_TO_KIND[this.profession]) {
+      const prefKind = PROFESSION_TO_KIND[this.profession]
+      let best = null, bestD = Infinity
+      for (const [, j] of state.jobs) {
+        if (j.claimedBy) continue
+        if (j.kind !== prefKind) continue
+        const d = Math.abs(j.x - this.x) + Math.abs(j.z - this.z)
+        if (d < bestD) { bestD = d; best = j }
+      }
+      if (best) {
+        const approach = findApproach(this.x, this.z, best.x, best.z)
+        if (approach) {
+          best.claimedBy = this
+          this.targetJob = best
+          this.path = approach.path
+          this.pathStep = 0
+          this.state = 'MOVING'
+          this.isWandering = false
+          this.updateTrail()
+          return true
+        }
+      }
+    }
+    // Passe normale : tout job disponible
     let best = null, bestD = Infinity
     for (const [, j] of state.jobs) {
       if (j.claimedBy) continue
@@ -497,6 +540,11 @@ export class Colonist {
       this.group.rotation.y = Math.atan2(dx, dz)
       const bob = Math.sin(performance.now() * 0.0025) * 0.06
       this.group.position.set(this.tx, this.ty + bob, this.tz)
+      this.researchXpTimer += dt
+      if (this.researchXpTimer >= RESEARCH_TICK) {
+        this.researchXpTimer -= RESEARCH_TICK
+        this.skills.research++
+      }
       this.nextSpeech -= dt
       if (this.nextSpeech <= 0) {
         this.nextSpeech = 15 + Math.random() * 10
@@ -570,6 +618,50 @@ export class Colonist {
         }
         if (state.jobs.size > 0) { if (this.pickJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK }; return } }
         if (state.buildJobs.size > 0) { if (this.pickBuildJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_BUILD_JOB, priority: PRIORITY.WORK }; return } }
+        // Comportement proactif selon profession (priorite LEISURE, derriere les ordres joueur)
+        if (this.profession === 'bucheron' && techUnlocked('axe-stone')) {
+          let best = null, bestD = Infinity
+          for (const t of state.trees) {
+            if (t.growth < 0.66) continue
+            if (state.jobs.has(jobKey(t.x, t.z))) continue
+            const d = Math.abs(t.x - this.x) + Math.abs(t.z - this.z)
+            if (d < bestD) { bestD = d; best = t }
+          }
+          if (best) {
+            const approach = findApproach(this.x, this.z, best.x, best.z)
+            if (approach) {
+              this.targetJob = { x: best.x, z: best.z, claimedBy: this, auto: true, kind: 'hache' }
+              this.path = approach.path; this.pathStep = 0
+              this.state = 'MOVING'; this.isWandering = false; this.updateTrail()
+              this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
+              return
+            }
+          }
+        }
+        if (this.profession === 'cueilleur') {
+          if (this.pickHarvest()) {
+            this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
+            return
+          }
+        }
+        if (this.profession === 'chasseur') {
+          let best = null, bestD = Infinity
+          for (const d of (state.deers || [])) {
+            if (state.jobs.has(jobKey(d.x, d.z))) continue
+            const dist = Math.abs(d.x - this.x) + Math.abs(d.z - this.z)
+            if (dist < bestD) { bestD = dist; best = d }
+          }
+          if (best) {
+            const approach = findApproach(this.x, this.z, best.x, best.z)
+            if (approach) {
+              this.targetJob = { x: best.x, z: best.z, claimedBy: this, auto: true, kind: 'hunt' }
+              this.path = approach.path; this.pathStep = 0
+              this.state = 'MOVING'; this.isWandering = false; this.updateTrail()
+              this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
+              return
+            }
+          }
+        }
       }
       // Lot B, B10 : auto-collecte de base au repos (rochers, arbres si hache).
       // desactive - remplace par systeme 3 boutons (pioche/hache/baie)
@@ -693,6 +785,7 @@ export class Colonist {
           const treeEntry = state.trees.find(t => t.x === x && t.z === z)
           if (isTreeOn(x, z) && treeEntry && treeEntry.growth >= 0.66 && chopTreeAt(x, z)) {
             state.resources.wood++
+            this.skills.logging++
             scheduleFlash(x, z)
             removeJob(x, z, true)
             state.gameStats.minesCompleted++
@@ -701,6 +794,7 @@ export class Colonist {
             state.resources.stone += got
             state.stocks.stone += got
             if (Math.random() < 0.15) { state.resources.silex++; state.stocks.silex++ }
+            this.skills.mining++
             scheduleFlash(x, z)
             removeJob(x, z, true)
             state.gameStats.minesCompleted++
@@ -709,6 +803,7 @@ export class Colonist {
             if (oreType) {
               const stockKey = ORE_TO_STOCK[oreType]
               if (stockKey && state.stocks[stockKey] != null) state.stocks[stockKey]++
+              this.skills.mining++
               scheduleFlash(x, z)
               removeJob(x, z, true)
               state.gameStats.minesCompleted++
@@ -716,34 +811,47 @@ export class Colonist {
               const picked = grabBushAt(x, z)
               state.resources.berries += picked
               state.gameStats.totalBerriesHarvested += picked
+              this.skills.gathering++
               scheduleFlash(x, z)
               removeJob(x, z, true)
               state.gameStats.minesCompleted++
             } else {
-              // Voxel terrain nu : le mineur retire la couche du dessus.
-              const k = z * GRID + x
-              const biomeHere = state.cellBiome[k]
-              const isRocky = biomeHere === 'rock' || biomeHere === 'snow'
-              if (!isRocky && !techUnlocked('shovel-stone')) {
-                // Biome ordinaire sans terraformation : annuler le job sans miner.
-                removeJob(x, z, true)
-              } else {
-                const top = state.cellTop[k]
-                if (top > MIN_STRATES && top > SHALLOW_WATER_LEVEL) {
-                  const idx = state.instanceIndex[z * GRID + x] ? state.instanceIndex[z * GRID + x][top - 1] : -1
-                  if (idx >= 0) {
-                    state.instanced.setMatrixAt(idx, HIDDEN_MATRIX)
-                    state.instanced.instanceMatrix.needsUpdate = true
-                    if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
-                    state.cellTop[k] = top - 1
-                    incrStockForBiome(biomeHere)
-                    if (isRocky) state.resources.stone++
-                    if (biomeHere === 'sand' && Math.random() < 0.35) { state.resources.silex++; state.stocks.silex++ }
-                    scheduleFlash(x, z)
-                  }
-                }
+              const deerEntry = state.deers ? state.deers.find(d => d.x === x && d.z === z) : null
+              if (deerEntry) {
+                const deerIdx = state.deers.indexOf(deerEntry)
+                state.deers.splice(deerIdx, 1)
+                if (deerEntry.group.parent) deerEntry.group.parent.remove(deerEntry.group)
+                state.resources.viande++
+                this.skills.hunting++
+                scheduleFlash(x, z)
                 removeJob(x, z, true)
                 state.gameStats.minesCompleted++
+              } else {
+                // Voxel terrain nu : le mineur retire la couche du dessus.
+                const k = z * GRID + x
+                const biomeHere = state.cellBiome[k]
+                const isRocky = biomeHere === 'rock' || biomeHere === 'snow'
+                if (!isRocky && !techUnlocked('shovel-stone')) {
+                  // Biome ordinaire sans terraformation : annuler le job sans miner.
+                  removeJob(x, z, true)
+                } else {
+                  const top = state.cellTop[k]
+                  if (top > MIN_STRATES && top > SHALLOW_WATER_LEVEL) {
+                    const idx = state.instanceIndex[z * GRID + x] ? state.instanceIndex[z * GRID + x][top - 1] : -1
+                    if (idx >= 0) {
+                      state.instanced.setMatrixAt(idx, HIDDEN_MATRIX)
+                      state.instanced.instanceMatrix.needsUpdate = true
+                      if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+                      state.cellTop[k] = top - 1
+                      incrStockForBiome(biomeHere)
+                      if (isRocky) state.resources.stone++
+                      if (biomeHere === 'sand' && Math.random() < 0.35) { state.resources.silex++; state.stocks.silex++ }
+                      scheduleFlash(x, z)
+                    }
+                  }
+                  removeJob(x, z, true)
+                  state.gameStats.minesCompleted++
+                }
               }
             }
           }
@@ -829,6 +937,8 @@ export class Colonist {
       }
     }
   }
+
+  skillLevel(name) { return Math.min(10, Math.floor((this.skills[name] || 0) / 20)) }
 
   dispose() {
     scene.remove(this.group)
