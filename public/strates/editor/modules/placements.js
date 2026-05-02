@@ -517,61 +517,63 @@ export function findNearestBush(cx, cz, maxDist) {
 // Cerfs (decor statique GLB, pas de IA)
 // ============================================================================
 
-function makeFallbackDeer() {
-  const g = new THREE.Group()
-  const rust      = new THREE.MeshLambertMaterial({ color: 0xA0522D })
-  const darkBrown = new THREE.MeshLambertMaterial({ color: 0x5C3A1E })
-  const black     = new THREE.MeshLambertMaterial({ color: 0x111111 })
-  const amber     = new THREE.MeshLambertMaterial({ color: 0xC8860A })
-  const cream     = new THREE.MeshLambertMaterial({ color: 0xE8D5B0 })
+function _makeDeerElance() {
+  const MAT_RUST      = new THREE.MeshLambertMaterial({ color: 0xA0522D })
+  const MAT_DARK      = new THREE.MeshLambertMaterial({ color: 0x5C3A1E })
+  const MAT_AMBER     = new THREE.MeshLambertMaterial({ color: 0xC8860A })
+  const MAT_BLACK     = new THREE.MeshLambertMaterial({ color: 0x111111 })
+  const MAT_CREAM     = new THREE.MeshLambertMaterial({ color: 0xE8D5B0 })
 
-  function b(w, h, d, mat, x, y, z) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat)
-    m.position.set(x, y, z); m.castShadow = true; g.add(m)
+  const g = new THREE.Group()
+
+  function box(w,h,d,mat,x,y,z) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat)
+    m.position.set(x,y,z); m.castShadow = true; g.add(m)
   }
-  function c(rt, rb, h, mat, x, y, z) {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 8), mat)
-    m.position.set(x, y, z); m.castShadow = true; g.add(m)
+  function cyl(rt,rb,h,mat,x,y,z) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,8), mat)
+    m.position.set(x,y,z); m.castShadow = true; g.add(m)
   }
 
   // Corps
-  b(0.58, 0.38, 1.20, rust,       0,     0.92,  0)
+  box(0.58,0.38,1.20, MAT_RUST,      0,    0.92,  0)
   // Cou
-  b(0.16, 0.44, 0.16, rust,       0,     1.22,  0.46)
-  // Tête
-  b(0.22, 0.22, 0.30, rust,       0,     1.50,  0.60)
+  box(0.16,0.44,0.16, MAT_RUST,      0,    1.22,  0.46)
+  // Tete
+  box(0.22,0.22,0.30, MAT_RUST,      0,    1.50,  0.60)
   // Museau
-  b(0.14, 0.10, 0.14, darkBrown,  0,     1.44,  0.74)
+  box(0.14,0.10,0.14, MAT_DARK,      0,    1.44,  0.74)
   // Yeux
-  b(0.05, 0.05, 0.03, black,  0.09,     1.54,  0.70)
-  b(0.05, 0.05, 0.03, black, -0.09,     1.54,  0.70)
-  // Pattes (cylindres)
-  c(0.055, 0.07, 0.60, darkBrown,  0.24, 0.38,  0.38)
-  c(0.055, 0.07, 0.60, darkBrown, -0.24, 0.38,  0.38)
-  c(0.055, 0.07, 0.60, darkBrown,  0.24, 0.38, -0.36)
-  c(0.055, 0.07, 0.60, darkBrown, -0.24, 0.38, -0.36)
-  // Sabots
-  c(0.07, 0.07, 0.07, black,  0.24, 0.05,  0.38)
-  c(0.07, 0.07, 0.07, black, -0.24, 0.05,  0.38)
-  c(0.07, 0.07, 0.07, black,  0.24, 0.05, -0.36)
-  c(0.07, 0.07, 0.07, black, -0.24, 0.05, -0.36)
-  // Bois droite
-  c(0.03, 0.03, 0.38, amber,  0.10, 1.70, 0.56)
-  c(0.03, 0.03, 0.22, amber,  0.22, 1.84, 0.56)
-  c(0.03, 0.03, 0.18, amber,  0.08, 1.80, 0.56)
-  c(0.03, 0.03, 0.14, amber,  0.28, 1.74, 0.56)
+  box(0.05,0.05,0.03, MAT_BLACK,  0.09,1.54,0.70)
+  box(0.05,0.05,0.03, MAT_BLACK, -0.09,1.54,0.70)
+  // Pattes avant
+  cyl(0.055,0.07,0.60, MAT_DARK,  0.24,0.38,  0.38)
+  cyl(0.055,0.07,0.60, MAT_DARK, -0.24,0.38,  0.38)
+  // Pattes arriere
+  cyl(0.055,0.07,0.60, MAT_DARK,  0.24,0.38, -0.36)
+  cyl(0.055,0.07,0.60, MAT_DARK, -0.24,0.38, -0.36)
+  // Sabots avant
+  cyl(0.07,0.07,0.07, MAT_BLACK,  0.24,0.05, 0.38)
+  cyl(0.07,0.07,0.07, MAT_BLACK, -0.24,0.05, 0.38)
+  // Sabots arriere
+  cyl(0.07,0.07,0.07, MAT_BLACK,  0.24,0.05,-0.36)
+  cyl(0.07,0.07,0.07, MAT_BLACK, -0.24,0.05,-0.36)
   // Bois gauche
-  c(0.03, 0.03, 0.38, amber, -0.10, 1.70, 0.56)
-  c(0.03, 0.03, 0.22, amber, -0.22, 1.84, 0.56)
-  c(0.03, 0.03, 0.18, amber, -0.08, 1.80, 0.56)
-  c(0.03, 0.03, 0.14, amber, -0.28, 1.74, 0.56)
-  // Manchons de bois (attaches aux bois)
-  b(0.05, 0.20, 0.04, rust,  0.22, 1.52, 0.56)
-  b(0.05, 0.20, 0.04, rust, -0.22, 1.52, 0.56)
+  cyl(0.03,0.03,0.38, MAT_AMBER,  0.10,1.70,0.56)
+  cyl(0.03,0.03,0.22, MAT_AMBER,  0.22,1.84,0.56)
+  cyl(0.03,0.03,0.18, MAT_AMBER,  0.08,1.80,0.56)
+  cyl(0.03,0.03,0.14, MAT_AMBER,  0.28,1.74,0.56)
+  // Bois droit
+  cyl(0.03,0.03,0.38, MAT_AMBER, -0.10,1.70,0.56)
+  cyl(0.03,0.03,0.22, MAT_AMBER, -0.22,1.84,0.56)
+  cyl(0.03,0.03,0.18, MAT_AMBER, -0.08,1.80,0.56)
+  cyl(0.03,0.03,0.14, MAT_AMBER, -0.28,1.74,0.56)
+  // Oreilles
+  box(0.05,0.20,0.04, MAT_RUST,  0.22,1.52,0.56)
+  box(0.05,0.20,0.04, MAT_RUST, -0.22,1.52,0.56)
   // Queue
-  b(0.18, 0.18, 0.07, cream, 0, 1.0, -0.62)
+  box(0.18,0.18,0.07, MAT_CREAM, 0,1.0,-0.62)
 
-  g.scale.setScalar(0.7)
   g.userData.type = 'deer'
   return g
 }
@@ -583,8 +585,8 @@ export function addDeer(gx, gz) {
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return null
   const rng = prng.rng
-  const jx = (rng() - 0.5) * 0.6
-  const jz = (rng() - 0.5) * 0.6
+  const jx = (rng() - 0.5) * 0.4
+  const jz = (rng() - 0.5) * 0.4
   const rotY = rng() * Math.PI * 2
 
   const model = getModel('deer')
@@ -617,9 +619,9 @@ export function addDeer(gx, gz) {
     model.updateMatrixWorld(true)
     console.log('[deer] addDeer GLB pos:', model.position.x.toFixed(1), model.position.y.toFixed(1), model.position.z.toFixed(1), 'scale:', DEER_GLB_SCALE)
     if (meshCount === 0) {
-      console.warn('[deer] GLB clone vide, fallback procedural pour cette tuile')
+      console.warn('[deer] GLB clone vide, fallback procedural style D pour cette tuile')
       scene.remove(model)
-      const g = makeFallbackDeer()
+      const g = _makeDeerElance()
       g.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
       g.rotation.y = rotY
       g.traverse(function(o) { if (o.isMesh) o.frustumCulled = false })
@@ -633,13 +635,13 @@ export function addDeer(gx, gz) {
     return entry
   }
 
-  // Fallback procedural si le GLB est absent ou en echec de chargement
-  const g = makeFallbackDeer()
+  // Fallback procedural style D si le GLB est absent ou en echec de chargement
+  const g = _makeDeerElance()
   g.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
   g.rotation.y = rotY
   g.traverse(function(o) { if (o.isMesh) o.frustumCulled = false })
   scene.add(g)
-  console.log('[deer] addDeer fallback pos:', g.position.x.toFixed(1), g.position.y.toFixed(1), g.position.z.toFixed(1))
+  console.log('[deer] addDeer fallback style D pos:', g.position.x.toFixed(1), g.position.y.toFixed(1), g.position.z.toFixed(1))
   const entry = { x: gx, z: gz, group: g }
   state.deers.push(entry)
   return entry
