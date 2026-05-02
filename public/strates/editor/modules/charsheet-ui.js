@@ -45,23 +45,19 @@ const PROFESSION_LABELS = {
   chasseur:  { icon: '🏹', label: 'Chasseur' },
 }
 
+// skills[name] est du XP brut (entier). Niveau = floor(xp / 20), plafonné à 10.
 function skillLevel(c, name) {
   if (!c) return 0
-  const direct = c.skills && c.skills[name]
-  if (typeof direct === 'number' && direct > 0) {
-    return Math.min(10, Math.floor(direct))
-  }
-  const xp = c.skillsXp && c.skillsXp[name]
-  if (typeof xp === 'number' && xp > 0) {
-    return Math.min(10, Math.floor(xp / 20))
-  }
-  return 0
+  const xp = (c.skills && c.skills[name]) || 0
+  return Math.min(10, Math.floor(xp / 20))
 }
 
-function skillXp(c, name) {
-  if (!c) return 0
-  const xp = c.skillsXp && c.skillsXp[name]
-  return typeof xp === 'number' ? xp : 0
+const PROFESSION_SKILL = {
+  cueilleur: 'gathering',
+  bucheron:  'logging',
+  mineur:    'mining',
+  chasseur:  'hunting',
+  chercheur: 'research',
 }
 
 function escHtml(s) {
@@ -204,6 +200,11 @@ function injectSkillsStyles() {
     '#char-panel .cs-skill-fill {' +
     '  height: 100%; background: #d4b870;' +
     '  border-radius: 2px; transition: width 0.3s;' +
+    '}' +
+    '#char-panel .cs-skill-active {' +
+    '  background: rgba(255,217,138,0.07);' +
+    '  border-radius: 5px; padding: 2px 4px; margin: 0 -4px;' +
+    '  outline: 1px solid rgba(255,217,138,0.22);' +
     '}'
   document.head.appendChild(style)
 }
@@ -288,25 +289,27 @@ function refreshSkills(c) {
   }
 
   // Liste des 6 compétences
+  var profSkill = c.profession ? (PROFESSION_SKILL[c.profession] || null) : null
   var html = ''
   for (var i = 0; i < CHAR_SKILLS.length; i++) {
     var sk = CHAR_SKILLS[i]
+    var xp = (c.skills && c.skills[sk.id]) || 0
     var lvl = skillLevel(c, sk.id)
-    var xp = skillXp(c, sk.id)
-    var pct = ((xp % 20) / 20) * 100
-    if (xp <= 0 && lvl > 0) {
-      // Cas où le niveau provient de skills[] direct sans xp : barre pleine au niveau acquis
-      pct = 0
-    }
+    var xpInLevel = xp - lvl * 20
+    var pct = lvl >= 10 ? 100 : (xpInLevel / 20) * 100
+    var lvlTxt = lvl >= 10 ? 'MAX' : 'Niv. ' + lvl + ' / 10'
+    var isActive = profSkill === sk.id
     html +=
-      '<div class="cs-skill-row">' +
+      '<div class="cs-skill-row' + (isActive ? ' cs-skill-active' : '') + '">' +
         '<span class="cs-skill-icon">' + sk.icon + '</span>' +
         '<div class="cs-skill-mid">' +
           '<div class="cs-skill-name">' +
             '<span>' + escHtml(sk.label) + '</span>' +
-            '<span class="cs-skill-lvl">Niv. ' + lvl + ' / 10</span>' +
+            '<span class="cs-skill-lvl">' + lvlTxt + '</span>' +
           '</div>' +
-          '<div class="cs-skill-bar"><div class="cs-skill-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+          (lvl >= 10
+            ? '<div class="cs-skill-bar"><div class="cs-skill-fill" style="width:100%;background:#f2c94c"></div></div>'
+            : '<div class="cs-skill-bar"><div class="cs-skill-fill" style="width:' + pct.toFixed(1) + '%"></div></div>') +
         '</div>' +
       '</div>'
   }
