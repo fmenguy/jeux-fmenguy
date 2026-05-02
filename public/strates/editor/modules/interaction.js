@@ -27,7 +27,7 @@ import { closeTechTreePanel, closeBranch } from './ui/techtree-panel.js'
 import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
 import { closeBuildingPanel, isBuildingPanelOpen } from './ui/building-panel.js'
-import { showCellTooltip, hideCellTooltip } from './ui/cell-tooltip.js'
+import { showCellTooltip, hideCellTooltip, isCellTooltipEnabled } from './ui/cell-tooltip.js'
 import { currentSeason } from './seasons.js'
 import { confirmCairnPlacement, cancelCairnPlacement } from './age-transitions.js'
 import {
@@ -1043,10 +1043,10 @@ dom.addEventListener('pointermove', (e) => {
     const now = performance.now()
     if (now - _tooltipThrottle >= 80) {
       _tooltipThrottle = now
-      if (hoverCell) {
-        showCellTooltip(hoverCell.x, hoverCell.z, e.clientX, e.clientY)
-      } else {
-        hideCellTooltip()
+      if (isCellTooltipEnabled()) {
+        const tc = hoverCell || pickCell(e.clientX, e.clientY)
+        if (tc) showCellTooltip(tc.x, tc.z, e.clientX, e.clientY)
+        else hideCellTooltip()
       }
     }
   }
