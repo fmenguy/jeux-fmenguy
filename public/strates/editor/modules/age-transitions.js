@@ -13,7 +13,9 @@ import { state } from './state.js'
 import { playCinematic } from './cinematics.js'
 import { saveGame } from './persistence.js'
 import { getTechsForAge, getBuildingsForAge, getTotalFood, TECH_TREE_DATA } from './gamedata.js'
-import { addCairn, findFreeCellNear } from './placements.js'
+import { addCairn, isCellOccupied } from './placements.js'
+import { GRID, SHALLOW_WATER_LEVEL } from './constants.js'
+import { showHudToast } from './ui/research-popup.js'
 
 // ---------------------------------------------------------------------------
 // Flag dev : si true, la condition "os" est ignoree (Lot B Chasseur pas livre)
@@ -293,30 +295,56 @@ function _injectCairnButton() {
 }
 
 function _onCairnClick() {
-  const { ok, missing } = canBuildCairn(state)
+  const { ok } = canBuildCairn(state)
   if (!ok) {
-    // Affiche le tooltip d'erreur si clique sans conditions
     _showCondTooltip()
     setTimeout(_hideCondTooltip, 3000)
     return
   }
-  // Consomme les ressources
-  if (!_consumeCairnResources()) return
+  startCairnPlacement()
+}
 
-  // Place le mesh Cairn dans le monde 3D, pres du spawn ou du centre
-  const GRID_SIZE = 96
-  const center = state.spawn
-    ? { x: state.spawn.x, z: state.spawn.z }
-    : { x: Math.floor(GRID_SIZE / 2), z: Math.floor(GRID_SIZE / 2) }
-  const cell = findFreeCellNear(center.x, center.z, 20)
-  if (cell) {
-    addCairn(cell.x, cell.z)
+// ---------------------------------------------------------------------------
+// Placement manuel du Cairn
+// ---------------------------------------------------------------------------
+
+export function startCairnPlacement() {
+  state.cairnPlacementMode = true
+  const canvas = document.querySelector('canvas')
+  if (canvas) canvas.style.cursor = 'crosshair'
+  showHudToast('Choisissez un emplacement pour le Cairn. ESC ou clic droit pour annuler.', 5000)
+}
+
+export function confirmCairnPlacement(gx, gz) {
+  if (!state.cairnPlacementMode) return
+  if (gx < 0 || gz < 0 || gx >= GRID || gz >= GRID) {
+    showHudToast('Emplacement hors-carte.', 2000)
+    return
   }
+  if (state.cellTop[gz * GRID + gx] <= SHALLOW_WATER_LEVEL) {
+    showHudToast('Le Cairn ne peut pas être posé sur l\'eau.', 2500)
+    return
+  }
+  if (isCellOccupied(gx, gz)) {
+    showHudToast('Cette case est déjà occupée.', 2000)
+    return
+  }
+  if (!_consumeCairnResources()) {
+    showHudToast('Ressources insuffisantes pour le Cairn.', 2500)
+    return
+  }
+  state.cairnPlacementMode = false
+  const canvas = document.querySelector('canvas')
+  if (canvas) canvas.style.cursor = ''
+  addCairn(gx, gz)
+  setTimeout(() => { triggerAgeTransitionBronze() }, 200)
+}
 
-  // Declenche la transition avec un leger delai pour laisser le mesh apparaitre
-  setTimeout(() => {
-    triggerAgeTransitionBronze()
-  }, 200)
+export function cancelCairnPlacement() {
+  state.cairnPlacementMode = false
+  const canvas = document.querySelector('canvas')
+  if (canvas) canvas.style.cursor = ''
+  showHudToast('Pose du Cairn annulée.', 2000)
 }
 
 function _consumeCairnResources() {
