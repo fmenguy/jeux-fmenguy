@@ -72,6 +72,33 @@
       "produces": [],
       "activity": "day",
       "description": "Etend le rayon de vision de la colonie. Necessite la tech Eclaireur."
+    },
+    {
+      "id": "bucheron-bronze",
+      "name": "Bucheron Bronze",
+      "age": 2,
+      "requires": { "tech": ["axe-bronze"] },
+      "produces": ["wood"],
+      "activity": "day",
+      "description": "Bucheron equipe d'une hache en bronze. Meilleur rendement par arbre que la hache pierre."
+    },
+    {
+      "id": "agriculteur",
+      "name": "Agriculteur",
+      "age": 2,
+      "requires": { "buildings": ["champ-ble"] },
+      "produces": ["grain"],
+      "activity": "day",
+      "description": "Travaille dans les champs de ble. Necessite un champ de ble construit."
+    },
+    {
+      "id": "forgeron",
+      "name": "Forgeron",
+      "age": 2,
+      "requires": { "buildings": ["forge"] },
+      "produces": ["bronze-tools"],
+      "activity": "day",
+      "description": "Travaille a la forge. Produit des outils en bronze. Necessite la Forge."
     }
   ]
 }
