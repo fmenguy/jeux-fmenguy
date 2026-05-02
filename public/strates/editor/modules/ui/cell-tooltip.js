@@ -82,6 +82,7 @@ export function initCellTooltip() {
     btn.addEventListener('animationend', function() { btn.classList.remove('pulse') }, { once: true })
     if (!_enabled) hideCellTooltip()
   })
+  ensureDom()
 }
 
 function ensureDom() {
