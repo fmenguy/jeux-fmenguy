@@ -263,7 +263,6 @@ function _injectCairnButton() {
   if (!monumentGroup) {
     monumentGroup = document.createElement('div')
     monumentGroup.className = 'group monument'
-    monumentGroup.innerHTML = '<span class="group-label">MONUMENT</span>'
     actionbar.appendChild(monumentGroup)
   }
 
@@ -271,7 +270,10 @@ function _injectCairnButton() {
   _cairnBtn.className = 'tool locked'
   _cairnBtn.dataset.tool = 'cairn'
   _cairnBtn.title = 'Poser le Cairn (passage à l\'âge du Bronze)'
-  _cairnBtn.innerHTML = '<span class="ic">🪨</span><span class="nm">Cairn</span><span class="key">C</span>'
+  _cairnBtn.innerHTML = '<span class="nm">Cairn</span><span class="key">C</span>'
+  _cairnBtn.style.border    = '1px solid rgba(212,184,112,0.7)'
+  _cairnBtn.style.boxShadow = '0 0 8px rgba(212,184,112,0.45)'
+  _cairnBtn.style.opacity   = '0.5'
   monumentGroup.appendChild(_cairnBtn)
 
   _cairnBtn.addEventListener('click', _onCairnClick)
@@ -442,21 +444,17 @@ export function checkCairnOverlay() {
     // Sinon : reflet des conditions
     const { ok } = canBuildCairn(state)
     if (ok) {
-      _cairnBtn.style.borderColor = 'rgba(255, 196, 80, 0.9)'
-      _cairnBtn.style.background  = 'rgba(255, 196, 80, 0.22)'
-      _cairnBtn.style.color       = '#fff5d8'
-      _cairnBtn.style.opacity     = ''
-      _cairnBtn.style.pointerEvents = ''
-      _cairnBtn.style.cursor      = ''
-      _cairnBtn.title = 'Poser le Cairn de pierre -- conditions reunies !'
+      _cairnBtn.style.border    = '1px solid rgba(212,184,112,0.9)'
+      _cairnBtn.style.boxShadow = '0 0 8px rgba(212,184,112,0.8)'
+      _cairnBtn.style.opacity   = '1'
+      _cairnBtn.classList.remove('locked')
+      _cairnBtn.title = 'Poser le Cairn (conditions réunies !)'
     } else {
-      _cairnBtn.style.borderColor = 'rgba(255, 196, 80, 0.35)'
-      _cairnBtn.style.background  = ''
-      _cairnBtn.style.color       = ''
-      _cairnBtn.style.opacity     = ''
-      _cairnBtn.style.pointerEvents = ''
-      _cairnBtn.style.cursor      = ''
-      _cairnBtn.title = 'Cairn de pierre (conditions non reunies -- survolez pour voir)'
+      _cairnBtn.style.border    = '1px solid rgba(212,184,112,0.7)'
+      _cairnBtn.style.boxShadow = '0 0 8px rgba(212,184,112,0.45)'
+      _cairnBtn.style.opacity   = '0.5'
+      _cairnBtn.classList.add('locked')
+      _cairnBtn.title = 'Cairn de pierre (conditions non réunies, survolez pour voir)'
     }
   }
 }
