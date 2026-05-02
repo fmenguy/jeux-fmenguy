@@ -13,6 +13,7 @@ import { topVoxelIndex, colorForLayer, surfaceColor } from './terrain.js'
 
 const SEASON_DURATION = 600 // secondes par saison (10 min = 40 min par cycle complet)
 const TRANSITION = 40       // secondes de lerp vers la saison suivante
+const _FERTILE_TINT = new THREE.Color(0xd4a843)
 
 export const SEASONS = [
   {
@@ -198,6 +199,7 @@ function repaintSaisonTerrainChunk() {
       const jitter = (Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1
       const j = 0.06 * (jitter - Math.floor(jitter) - 0.5)
       tmpCol.offsetHSL(0, 0, j)
+      if (state.cellFertile && state.cellFertile[idx]) tmpCol.lerp(_FERTILE_TINT, 0.55)
     }
     state.instanced.setColorAt(topIdx, tmpCol)
     state.origColor[topIdx].copy(tmpCol)
