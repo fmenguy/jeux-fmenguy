@@ -6,7 +6,7 @@ import {
 import { state } from './state.js'
 import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
-import { repaintCellSurface, setOnCellRevealed } from './terrain.js'
+import { repaintCellSurface, setOnCellRevealed, revealAround } from './terrain.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
 import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
@@ -806,6 +806,7 @@ export function addHouse(gx, gz) {
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
   state.houses.push({ x: gx, z: gz, group: g, id: state.houses.length, residents: [] })
+  revealAround(gx, gz, 8)
   return true
 }
 
@@ -842,6 +843,7 @@ export function addFoyer(gx, gz) {
   scene.add(g)
   const entry = { x: gx, z: gz, group: g, light }
   state.foyers.push(entry)
+  revealAround(gx, gz, 8)
   return true
 }
 
@@ -886,6 +888,7 @@ export function addBigHouse(gx, gz) {
   g.position.set(gx + 2, top, gz + 2)
   scene.add(g)
   state.bigHouses.push({ x: gx, z: gz, group: g })
+  revealAround(gx + 2, gz + 2, 8)
   return true
 }
 
@@ -1049,6 +1052,7 @@ export function addResearchHouse(gx, gz) {
   scene.add(g)
   const entry = { id: state.researchBuildingNextId++, x: gx, z: gz, group: g, assignedColonistId: null }
   state.researchHouses.push(entry)
+  revealAround(gx, gz, 8)
   try { window.dispatchEvent(new CustomEvent('strates:buildingPlaced', { detail: { type: 'research', id: entry.id } })) } catch (_) {}
   return entry
 }
@@ -1419,6 +1423,7 @@ export function addObservatory(gx, gz) {
   scene.add(g)
   const entry = { x: gx, z: gz, group: g }
   state.observatories.push(entry)
+  revealAround(gx, gz, 20)
   return entry
 }
 
