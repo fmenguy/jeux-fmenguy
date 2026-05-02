@@ -307,6 +307,10 @@
     }
     #loader.hidden { display: none; }
 
+    /* Monument : visible uniquement quand l'onglet Construire est actif */
+    #actionbar .group.monument { display: none; }
+    #actionbar[data-active-tab="build"] .group.monument { display: flex; }
+
     /* Anciens styles #actionbar/.group/.tool/.brush retires : remplaces par .actionbar + .ab-tabs + .tool (maquette U5). */
     .btn-ctrl {
       padding: 6px 10px;
@@ -644,6 +648,8 @@
           });
           const body = document.getElementById('ab-' + target);
           if (body) body.style.display = 'flex';
+          const ab = document.getElementById('actionbar');
+          if (ab) ab.dataset.activeTab = target;
         });
       });
 
