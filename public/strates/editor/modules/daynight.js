@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { state } from './state.js'
 import { scene, sun, hemi, sky, sunDir } from './scene.js'
 import { refreshHUD, formatNum } from './hud.js'
+import { techUnlocked } from './tech.js'
 
 // ============================================================================
 // Cycle jour/nuit (MVP C).
@@ -125,6 +126,12 @@ let toMode   = 'day'
 // Tick pour les points nocturnes
 const NIGHT_POINT_INTERVAL = 5 // secondes
 let nightPointAccum = 0
+
+// Duree de base de la nuit (en secondes). astronomy-1 la reduit de 20 s.
+const BASE_NIGHT_DURATION = 120 // secondes
+export function getNightDuration() {
+  return BASE_NIGHT_DURATION - (techUnlocked('astronomy-1') ? 20 : 0)
+}
 
 // Callbacks (HUD, audio) relies par setHudCallbacks
 let onModeChange = null
