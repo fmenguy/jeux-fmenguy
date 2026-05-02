@@ -617,11 +617,6 @@
     }
     */
 
-    /* Mode jeu : masque les outils godmod */
-    body[data-mode="game"] .ab-body.godmod { display: none !important; }
-    body[data-mode="game"] .godmod-ctrl  { display: none; }
-    body[data-mode="game"] .godmod-label { display: none; }
-
   </style>
   <link rel="stylesheet" href="./styles/cinematic.css">
   <script type="importmap">
@@ -633,7 +628,7 @@
   }
   </script>
 </head>
-<body data-mode="game">
+<body>
   <script>
     // U5 : logique d'onglets actionbar + toggle panneaux rail droite
     document.addEventListener('DOMContentLoaded', function() {
@@ -645,7 +640,7 @@
           tab.classList.add('active');
           const target = tab.dataset.tab;
           document.querySelectorAll('.ab-body').forEach(b => {
-            if (!b.classList.contains('godmod')) b.style.display = 'none';
+            b.style.display = 'none';
           });
           const body = document.getElementById('ab-' + target);
           if (body) body.style.display = 'flex';
@@ -957,6 +952,10 @@
         <span class="ic">&#127826;</span>
         <span class="nm">Récolter</span>
       </button>
+      <button class="tool" data-action="open-agriculture" title="Agriculture">
+        <span class="ic">&#127806;</span>
+        <span class="nm">Agriculture</span>
+      </button>
       <div class="sep"></div>
       <button class="tool locked" data-tool="hache" title="Abattre les arbres (requiert Hache)">
         <span class="ic">&#129683;</span>
@@ -1002,38 +1001,6 @@
       <div class="sep" style="width:100%;height:1px;margin:2px 0;flex-shrink:0"></div>
     </div>
 
-    <!-- Godmod (toujours visible pour debug) -->
-    <div class="ab-body godmod" id="ab-godmod">
-      <span class="group-label">godmod</span>
-      <button class="tool" data-tool="forest">
-        <span class="ic">&#127794;</span>
-        <span class="nm">Forêt</span>
-        <span class="kb">4</span>
-      </button>
-      <button class="tool" data-tool="rock">
-        <span class="ic">&#129704;</span>
-        <span class="nm">Rocher</span>
-        <span class="kb">5</span>
-      </button>
-      <button class="tool" data-tool="ore">
-        <span class="ic">&#128142;</span>
-        <span class="nm">Filon</span>
-        <span class="kb">6</span>
-      </button>
-      <button class="tool" data-tool="bush">
-        <span class="ic">&#129744;</span>
-        <span class="nm">Baies</span>
-        <span class="kb">9</span>
-      </button>
-      <button class="tool" data-tool="erase">
-        <span class="ic">&#128465;</span>
-        <span class="nm">Effacer</span>
-      </button>
-      <div class="sep"></div>
-      <button class="brush active godmod-ctrl" data-brush="1">1</button>
-      <button class="brush godmod-ctrl" data-brush="3">3</button>
-      <button class="brush godmod-ctrl" data-brush="5">5</button>
-    </div>
   </div>
 
   <!-- B8bis : panneau save/load/nouvelle retire (doublon avec le menu Echap). Le bouton disquette rapide (U8, bas droite) reste intact. -->

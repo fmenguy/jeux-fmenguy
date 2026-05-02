@@ -1,21 +1,20 @@
 import * as THREE from 'three'
 import {
-  GRID, MAX_STRATES, SHALLOW_WATER_LEVEL, STRATA_MAX, ORE_KEYS, ORE_TYPES
+  GRID, MAX_STRATES, SHALLOW_WATER_LEVEL, STRATA_MAX
 } from './constants.js'
 import { state } from './state.js'
 import { prng } from './rng.js'
 import { scene, renderer, camera, controls, tmpObj, tmpColor } from './scene.js'
 import { repaintCellSurface, colorForLayer } from './terrain.js'
 import {
-  addTree, addRock, addOre, addHouse, addFoyer, addBush, addResearchHouse,
-  assignResearcherToBuilding, removeTreesIn, removeRocksIn, removeHousesIn,
-  removeResearchHousesIn, removeOresIn, removeBushesIn, removeManorsIn,
+  addTree, addHouse, addFoyer, addResearchHouse,
+  assignResearcherToBuilding,
   checkManorMerge, isCellOccupied, isMineBlocked,
-  addObservatory, removeObservatoriesIn,
+  addObservatory,
   isBuildingUniqueAndPlaced, isBushOn,
-  addBigHouse, removeBigHousesIn, removeDeersIn
+  addBigHouse
 } from './placements.js'
-import { addJob, removeAllJobsIn, removeJob, removeBuildJob, jobKey } from './jobs.js'
+import { addJob, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell, techUnlocked, hasTreeAt } from './tech.js'
 import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
@@ -240,10 +239,6 @@ function showStrataPreview(cell) {
 const toolBtns = document.querySelectorAll('.tool')
 const brushBtns = document.querySelectorAll('.brush')
 const hudToolEl = document.getElementById('hud-tool')
-const oreSubEl = document.getElementById('ore-sub')
-
-// init oreType dans toolState
-state.toolState.oreType = ORE_KEYS[0]
 
 export function refreshToolButtons() {
   function setLocked(sel, locked) {
@@ -281,38 +276,26 @@ window.addEventListener('strates:techComplete', refreshToolButtons)
 window.addEventListener('strates:worldReset', refreshToolButtons)
 
 export function labelOfTool(t) {
-  if (t === 'ore') return 'filon (' + ORE_TYPES[state.toolState.oreType].label + ')'
   return ({
     nav: 'naviguer',
     mine: 'récolter ressources',
     hache: 'hache (abattre arbres)',
     pick: 'pioche (extraire minerais)',
     build: 'placer un bloc',
-    forest: 'planter une forêt',
-    rock: 'poser un rocher',
     house: 'poser une maison',
     research: 'poser un laboratoire',
     'place-research': 'placer hutte du sage',
     'place-foyer': 'placer un foyer',
     'cancel-zone': 'annuler récolte',
     'place-big-house': 'placer une grande maison',
-    bush: 'poser un buisson',
-    observatory: 'poser un promontoire',
-    erase: 'effacer'
+    observatory: 'poser un promontoire'
   })[t] || t
 }
 
 export function setTool(t) {
-  if (t === 'ore' && state.toolState.tool === 'ore') {
-    const i = ORE_KEYS.indexOf(state.toolState.oreType)
-    state.toolState.oreType = ORE_KEYS[(i + 1) % ORE_KEYS.length]
-  }
   state.toolState.tool = t
   toolBtns.forEach(b => b.classList.toggle('active', b.dataset.tool === t))
   if (hudToolEl) hudToolEl.textContent = labelOfTool(t)
-  if (oreSubEl) oreSubEl.textContent = ORE_TYPES[state.toolState.oreType].label
-  const btnOre = document.querySelector('.tool[data-tool="ore"]')
-  if (btnOre) btnOre.style.borderLeft = '4px solid #' + ORE_TYPES[state.toolState.oreType].rock.getHexString()
   controls.mouseButtons.LEFT = (t === 'nav') ? THREE.MOUSE.ROTATE : null
   if (t === 'nav') cursorMesh.visible = false
 }
@@ -509,19 +492,6 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'r' || e.key === 'R') resetWorld(refreshHUD)
 })
 
-window.addEventListener('wheel', (e) => {
-  if (state.toolState.tool === 'ore' && e.shiftKey) {
-    e.preventDefault()
-    const i = ORE_KEYS.indexOf(state.toolState.oreType)
-    const dir = e.deltaY > 0 ? 1 : -1
-    state.toolState.oreType = ORE_KEYS[(i + dir + ORE_KEYS.length) % ORE_KEYS.length]
-    if (hudToolEl) hudToolEl.textContent = labelOfTool('ore')
-    if (oreSubEl) oreSubEl.textContent = ORE_TYPES[state.toolState.oreType].label
-    const btnOre = document.querySelector('.tool[data-tool="ore"]')
-    if (btnOre) btnOre.style.borderLeft = '4px solid #' + ORE_TYPES[state.toolState.oreType].rock.getHexString()
-  }
-}, { passive: false })
-
 // ============================================================================
 // Raycasting et peinture
 // ============================================================================
@@ -550,12 +520,6 @@ function pickCell(clientX, clientY) {
 }
 
 function toolAllowedOnBiome(tool, biome) {
-  if (tool === 'bush') {
-    return biome === 'grass' || biome === 'forest'
-  }
-  if (tool === 'ore') {
-    return biome === 'rock' || biome === 'snow'
-  }
   if (tool === 'build') {
     return biome === 'grass' || biome === 'forest' || biome === 'sand' || biome === 'rock' || biome === 'snow'
   }
@@ -684,31 +648,6 @@ function applyToolAtCell(cell) {
   state.toolState.paintedThisStroke.add(key)
 
   switch (t) {
-    case 'forest': {
-      const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
-      for (const c of cells) {
-        const k = c.z * GRID + c.x
-        if (state.toolState.paintedThisStroke.has('f' + k)) continue
-        state.toolState.paintedThisStroke.add('f' + k)
-        if (rng() < 0.6 && !isCellOccupied(c.x, c.z)) addTree(c.x, c.z, { growing: true })
-      }
-      break
-    }
-    case 'rock':
-      if (!isCellOccupied(cell.x, cell.z)) addRock(cell.x, cell.z)
-      break
-    case 'ore': {
-      const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
-      for (const c of cells) {
-        const k = c.z * GRID + c.x
-        if (state.toolState.paintedThisStroke.has('o' + k)) continue
-        state.toolState.paintedThisStroke.add('o' + k)
-        if (isCellOccupied(c.x, c.z)) continue
-        if (!toolAllowedOnCell('ore', c.x, c.z)) continue
-        if (rng() < 0.7) addOre(c.x, c.z, state.toolState.oreType)
-      }
-      break
-    }
     case 'house':
       if (!isCellOccupied(cell.x, cell.z)) {
         if (addHouse(cell.x, cell.z)) {
@@ -747,9 +686,6 @@ function applyToolAtCell(cell) {
       if (!isCellOccupied(cell.x, cell.z)) addFoyer(cell.x, cell.z)
       break
     }
-    case 'bush':
-      if (!isCellOccupied(cell.x, cell.z) && toolAllowedOnCell('bush', cell.x, cell.z)) addBush(cell.x, cell.z)
-      break
     case 'observatory':
       if (!isCellOccupied(cell.x, cell.z)) addObservatory(cell.x, cell.z)
       break
@@ -761,27 +697,6 @@ function applyToolAtCell(cell) {
       if (addBigHouse(cell.x, cell.z)) {
         state.gameStats.housesPlaced++
         spawnColonsAroundHouse(cell.x + 1, cell.z + 1, 4)
-      }
-      break
-    }
-    case 'erase': {
-      const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
-      removeTreesIn(cells)
-      removeRocksIn(cells)
-      removeHousesIn(cells)
-      removeManorsIn(cells)
-      removeBigHousesIn(cells)
-      removeResearchHousesIn(cells)
-      removeOresIn(cells)
-      removeBushesIn(cells)
-      removeObservatoriesIn(cells)
-      removeAllJobsIn(cells)
-      for (const c of cells) {
-        const k = c.z * GRID + c.x
-        if (state.cellSurface[k]) {
-          state.cellSurface[k] = null
-          repaintCellSurface(c.x, c.z)
-        }
       }
       break
     }
@@ -854,37 +769,8 @@ function applyToolToStrata(cells) {
     refreshHUD()
     return
   }
-  if (t === 'erase') {
-    removeTreesIn(cells)
-    removeRocksIn(cells)
-    removeHousesIn(cells)
-    removeManorsIn(cells)
-    removeBigHousesIn(cells)
-    removeResearchHousesIn(cells)
-    removeOresIn(cells)
-    removeBushesIn(cells)
-    removeAllJobsIn(cells)
-    for (const c of cells) {
-      const k = c.z * GRID + c.x
-      if (state.cellSurface[k]) {
-        state.cellSurface[k] = null
-        repaintCellSurface(c.x, c.z)
-      }
-    }
-    refreshHUD()
-    return
-  }
   for (const c of cells) {
     switch (t) {
-      case 'forest':
-        if (!isCellOccupied(c.x, c.z)) addTree(c.x, c.z, { growing: true })
-        break
-      case 'rock':
-        if (!isCellOccupied(c.x, c.z)) addRock(c.x, c.z)
-        break
-      case 'ore':
-        if (!isCellOccupied(c.x, c.z) && toolAllowedOnCell('ore', c.x, c.z)) addOre(c.x, c.z, state.toolState.oreType)
-        break
       case 'house':
         if (!isCellOccupied(c.x, c.z)) {
           if (addHouse(c.x, c.z)) {
@@ -923,9 +809,6 @@ function applyToolToStrata(cells) {
         if (!isCellOccupied(c.x, c.z)) addFoyer(c.x, c.z)
         break
       }
-      case 'bush':
-        if (!isCellOccupied(c.x, c.z) && toolAllowedOnCell('bush', c.x, c.z)) addBush(c.x, c.z)
-        break
       case 'observatory':
         if (!isCellOccupied(c.x, c.z)) addObservatory(c.x, c.z)
         break
@@ -1061,7 +944,7 @@ dom.addEventListener('pointermove', (e) => {
   }
   if (!state.toolState.isPainting) return
   if (state.toolState.tool === 'nav') return
-  if (state.toolState.tool === 'rock' || state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'bush' || state.toolState.tool === 'observatory' || state.toolState.tool === 'place-big-house' || state.toolState.tool === 'hunt') return
+  if (state.toolState.tool === 'house' || state.toolState.tool === 'research' || state.toolState.tool === 'observatory' || state.toolState.tool === 'place-big-house' || state.toolState.tool === 'hunt') return
   const cell = hoverCell || pickCell(e.clientX, e.clientY)
   if (cell) applyToolAtCell(cell)
 })
