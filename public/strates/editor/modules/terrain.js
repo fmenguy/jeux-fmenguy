@@ -272,6 +272,11 @@ export function buildTerrain() {
   state.instanced.instanceMatrix.needsUpdate = true
   if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
   scene.add(state.instanced)
+  for (let z = 0; z < GRID; z++) {
+    for (let x = 0; x < GRID; x++) {
+      if (state.cellFertile[z * GRID + x]) repaintCellSurface(x, z)
+    }
+  }
 }
 
 // Reconstruit l'InstancedMesh a partir de state.cellTop et state.cellBiome deja
