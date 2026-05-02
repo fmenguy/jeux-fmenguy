@@ -589,21 +589,23 @@ export function addDeer(gx, gz) {
   const model = getModel('deer')
   if (model) {
     model.scale.setScalar(DEER_GLB_SCALE)
-    // Offset Y : le pivot du GLB est souvent au centre du mesh, pas aux pieds.
-    // DEER_GLB_SCALE * 0.3 leve le groupe pour que les sabots affleurent le sol.
-    model.position.set(gx + 0.5 + jx, top + DEER_GLB_SCALE * 0.3, gz + 0.5 + jz)
+    // Offset Y fixe : le pivot du GLB est typiquement au centre du mesh.
+    // 0.5 leve assez le groupe pour que les sabots affleurent le sol, sans
+    // dependre du scale (qui peut varier sans changer la geometrie native).
+    model.position.set(gx + 0.5 + jx, top + 0.5, gz + 0.5 + jz)
     model.rotation.y = rotY
     model.userData.type = 'deer'
-    const _diagMat = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    let meshCount = 0
     model.traverse(function(o) {
       o.visible = true
       if (o.isMesh) {
+        meshCount++
         o.castShadow = true
         o.receiveShadow = true
         o.frustumCulled = false
-        o.material = _diagMat
       }
     })
+    console.log('[deer] meshes found in traverse:', meshCount)
     const clips = getModelClips('deer')
     if (clips.length > 0) {
       const mixer = new THREE.AnimationMixer(model)
@@ -612,7 +614,19 @@ export function addDeer(gx, gz) {
     }
     scene.add(model)
     model.updateMatrixWorld(true)
-    console.log('[deer] addDeer GLB pos:', model.position.x.toFixed(1), model.position.y.toFixed(1), model.position.z.toFixed(1))
+    console.log('[deer] addDeer GLB pos:', model.position.x.toFixed(1), model.position.y.toFixed(1), model.position.z.toFixed(1), 'scale:', DEER_GLB_SCALE)
+    if (meshCount === 0) {
+      console.warn('[deer] GLB clone vide, fallback procedural pour cette tuile')
+      scene.remove(model)
+      const g = makeFallbackDeer()
+      g.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
+      g.rotation.y = rotY
+      g.traverse(function(o) { if (o.isMesh) o.frustumCulled = false })
+      scene.add(g)
+      const entry = { x: gx, z: gz, group: g }
+      state.deers.push(entry)
+      return entry
+    }
     const entry = { x: gx, z: gz, group: model }
     state.deers.push(entry)
     return entry

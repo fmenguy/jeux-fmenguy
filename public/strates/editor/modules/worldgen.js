@@ -137,17 +137,22 @@ export function populateDefaultScene() {
     }
   }
 
-  // Cerfs decoratifs : 3 a 6 sur cellules herbe eloignees du spawn
+  // Cerfs decoratifs : 3 a 6 sur cellules herbe eloignees du spawn.
+  // Bornes [2, GRID-3] pour eviter les bords (frustum, clipping, falloff).
   const deerCount = 3 + Math.floor(rng() * 4)
   let deersPlaced = 0
+  const MIN_BOUND = 2
+  const MAX_BOUND = GRID - 3
+  const SPAN = MAX_BOUND - MIN_BOUND + 1
   for (let tries = 0; tries < 600 && deersPlaced < deerCount; tries++) {
-    const x = Math.floor(rng() * GRID)
-    const z = Math.floor(rng() * GRID)
+    const x = MIN_BOUND + Math.floor(rng() * SPAN)
+    const z = MIN_BOUND + Math.floor(rng() * SPAN)
     const biome = state.cellBiome[z * GRID + x]
     if (biome !== 'grass' && biome !== 'forest') continue
     if (isCellOccupied(x, z)) continue
     const dist = Math.abs(x - spawn.x) + Math.abs(z - spawn.z)
     if (dist < 4) continue  // eviter le spawn du joueur
+    console.log('[deer] spawn pos vs GRID:', x, z, GRID)
     if (addDeer(x, z)) deersPlaced++
   }
   console.log('[deer] count in scene:', state.deers.length)
