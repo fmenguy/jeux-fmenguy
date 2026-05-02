@@ -79,6 +79,18 @@ export function unlockTech(id, refreshTechsPanel, opts) {
     if (state.researchPoints < costNum) return
     state.researchPoints -= costNum
   }
+  // Consommer les points nocturnes si la tech en requiert (ex: astronomy-1).
+  // Le cout night est toujours verifie et consomme au moment du deblocage,
+  // que le cout recherche ait ete pre-paye (alreadyPaid) ou non.
+  const techEntry = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
+    ? TECH_TREE_DATA.techs.find(x => x.id === id)
+    : null
+  const nightCost = (techEntry && techEntry.cost && typeof techEntry.cost === 'object')
+    ? (techEntry.cost.night || 0) : 0
+  if (nightCost > 0) {
+    if ((state.nightPoints || 0) < nightCost) return
+    state.nightPoints -= nightCost
+  }
   state.totalResearchSpent = (state.totalResearchSpent || 0) + costNum
   t.unlocked = true
   // Effets supplementaires depuis TECH_TREE_DATA (unlocks.jobs / unlocks.buildings).
