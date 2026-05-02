@@ -814,8 +814,9 @@ export class Colonist {
               state.gameStats.minesCompleted++
             } else if (isBushOn(x, z)) {
               const picked = grabBushAt(x, z)
-              state.resources.berries += picked
-              state.gameStats.totalBerriesHarvested += picked
+              const bonus = techUnlocked('gathering-improved') ? 1 : 0
+              state.resources.berries += picked + bonus
+              state.gameStats.totalBerriesHarvested += picked + bonus
               this.skills.gathering++
               scheduleFlash(x, z)
               removeJob(x, z, true)
@@ -933,7 +934,8 @@ export class Colonist {
                 this.needs.set('hunger', Math.max(0, cur - perBerry * picked))
               }
             } else {
-              state.resources.berries += picked
+              const bonus = techUnlocked('gathering-improved') ? 1 : 0
+              state.resources.berries += picked + bonus
             }
             refreshBushBerries(bush)
             bush.regenTimer = 0
