@@ -4,7 +4,7 @@ import { rebuildTerrainFromState, repaintCellSurface, computeFertileCells } from
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
   addManorFromSave, addBigHouseFromSave, clearAllPlacements, isCellOccupied, addObservatory,
-  addCairn, addWheatField, addDeer
+  addCairn, addWheatField, addDeer, applyFogToAllVegetation
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
@@ -325,6 +325,19 @@ function applySnapshot(data) {
       addDeer(d.x, d.z)
     }
   }
+
+  // Fog of war : repaint du terrain et de la vegetation apres restauration
+  // de cellRevealed, puisque rebuildTerrainFromState ne connait pas encore
+  // l etat de revelation au moment ou il tourne.
+  if (state.cellRevealed) {
+    for (let z = 0; z < GRID; z++) {
+      for (let x = 0; x < GRID; x++) {
+        repaintCellSurface(x, z)
+      }
+    }
+    applyFogToAllVegetation()
+  }
+
   startNextQuest()
 
   state.lastJobTime = performance.now() / 1000
