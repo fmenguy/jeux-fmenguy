@@ -1004,9 +1004,9 @@
         <span class="ic">&#127978;</span>
         <span class="nm">Grosse maison</span>
       </button>
-      <button class="tool locked" data-tool="field" title="Champ (requiert Premier champ)">
+      <button class="tool locked" data-action="open-agriculture" data-agri-locked title="Agriculture (requiert Premier champ)">
         <span class="ic">&#127806;</span>
-        <span class="nm">Champ</span>
+        <span class="nm">Agriculture</span>
       </button>
       <div class="sep" style="width:100%;height:1px;margin:2px 0;flex-shrink:0"></div>
     </div>
@@ -1765,6 +1765,9 @@
         <button type="button" class="ho-menu-item" data-topic="blocs">
           <span class="ho-menu-icon">&#9968;</span><span class="ho-menu-label">Blocs et Terrain</span>
         </button>
+        <button type="button" class="ho-menu-item" data-topic="agriculture">
+          <span class="ho-menu-icon">&#127806;</span><span class="ho-menu-label">Agriculture</span>
+        </button>
         <button type="button" class="ho-menu-item" data-topic="technologies">
           <span class="ho-menu-icon">&#129514;</span><span class="ho-menu-label">Technologies</span>
         </button>
@@ -1904,6 +1907,18 @@
               </tr>
             </tbody>
           </table>
+        </section>
+
+        <!-- Agriculture -->
+        <section data-topic="agriculture" hidden>
+          <h3>Agriculture</h3>
+          <ul class="ho-list">
+            <li><span class="ho-li-icon">&#127806;</span><span class="ho-li-text">Les <span class="hl">zones fertiles</span> apparaissent en <span class="hl">doré</span> sur la carte. Seuls ces terrains acceptent un champ.</span></li>
+            <li><span class="ho-li-icon">&#128722;</span><span class="ho-li-text">Ouvrir le menu <span class="hl">Agriculture</span> dans la barre, choisir une culture, puis cliquer sur le terrain fertile pour poser le champ (footprint 2x2).</span></li>
+            <li><span class="ho-li-icon">&#9989;</span><span class="ho-li-text">Aperçu <span class="hl">vert</span> au survol : placement valide. Aperçu <span class="hl">rouge</span> : zone non fertile ou occupée.</span></li>
+            <li><span class="ho-li-icon">&#9203;</span><span class="ho-li-text">Touche <span class="kbd wide">Échap</span> pour annuler le placement en cours.</span></li>
+            <li><span class="ho-li-icon">&#128202;</span><span class="ho-li-text">Chaîne de production : <span class="hl">Blé</span> &rarr; <span class="hl">Grain</span> &rarr; <span class="hl">Farine</span> &rarr; <span class="hl">Pain</span> (étapes débloquées aux âges suivants).</span></li>
+          </ul>
         </section>
 
         <!-- Technologies -->

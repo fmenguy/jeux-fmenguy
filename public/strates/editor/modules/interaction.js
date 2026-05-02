@@ -30,6 +30,10 @@ import { closeBuildingPanel, isBuildingPanelOpen } from './ui/building-panel.js'
 import { showCellTooltip, hideCellTooltip } from './ui/cell-tooltip.js'
 import { currentSeason } from './seasons.js'
 import { confirmCairnPlacement, cancelCairnPlacement } from './age-transitions.js'
+import {
+  openAgriculturePanel, closeAgriculturePanel, isAgriculturePanelOpen,
+  cancelFieldPlacement, confirmFieldPlacement, updateFieldGhost
+} from './ui/agriculture-panel.js'
 
 let firstHarvestDone = false
 let _tooltipThrottle = 0
@@ -252,7 +256,8 @@ export function refreshToolButtons() {
   setLocked('.tool[data-tool="hache"]',      !techUnlocked('axe-stone'))
   setLocked('.tool[data-tool="pick"]',        !techUnlocked('pick-stone'))
   setLocked('.tool[data-tool="hunt"]',        !techUnlocked('bow-wood'))
-  setLocked('.tool[data-tool="field"]',       !techUnlocked('first-field'))
+  // Le bouton Agriculture s ouvre toujours (le menu detaille les cultures et
+  // grise celles qui ne sont pas debloquees). On ne le verrouille pas.
   setLocked('.tool[data-tool="observatory"]', !techUnlocked('promontory'))
   setLocked('.tool[data-tool="abri"]',        !techUnlocked('shelter-basic'))
 
@@ -291,7 +296,6 @@ export function labelOfTool(t) {
     'place-foyer': 'placer un foyer',
     'cancel-zone': 'annuler récolte',
     'place-big-house': 'placer une grande maison',
-    field: 'tracer un champ',
     bush: 'poser un buisson',
     observatory: 'poser un promontoire',
     erase: 'effacer'
@@ -318,7 +322,14 @@ export function setBrush(b) {
   brushBtns.forEach(x => x.classList.toggle('active', parseInt(x.dataset.brush, 10) === b))
 }
 
-toolBtns.forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)))
+toolBtns.forEach(b => b.addEventListener('click', () => {
+  const action = b.dataset.action
+  if (action === 'open-agriculture') {
+    openAgriculturePanel()
+    return
+  }
+  if (b.dataset.tool) setTool(b.dataset.tool)
+}))
 brushBtns.forEach(b => b.addEventListener('click', () => setBrush(parseInt(b.dataset.brush, 10))))
 window.addEventListener('strates:brushSize', e => setBrush(e.detail.size))
 
@@ -448,6 +459,14 @@ document.addEventListener('keydown', (e) => {
     cancelCairnPlacement()
     e.stopPropagation(); e.preventDefault(); return
   }
+  if (state.fieldPlacementMode) {
+    cancelFieldPlacement()
+    e.stopPropagation(); e.preventDefault(); return
+  }
+  if (isAgriculturePanelOpen()) {
+    closeAgriculturePanel()
+    e.stopPropagation(); e.preventDefault(); return
+  }
 
   const clearRail = () => document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'))
 
@@ -531,7 +550,7 @@ function pickCell(clientX, clientY) {
 }
 
 function toolAllowedOnBiome(tool, biome) {
-  if (tool === 'field' || tool === 'bush') {
+  if (tool === 'bush') {
     return biome === 'grass' || biome === 'forest'
   }
   if (tool === 'ore') {
@@ -745,18 +764,6 @@ function applyToolAtCell(cell) {
       }
       break
     }
-    case 'field': {
-      const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
-      for (const c of cells) {
-        const k = c.z * GRID + c.x
-        if (state.toolState.paintedThisStroke.has('h' + k)) continue
-        state.toolState.paintedThisStroke.add('h' + k)
-        if (!toolAllowedOnCell('field', c.x, c.z)) continue
-        state.cellSurface[k] = 'field'
-        repaintCellSurface(c.x, c.z)
-      }
-      break
-    }
     case 'erase': {
       const cells = cellsInBrush(cell.x, cell.z, state.toolState.brush)
       removeTreesIn(cells)
@@ -933,13 +940,6 @@ function applyToolToStrata(cells) {
         }
         break
       }
-      case 'field': {
-        if (!toolAllowedOnCell('field', c.x, c.z)) break
-        const k = c.z * GRID + c.x
-        state.cellSurface[k] = 'field'
-        repaintCellSurface(c.x, c.z)
-        break
-      }
     }
   }
   refreshHUD()
@@ -981,13 +981,23 @@ let lclickStart = null
 dom.addEventListener('pointerdown', (e) => {
   if (e.button !== 0) return
   lclickStart = { x: e.clientX, y: e.clientY, t: performance.now() }
+  // Modes de placement speciaux : prioritaires meme en outil "nav".
+  if (state.cairnPlacementMode || state.fieldPlacementMode) {
+    if (isCharSheetOpen()) return
+    const cellSpec = pickCell(e.clientX, e.clientY)
+    if (state.cairnPlacementMode && cellSpec) {
+      confirmCairnPlacement(cellSpec.x, cellSpec.z)
+      return
+    }
+    if (state.fieldPlacementMode && cellSpec) {
+      confirmFieldPlacement(cellSpec.x, cellSpec.z)
+      return
+    }
+    return
+  }
   if (state.toolState.tool === 'nav') return
   if (isCharSheetOpen()) return
   const cell = pickCell(e.clientX, e.clientY)
-  if (state.cairnPlacementMode && cell) {
-    confirmCairnPlacement(cell.x, cell.z)
-    return
-  }
   if (e.shiftKey && cell) {
     const cells = computeStrata(cell.x, cell.z)
     applyToolToStrata(cells)
@@ -1009,6 +1019,12 @@ dom.addEventListener('pointerdown', (e) => {
 
 dom.addEventListener('pointermove', (e) => {
   let hoverCell = null
+  if (state.fieldPlacementMode) {
+    hoverCell = pickCell(e.clientX, e.clientY)
+    updateFieldGhost(hoverCell)
+    cursorMesh.visible = false
+    return
+  }
   if (state.toolState.tool !== 'nav') {
     hoverCell = pickCell(e.clientX, e.clientY)
     setCursorAt(hoverCell)
