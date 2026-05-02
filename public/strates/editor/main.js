@@ -291,6 +291,23 @@ function tick(nowMs) {
     }
   }
 
+  // Production de grain par les champs de ble (tick toutes les ~2s)
+  tick._grainAccum = (tick._grainAccum || 0) + dt
+  if (tick._grainAccum >= 2.0) {
+    tick._grainAccum -= 2.0
+    if (state.wheatFields && state.wheatFields.length) {
+      for (const f of state.wheatFields) {
+        f.grain = (f.grain || 0) + 0.08
+        if (f.grain >= 1.0) {
+          const harvested = Math.floor(f.grain)
+          state.stocks.grain = (state.stocks.grain || 0) + harvested
+          state.resources.grain = (state.resources.grain || 0) + harvested
+          f.grain -= harvested
+        }
+      }
+    }
+  }
+
   tickDayNight(dt)
   tickSeasons(dt)
   tickVegetationSeasons(dt)

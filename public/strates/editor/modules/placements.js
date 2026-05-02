@@ -6,6 +6,7 @@ import {
 import { state } from './state.js'
 import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
+import { repaintCellSurface } from './terrain.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
 import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
@@ -1041,6 +1042,13 @@ export function clearAllPlacements() {
     }
     state.observatories.length = 0
   }
+  if (state.wheatFields && state.wheatFields.length) {
+    for (const f of state.wheatFields) {
+      scene.remove(f.group)
+      f.group.traverse(node => { if (node.material) node.material.dispose(); if (node.geometry) node.geometry.dispose() })
+    }
+    state.wheatFields.length = 0
+  }
   if (state.cairns && state.cairns.length) {
     for (const c of state.cairns) {
       scene.remove(c.group)
@@ -1054,41 +1062,59 @@ export function clearAllPlacements() {
 // Champs de ble (Age du Bronze, 2x2 cellules)
 // Necessite des cellules fertiles (state.cellFertile[k] === 1) et libres.
 // ============================================================================
-function makeWheatField() {
+function makeWheatField(tops) {
   const g = new THREE.Group()
-  const soilMat  = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.95, flatShading: true })
-  const wheatMat = new THREE.MeshStandardMaterial({ color: 0xd9b14a, roughness: 0.85, flatShading: true })
-  const soil = new THREE.Mesh(new THREE.BoxGeometry(2, 0.08, 2), soilMat)
-  soil.position.y = 0.04
-  soil.receiveShadow = true
-  g.add(soil)
-  // Quelques touffes de ble pour le visuel
-  const rng = prng.rng
-  for (let i = 0; i < 14; i++) {
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 5), wheatMat)
-    cone.position.set((rng() - 0.5) * 1.7, 0.25, (rng() - 0.5) * 1.7)
-    cone.castShadow = true
-    g.add(cone)
+  const soilMat  = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.95, flatShading: true })
+  const wheatMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, roughness: 0.85, flatShading: true })
+  // 4 boites plates pour le sol, une par cellule du 2x2
+  const soilGeo = new THREE.BoxGeometry(0.9, 0.05, 0.9)
+  const offsets = [[0, 0], [1, 0], [0, 1], [1, 1]]
+  for (let i = 0; i < 4; i++) {
+    const [dx, dz] = offsets[i]
+    const localTop = tops ? tops[i] : 0
+    const baseTop = tops ? tops[0] : 0
+    const soil = new THREE.Mesh(soilGeo, soilMat)
+    soil.position.set(-0.5 + dx, (localTop - baseTop) + 0.025, -0.5 + dz)
+    soil.receiveShadow = true
+    g.add(soil)
+  }
+  // 12 epis fins en grille 3x4 sur les 4 cellules
+  const wheatGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.35, 5)
+  // Repartition 3 colonnes x 4 lignes sur 2 unites de cote, soit pas ~0.5
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 3; col++) {
+      const lx = -0.7 + col * 0.7
+      const lz = -0.85 + row * 0.5
+      const ear = new THREE.Mesh(wheatGeo, wheatMat)
+      // tops moyen pour la position verticale
+      const avgTop = tops ? (tops[0] + tops[1] + tops[2] + tops[3]) / 4 - tops[0] : 0
+      ear.position.set(lx, avgTop + 0.225, lz)
+      ear.castShadow = true
+      g.add(ear)
+    }
   }
   return g
 }
 
 /**
  * Place un champ de ble 2x2 dont l'origine est la cellule (gx, gz).
- * Verifie : cellules dans la grille, fertiles, libres, hors eau.
- * Retourne true en cas de succes, false sinon.
+ * Verifie : cellules dans la grille, biome grass/forest, fertiles, libres, hors eau.
+ * Peint cellSurface = 'field' sur les 4 cellules.
+ * Retourne l'entree { x, z, group, grain } ou null si echec.
  */
 export function addWheatField(gx, gz) {
   // Verifie le footprint 2x2
   for (let dz = 0; dz < 2; dz++) {
     for (let dx = 0; dx < 2; dx++) {
       const cx = gx + dx, cz = gz + dz
-      if (cx < 0 || cz < 0 || cx >= GRID || cz >= GRID) return false
+      if (cx < 0 || cz < 0 || cx >= GRID || cz >= GRID) return null
       const k = cz * GRID + cx
       const top = state.cellTop[k]
-      if (top <= SHALLOW_WATER_LEVEL) return false
-      if (isCellOccupied(cx, cz)) return false
-      if (!state.cellFertile || state.cellFertile[k] !== 1) return false
+      if (top <= 1) return null
+      const biome = state.cellBiome[k]
+      if (biome !== 'grass' && biome !== 'forest') return null
+      if (!state.cellFertile || state.cellFertile[k] !== 1) return null
+      if (isCellOccupied(cx, cz)) return null
     }
   }
   const tops = []
@@ -1097,13 +1123,23 @@ export function addWheatField(gx, gz) {
       tops.push(state.cellTop[(gz + dz) * GRID + (gx + dx)])
     }
   }
-  const top = Math.max(...tops)
-  const g = makeWheatField()
-  g.position.set(gx + 1, top, gz + 1)
+  const baseTop = tops[0]
+  const g = makeWheatField(tops)
+  g.position.set(gx + 0.5, baseTop, gz + 0.5)
   scene.add(g)
+  // Peindre cellSurface = 'field' et repaint chaque voxel top
+  for (let dz = 0; dz < 2; dz++) {
+    for (let dx = 0; dx < 2; dx++) {
+      const cx = gx + dx, cz = gz + dz
+      const k = cz * GRID + cx
+      state.cellSurface[k] = 'field'
+      repaintCellSurface(cx, cz)
+    }
+  }
   if (!state.wheatFields) state.wheatFields = []
-  state.wheatFields.push({ x: gx, z: gz, group: g })
-  return true
+  const entry = { x: gx, z: gz, group: g, grain: 0.0 }
+  state.wheatFields.push(entry)
+  return entry
 }
 
 // ============================================================================
@@ -1200,6 +1236,11 @@ export function isCellOccupied(x, z) {
   for (const b of state.bushes) if (b.x === x && b.z === z) return true
   if (state.observatories) {
     for (const o of state.observatories) if (o.x === x && o.z === z) return true
+  }
+  if (state.wheatFields) {
+    for (const f of state.wheatFields) {
+      if (x >= f.x && x < f.x + 2 && z >= f.z && z < f.z + 2) return true
+    }
   }
   if (state.cellOre[z * GRID + x]) return true
   return false

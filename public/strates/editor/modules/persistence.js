@@ -1,10 +1,10 @@
 import { GRID, STOCK_KEYS } from './constants.js'
 import { state } from './state.js'
-import { rebuildTerrainFromState, repaintCellSurface } from './terrain.js'
+import { rebuildTerrainFromState, repaintCellSurface, computeFertileCells } from './terrain.js'
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
   addManorFromSave, addBigHouseFromSave, clearAllPlacements, isCellOccupied, addObservatory,
-  addCairn
+  addCairn, addWheatField
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
@@ -105,6 +105,7 @@ function serializeSnapshot() {
     houses: state.houses.map(h => ({ x: h.x, z: h.z })),
     manors: state.manors.map(m => ({ x: m.x, z: m.z })),
     bigHouses: (state.bigHouses || []).map(b => ({ x: b.x, z: b.z })),
+    wheatFields: (state.wheatFields || []).map(f => ({ x: f.x, z: f.z, grain: f.grain || 0 })),
     researchHouses: state.researchHouses.map(r => ({
       x: r.x, z: r.z, id: r.id,
       assignedColonistId: r.assignedColonistId
@@ -189,6 +190,7 @@ function clearEverything() {
   state.ageUnlockedAt = { 1: Date.now() }
   state.achievements = []
   state.cairns = []
+  state.wheatFields = []
 }
 
 function applySnapshot(data) {
@@ -202,11 +204,13 @@ function applySnapshot(data) {
   state.cellSurface = data.terrain.cellSurface.slice()
   state.cellOre = data.terrain.cellOre.slice()
   rebuildTerrainFromState()
+  computeFertileCells()
 
-  // applique les surfaces (champs) sur les voxels top
+  // applique les surfaces (champs et teinte fertile) sur les voxels top
   for (let z = 0; z < GRID; z++) {
     for (let x = 0; x < GRID; x++) {
-      if (state.cellSurface[z * GRID + x]) repaintCellSurface(x, z)
+      const k = z * GRID + x
+      if (state.cellSurface[k] || (state.cellFertile && state.cellFertile[k])) repaintCellSurface(x, z)
     }
   }
 
@@ -225,6 +229,12 @@ function applySnapshot(data) {
   for (const h of data.houses) if (!isCellOccupied(h.x, h.z)) addHouse(h.x, h.z)
   for (const m of (data.manors || [])) addManorFromSave(m.x, m.z)
   for (const b of (data.bigHouses || [])) addBigHouseFromSave(b.x, b.z)
+  if (Array.isArray(data.wheatFields)) {
+    for (const f of data.wheatFields) {
+      const entry = addWheatField(f.x, f.z)
+      if (entry && typeof f.grain === 'number') entry.grain = f.grain
+    }
+  }
   for (const rh of data.researchHouses) {
     if (isCellOccupied(rh.x, rh.z)) continue
     const entry = addResearchHouse(rh.x, rh.z)

@@ -10,6 +10,7 @@ export const state = {
   cellTop: null,
   cellBiome: null,
   cellSurface: null,
+  cellFertile: null,
   cellOre: null,
   instanceIndex: [],
   instanced: null,
@@ -27,6 +28,7 @@ export const state = {
   houses: [],
   manors: [],
   bigHouses: [],
+  wheatFields: [],
   researchHouses: [],
   researchBuildingNextId: 1,
 
@@ -37,7 +39,7 @@ export const state = {
   buildMarkers: new Map(),
 
   // ressources
-  stocks: { silex: 0 },
+  stocks: { silex: 0, grain: 0 },
   techs: {
     'axe-stone':     { name: 'Hache en pierre',   cost: 4,  req: null,           age: 'pierre', icon: 'H', tint: '#8a6a4a', unlocked: false },
     'pick-stone':    { name: 'Pioche en pierre',  cost: 5,  req: null,           age: 'pierre', icon: 'P', tint: '#9ca3af', unlocked: false },
