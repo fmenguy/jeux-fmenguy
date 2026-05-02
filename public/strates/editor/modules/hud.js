@@ -21,7 +21,7 @@ export function formatNum(n) {
 }
 
 // Valeurs affichées interpolées (lerp) pour les ressources à mise à jour fréquente
-const _disp = { berries: 0, wood: 0, stone: 0, viande: 0, grain: 0 }
+const _disp = { berries: 0, wood: 0, stone: 0, viande: 0, grain: 0, silex: 0 }
 
 const fpsEl = document.getElementById('fps')
 const jobsEl = document.getElementById('jobs')
@@ -41,6 +41,7 @@ const cResearchersEl = document.getElementById('c-researchers')
 const rBerriesEl = document.getElementById('r-berries')
 const rWoodEl = document.getElementById('r-wood')
 const rStoneEl = document.getElementById('r-stone')
+const rSilexEl = document.getElementById('r-silex')
 const rBlocsEl = document.getElementById('r-blocs')
 const cCountEl = document.getElementById('c-count')
 const colonsListEl = document.getElementById('colons-list')
@@ -152,9 +153,11 @@ export function refreshHUD() {
   _disp.stone   = state.resources.stone
   _disp.viande  = state.resources.viande || 0
   _disp.grain   = state.resources.grain  || 0
+  _disp.silex   = state.resources.silex  || 0
   if (rBerriesEl) rBerriesEl.textContent = formatNum(state.resources.berries)
   if (rWoodEl)    rWoodEl.textContent    = formatNum(state.resources.wood)
   if (rStoneEl)   rStoneEl.textContent   = formatNum(state.resources.stone)
+  if (rSilexEl)   rSilexEl.textContent   = formatNum(state.resources.silex || 0)
   if (rBlocsEl)   rBlocsEl.textContent   = formatNum(totalBuildStock())
   if (rViandeEl)  rViandeEl.textContent  = formatNum(state.resources.viande || 0)
   if (rGrainEl)   rGrainEl.textContent   = formatNum(state.resources.grain  || 0)
@@ -171,10 +174,12 @@ export function tickResourceAnim() {
   _disp.stone   += (state.resources.stone   - _disp.stone)   * LERP
   _disp.viande  += ((state.resources.viande || 0) - _disp.viande) * LERP
   _disp.grain   += ((state.resources.grain  || 0) - _disp.grain)  * LERP
+  _disp.silex   += ((state.resources.silex  || 0) - _disp.silex)  * LERP
 
   if (rBerriesEl) rBerriesEl.textContent = formatNum(_disp.berries)
   if (rWoodEl)    rWoodEl.textContent    = formatNum(_disp.wood)
   if (rStoneEl)   rStoneEl.textContent   = formatNum(_disp.stone)
+  if (rSilexEl)   rSilexEl.textContent   = formatNum(_disp.silex)
   if (rBlocsEl)   rBlocsEl.textContent   = formatNum((state.stocks.stone || 0) + (state.stocks.dirt || 0))
   if (cBushesEl)  cBushesEl.textContent  = state.bushes.length
   if (rViandeEl)  rViandeEl.textContent  = formatNum(_disp.viande)

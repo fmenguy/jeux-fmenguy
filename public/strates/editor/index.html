@@ -793,6 +793,13 @@
 
       <div class="res-sep"></div>
 
+      <div class="res" title="Silex (taille d'outils)">
+        <span class="ic">🪨</span>
+        <span class="v"><span id="r-silex">0</span> <small>silex</small></span>
+      </div>
+
+      <div class="res-sep"></div>
+
       <div class="res" title="Blocs disponibles pour la construction">
         <span class="ic">
           <svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="7" width="5" height="5" rx=".8" fill="#7a9a6a"/><rect x="9" y="7" width="5" height="5" rx=".8" fill="#9e9690"/><rect x="5.5" y="3" width="5" height="5" rx=".8" fill="#7d6e5a"/></svg>
@@ -1670,6 +1677,23 @@
         0 2px 5px rgba(0,0,0,0.45);
     }
     .ho-li-text .kbd.wide { min-width: 44px; font-size: 10px; }
+    .ho-table {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+      color: rgba(243,236,221,0.92);
+    }
+    .ho-table th, .ho-table td {
+      text-align: left; padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,217,138,0.12);
+      vertical-align: middle;
+    }
+    .ho-table th {
+      color: #ffd98a; font-weight: 600; font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      background: rgba(255,217,138,0.06);
+    }
+    .ho-table td.ho-icon-cell { font-size: 18px; width: 38px; text-align: center; }
+    .ho-table td .hl { color: #ffd98a; font-weight: 600; }
+    .ho-table tr:last-child td { border-bottom: none; }
 
     .ho-footer {
       grid-area: footer;
@@ -1736,6 +1760,9 @@
         </button>
         <button type="button" class="ho-menu-item" data-topic="ressources">
           <span class="ho-menu-icon">&#127794;</span><span class="ho-menu-label">Ressources</span>
+        </button>
+        <button type="button" class="ho-menu-item" data-topic="blocs">
+          <span class="ho-menu-icon">&#9968;</span><span class="ho-menu-label">Blocs et Terrain</span>
         </button>
         <button type="button" class="ho-menu-item" data-topic="technologies">
           <span class="ho-menu-icon">&#129514;</span><span class="ho-menu-label">Technologies</span>
@@ -1805,6 +1832,77 @@
             <li><span class="ho-li-icon">&#127827;</span><span class="ho-li-text"><span class="hl">Baies</span>, cueillies par les colons ou manuellement.</span></li>
             <li><span class="ho-li-icon">&#128279;</span><span class="ho-li-text">Toutes les ressources s'affichent en <span class="hl">haut à gauche</span> de l'écran.</span></li>
           </ul>
+        </section>
+
+        <!-- Blocs et Terrain -->
+        <section data-topic="blocs" hidden>
+          <h3>Blocs et Terrain</h3>
+          <table class="ho-table">
+            <thead>
+              <tr>
+                <th>Icône</th>
+                <th>Biome</th>
+                <th>Description</th>
+                <th>Ressources</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="ho-icon-cell">&#127807;</td>
+                <td><span class="hl">Prairie</span></td>
+                <td>Terrain par défaut des basses altitudes.</td>
+                <td>Terre</td>
+              </tr>
+              <tr>
+                <td class="ho-icon-cell">&#127794;</td>
+                <td><span class="hl">Forêt</span></td>
+                <td>Prairie à végétation dense.</td>
+                <td>Terre, Bois (arbres)</td>
+              </tr>
+              <tr>
+                <td class="ho-icon-cell">&#127958;</td>
+                <td><span class="hl">Plage</span></td>
+                <td>Zone sablonneuse en bordure d'eau.</td>
+                <td>Terre, Silex (35%)</td>
+              </tr>
+              <tr>
+                <td class="ho-icon-cell">&#9968;</td>
+                <td><span class="hl">Roche</span></td>
+                <td>Haute altitude, sol minéral.</td>
+                <td>Pierre, Silex (rare)</td>
+              </tr>
+              <tr>
+                <td class="ho-icon-cell">&#10052;</td>
+                <td><span class="hl">Neige</span></td>
+                <td>Altitude maximale.</td>
+                <td>Pierre</td>
+              </tr>
+              <tr>
+                <td class="ho-icon-cell">&#128167;</td>
+                <td><span class="hl">Eau</span></td>
+                <td>Zone aquatique, non minable.</td>
+                <td>aucune</td>
+              </tr>
+              <tr>
+                <td class="ho-icon-cell">&#129704;</td>
+                <td><span class="hl">Rocher déco</span></td>
+                <td>Affleurement rocheux au sol.</td>
+                <td>Pierre, Silex (15%)</td>
+              </tr>
+              <tr>
+                <td class="ho-icon-cell">&#127795;</td>
+                <td><span class="hl">Arbre</span></td>
+                <td>Végétation ligneuse mature.</td>
+                <td>Bois</td>
+              </tr>
+              <tr>
+                <td class="ho-icon-cell">&#129744;</td>
+                <td><span class="hl">Buisson</span></td>
+                <td>Plante à baies.</td>
+                <td>Baies</td>
+              </tr>
+            </tbody>
+          </table>
         </section>
 
         <!-- Technologies -->

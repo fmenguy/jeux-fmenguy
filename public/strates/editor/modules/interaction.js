@@ -27,9 +27,9 @@ import { closeTechTreePanel, closeBranch } from './ui/techtree-panel.js'
 import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
 import { closeBuildingPanel, isBuildingPanelOpen } from './ui/building-panel.js'
+import { showCellTooltip, hideCellTooltip } from './ui/cell-tooltip.js'
 import { currentSeason } from './seasons.js'
 import { confirmCairnPlacement, cancelCairnPlacement } from './age-transitions.js'
-import { showCellTooltip, hideCellTooltip } from './ui/cell-tooltip.js'
 
 let firstHarvestDone = false
 
@@ -1183,7 +1183,16 @@ dom.addEventListener('pointermove', (e) => {
     hoveredColonist = best
     if (hoveredColonist) hoveredColonist.label.visible = true
   }
+  // Tooltip de cellule (masque si on survole un colon ou hors grille)
+  if (best) {
+    hideCellTooltip()
+  } else {
+    const cell = pickCell(e.clientX, e.clientY)
+    if (cell) showCellTooltip(cell.x, cell.z, e.clientX, e.clientY)
+    else hideCellTooltip()
+  }
 })
 dom.addEventListener('pointerleave', () => {
   if (hoveredColonist) { hoveredColonist.label.visible = false; hoveredColonist = null }
+  hideCellTooltip()
 })
