@@ -6,7 +6,7 @@ import {
 import { state } from './state.js'
 import { prng } from './rng.js'
 import { scene, tmpObj, tmpColor } from './scene.js'
-import { repaintCellSurface } from './terrain.js'
+import { repaintCellSurface, setOnCellRevealed } from './terrain.js'
 import { findApproach } from './pathfind.js'
 import { getBuildingById } from './gamedata.js'
 import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
@@ -22,6 +22,7 @@ trunkMesh.castShadow = true
 trunkMesh.receiveShadow = true
 trunkMesh.count = 0
 trunkMesh.frustumCulled = false
+trunkMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_TREES * 3).fill(1), 3)
 scene.add(trunkMesh)
 
 const leafGeo = new THREE.ConeGeometry(0.95, 2.6, 6)
@@ -101,10 +102,14 @@ export function addTree(gx, gz, opts) {
   const entry = { x: gx, z: gz, slot, jx, jz, rot, top, targetScale: scale, growth, stage: growthStage(growth) }
   applyTreeMatrix(entry)
   tmpColor.setHSL(0.28 + (rng() - 0.5) * 0.06, 0.5 + rng() * 0.15, 0.32 + rng() * 0.1)
+  entry.leafColor = tmpColor.clone()
   leafMesh.setColorAt(slot, tmpColor)
+  entry.trunkColor = new THREE.Color(0x6b4a2b)
+  trunkMesh.setColorAt(slot, entry.trunkColor)
   trunkMesh.count = slot + 1
   leafMesh.count = slot + 1
   trunkMesh.instanceMatrix.needsUpdate = true
+  trunkMesh.instanceColor.needsUpdate = true
   leafMesh.instanceMatrix.needsUpdate = true
   if (leafMesh.instanceColor) leafMesh.instanceColor.needsUpdate = true
   state.trees.push(entry)
@@ -233,6 +238,7 @@ export function addRock(gx, gz) {
   const startIdx = rockMesh.count
   const chunkCount = 2 + Math.floor(rng() * 2) // 2 ou 3 cailloux
   const indices = []
+  const chunkColors = []
   for (let k = 0; k < chunkCount; k++) {
     if (rockMesh.count >= ROCK_INSTANCE_CAP) break
     const i = rockMesh.count
@@ -247,12 +253,13 @@ export function addRock(gx, gz) {
     const rotY = rng() * Math.PI * 2
     const g = 0.55 + rng() * 0.15
     placeRockChunk(i, cx, top, cz, sx, sy, sz, rotY, g)
+    chunkColors.push(new THREE.Color(g, g * 0.98, g * 0.95))
     rockMesh.count = i + 1
     indices.push(i)
   }
   rockMesh.instanceMatrix.needsUpdate = true
   if (rockMesh.instanceColor) rockMesh.instanceColor.needsUpdate = true
-  state.rocks.push({ x: gx, z: gz, indices })
+  state.rocks.push({ x: gx, z: gz, indices, chunkColors })
   return startIdx
 }
 
@@ -313,10 +320,13 @@ export function addOre(gx, gz, type) {
   tmpColor.copy(def.rock)
   tmpColor.offsetHSL(0, 0, (rng() - 0.5) * 0.06)
   oreRockMesh.setColorAt(ri, tmpColor)
+  const oreRockColor = tmpColor.clone()
   oreRockMesh.count = ri + 1
 
   const nCrystals = 2 + Math.floor(rng() * 3)
   const baseY = top + 0.4
+  const crystalSlots = []
+  const crystalColors = []
   for (let k = 0; k < nCrystals; k++) {
     const ci = crystalMesh.count
     const cx = gx + 0.5 + jx + (rng() - 0.5) * 0.4
@@ -331,6 +341,8 @@ export function addOre(gx, gz, type) {
     tmpColor.copy(def.crystal)
     tmpColor.offsetHSL(0, 0, (rng() - 0.5) * 0.05)
     crystalMesh.setColorAt(ci, tmpColor)
+    crystalSlots.push(ci)
+    crystalColors.push(tmpColor.clone())
     crystalMesh.count = ci + 1
   }
 
@@ -339,7 +351,7 @@ export function addOre(gx, gz, type) {
   crystalMesh.instanceMatrix.needsUpdate = true
   if (crystalMesh.instanceColor) crystalMesh.instanceColor.needsUpdate = true
 
-  state.ores.push({ x: gx, z: gz, type })
+  state.ores.push({ x: gx, z: gz, type, oreRockSlot: ri, oreRockColor, crystalSlots, crystalColors })
   state.cellOre[gz * GRID + gx] = type
 }
 
@@ -413,7 +425,9 @@ export function addBush(gx, gz) {
 
   const rng = prng.rng
   const leafIndices = []
+  const leafColors = []
   const berryIndices = []
+  const berryColors = []
   const baseY = top
   const nLeaves = 3 + Math.floor(rng() * 3)
   const leafBase = new THREE.Color('#3d6b2d')
@@ -431,6 +445,7 @@ export function addBush(gx, gz) {
     bushLeafMesh.setMatrixAt(li, tmpObj.matrix)
     tmpColor.copy(leafBase).offsetHSL((rng() - 0.5) * 0.02, 0, (rng() - 0.5) * 0.08)
     bushLeafMesh.setColorAt(li, tmpColor)
+    leafColors.push(tmpColor.clone())
     bushLeafMesh.count = li + 1
     leafIndices.push(li)
   }
@@ -450,6 +465,7 @@ export function addBush(gx, gz) {
     bushBerryMesh.setMatrixAt(bi, tmpObj.matrix)
     tmpColor.copy(berryBase).offsetHSL((rng() - 0.5) * 0.04, (rng() - 0.5) * 0.15, (rng() - 0.5) * 0.06)
     bushBerryMesh.setColorAt(bi, tmpColor)
+    berryColors.push(tmpColor.clone())
     bushBerryMesh.count = bi + 1
     berryIndices.push(bi)
     berryPositions.push(tmpObj.matrix.clone())
@@ -467,7 +483,9 @@ export function addBush(gx, gz) {
     berries: Math.min(maxB, 3 + Math.floor(rng() * 8)), // part deja partiellement remplie
     maxBerries: maxB,
     leafIndices,
+    leafColors,
     berryIndices,
+    berryColors,
     berryMatrices: berryPositions,
     claimedBy: null,
     regenTimer: 0
@@ -1572,6 +1590,195 @@ export function checkUniqueBuildingButtons() {
     }
   }
 }
+
+// ============================================================================
+// Fog of war : vegetation
+// Masque (noir) les meshes de vegetation dans les zones non revelees.
+// Restaure la couleur d origine quand une cellule est revelee.
+// ============================================================================
+
+const _fogBlack = new THREE.Color(0, 0, 0)
+
+function _setGroupVisibility(group, visible) {
+  if (!group) return
+  group.visible = visible
+}
+
+// Met a jour la visibilite/couleur de toute la vegetation sur la cellule (x, z).
+// Appele par le callback setOnCellRevealed chaque fois qu une cellule est revelee.
+export function repaintVegetationAt(x, z) {
+  if (!state.cellRevealed) return
+  const revealed = !!state.cellRevealed[z * GRID + x]
+
+  // Arbres
+  for (const t of state.trees) {
+    if (t.x !== x || t.z !== z) continue
+    if (t.group) {
+      _setGroupVisibility(t.group, revealed)
+    } else if (t.slot != null) {
+      if (revealed) {
+        leafMesh.setColorAt(t.slot, t.leafColor || new THREE.Color(0x4a8a3a))
+        trunkMesh.setColorAt(t.slot, t.trunkColor || new THREE.Color(0x6b4a2b))
+      } else {
+        leafMesh.setColorAt(t.slot, _fogBlack)
+        trunkMesh.setColorAt(t.slot, _fogBlack)
+      }
+      if (leafMesh.instanceColor) leafMesh.instanceColor.needsUpdate = true
+      trunkMesh.instanceColor.needsUpdate = true
+    }
+  }
+
+  // Rochers
+  for (const r of state.rocks) {
+    if (r.x !== x || r.z !== z) continue
+    if (r.group) {
+      _setGroupVisibility(r.group, revealed)
+    } else if (r.indices) {
+      for (let i = 0; i < r.indices.length; i++) {
+        const idx = r.indices[i]
+        if (revealed) {
+          const col = (r.chunkColors && r.chunkColors[i]) ? r.chunkColors[i] : new THREE.Color(0xa0998e)
+          rockMesh.setColorAt(idx, col)
+        } else {
+          rockMesh.setColorAt(idx, _fogBlack)
+        }
+      }
+      if (rockMesh.instanceColor) rockMesh.instanceColor.needsUpdate = true
+    }
+  }
+
+  // Filons
+  for (const o of state.ores) {
+    if (o.x !== x || o.z !== z) continue
+    if (o.oreRockSlot != null) {
+      if (revealed) {
+        oreRockMesh.setColorAt(o.oreRockSlot, o.oreRockColor || new THREE.Color(1, 1, 1))
+      } else {
+        oreRockMesh.setColorAt(o.oreRockSlot, _fogBlack)
+      }
+      if (oreRockMesh.instanceColor) oreRockMesh.instanceColor.needsUpdate = true
+    }
+    if (o.crystalSlots) {
+      for (let i = 0; i < o.crystalSlots.length; i++) {
+        const ci = o.crystalSlots[i]
+        if (revealed) {
+          const col = (o.crystalColors && o.crystalColors[i]) ? o.crystalColors[i] : new THREE.Color(1, 1, 1)
+          crystalMesh.setColorAt(ci, col)
+        } else {
+          crystalMesh.setColorAt(ci, _fogBlack)
+        }
+      }
+      if (crystalMesh.instanceColor) crystalMesh.instanceColor.needsUpdate = true
+    }
+  }
+
+  // Buissons
+  for (const b of state.bushes) {
+    if (b.x !== x || b.z !== z) continue
+    for (let i = 0; i < b.leafIndices.length; i++) {
+      const li = b.leafIndices[i]
+      if (revealed) {
+        const col = (b.leafColors && b.leafColors[i]) ? b.leafColors[i] : new THREE.Color(0x3d6b2d)
+        bushLeafMesh.setColorAt(li, col)
+      } else {
+        bushLeafMesh.setColorAt(li, _fogBlack)
+      }
+    }
+    if (bushLeafMesh.instanceColor) bushLeafMesh.instanceColor.needsUpdate = true
+    for (let i = 0; i < b.berryIndices.length; i++) {
+      const bi = b.berryIndices[i]
+      if (revealed) {
+        const col = (b.berryColors && b.berryColors[i]) ? b.berryColors[i] : new THREE.Color(0x6b2d8c)
+        bushBerryMesh.setColorAt(bi, col)
+      } else {
+        bushBerryMesh.setColorAt(bi, _fogBlack)
+      }
+    }
+    if (bushBerryMesh.instanceColor) bushBerryMesh.instanceColor.needsUpdate = true
+  }
+
+  // Cerfs
+  if (state.deers) {
+    for (const d of state.deers) {
+      if (d.x !== x || d.z !== z) continue
+      _setGroupVisibility(d.group, revealed)
+    }
+  }
+}
+
+// Applique le fog a toute la vegetation (appele apres populateDefaultScene,
+// avant la revelation initiale). Tout ce qui est sur une cellule non revelee
+// est masque.
+export function applyFogToAllVegetation() {
+  if (!state.cellRevealed) return
+
+  // Arbres
+  for (const t of state.trees) {
+    const revealed = !!state.cellRevealed[t.z * GRID + t.x]
+    if (t.group) {
+      _setGroupVisibility(t.group, revealed)
+    } else if (t.slot != null) {
+      if (!revealed) {
+        leafMesh.setColorAt(t.slot, _fogBlack)
+        trunkMesh.setColorAt(t.slot, _fogBlack)
+        if (leafMesh.instanceColor) leafMesh.instanceColor.needsUpdate = true
+        trunkMesh.instanceColor.needsUpdate = true
+      }
+    }
+  }
+
+  // Rochers
+  for (const r of state.rocks) {
+    const revealed = !!state.cellRevealed[r.z * GRID + r.x]
+    if (r.group) {
+      _setGroupVisibility(r.group, revealed)
+    } else if (r.indices) {
+      if (!revealed) {
+        for (const idx of r.indices) rockMesh.setColorAt(idx, _fogBlack)
+        if (rockMesh.instanceColor) rockMesh.instanceColor.needsUpdate = true
+      }
+    }
+  }
+
+  // Filons
+  for (const o of state.ores) {
+    const revealed = !!state.cellRevealed[o.z * GRID + o.x]
+    if (!revealed) {
+      if (o.oreRockSlot != null) {
+        oreRockMesh.setColorAt(o.oreRockSlot, _fogBlack)
+        if (oreRockMesh.instanceColor) oreRockMesh.instanceColor.needsUpdate = true
+      }
+      if (o.crystalSlots) {
+        for (const ci of o.crystalSlots) crystalMesh.setColorAt(ci, _fogBlack)
+        if (crystalMesh.instanceColor) crystalMesh.instanceColor.needsUpdate = true
+      }
+    }
+  }
+
+  // Buissons
+  for (const b of state.bushes) {
+    const revealed = !!state.cellRevealed[b.z * GRID + b.x]
+    if (!revealed) {
+      for (const li of b.leafIndices) bushLeafMesh.setColorAt(li, _fogBlack)
+      if (bushLeafMesh.instanceColor) bushLeafMesh.instanceColor.needsUpdate = true
+      for (const bi of b.berryIndices) bushBerryMesh.setColorAt(bi, _fogBlack)
+      if (bushBerryMesh.instanceColor) bushBerryMesh.instanceColor.needsUpdate = true
+    }
+  }
+
+  // Cerfs
+  if (state.deers) {
+    for (const d of state.deers) {
+      const revealed = !!state.cellRevealed[d.z * GRID + d.x]
+      _setGroupVisibility(d.group, revealed)
+    }
+  }
+}
+
+// Enregistrement du callback dans terrain.js.
+// Utilise la forme immediate : setOnCellRevealed est appele au chargement du
+// module, avant que revealAround soit jamais invoque.
+setOnCellRevealed(repaintVegetationAt)
 
 // ============================================================================
 // Animation flamme (foyer fallback procedural uniquement)

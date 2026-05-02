@@ -397,6 +397,11 @@ export function repaintCellSurface(x, z) {
   state.instanced.instanceColor.needsUpdate = true
 }
 
+// Callback optionnel appele pour chaque cellule nouvellement revelee.
+// Enregistre par placements.js pour mettre a jour la vegetation.
+let _onCellRevealed = null
+export function setOnCellRevealed(fn) { _onCellRevealed = fn }
+
 // Revele les cellules dans un rayon r autour de (cx, cz) et repeint chaque
 // cellule nouvellement revelee. Utilisee par worldgen.js et colonist.js.
 export function revealAround(cx, cz, r) {
@@ -413,6 +418,7 @@ export function revealAround(cx, cz, r) {
         if (!state.cellRevealed[k]) {
           state.cellRevealed[k] = 1
           repaintCellSurface(x, z)
+          if (_onCellRevealed) _onCellRevealed(x, z)
         }
       }
     }
