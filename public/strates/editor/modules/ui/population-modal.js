@@ -22,6 +22,35 @@ const JOB_DEFS = [
   { id: 'chasseur',   label: 'Chasseur',   icon: '🏹', desc: 'Chasse le gibier, rapporte viande et os',    req: 'Arc' },
 ]
 
+// Mapping métier vers compétence pour afficher le niveau dans les chips
+const JOB_SKILL = {
+  bucheron:  'logging',
+  mineur:    'mining',
+  cueilleur: 'gathering',
+  chasseur:  'hunting',
+  chercheur: 'research',
+}
+
+// Helpers de niveau / xp de compétences (lecture seule sur le raw colonist)
+function skillLevelOf(rawC, name) {
+  if (!rawC) return 0
+  const direct = rawC.skills && rawC.skills[name]
+  if (typeof direct === 'number' && direct > 0) {
+    return Math.min(10, Math.floor(direct))
+  }
+  const xp = rawC.skillsXp && rawC.skillsXp[name]
+  if (typeof xp === 'number' && xp > 0) {
+    return Math.min(10, Math.floor(xp / 20))
+  }
+  return 0
+}
+
+function skillXpOf(rawC, name) {
+  if (!rawC) return 0
+  const xp = rawC.skillsXp && rawC.skillsXp[name]
+  return typeof xp === 'number' ? xp : 0
+}
+
 const SKILL_CATEGORIES = [
   { id: 'harvest', label: 'Récolte',   color: '#8bb583', skills: ['bois', 'cueillette', 'herboristerie', 'pioche', 'chasse', 'peche'] },
   { id: 'craft',   label: 'Artisanat', color: '#d9b87a', skills: ['artisanat', 'cuisine', 'construction', 'forge'] },
@@ -50,15 +79,23 @@ function colonistView(raw) {
     age:     raw.age != null ? raw.age : 0,
     chief:   !!raw.isChief,
     village: raw.village || 'souche',
-    job:     raw.job || null,
-    state:   stateActivity(raw),
-    hp:      raw.hp   != null ? raw.hp   : 80,
-    mor:     raw.mor  != null ? raw.mor  : 70,
-    faim:    raw.faim != null ? raw.faim : 60,
-    skills:  raw.skills || {},
-    rel:     raw.rel   || [],
-    house:   raw.assignedBuildingId || null,
+    job:        raw.job || null,
+    profession: raw.profession || null,
+    state:      stateActivity(raw),
+    hp:         raw.hp   != null ? raw.hp   : 80,
+    mor:        raw.mor  != null ? raw.mor  : 70,
+    faim:       raw.faim != null ? raw.faim : 60,
+    skills:     raw.skills || {},
+    rel:        raw.rel   || [],
+    house:      raw.assignedBuildingId || null,
+    _raw:       raw,
   }
+}
+
+// Récupère le label affiché pour la profession actuelle
+function jobLabelOf(profId) {
+  const jd = JOB_DEFS.find(j => j.id === profId)
+  return jd ? jd.label : null
 }
 
 function escH(s) {
@@ -113,6 +150,7 @@ export class PopulationModal {
     this.sortKey = 'name'
     this.sortDir = 1
     this.selectedId = null
+    this.openJobId = null
     this._loadPrefs()
     this._injectFrame()
     this._bindEvents()
@@ -162,6 +200,26 @@ export class PopulationModal {
 
       const th = e.target.closest('th[data-sort]')
       if (th) { this._sort(th.dataset.sort); return }
+
+      // Boutons d'assignation à un métier (priorité avant le clic carte)
+      const assignBtn = e.target.closest('.pv2-job-action')
+      if (assignBtn) {
+        e.stopPropagation()
+        const jid = assignBtn.dataset.jobId
+        const cid = assignBtn.dataset.cid
+        const action = assignBtn.dataset.action
+        this._toggleAssign(jid, cid, action)
+        return
+      }
+
+      // Clic sur une carte métier : toggle du sous-panneau
+      const jobCard = e.target.closest('.pv2-job-card')
+      if (jobCard && jobCard.dataset.jobId) {
+        const jid = jobCard.dataset.jobId
+        this.openJobId = (this.openJobId === jid) ? null : jid
+        this._renderBody()
+        return
+      }
     })
 
     this.panel.addEventListener('input', e => {
@@ -174,6 +232,19 @@ export class PopulationModal {
 
   _selectColon(id) {
     this.selectedId = id
+    this._renderBody()
+  }
+
+  _toggleAssign(jobId, colonistId, action) {
+    const raw = state.colonists.find(c => String(c.id) === String(colonistId))
+    if (!raw) return
+    if (action === 'remove') {
+      raw.profession = null
+    } else {
+      raw.profession = jobId
+    }
+    // Refermer le sous-panneau et rafraîchir l'affichage
+    this.openJobId = null
     this._renderBody()
   }
 
@@ -196,6 +267,7 @@ export class PopulationModal {
   setTab(id) {
     this.tab = id
     this.selectedId = null
+    this.openJobId = null
     this._savePrefs()
     this.render()
   }
@@ -316,17 +388,22 @@ export class PopulationModal {
 
   _htmlMetiers(colonists) {
     const cards = JOB_DEFS.map(jd => {
-      const assigned = colonists.filter(c => {
-        const cl = (c.job || '').toLowerCase()
-        return cl === jd.label.toLowerCase() || cl === jd.id
-      })
+      // Affectation se base sur la profession (champ piloté par l'UI)
+      const assigned = colonists.filter(c => c.profession === jd.id)
+      const skillName = JOB_SKILL[jd.id]
       const chips = assigned.length
-        ? assigned.map(c =>
-            '<span class="pv2-job-chip' + (c.chief ? ' chief' : '') + '">' + escH(c.name) + '</span>'
-          ).join('')
+        ? assigned.map(c => {
+            const lvl = skillName ? skillLevelOf(c._raw, skillName) : 0
+            const lvlTxt = lvl > 0 ? (' Niv.' + lvl) : ''
+            return '<span class="pv2-job-chip' + (c.chief ? ' chief' : '') + '">' +
+              escH(c.name) + escH(lvlTxt) + '</span>'
+          }).join('')
         : '<span class="pv2-job-empty">Personne</span>'
 
-      return '<div class="pv2-job-card">' +
+      const isOpen = this.openJobId === jd.id
+      const assignPanel = isOpen ? this._htmlJobAssignPanel(jd, colonists) : ''
+
+      return '<div class="pv2-job-card' + (isOpen ? ' open' : '') + '" data-job-id="' + escH(jd.id) + '">' +
         '<div class="pv2-job-head">' +
         '  <div class="pv2-job-icon">' + jd.icon + '</div>' +
         '  <div>' +
@@ -337,10 +414,43 @@ export class PopulationModal {
         '<div class="pv2-job-desc">' + escH(jd.desc) + '</div>' +
         '<div class="pv2-job-cap">Affectés : <b>' + assigned.length + '</b></div>' +
         '<div class="pv2-job-assigned">' + chips + '</div>' +
+        assignPanel +
         '</div>'
     })
 
     return '<div class="pv2-metiers">' + cards.join('') + '</div>'
+  }
+
+  _htmlJobAssignPanel(jd, colonists) {
+    const skillName = JOB_SKILL[jd.id]
+    const rows = colonists.map(c => {
+      const isCurrent = c.profession === jd.id
+      const otherJob = !isCurrent && c.profession ? jobLabelOf(c.profession) : null
+      const lvl = skillName ? skillLevelOf(c._raw, skillName) : 0
+      const lvlTxt = lvl > 0 ? '<span class="pv2-assign-lvl">Niv.' + lvl + '</span>' : ''
+      const meta = otherJob ? '<span class="pv2-assign-meta">(' + escH(otherJob) + ')</span>' : ''
+      const action = isCurrent ? 'remove' : 'assign'
+      const btnLabel = isCurrent ? 'Retirer' : 'Assigner'
+      const btnCls = 'pv2-job-action' + (isCurrent ? ' remove' : '')
+      return '<div class="pv2-assign-row' + (isCurrent ? ' current' : '') + '">' +
+        '<span class="pv2-assign-name">' +
+          (c.chief ? '<span class="pv2-chief-star">★</span> ' : '') +
+          escH(c.name) + ' ' + meta + ' ' + lvlTxt +
+        '</span>' +
+        '<button class="' + btnCls + '" data-action="' + action + '" data-job-id="' + escH(jd.id) + '" data-cid="' + escH(c.id) + '">' +
+          escH(btnLabel) +
+        '</button>' +
+        '</div>'
+    }).join('')
+
+    const body = colonists.length
+      ? rows
+      : '<div class="pv2-assign-empty">Aucun colon disponible.</div>'
+
+    return '<div class="pv2-job-assign">' +
+      '<div class="pv2-assign-title">Assigner à ' + escH(jd.label) + '</div>' +
+      body +
+      '</div>'
   }
 
   // ---- TAB COMPÉTENCES ----
