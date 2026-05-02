@@ -263,29 +263,24 @@ function _injectCairnButton() {
   if (!monumentGroup) {
     monumentGroup = document.createElement('div')
     monumentGroup.className = 'group monument'
-    monumentGroup.style.borderColor = 'rgba(255, 196, 80, 0.45)'
-    monumentGroup.innerHTML = '<span class="group-label" style="color:#ffd98a">MONUMENT</span>'
+    monumentGroup.innerHTML = '<span class="group-label">MONUMENT</span>'
     actionbar.appendChild(monumentGroup)
   }
-
-  if (monumentGroup.querySelector('[data-tool="cairn"]')) return
 
   _cairnBtn = document.createElement('button')
   _cairnBtn.className = 'tool locked'
   _cairnBtn.dataset.tool = 'cairn'
-  _cairnBtn.title = 'Poser le Cairn de pierre (passage au Bronze)'
-  _cairnBtn.innerHTML = 'Cairn<span class="cond">50🪨 20🪵 10🦴</span><span class="key">C</span>'
-  _cairnBtn.style.borderColor = 'rgba(255, 196, 80, 0.35)'
+  _cairnBtn.title = 'Poser le Cairn (passage à l\'âge du Bronze)'
+  _cairnBtn.innerHTML = '<span class="ic">🪨</span><span class="nm">Cairn</span><span class="key">C</span>'
+  monumentGroup.appendChild(_cairnBtn)
 
   _cairnBtn.addEventListener('click', _onCairnClick)
   _cairnBtn.addEventListener('mouseenter', _showCondTooltip)
   _cairnBtn.addEventListener('mouseleave', _hideCondTooltip)
 
-  monumentGroup.appendChild(_cairnBtn)
-
   window.addEventListener('keydown', (e) => {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return
-    if (e.key === 'c' || e.key === 'C') {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+    if ((e.key === 'c' || e.key === 'C') && !state.cairnPlacementMode) {
       e.preventDefault()
       _onCairnClick()
     }
