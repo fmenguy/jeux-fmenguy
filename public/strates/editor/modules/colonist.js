@@ -87,6 +87,7 @@ export class Colonist {
     this.targetBush = null
     this.targetBuildJob = null
     this.workTimer = 0
+    this.huntTimer = 0
     this.bounce = 0
     this.isWandering = false
     this.wanderPause = 2 + Math.random() * 4
@@ -233,6 +234,23 @@ export class Colonist {
     this.label.visible = true
     this.label.renderOrder = 998
     this.group.add(this.label)
+
+    // Arc du chasseur (cache par defaut)
+    const bowGroup = new THREE.Group()
+    const handleGeo = new THREE.BoxGeometry(0.04, 0.35, 0.04)
+    const woodMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 })
+    const handle = new THREE.Mesh(handleGeo, woodMat)
+    handle.position.set(0, 0, 0)
+    bowGroup.add(handle)
+    const stringGeo = new THREE.BoxGeometry(0.01, 0.30, 0.01)
+    const stringMat = new THREE.MeshLambertMaterial({ color: 0xcccccc })
+    const bowString = new THREE.Mesh(stringGeo, stringMat)
+    bowString.position.set(0.06, 0, 0)
+    bowGroup.add(bowString)
+    bowGroup.position.set(0.25, 0.1, 0)
+    bowGroup.visible = false
+    this.group.add(bowGroup)
+    this._bowGroup = bowGroup
   }
 
   say(line, isHint) {
@@ -519,6 +537,11 @@ export class Colonist {
     this.applyGravity(dt)
     this.updateSpeech(dt)
     this.faim = Math.max(0, this.faim - 0.5 * dt)
+    // Arc visible si chasseur de profession ou job de chasse en cours
+    if (this._bowGroup && this.state !== 'WORKING') {
+      const activeHunt = (this.targetJob && this.targetJob.kind === 'hunt')
+      this._bowGroup.visible = (this.profession === 'chasseur' || activeHunt)
+    }
     if (this.state !== 'MOVING' && this.legL) {
       const k = Math.min(1, dt * 8)
       this.legL.rotation.x *= (1 - k)
@@ -713,6 +736,23 @@ export class Colonist {
         this.lineGeo.setFromPoints([])
         return
       }
+      // Tir a distance : si job de chasse et cerf dans portee 6, arreter le deplacement
+      if (this.targetJob && this.targetJob.kind === 'hunt') {
+        const deerEntry = state.deers ? state.deers.find(d => d.x === this.targetJob.x && d.z === this.targetJob.z) : null
+        if (deerEntry) {
+          const huntDx = deerEntry.x - this.x
+          const huntDz = deerEntry.z - this.z
+          const huntDist = Math.hypot(huntDx, huntDz)
+          if (huntDist <= 6) {
+            this.state = 'WORKING'
+            this.workTimer = 0
+            this.huntTimer = 0
+            this.path = null
+            this.lineGeo.setFromPoints([])
+            return
+          }
+        }
+      }
       if (!this.path || this.pathStep >= this.path.length) {
         if (this.isWandering) {
           this.isWandering = false
@@ -777,9 +817,55 @@ export class Colonist {
         const dz = (focusTarget.z + 0.5) - this.tz
         this.group.rotation.y = Math.atan2(dx, dz)
       }
+      // Visibilite de l arc : afficher quand job de chasse actif
+      if (this._bowGroup) {
+        const isHunting = (this.targetJob && this.targetJob.kind === 'hunt') || this.profession === 'chasseur'
+        this._bowGroup.visible = !!isHunting
+      }
       this.bounce = Math.sin(this.workTimer * 12) * 0.08
       const grounded = this.ty <= topY(this.x, this.z) + 1e-4 && this.vy === 0
       this.group.position.set(this.tx, this.ty + (grounded ? Math.abs(this.bounce) : 0), this.tz)
+
+      // Tir a distance : job de chasse avec timer 0.8s
+      if (this.targetJob && this.targetJob.kind === 'hunt') {
+        this.huntTimer += dt
+        if (this.huntTimer < 0.8) return
+        // Tir declenche
+        const { x, z } = this.targetJob
+        const deerEntry = state.deers ? state.deers.find(d => d.x === x && d.z === z) : null
+        if (deerEntry) {
+          if (!techUnlocked('bow-wood')) {
+            removeJob(x, z, true)
+            this.targetJob = null
+            this.huntTimer = 0
+            this.state = 'IDLE'
+            if (this._bowGroup) this._bowGroup.visible = false
+            return
+          }
+          const deerIdx = state.deers.indexOf(deerEntry)
+          state.deers.splice(deerIdx, 1)
+          if (deerEntry.group.parent) deerEntry.group.parent.remove(deerEntry.group)
+          state.resources['raw-meat'] = (state.resources['raw-meat'] || 0) + 2
+          state.resources['bone']     = (state.resources['bone']     || 0) + 1
+          state.resources['hide']     = (state.resources['hide']     || 0) + 1
+          this.skills.hunting++
+          scheduleFlash(x, z)
+          removeJob(x, z, true)
+          state.gameStats.minesCompleted++
+        } else {
+          // Cerf disparu entre temps
+          removeJob(x, z, true)
+        }
+        this.targetJob = null
+        this.huntTimer = 0
+        this.currentTask = null
+        this.state = 'IDLE'
+        this.path = null
+        if (this._bowGroup) this._bowGroup.visible = (this.profession === 'chasseur')
+        this.group.position.set(this.tx, this.ty, this.tz)
+        return
+      }
+
       const duration = this.targetBush ? HARVEST_DURATION : (this.targetBuildJob ? 1.5 : WORK_DURATION)
       if (this.workTimer >= duration) {
         if (this.targetJob) {
@@ -822,49 +908,30 @@ export class Colonist {
               removeJob(x, z, true)
               state.gameStats.minesCompleted++
             } else {
-              const deerEntry = state.deers ? state.deers.find(d => d.x === x && d.z === z) : null
-              if (deerEntry) {
-                if (!techUnlocked('bow-wood')) {
-                  removeJob(x, z, true)
-                  this.targetJob = null
-                  this.state = 'IDLE'
-                  return
+              // Voxel terrain nu : le mineur retire la couche du dessus.
+              const k = z * GRID + x
+              const biomeHere = state.cellBiome[k]
+              const isRocky = biomeHere === 'rock' || biomeHere === 'snow'
+              if (!isRocky && !techUnlocked('shovel-stone')) {
+                // Biome ordinaire sans terraformation : annuler le job sans miner.
+                removeJob(x, z, true)
+              } else {
+                const top = state.cellTop[k]
+                if (top > MIN_STRATES && top > SHALLOW_WATER_LEVEL) {
+                  const idx = state.instanceIndex[z * GRID + x] ? state.instanceIndex[z * GRID + x][top - 1] : -1
+                  if (idx >= 0) {
+                    state.instanced.setMatrixAt(idx, HIDDEN_MATRIX)
+                    state.instanced.instanceMatrix.needsUpdate = true
+                    if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
+                    state.cellTop[k] = top - 1
+                    incrStockForBiome(biomeHere)
+                    if (isRocky) state.resources.stone++
+                    if (biomeHere === 'sand' && Math.random() < 0.35) { state.resources.silex++; state.stocks.silex++ }
+                    scheduleFlash(x, z)
+                  }
                 }
-                const deerIdx = state.deers.indexOf(deerEntry)
-                state.deers.splice(deerIdx, 1)
-                if (deerEntry.group.parent) deerEntry.group.parent.remove(deerEntry.group)
-                state.resources['raw-meat'] = (state.resources['raw-meat'] || 0) + 2
-                state.resources.bone = (state.resources.bone || 0) + 1
-                this.skills.hunting++
-                scheduleFlash(x, z)
                 removeJob(x, z, true)
                 state.gameStats.minesCompleted++
-              } else {
-                // Voxel terrain nu : le mineur retire la couche du dessus.
-                const k = z * GRID + x
-                const biomeHere = state.cellBiome[k]
-                const isRocky = biomeHere === 'rock' || biomeHere === 'snow'
-                if (!isRocky && !techUnlocked('shovel-stone')) {
-                  // Biome ordinaire sans terraformation : annuler le job sans miner.
-                  removeJob(x, z, true)
-                } else {
-                  const top = state.cellTop[k]
-                  if (top > MIN_STRATES && top > SHALLOW_WATER_LEVEL) {
-                    const idx = state.instanceIndex[z * GRID + x] ? state.instanceIndex[z * GRID + x][top - 1] : -1
-                    if (idx >= 0) {
-                      state.instanced.setMatrixAt(idx, HIDDEN_MATRIX)
-                      state.instanced.instanceMatrix.needsUpdate = true
-                      if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
-                      state.cellTop[k] = top - 1
-                      incrStockForBiome(biomeHere)
-                      if (isRocky) state.resources.stone++
-                      if (biomeHere === 'sand' && Math.random() < 0.35) { state.resources.silex++; state.stocks.silex++ }
-                      scheduleFlash(x, z)
-                    }
-                  }
-                  removeJob(x, z, true)
-                  state.gameStats.minesCompleted++
-                }
               }
             }
           }
