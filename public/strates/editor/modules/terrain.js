@@ -226,9 +226,6 @@ export function buildTerrain() {
     }
   }
 
-  // Zones fertiles : herbe ou foret avec biomeNoise faible OU proche de l eau/sable
-  computeFertileCells()
-
   if (state.instanced) {
     scene.remove(state.instanced)
     state.instanced.dispose()
@@ -272,11 +269,13 @@ export function buildTerrain() {
   state.instanced.instanceMatrix.needsUpdate = true
   if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
   scene.add(state.instanced)
+  computeFertileCells()
   for (let z = 0; z < GRID; z++) {
     for (let x = 0; x < GRID; x++) {
       if (state.cellFertile[z * GRID + x]) repaintCellSurface(x, z)
     }
   }
+  console.log('[fertile] cells marked:', Array.from(state.cellFertile).filter(v => v).length)
 }
 
 // Reconstruit l'InstancedMesh a partir de state.cellTop et state.cellBiome deja
@@ -387,7 +386,7 @@ export function repaintCellSurface(x, z) {
     const j = 0.06 * (jitter - Math.floor(jitter) - 0.5)
     tmpColor.offsetHSL(0, 0, j)
     if (state.cellFertile && state.cellFertile[k]) {
-      tmpColor.lerp(FERTILE_TINT, 0.28)
+      tmpColor.lerp(FERTILE_TINT, 0.55)
     }
   }
   const i = topVoxelIndex(x, z)
