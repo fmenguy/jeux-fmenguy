@@ -708,7 +708,13 @@ function applyToolAtCell(cell) {
       break
     }
     case 'observatory':
-      if (!isCellOccupied(cell.x, cell.z)) addObservatory(cell.x, cell.z)
+      if ((state.resources.stone || 0) < 5) {
+        showHudToast('Pas assez de pierre (5 requis).', 2500)
+        return
+      }
+      if (!isCellOccupied(cell.x, cell.z)) {
+        if (addObservatory(cell.x, cell.z)) state.resources.stone -= 5
+      }
       break
     case 'place-big-house': {
       if (!techUnlocked('big-house')) break
@@ -851,7 +857,13 @@ function applyToolToStrata(cells) {
         break
       }
       case 'observatory':
-        if (!isCellOccupied(c.x, c.z)) addObservatory(c.x, c.z)
+        if ((state.resources.stone || 0) < 5) {
+          showHudToast('Pas assez de pierre (5 requis).', 2500)
+          break
+        }
+        if (!isCellOccupied(c.x, c.z)) {
+          if (addObservatory(c.x, c.z)) state.resources.stone -= 5
+        }
         break
       case 'place-big-house': {
         if (!techUnlocked('big-house')) break
