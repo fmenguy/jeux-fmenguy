@@ -1,0 +1,1466 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Strates — Mindmap de conception · v0.4</title>
+<style>
+  /* v0.3 — Axe Social injected banner */
+  .v03-banner{position:sticky;top:0;z-index:100;background:#fff6c9;border-bottom:1.5px dashed #d94a2c;padding:10px 28px;font-family:'Kalam',system-ui,sans-serif;font-size:13.5px;color:#1f1a14}
+  .v03-banner b{font-family:'Caveat',cursive;font-weight:700;font-size:20px;color:#d94a2c;margin-right:8px}
+  .v03-social{margin:18px 28px;padding:16px 20px;border:1.5px solid #1f1a14;border-radius:6px 10px 8px 12px/10px 6px 12px 8px;background:#f4efe4;box-shadow:2px 3px 0 rgba(31,26,20,.06);font-family:'Kalam',system-ui,sans-serif}
+  .v03-social h3{font-family:'Caveat',cursive;font-weight:700;font-size:30px;margin:0 0 6px;color:#6a4a8a}
+  .v03-social h4{font-family:'Caveat',cursive;font-weight:700;font-size:20px;margin:10px 0 4px;color:#3a3026}
+  .v03-social ul{margin:4px 0 4px 20px;padding:0;font-size:13.5px;line-height:1.45}
+  .v03-social .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+  .v03-social .col{background:#ece4d1;border:1.5px dashed #1f1a14;border-radius:5px;padding:10px 12px}
+  .v03-social small{display:block;font-size:12px;color:#7a6d5c;margin-top:6px;font-style:italic}
+  @media(max-width:900px){.v03-social .cols{grid-template-columns:1fr}}
+</style>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --paper: #f4efe4;
+    --paper-2: #ece4d1;
+    --paper-3: #e3d9c2;
+    --ink: #1f1a14;
+    --ink-soft: #3a3026;
+    --ink-faint: #7a6d5c;
+    --rule: #c9bfa6;
+    --fog: #d9cfb9;
+    --accent-tech: #2f6b5a;        /* vert forêt */
+    --accent-build: #b05a2c;       /* terracotta */
+    --accent-comm: #3d5a99;        /* bleu encre */
+    --accent-core: #8a5a2b;
+    --accent-time: #6a4a8a;
+    --accent-night: #1b2540;
+    --accent-day: #d9a441;
+    --wood: #8b5a2b;
+    --stone: #6b6b68;
+    --food: #9b7a2c;
+    --hl: #d94a2c;
+    --shadow: 0 1px 0 rgba(31,26,20,.08), 0 2px 6px rgba(31,26,20,.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Kalam', system-ui, sans-serif; }
+
+  /* Paper texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(139,90,43,.06), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(61,90,153,.05), transparent 40%),
+      repeating-linear-gradient(0deg, transparent 0 28px, rgba(31,26,20,.02) 28px 29px),
+      repeating-linear-gradient(90deg, transparent 0 28px, rgba(31,26,20,.015) 28px 29px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #root { position: relative; z-index: 1; }
+
+  /* Typography */
+  .h-hand { font-family: 'Caveat', cursive; font-weight: 700; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Sketchy borders via filter=url(#squiggle) on inline SVGs or box with dashed */
+  .sketch-box {
+    border: 1.5px solid var(--ink);
+    border-radius: 6px 10px 8px 12px / 10px 6px 12px 8px;
+    background: var(--paper);
+    box-shadow: var(--shadow), 2px 3px 0 rgba(31,26,20,.06);
+    padding: 10px 12px;
+    position: relative;
+  }
+  .sketch-box.tight { padding: 6px 9px; border-radius: 5px 8px 6px 9px / 8px 5px 9px 6px; }
+  .sketch-box.dashed { border-style: dashed; }
+  .sketch-box.ghost { opacity: .45; }
+
+  /* Header */
+  header.top {
+    position: sticky; top: 0; z-index: 10;
+    background: linear-gradient(180deg, var(--paper) 70%, rgba(244,239,228,.85));
+    backdrop-filter: blur(4px);
+    border-bottom: 1.5px solid var(--ink);
+    padding: 14px 28px 10px;
+  }
+  .brandrow { display:flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .brand { font-family: 'Caveat', cursive; font-size: 40px; font-weight: 700; letter-spacing: .5px; line-height: 1; }
+  .brand .strata { display: inline-block; }
+  .brand .strata span { display:inline-block; }
+  .sub { font-family: 'Kalam'; font-size: 14px; color: var(--ink-faint); }
+
+  .tabs {
+    display: flex; gap: 4px; margin-top: 10px; flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .tab {
+    font-family: 'Caveat', cursive; font-weight: 600; font-size: 22px;
+    padding: 6px 14px 4px; cursor: pointer;
+    border: 1.5px solid var(--ink); border-bottom: none;
+    background: var(--paper-2); color: var(--ink-soft);
+    border-radius: 10px 14px 0 0 / 14px 10px 0 0;
+    transform: translateY(1.5px);
+    transition: background .15s, transform .1s;
+    user-select: none;
+  }
+  .tab:hover { background: var(--paper-3); }
+  .tab.active { background: var(--paper); color: var(--ink); border-bottom: 1.5px solid var(--paper); transform: translateY(1.5px); font-weight: 700; }
+  .tab .num { font-family: 'JetBrains Mono'; font-size: 12px; color: var(--ink-faint); margin-right: 6px; }
+
+  /* Controls */
+  .ctrlbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .chip {
+    font-family:'Kalam'; font-size: 13px; padding: 2px 10px;
+    border:1.5px solid var(--ink); border-radius: 999px;
+    background: var(--paper); cursor: pointer; user-select:none;
+    display:inline-flex; align-items:center; gap: 6px;
+  }
+  .chip.on { background: var(--ink); color: var(--paper); }
+  .chip .dot { width:8px; height:8px; border-radius: 50%; background: currentColor; display:inline-block; }
+
+  /* Main frame */
+  main { padding: 22px 28px 80px; }
+
+  /* Ages grid */
+  .ages-head {
+    display: grid;
+    grid-template-columns: 140px repeat(var(--n, 7), minmax(180px, 1fr));
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 4px;
+  }
+  .age-col-head { text-align: center; padding-bottom: 6px; border-bottom: 1.5px dashed var(--ink); }
+  .age-col-head .roman { font-family:'Caveat'; font-size: 28px; font-weight: 700; line-height: 1; }
+  .age-col-head .name { font-family:'Kalam'; font-size: 14px; color: var(--ink-soft); }
+  .age-col-head.fog { color: var(--ink-faint); border-bottom-color: var(--rule); }
+  .age-col-head.fog .roman { color: var(--ink-faint); }
+
+  .row-head { font-family:'Caveat'; font-size: 22px; font-weight: 700; padding-top: 8px;
+    writing-mode: vertical-rl; transform: rotate(180deg); text-align: center;
+    border-right: 1.5px dashed var(--ink); }
+
+  .row-head .sub { display:block; writing-mode: horizontal-tb; transform: none; font-family:'Kalam'; font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
+
+  /* Strata row */
+  .strata-row {
+    display: grid;
+    grid-template-columns: 140px repeat(var(--n, 7), minmax(180px, 1fr));
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1.5px solid var(--ink);
+    position: relative;
+  }
+  .strata-row:first-of-type { border-top: none; }
+  .strata-row.tech    { background: linear-gradient(90deg, rgba(47,107,90,.05), transparent 20%); }
+  .strata-row.build   { background: linear-gradient(90deg, rgba(176,90,44,.05), transparent 20%); }
+  .strata-row.comm    { background: linear-gradient(90deg, rgba(61,90,153,.05), transparent 20%); }
+
+  .strata-label {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 6px; padding: 8px 4px;
+  }
+  .strata-label .icon {
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    display:grid; place-items:center;
+    font-family:'Caveat'; font-weight: 700; font-size: 22px;
+    background: var(--paper);
+  }
+  .strata-label .name { font-family:'Caveat'; font-size: 22px; font-weight: 700; line-height: 1; text-align: center; }
+  .strata-label .tag { font-family:'JetBrains Mono'; font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1px; }
+
+  .tech  .icon { background: var(--accent-tech); color: var(--paper); border-color: var(--accent-tech); }
+  .build .icon { background: var(--accent-build); color: var(--paper); border-color: var(--accent-build); }
+  .comm  .icon { background: var(--accent-comm); color: var(--paper); border-color: var(--accent-comm); }
+
+  /* Age cell */
+  .age-cell {
+    min-height: 110px;
+    padding: 6px 4px;
+    display: flex; flex-direction: column; gap: 6px;
+    position: relative;
+  }
+  .age-cell.fog {
+    position: relative;
+  }
+  .age-cell.fog::after {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(45deg, rgba(217,207,185,.7) 0 6px, rgba(217,207,185,.4) 6px 12px);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  .age-cell.fog .fog-label {
+    position: absolute; inset: 0; display:grid; place-items:center;
+    font-family:'Caveat'; font-size: 20px; color: var(--ink-faint);
+    z-index: 2; pointer-events: none;
+    transform: rotate(-4deg);
+  }
+
+  /* Node card */
+  .node {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 5px 9px 6px 10px / 9px 5px 10px 6px;
+    padding: 5px 8px;
+    font-size: 14px;
+    line-height: 1.15;
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer;
+    transition: transform .08s, box-shadow .08s, background .15s;
+    box-shadow: 1px 2px 0 rgba(31,26,20,.06);
+  }
+  .node:hover { transform: translate(-1px, -1px); box-shadow: 2px 3px 0 rgba(31,26,20,.1); }
+  .node .bullet {
+    font-family:'Caveat'; font-size: 16px; font-weight:700;
+    width: 18px; text-align: center; flex-shrink: 0;
+  }
+  .node .lbl { flex: 1; }
+  .node .meta { font-family:'JetBrains Mono'; font-size: 10px; color: var(--ink-faint); }
+  .node.tech  { border-left: 4px solid var(--accent-tech); }
+  .node.build { border-left: 4px solid var(--accent-build); }
+  .node.comm  { border-left: 4px solid var(--accent-comm); }
+  .node.night { background: var(--accent-night); color: var(--paper); border-color: var(--accent-night); }
+  .node.night .meta { color: rgba(244,239,228,.6); }
+  .node.dimmed { opacity: .25; filter: grayscale(.6); }
+  .node.chain-hl { background: #fff6c9; border-color: var(--hl); box-shadow: 0 0 0 2px rgba(217,74,44,.3); }
+  .node.job-hl { background: #e6f2ec; border-color: var(--accent-tech); }
+
+  /* Dep arrows container */
+  .deps-svg { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+
+  /* Two column splits */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  /* Section heading */
+  h2.sec { font-family:'Caveat'; font-weight:700; font-size: 34px; margin: 0 0 4px; line-height: 1; }
+  h2.sec .n { font-family:'JetBrains Mono'; font-size: 14px; color: var(--ink-faint); margin-right: 8px; vertical-align: middle; }
+  .sec-desc { font-family:'Kalam'; color: var(--ink-soft); font-size: 14px; margin: 0 0 16px; max-width: 820px; }
+
+  .pill {
+    display: inline-block; padding: 1px 8px; border: 1.5px solid var(--ink);
+    border-radius: 999px; font-family:'JetBrains Mono'; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    background: var(--paper);
+  }
+  .pill.tech  { border-color: var(--accent-tech); color: var(--accent-tech); }
+  .pill.build { border-color: var(--accent-build); color: var(--accent-build); }
+  .pill.comm  { border-color: var(--accent-comm); color: var(--accent-comm); }
+  .pill.core  { border-color: var(--accent-core); color: var(--accent-core); }
+  .pill.night { background: var(--accent-night); color: var(--paper); border-color: var(--accent-night); }
+  .pill.day   { background: var(--accent-day); color: var(--ink); border-color: var(--ink); }
+
+  /* Chain track */
+  .chain {
+    display:flex; align-items:center; gap:8px; flex-wrap: wrap;
+    padding: 10px 12px; border: 1.5px solid var(--ink); border-radius: 8px 12px 10px 14px / 12px 8px 14px 10px;
+    background: var(--paper);
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+  .chain:hover { background: #fff6c9; }
+  .chain .link { font-family:'Caveat'; font-size: 22px; }
+  .chain .step {
+    padding: 3px 9px; border: 1.5px solid var(--ink); border-radius: 4px 8px 5px 9px / 8px 4px 9px 5px;
+    font-family:'Kalam'; font-size: 14px; background: var(--paper-2);
+  }
+  .chain .step.res  { background: #f1e7cf; }
+  .chain .step.tech { background: #d9ebe3; }
+  .chain .step.build{ background: #f1dcc9; }
+  .chain .step.job  { background: #d9e0f1; }
+  .chain .step.need { background: #f7dcd4; }
+  .chain-title { font-family:'Caveat'; font-weight:700; font-size: 22px; margin: 0 0 8px; }
+  .chain-title .ic { margin-right: 8px; }
+
+  /* Villager card */
+  .vill-card { padding: 14px; }
+  .vill-state { display:flex; align-items:flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--rule); }
+  .vill-state:last-child { border-bottom: none; }
+  .vill-state .icon { font-family:'Caveat'; font-size: 22px; width: 34px; text-align: center; }
+
+  /* Day/Night toggle */
+  .daynight {
+    display: inline-flex; border: 1.5px solid var(--ink); border-radius: 999px; overflow: hidden;
+    font-family:'Kalam'; font-size: 13px; cursor: pointer; user-select:none;
+  }
+  .daynight > div { padding: 3px 14px; }
+  .daynight .d { background: var(--accent-day); }
+  .daynight .n { background: var(--accent-night); color: var(--paper); }
+  .daynight.night .d { background: var(--paper); }
+  .daynight.night .n { background: var(--accent-night); color: var(--paper); }
+  .daynight.day .d { background: var(--accent-day); color: var(--ink); }
+  .daynight.day .n { background: var(--paper); color: var(--ink); }
+
+  /* Season wheel */
+  .season-wheel { width: 280px; height: 280px; margin: 0 auto; }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 14px; flex-wrap: wrap; font-family:'Kalam'; font-size: 12px; color: var(--ink-soft);
+    padding: 8px 12px; border: 1.5px dashed var(--ink); border-radius: 8px;
+    background: var(--paper-2);
+    margin-bottom: 14px;
+  }
+  .legend .item { display:inline-flex; align-items:center; gap: 6px; }
+  .legend .sw { width: 14px; height: 14px; border: 1.5px solid var(--ink); border-radius: 3px; }
+
+  /* small helpers */
+  .muted { color: var(--ink-faint); }
+  .nowrap { white-space: nowrap; }
+  hr.wavy {
+    border: none; height: 8px; background-image:
+      radial-gradient(circle at 4px 4px, var(--ink) 1px, transparent 2px);
+    background-size: 8px 8px; background-repeat: repeat-x; opacity: .3;
+    margin: 18px 0;
+  }
+
+  /* Arrow deco in headers */
+  .arrow-future {
+    font-family:'Caveat'; font-size: 18px; color: var(--ink-faint);
+    display:inline-flex; align-items:center; gap:6px;
+  }
+
+  /* Hand-drawn underline */
+  .ul-hand {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10'><path d='M2 6 C 20 2, 40 9, 60 5 S 95 3, 98 7' stroke='%231f1a14' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat; background-position: 0 100%; background-size: 100% 6px;
+    padding-bottom: 6px;
+  }
+
+  /* Tweaks panel */
+  #tweaks {
+    position: fixed; right: 18px; bottom: 18px; z-index: 50;
+    width: 300px; background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 8px 14px 10px 16px / 14px 8px 16px 10px;
+    box-shadow: 4px 6px 0 rgba(31,26,20,.1);
+    padding: 12px 14px; display:none;
+    font-family:'Kalam'; font-size: 13px;
+  }
+  #tweaks.open { display: block; }
+  #tweaks h3 { font-family:'Caveat'; font-size: 22px; margin: 0 0 4px; }
+  #tweaks .row { display:flex; justify-content: space-between; align-items:center; padding: 4px 0; }
+  #tweaks label { cursor: pointer; }
+  #tweaks select, #tweaks input[type=range] { font-family:'Kalam'; }
+
+  /* POC gallery for dep styles */
+  .poc-card { padding: 12px; min-height: 260px; position: relative; }
+  .poc-card h4 { font-family:'Caveat'; font-size: 22px; margin: 0 0 6px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .ages-head, .strata-row { grid-template-columns: 110px repeat(var(--n,7), minmax(140px, 1fr)); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="v03-banner"><b>v0.4 · 2026-05-02 ·</b> Tech tree XXL livré (source brute <code>public/strates/techtree-v2.html</code>) · nouvel axe <b style="color:#6a4a8a">Social</b> à intégrer ↓ · <a href="age-pierre-pilotage-v0.3.html" style="color:#3d5a99">◄ voir pilotage Âge de Pierre v0.3</a></div>
+
+  <section class="v03-social">
+    <h3>🫂 Axe Social — à intégrer comme 4e strate</h3>
+    <p style="margin:0">En complément des 3 strates existantes (<b>Technologie</b>, <b>Bâtiments</b>, <b>Communauté</b>), on ajoute un <b>4e axe Social</b> qui gère les liens entre colons et structure la vie du village dans la durée. C'est ce qui transforme une colonie d'ouvriers en <i>tribu</i>.</p>
+
+    <div class="cols">
+      <div class="col">
+        <h4>💞 Couples</h4>
+        <ul>
+          <li>2 colons adultes logés dans la même Cabane peuvent se « lier » (affinité passive au fil du temps)</li>
+          <li>État <b>en couple</b> affiché sur fiche colon + bulle « ❤️ » occasionnelle</li>
+          <li>Bonus de moral mutuel, malus en cas de séparation / décès</li>
+          <li>Prérequis à la reproduction naturelle (axe Communauté → Besoins)</li>
+        </ul>
+        <small>Âge I : optionnel / tease — Âge Bronze : mécanique active</small>
+      </div>
+
+      <div class="col">
+        <h4>👶 Parent / Enfant</h4>
+        <ul>
+          <li>Couple logé → bébé après délai (saisonnier) ; enfant non-productif pendant N saisons</li>
+          <li>Lignée tracée : nom de famille / ascendance visible sur fiche</li>
+          <li>Enfants héritent d'un biais de métier (XP bonus) du parent majoritaire</li>
+          <li>Mort d'un parent → état <b>orphelin</b> (malus moral, adoption possible)</li>
+        </ul>
+        <small>Enrichit les fiches personnages et donne du poids aux décès</small>
+      </div>
+
+      <div class="col">
+        <h4>🪶 Hiérarchie</h4>
+        <ul>
+          <li>Chef par défaut (François), succession à sa mort (fils aîné / doyen / élu selon tech)</li>
+          <li>Rôles sociaux : <b>Sage</b> (Hutte du sage), <b>Chaman</b> (Totem), <b>Chasseur en chef</b></li>
+          <li>Influence : le chef a un bonus de moral de zone, un décret actif (priorité colonie)</li>
+          <li>Structure évolue avec l'âge : tribu (Pierre) → conseil (Bronze) → royaume (Fer)</li>
+        </ul>
+        <small>Lien direct avec axe Communauté → Métiers + Tech tree → Savoir</small>
+      </div>
+    </div>
+
+    <h4 style="margin-top:14px">🔗 Intégrations avec les 3 axes existants</h4>
+    <ul>
+      <li><b>Communauté</b> : nouvelles catégories <i>Liens</i> (couples, famille) + <i>Statuts sociaux</i> (chef, sage, enfant)</li>
+      <li><b>Tech tree — branche Savoir</b> : nouvelles techs <i>Rites de passage</i>, <i>Filiation</i>, <i>Conseil des anciens</i> (Bronze+)</li>
+      <li><b>Bâtiments</b> : Totem et Cairn deviennent des <i>lieux sociaux</i> (mariages, funérailles, passages d'âge d'enfant)</li>
+      <li><b>Besoins</b> : nouveau besoin <i>Lien social</i> (solitude → malus moral), satisfait par repas communs au Foyer / veillées au Promontoire</li>
+    </ul>
+
+    <small>↳ À préciser dans la prochaine itération : contenu par âge, règles de succession, affichage UI (arbre généalogique simplifié ?). Pour l'Âge de Pierre, on se limite à : couples liables + 1 enfant possible + chef par défaut.</small>
+  </section>
+
+  <div id="root"></div>
+
+  <script type="application/json" id="game-data">
+  {
+    "ages": [
+      { "roman": "I",   "name": "Pierre",       "era": "Survie, cueillette, abri" },
+      { "roman": "II",  "name": "Bronze",       "era": "Agriculture, artisanat" },
+      { "roman": "III", "name": "Fer",          "era": "Fortification, exploration" },
+      { "roman": "IV",  "name": "Industriel",   "era": "Production, ports" },
+      { "roman": "V",   "name": "Moderne",      "era": "Automatisation, santé" },
+      { "roman": "VI",  "name": "Atomique",     "era": "Nucléaire, recherche" },
+      { "roman": "VII", "name": "Espace",       "era": "Endgame, orbital" }
+    ],
+    "tree_tech": {
+      "Outils":        [["Hache pierre","Pioche pierre","Arc","Terraformation"],["Hache bronze","Pioche bronze","Pelle bronze"],["Pioche fer","Houe fer","Pioche or"],["Machine à vapeur"],[],[],[]],
+      "Agriculture":   [["Cueillette améliorée","Premier champ"],["Champ de blé","Grenier"],["Irrigation","Moulin"],[],[],[],[]],
+      "Construction":  [["Maîtrise du feu","Grosse maison"],["Forge","Route pavée"],["Château fort"],[],[],[],["Fusée orbitale"]],
+      "Savoir":        [["Recherche de base","Tradition orale"],["Écriture"],["Bibliothèque"],[],["Électricité"],["Énergie nucléaire"],[]],
+      "Exploration":   [[],["Éclaireur","Cartographie","Routes comm."],["Tour de vigie","Grande expédition"],["Navigation"],["Colonies"],[],[]],
+      "Nocturne 🌙":   [["Promontoire*","Astronomie I"],[],["Observatoire*"],[],["Grand télescope*"],["Radio-télescope*"],["Portail orbital*"]]
+    },
+    "tree_build": {
+      "Habitation":    [["Cabane (+2)"],["Maison (+5)"],["Manoir (+12)"],["Château (+28)"],[],["Palais (+60)"],["Arcologie (+200)"]],
+      "Recherche":     [["Laboratoire +1"],["Grand Labo +4"],["Académie +12"],["Université +30"],["Institut +80"],[],["Labo orbital +250"]],
+      "Alimentation":  [["Champ (2)"],["Ferme (6)","Moulin","Boulangerie"],["Domaine (16)"],["Plantation (40)"],["Agroindustrie (100)"],[],["Serre hydroponique (400)"]],
+      "Production":    [["Foyer","Scierie"],["Forge"],["Fonderie"],["Usine"],["Complexe indus."],[],["Manufacture auto."]],
+      "Maritime":      [[],[],["Quai rudimentaire"],["Port (pêche)"],["Port commercial"],["Port spatial"],[]],
+      "Monuments":     [["Totem (+1 moral)"],["Statue"],["Temple"],[],["Monument national"],[],["Portail orbital"]]
+    },
+    "tree_comm": {
+      "Besoins":       [["Abri + viande/baies"],["Logement + pain + vêtements"],["Confort + variété + sécurité"],["Loisirs + culture + école"],["Santé avancée + bien-être"],["Tech quotidienne"],["Transcendance"]],
+      "Métiers jour":  [["Bûcheron","Chasseur","Cueilleur","Mineur"],["Agriculteur","Forgeron","Bricoleur","Boulanger"],["Meunier","Pêcheur†","Bâtisseur","Soldat"],["Ouvrier","Marin","Ingénieur","Médecin"],["Scientifique","Pilote","Enseignant"],["Technicien nucléaire"],["Astronaute"]],
+      "Métiers nuit":  [["Astronome*"],[],["Veilleur*","Alchimiste*"],[],["Astrophysicien*"],["Radio-opérateur*"],["Portalier*"]],
+      "IA villageois": [["File de tâches","Nav autonome"],["Priorités survie>travail>loisir","Sommeil nuit"],["Routes auto (recherche)"],["Loisirs + culture"],["Santé auto"],[],[]],
+      "États":         [["Faim","Sans-abri","Flâne","En travail"],["+ Maladie","+ Froid (hiver)"],["+ Moral","+ Loyauté"],[],[],[],[]]
+    },
+    "chains": [
+      { "key":"bois",  "icon":"🪵", "title":"Bois → Planches → Construction",
+        "steps":[ {"k":"res","l":"Bois"}, {"k":"tech","l":"Hache pierre"}, {"k":"build","l":"Scierie"}, {"k":"res","l":"Planches"}, {"k":"job","l":"Bricoleur / Charpentier"} ] },
+      { "key":"ble",   "icon":"🌾", "title":"Blé → Farine → Pain",
+        "steps":[ {"k":"build","l":"Champ de blé"}, {"k":"build","l":"Moulin"}, {"k":"res","l":"Farine"}, {"k":"build","l":"Boulangerie"}, {"k":"res","l":"Pain"}, {"k":"job","l":"Boulanger"}, {"k":"need","l":"Faim (âge 2+)"} ] },
+      { "key":"chasse","icon":"🦌", "title":"Chasse → Survie hiver",
+        "steps":[ {"k":"job","l":"Chasseur"}, {"k":"res","l":"Viande"}, {"k":"res","l":"Os + Peau"}, {"k":"build","l":"Atelier cuir"}, {"k":"res","l":"Vêtements"}, {"k":"need","l":"Froid hiver"} ] },
+      { "key":"metal", "icon":"⛏️", "title":"Minerai → Outils → Tiers",
+        "steps":[ {"k":"res","l":"Pierre/Cuivre"}, {"k":"build","l":"Foyer"}, {"k":"res","l":"Bronze"}, {"k":"build","l":"Forge"}, {"k":"res","l":"Fer/Acier"}, {"k":"build","l":"Fonderie"}, {"k":"res","l":"Or"}, {"k":"job","l":"Forgeron"} ] },
+      { "key":"mer",   "icon":"🌊", "title":"Exploration → Pêche → Commerce",
+        "steps":[ {"k":"tech","l":"Éclaireur"}, {"k":"tech","l":"Cartographie"}, {"k":"tech","l":"Navigation"}, {"k":"build","l":"Port"}, {"k":"job","l":"Pêcheur"}, {"k":"res","l":"Poisson"}, {"k":"build","l":"Port commercial"}, {"k":"res","l":"Commerce"} ] },
+      { "key":"nuit",  "icon":"🌙", "title":"Ciel → Points nocturnes → Endgame",
+        "steps":[ {"k":"build","l":"Promontoire"}, {"k":"job","l":"Astronome"}, {"k":"res","l":"Points nocturnes"}, {"k":"tech","l":"Recherches nuit"}, {"k":"build","l":"Observatoire"}, {"k":"build","l":"Radio-télescope"}, {"k":"build","l":"Portail orbital"} ] }
+    ],
+    "jobs": [
+      { "name":"Bûcheron",   "age":1, "req":[{"k":"tech","l":"Hache pierre"}], "out":[{"k":"res","l":"Bois"}] },
+      { "name":"Cueilleur",  "age":1, "req":[], "out":[{"k":"res","l":"Baies"}] },
+      { "name":"Chasseur",   "age":1, "req":[], "out":[{"k":"res","l":"Viande"},{"k":"res","l":"Os"},{"k":"res","l":"Peau"}] },
+      { "name":"Mineur",     "age":1, "req":[{"k":"tech","l":"Pioche pierre"}], "out":[{"k":"res","l":"Pierre, Cuivre"}] },
+      { "name":"Astronome*", "age":1, "req":[{"k":"build","l":"Promontoire"}], "out":[{"k":"res","l":"Pts nocturnes"}], "night":true },
+      { "name":"Agriculteur","age":2, "req":[{"k":"build","l":"Champ"}], "out":[{"k":"res","l":"Blé"}] },
+      { "name":"Forgeron",   "age":2, "req":[{"k":"build","l":"Forge"}], "out":[{"k":"res","l":"Outils métal"}] },
+      { "name":"Bricoleur",  "age":2, "req":[{"k":"build","l":"Scierie"}], "out":[{"k":"res","l":"Planches"}] },
+      { "name":"Boulanger",  "age":2, "req":[{"k":"build","l":"Boulangerie"}], "out":[{"k":"res","l":"Pain"}] },
+      { "name":"Meunier",    "age":3, "req":[{"k":"build","l":"Moulin"}], "out":[{"k":"res","l":"Farine"}] },
+      { "name":"Pêcheur",    "age":3, "req":[{"k":"build","l":"Port"}], "out":[{"k":"res","l":"Poisson"}] },
+      { "name":"Bâtisseur",  "age":3, "req":[{"k":"res","l":"Planches"},{"k":"res","l":"Pierre"}], "out":[{"k":"res","l":"Constructions"}] },
+      { "name":"Explorateur","age":2, "req":[{"k":"tech","l":"Éclaireur"}], "out":[{"k":"res","l":"Carte"}] },
+      { "name":"Médecin",    "age":4, "req":[{"k":"build","l":"Infirmerie"}], "out":[{"k":"res","l":"Soins"}] },
+      { "name":"Ingénieur",  "age":4, "req":[{"k":"build","l":"Université"}], "out":[{"k":"res","l":"Recherche+"}] }
+    ]
+  }
+  </script>
+
+  <!-- Speaker notes: none (ce n'est pas un deck) -->
+
+  <script type="text/babel" data-presets="react">
+  /* ============================================================
+     Strates — Mindmap de conception
+     Document à onglets, low-fi sketchy
+     ============================================================ */
+
+  const DATA = JSON.parse(document.getElementById('game-data').textContent);
+  const { useState, useMemo, useEffect, useRef } = React;
+
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "revealAges": true,
+    "orientation": "horizontal",
+    "dayNight": "day"
+  }/*EDITMODE-END*/;
+
+  // ---- small helpers
+  const cls = (...xs) => xs.filter(Boolean).join(' ');
+
+  // ---- Top header with tabs
+  function Header({ tab, setTab }) {
+    const TABS = [
+      ["overview",   "Vue d'ensemble"],
+      ["trees",      "Les 3 arbres"],
+      ["core",       "Systèmes core"],
+      ["villagers",  "Villageois IA"],
+      ["jobs",       "Métiers & chaînes"],
+      ["time",       "Temps & saisons"],
+      ["pocs",       "POCs dépendances"]
+    ];
+    return (
+      <header className="top">
+        <div className="brandrow">
+          <div className="brand"><span className="strata">STRATES</span></div>
+          <div className="sub">— mindmap de conception · jeu de colonisation voxel · v0.1</div>
+        </div>
+        <div className="tabs">
+          {TABS.map(([id, name], i) => (
+            <div key={id} className={cls('tab', tab===id && 'active')} onClick={()=>setTab(id)}>
+              <span className="num">{String(i+1).padStart(2,'0')}</span>{name}
+            </div>
+          ))}
+        </div>
+      </header>
+    );
+  }
+
+  // ---- AgeHeader row
+  function AgeHeader({ revealAges, nVisible, n }) {
+    return (
+      <div className="ages-head" style={{ '--n': n }}>
+        <div className="row-head" style={{ border: 'none' }}>
+          <span className="h-hand" style={{ fontSize: 22 }}>arbres ↓</span>
+          <span className="sub">âges →</span>
+        </div>
+        {DATA.ages.slice(0, n).map((a, i) => {
+          const fog = !revealAges && i >= nVisible;
+          return (
+            <div key={i} className={cls('age-col-head', fog && 'fog')}>
+              <div className="roman">Âge {a.roman}</div>
+              <div className="name ul-hand">{a.name}</div>
+              <div className="sub">{fog ? '≈ à découvrir' : a.era}</div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ---- Node card
+  function Node({ kind, label, dimmed, highlighted, jobHl, night, onClick, small }) {
+    const bullet = label[0].toUpperCase();
+    return (
+      <div
+        className={cls('node', kind, dimmed && 'dimmed', highlighted && 'chain-hl', jobHl && 'job-hl', night && 'night')}
+        onClick={onClick}
+      >
+        <span className="bullet">{bullet}</span>
+        <span className="lbl">{label}</span>
+      </div>
+    );
+  }
+
+  // ---- Strata row (= one tree branch spanning all ages)
+  function StrataRow({ treeKey, treeData, rowName, iconLetter, n, nVisible, revealAges, filter, activeChain, jobsMode }) {
+    const rows = treeData[rowName] || [];
+    const kind = treeKey;
+    const dimBranch = filter && filter !== kind;
+    const chainNodes = activeChain ? chainNodeSet(activeChain) : null;
+
+    return (
+      <div className={cls('strata-row', kind)}>
+        <div className="strata-label">
+          <div className="icon">{iconLetter}</div>
+          <div className="name">{rowName}</div>
+          <div className="tag">{kind}</div>
+        </div>
+        {Array.from({length: n}).map((_, ageIdx) => {
+          const fog = !revealAges && ageIdx >= nVisible;
+          const items = rows[ageIdx] || [];
+          return (
+            <div key={ageIdx} className={cls('age-cell', fog && 'fog')}>
+              {items.map((it, j) => {
+                const isNight = /\*/.test(it) || rowName.includes('nuit') || rowName.includes('Nocturne');
+                const hl = chainNodes && chainNodes.has(normalize(it));
+                return (
+                  <Node key={j}
+                    kind={kind}
+                    label={it.replace(/\*$/,'').replace(/†$/,'')}
+                    dimmed={dimBranch}
+                    highlighted={hl}
+                    night={isNight}
+                  />
+                );
+              })}
+              {fog && <div className="fog-label">?</div>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Normalize a label for chain match (very loose)
+  function normalize(s) { return s.toLowerCase().replace(/[^a-zà-ú]/g,'').replace(/[éèê]/g,'e'); }
+  function chainNodeSet(chain) {
+    const set = new Set();
+    chain.steps.forEach(s => set.add(normalize(s.l)));
+    // seed with fuzzy keywords
+    if (chain.key === 'bois')   ['bois','hachepierre','scierie','bricoleur','planches'].forEach(x=>set.add(x));
+    if (chain.key === 'ble')    ['champdeble','moulin','boulangerie','boulanger'].forEach(x=>set.add(x));
+    if (chain.key === 'chasse') ['chasseur','viande','peau','os'].forEach(x=>set.add(x));
+    if (chain.key === 'metal')  ['foyer','forge','fonderie','forgeron','hachebronze','piochebronze','piochefer','piocheor'].forEach(x=>set.add(x));
+    if (chain.key === 'mer')    ['eclaireur','cartographie','port','pecheur','navigation','portcommercial'].forEach(x=>set.add(x));
+    if (chain.key === 'nuit')   ['promontoire','observatoire','grandtelescope','radiotelescope','astronome','portailorbital'].forEach(x=>set.add(x));
+    return set;
+  }
+
+  // ---- Overview tab: the big strata diagram
+  function OverviewTab({ state, setState }) {
+    const n = 7;
+    const nVisible = 2;
+    const { revealAges, filter, activeChain, orientation } = state;
+    return (
+      <>
+        <h2 className="sec"><span className="n">01</span>Vue d'ensemble — strates</h2>
+        <p className="sec-desc">
+          Les 3 arbres empilés comme des <b>strates géologiques</b>. Colonnes = âges (progression vers la droite, vers le futur).
+          Au début d'une partie, seuls l'<i>Âge en cours</i> et l'<i>Âge suivant</i> (grisé) sont visibles — les âges plus lointains
+          sont dans le brouillard : « <span className="h-hand" style={{fontSize:18}}>à découvrir</span> ».
+        </p>
+
+        <Legend />
+
+        <Controls state={state} setState={setState} showChains showFilter showReveal showOrientation />
+
+        <div style={{ marginTop: 14 }}>
+          <AgeHeader revealAges={revealAges} nVisible={nVisible} n={n} />
+
+          {/* 🔬 TECHNO */}
+          <SectionBand title="Arbre TECHNOLOGIE" kind="tech" sub="recherches, outils, savoirs" />
+          {Object.keys(DATA.tree_tech).map(row => (
+            <StrataRow key={row} treeKey="tech" treeData={DATA.tree_tech} rowName={row}
+              iconLetter={row[0]} n={n} nVisible={nVisible} revealAges={revealAges}
+              filter={filter} activeChain={activeChain}/>
+          ))}
+
+          {/* 🏗️ BÂTIMENTS */}
+          <SectionBand title="Arbre BÂTIMENTS" kind="build" sub="ce qu'on construit pour grandir" />
+          {Object.keys(DATA.tree_build).map(row => (
+            <StrataRow key={row} treeKey="build" treeData={DATA.tree_build} rowName={row}
+              iconLetter={row[0]} n={n} nVisible={nVisible} revealAges={revealAges}
+              filter={filter} activeChain={activeChain}/>
+          ))}
+
+          {/* 👥 COMMUNAUTÉ */}
+          <SectionBand title="Arbre COMMUNAUTÉ" kind="comm" sub="colons, métiers, besoins, IA" />
+          {Object.keys(DATA.tree_comm).map(row => (
+            <StrataRow key={row} treeKey="comm" treeData={DATA.tree_comm} rowName={row}
+              iconLetter={row[0]} n={n} nVisible={nVisible} revealAges={revealAges}
+              filter={filter} activeChain={activeChain}/>
+          ))}
+        </div>
+
+        <hr className="wavy" />
+
+        <p className="sec-desc">
+          <b>Note design :</b> les cases grisées n'existent qu'à des fins d'auteur / doc. <u>Dans le jeu</u>,
+          le joueur ne voit QUE les âges atteint + 1 suivant en aperçu brumeux. Tout le reste est caché
+          (ou annoncé par des teasers événementiels, comme « des voyageurs parlent d'une cité de métal au loin »).
+        </p>
+      </>
+    );
+  }
+
+  function SectionBand({ title, kind, sub }) {
+    return (
+      <div style={{ marginTop: 14, marginBottom: 2 }}>
+        <div style={{ display:'flex', alignItems:'baseline', gap: 10 }}>
+          <span className={cls('pill', kind)}>{kind}</span>
+          <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>{title}</h3>
+          <span className="muted" style={{ fontSize: 13 }}>{sub}</span>
+        </div>
+      </div>
+    );
+  }
+
+  function Legend() {
+    return (
+      <div className="legend">
+        <span className="item"><span className="sw" style={{ background: 'var(--accent-tech)' }}></span> Technologie</span>
+        <span className="item"><span className="sw" style={{ background: 'var(--accent-build)' }}></span> Bâtiments</span>
+        <span className="item"><span className="sw" style={{ background: 'var(--accent-comm)' }}></span> Communauté</span>
+        <span className="item"><span className="sw" style={{ background: 'var(--accent-night)' }}></span> Nuit / nocturne</span>
+        <span className="item"><span className="sw" style={{ background: '#fff6c9', borderColor: 'var(--hl)' }}></span> Chaîne sélectionnée</span>
+        <span className="item"><span className="sw" style={{
+          background: 'repeating-linear-gradient(45deg, rgba(217,207,185,.7) 0 4px, rgba(217,207,185,.4) 4px 8px)'
+        }}></span> Brouillard (à découvrir)</span>
+      </div>
+    );
+  }
+
+  // ---- Controls bar
+  function Controls({ state, setState, showChains, showFilter, showReveal, showOrientation, showDayNight }) {
+    const { filter, activeChain, revealAges, orientation, dayNight } = state;
+    return (
+      <div className="ctrlbar">
+        {showReveal && (
+          <div className={cls('chip', revealAges && 'on')}
+               onClick={()=>setState(s=>({...s, revealAges: !s.revealAges}))}>
+            {revealAges ? '◉' : '○'} Tout révéler
+          </div>
+        )}
+        {showFilter && (
+          <>
+            <span className="muted" style={{fontSize:12}}>filtre arbre :</span>
+            {[['', 'Tout'], ['tech','Techno'], ['build','Bâtiments'], ['comm','Communauté']].map(([k,l]) => (
+              <div key={k} className={cls('chip', filter===k && 'on')}
+                   onClick={()=>setState(s=>({...s, filter: k}))}>{l}</div>
+            ))}
+          </>
+        )}
+        {showChains && (
+          <>
+            <span className="muted" style={{fontSize:12, marginLeft:8}}>chaîne :</span>
+            <div className={cls('chip', !activeChain && 'on')} onClick={()=>setState(s=>({...s, activeChain:null}))}>aucune</div>
+            {DATA.chains.map(ch => (
+              <div key={ch.key}
+                   className={cls('chip', activeChain && activeChain.key===ch.key && 'on')}
+                   onClick={()=>setState(s=>({...s, activeChain: ch}))}>
+                <span>{ch.icon}</span> {ch.key}
+              </div>
+            ))}
+          </>
+        )}
+        {showDayNight && (
+          <div className={cls('daynight', dayNight)} onClick={()=>setState(s=>({...s, dayNight: s.dayNight==='day'?'night':'day'}))}>
+            <div className="d">☀ Jour</div>
+            <div className="n">☾ Nuit</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ---- Trees tab: detailed view per tree
+  function TreesTab({ state, setState }) {
+    const n = 7;
+    const nVisible = 2;
+    const { revealAges } = state;
+    return (
+      <>
+        <h2 className="sec"><span className="n">02</span>Les 3 arbres — détail</h2>
+        <p className="sec-desc">
+          Vue détaillée par arbre. Chaque branche = une ligne. La nuit (en marine) est réservée à l'arbre Techno et
+          débloque des bâtiments/métiers nocturnes.
+        </p>
+        <Controls state={state} setState={setState} showReveal />
+
+        {[
+          ['tech', 'Technologie', DATA.tree_tech, 'recherches'],
+          ['build', 'Bâtiments', DATA.tree_build, 'constructions'],
+          ['comm', 'Communauté', DATA.tree_comm, 'colons, métiers, besoins']
+        ].map(([k, title, data, sub]) => (
+          <div key={k} style={{ marginTop: 18 }}>
+            <SectionBand title={title.toUpperCase()} kind={k} sub={sub} />
+            <AgeHeader revealAges={revealAges} nVisible={nVisible} n={n} />
+            {Object.keys(data).map(row => (
+              <StrataRow key={row} treeKey={k} treeData={data} rowName={row}
+                iconLetter={row[0]} n={n} nVisible={nVisible} revealAges={revealAges} />
+            ))}
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  // ---- Core systems tab
+  function CoreTab() {
+    return (
+      <>
+        <h2 className="sec"><span className="n">03</span>Systèmes core</h2>
+        <p className="sec-desc">La plomberie du jeu : temps, points de recherche, ressources, carte. Tout le reste dépend de ça.</p>
+
+        <div className="grid-2">
+          <div className="sketch-box vill-card">
+            <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>⏱️ Temps</h3>
+            <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>cycle + saisons</div>
+            <div className="vill-state"><div className="icon">☀</div><div>
+              <b>Cycle Jour / Nuit</b> — toggle joueur<br/>
+              <span className="muted">jour → tâches, récolte, construction</span><br/>
+              <span className="muted">nuit → <span className="pill night">Points nocturnes</span> générés, bâtiments/métiers exclusifs</span>
+            </div></div>
+            <div className="vill-state"><div className="icon">🍂</div><div>
+              <b>Saisons</b> — printemps (planter) · été (récolter max) · automne (stocker) · <u>hiver</u> (survie)
+            </div></div>
+          </div>
+
+          <div className="sketch-box vill-card">
+            <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>🎯 Points de recherche</h3>
+            <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>2 devises</div>
+            <div className="vill-state"><div className="icon">D</div><div>
+              <b>Points diurnes</b> — recherches standards (outils, agri, construction…)
+              <br/><span className="muted">générés par laboratoires, université, institut</span>
+            </div></div>
+            <div className="vill-state"><div className="icon">N</div><div>
+              <b>Points nocturnes</b> — recherches exclusives nuit (astronomie, savoirs, endgame)
+              <br/><span className="muted">générés par promontoire, observatoire, télescopes</span>
+            </div></div>
+          </div>
+
+          <div className="sketch-box vill-card">
+            <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>📦 Ressources</h3>
+            <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>primaires → transformées → avancées</div>
+            <div className="grid-3" style={{ gap: 8 }}>
+              <div>
+                <div className="pill core">Primaires (âge 1-2)</div>
+                <ul style={{ paddingLeft: 18, margin: '6px 0' }}>
+                  <li>Bois (arbres)</li><li>Pierre</li><li>Baies</li>
+                  <li>Gibier → Os/Peau/Viande</li>
+                  <li>Filon : Cuivre → Bronze → Fer → Or</li>
+                </ul>
+              </div>
+              <div>
+                <div className="pill core">Transformées</div>
+                <ul style={{ paddingLeft: 18, margin: '6px 0' }}>
+                  <li>Planches (Bois → Scierie)</li>
+                  <li>Farine (Blé → Moulin)</li>
+                  <li>Pain (Farine → Boulangerie)</li>
+                  <li>Vêtements (Peau+Os → Atelier)</li>
+                  <li>Métal (Minerai → Forge → Fonderie)</li>
+                </ul>
+              </div>
+              <div>
+                <div className="pill core">Avancées (tardifs)</div>
+                <ul style={{ paddingLeft: 18, margin: '6px 0' }}>
+                  <li>Poisson (déblo Port)</li>
+                  <li>Électricité</li>
+                  <li>Matières spatiales</li>
+                  <li>Pts nocturnes → endgame</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="sketch-box vill-card">
+            <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>🗺️ Carte voxel</h3>
+            <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>procédurale, continents + îles</div>
+            <div className="vill-state"><div className="icon">⛰</div><div><b>Biomes</b> — forêt, montagne, côte, toundra (→ saisons plus dures), plaine</div></div>
+            <div className="vill-state"><div className="icon">⛵</div><div><b>Îles/continents</b> — débloqués via navigation (âge 3-4), accessibles via ports</div></div>
+            <div className="vill-state"><div className="icon">✦</div><div><b>Ressources cachées</b> — révélées par l'Explorateur + Tour de vigie → récompenses rares</div></div>
+          </div>
+        </div>
+
+        <hr className="wavy" />
+
+        <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>Boucle de jeu — schéma</h3>
+        <GameLoopSketch />
+      </>
+    );
+  }
+
+  function GameLoopSketch() {
+    // simple hand-drawn flow loop as SVG
+    return (
+      <div className="sketch-box" style={{ padding: 18, marginTop: 8 }}>
+        <svg viewBox="0 0 900 260" width="100%" style={{ maxHeight: 300 }}>
+          <defs>
+            <marker id="arrH" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+              <path d="M0 0 L10 5 L0 10 Z" fill="#1f1a14" />
+            </marker>
+          </defs>
+          {[
+            ['Villageois\ntrouvent ressources', 80, 60, 'var(--accent-comm)'],
+            ['Bâtiments\ntransforment', 300, 60, 'var(--accent-build)'],
+            ['Besoins satisfaits\n→ pop grandit', 520, 60, 'var(--accent-comm)'],
+            ['Points de recherche\ngénérés', 740, 60, 'var(--accent-core)'],
+            ['Nouvelles\ntechnologies', 740, 190, 'var(--accent-tech)'],
+            ['Nouveaux âges\n+ bâtiments', 420, 190, 'var(--accent-build)'],
+            ['Nouveaux métiers\n+ chaînes', 140, 190, 'var(--accent-comm)']
+          ].map(([t, x, y, c], i) => (
+            <g key={i}>
+              <rect x={x-70} y={y-25} width="140" height="50" rx="6" fill="var(--paper)" stroke="#1f1a14" strokeWidth="1.5" />
+              <rect x={x-70} y={y-25} width="4" height="50" fill={c} />
+              {t.split('\n').map((ln, j) => (
+                <text key={j} x={x} y={y-5+j*16} textAnchor="middle" fontFamily="Kalam" fontSize="13">{ln}</text>
+              ))}
+            </g>
+          ))}
+          {/* arrows */}
+          {[
+            [150, 60, 230, 60],
+            [370, 60, 450, 60],
+            [590, 60, 670, 60],
+            [740, 90, 740, 160],
+            [670, 190, 490, 190],
+            [350, 190, 210, 190],
+            [80, 165, 80, 95]
+          ].map(([x1,y1,x2,y2], i) => (
+            <path key={i} d={`M${x1} ${y1} Q ${(x1+x2)/2 + (i%2?10:-10)} ${(y1+y2)/2 + (i%2?-8:8)} ${x2} ${y2}`}
+              stroke="#1f1a14" strokeWidth="1.5" fill="none" markerEnd="url(#arrH)" />
+          ))}
+          <text x="450" y="240" textAnchor="middle" fontFamily="Caveat" fontSize="20" fill="var(--ink-faint)">
+            ↻ boucle auto-alimentée : + de pop → + de recherche → + de tech → + de bâtiments → + de métiers
+          </text>
+        </svg>
+      </div>
+    );
+  }
+
+  // ---- Villagers tab
+  function VillagersTab() {
+    const STATES = [
+      ['🍖','Faim','cherche nourriture'],
+      ['🤒','Maladie','besoin de soin (âge 2+ : médecin)'],
+      ['🏠','Sans-abri','besoin de logement'],
+      ['🥶','Froid','hiver → vêtements requis'],
+      ['💤','Flâne','inactif, pas de tâche assignée'],
+      ['🔨','En travail','tâche en cours'],
+      ['😊','Heureux','besoins supérieurs satisfaits (âge 3+)']
+    ];
+    const NEEDS = [
+      [1, 'Pierre',      'Abri basique + nourriture brute (baies, viande)'],
+      [2, 'Bronze',      'Logement + pain + vêtements (hiver)'],
+      [3, 'Fer',         'Confort + variété alimentaire + sécurité'],
+      [4, 'Industriel',  'Loisirs, culture, éducation'],
+      [5, 'Moderne',     'Santé avancée, bien-être'],
+      [6, 'Atomique',    'Technologie quotidienne, info'],
+      [7, 'Espace',      'Transcendance / sens collectif']
+    ];
+    return (
+      <>
+        <h2 className="sec"><span className="n">04</span>Villageois IA</h2>
+        <p className="sec-desc">Le cœur de la simulation. Chaque villageois a une <b>file de tâches</b>, une <b>navigation autonome</b>, des <b>états</b> et des <b>besoins qui évoluent</b> avec les âges.</p>
+
+        <div className="grid-2">
+          <div className="sketch-box vill-card">
+            <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>🤖 Anatomie d'un villageois</h3>
+            <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>schéma logique</div>
+            <VillagerAnatomy />
+          </div>
+
+          <div className="sketch-box vill-card">
+            <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>📋 États possibles</h3>
+            <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>mutuellement exclusifs sauf Faim/Froid/Maladie qui s'empilent</div>
+            {STATES.map(([ic, n, d], i) => (
+              <div className="vill-state" key={i}>
+                <div className="icon">{ic}</div>
+                <div><b>{n}</b><br/><span className="muted">{d}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <hr className="wavy" />
+
+        <h3 className="h-hand" style={{ fontSize: 26, margin: '0 0 8px' }}>📅 Besoins par âge</h3>
+        <p className="sec-desc">Règle clé : chaque nouvel âge <b>augmente les attentes</b>. Un villageois d'âge 3 qui ne mange que des baies devient mécontent → baisse la productivité globale.</p>
+
+        <div className="grid-4">
+          {NEEDS.map(([age, name, desc]) => (
+            <div className="sketch-box" key={age} style={{ padding: 12 }}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'baseline'}}>
+                <span className="h-hand" style={{ fontSize: 22 }}>Âge {age}</span>
+                <span className="pill comm">{name}</span>
+              </div>
+              <hr style={{ border: 'none', borderTop: '1.5px dashed var(--rule)', margin: '6px 0' }}/>
+              <div style={{ fontSize: 13 }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <hr className="wavy" />
+
+        <h3 className="h-hand" style={{ fontSize: 26, margin: '0 0 8px' }}>⚙️ Priorités du Job System</h3>
+        <div className="sketch-box" style={{ padding: 14 }}>
+          <div style={{ display:'flex', gap: 8, alignItems:'center', flexWrap:'wrap' }}>
+            <span className="pill comm">1. Survie</span>
+            <span className="h-hand" style={{ fontSize: 20 }}>→</span>
+            <span className="pill comm">2. Travail assigné</span>
+            <span className="h-hand" style={{ fontSize: 20 }}>→</span>
+            <span className="pill comm">3. Loisir / social</span>
+            <span className="h-hand" style={{ fontSize: 20 }}>→</span>
+            <span className="pill comm">4. Flâne</span>
+          </div>
+          <p className="sec-desc" style={{ marginTop: 10 }}>
+            Les villageois cherchent <b>seuls</b> les ressources à proximité dans les âges 1-2. À partir de l'âge 3, le joueur doit <b>débloquer la recherche "Routes auto"</b> pour que les trajets soient optimisés sur de grandes distances.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  function VillagerAnatomy() {
+    return (
+      <svg viewBox="0 0 420 300" width="100%" style={{ maxHeight: 320 }}>
+        {/* central villager */}
+        <g transform="translate(210, 150)">
+          <circle r="36" fill="var(--paper-2)" stroke="#1f1a14" strokeWidth="1.5" />
+          <text y="-40" textAnchor="middle" fontFamily="Caveat" fontSize="18" fontWeight="700">Villageois</text>
+          <circle cy="-10" r="8" fill="none" stroke="#1f1a14" strokeWidth="1.5" />
+          <path d="M-12 4 Q 0 16 12 4" fill="none" stroke="#1f1a14" strokeWidth="1.5" />
+        </g>
+        {[
+          ['File de tâches\n[chop, haul, eat]', 60, 60, 'var(--accent-comm)'],
+          ['Navigation\nautonome (A*)', 60, 230, 'var(--accent-comm)'],
+          ['Stats\nfaim/froid/santé', 360, 60, 'var(--accent-build)'],
+          ['Métier assigné\n(ou aucun)', 360, 230, 'var(--accent-tech)']
+        ].map(([t, x, y, c], i) => (
+          <g key={i}>
+            <rect x={x-60} y={y-22} width="120" height="44" rx="6" fill="var(--paper)" stroke="#1f1a14" strokeWidth="1.5" />
+            <rect x={x-60} y={y-22} width="4" height="44" fill={c} />
+            {t.split('\n').map((ln, j) => (
+              <text key={j} x={x} y={y-4+j*14} textAnchor="middle" fontFamily="Kalam" fontSize="12">{ln}</text>
+            ))}
+            <path d={`M${x + (x < 210 ? 62 : -62)} ${y} L ${210 + (x<210?-40:40)} ${150 + (y<150?30:-30)}`}
+              stroke="#1f1a14" strokeWidth="1.5" fill="none" strokeDasharray="3 3" />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+
+  // ---- Jobs & chains tab
+  function JobsTab({ state, setState }) {
+    const [hovered, setHovered] = useState(null);
+    return (
+      <>
+        <h2 className="sec"><span className="n">05</span>Métiers & chaînes de production</h2>
+        <p className="sec-desc">
+          Les métiers sont dans l'arbre <b>Communauté</b>, mais dépendent de <b>Technologie</b> (outils) et de <b>Bâtiments</b> (lieu de travail).
+          C'est le tissu qui relie les 3 arbres.
+        </p>
+
+        <h3 className="h-hand" style={{ fontSize: 26, margin: '6px 0' }}>🔗 Chaînes clés</h3>
+        <p className="sec-desc">Clique une chaîne pour la highlighter dans la Vue d'ensemble.</p>
+
+        {DATA.chains.map(ch => (
+          <div key={ch.key} className="chain"
+               onClick={()=>setState(s=>({...s, activeChain: ch, _goto:'overview'}))}>
+            <span className="h-hand" style={{ fontSize: 22 }}>{ch.icon}</span>
+            <b style={{ minWidth: 240, fontFamily:'Caveat', fontSize: 22 }}>{ch.title}</b>
+            {ch.steps.map((s, i) => (
+              <React.Fragment key={i}>
+                <span className={`step ${s.k}`}>{s.l}</span>
+                {i < ch.steps.length - 1 && <span className="link">→</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        ))}
+
+        <hr className="wavy" />
+
+        <h3 className="h-hand" style={{ fontSize: 26, margin: '6px 0' }}>👷 Tableau des métiers</h3>
+        <p className="sec-desc">
+          <span className="pill tech">tech</span> = prérequis arbre Technologie ·
+          <span className="pill build" style={{marginLeft:6}}>build</span> = prérequis arbre Bâtiments ·
+          <span className="pill comm" style={{marginLeft:6}}>out</span> = ressource produite ·
+          <span className="pill night" style={{marginLeft:6}}>nuit</span> = métier nocturne
+        </p>
+
+        <div className="grid-3">
+          {DATA.jobs.map((j, i) => (
+            <div key={i} className={cls('sketch-box', j.night && 'night')}
+                 style={{ padding: 12, background: j.night ? 'var(--accent-night)' : undefined, color: j.night ? 'var(--paper)' : undefined }}
+                 onMouseEnter={()=>setHovered(j.name)}
+                 onMouseLeave={()=>setHovered(null)}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'baseline'}}>
+                <span className="h-hand" style={{ fontSize: 22 }}>{j.name}</span>
+                <span className="pill comm" style={{ borderColor: j.night?'var(--paper)':undefined, color: j.night?'var(--paper)':undefined }}>Âge {j.age}</span>
+              </div>
+              <hr style={{ border: 'none', borderTop: '1.5px dashed ' + (j.night?'rgba(244,239,228,.3)':'var(--rule)'), margin: '6px 0' }}/>
+              <div style={{ fontSize: 12 }}>
+                <b>Req :</b>{' '}
+                {j.req.length===0 ? <span className="muted">—</span> :
+                  j.req.map((r,k)=>(<span key={k} className={cls('pill', r.k)} style={{marginRight:4}}>{r.l}</span>))}
+              </div>
+              <div style={{ fontSize: 12, marginTop: 4 }}>
+                <b>Produit :</b>{' '}
+                {j.out.map((r,k)=>(<span key={k} className="pill core" style={{marginRight:4}}>{r.l}</span>))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  // ---- Time & seasons tab
+  function TimeTab({ state, setState }) {
+    const { dayNight } = state;
+    return (
+      <>
+        <h2 className="sec"><span className="n">06</span>Temps & saisons</h2>
+        <p className="sec-desc">
+          Le temps est le <b>4ème arbre</b> caché. Il filtre ce qui est possible à un instant T. Le joueur peut <b>toggler jour/nuit</b> (il dort volontairement), ce qui bascule la génération de points et l'accès à certains métiers/bâtiments.
+        </p>
+
+        <Controls state={state} setState={setState} showDayNight />
+
+        <div className="grid-2" style={{ marginTop: 14 }}>
+          <div className="sketch-box vill-card" style={{
+            background: dayNight==='night' ? 'var(--accent-night)' : undefined,
+            color: dayNight==='night' ? 'var(--paper)' : undefined,
+            transition: 'background .3s, color .3s'
+          }}>
+            <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>
+              {dayNight==='day' ? '☀ Phase JOUR' : '☾ Phase NUIT'}
+            </h3>
+            <div style={{ fontSize: 12, opacity: .7, marginBottom: 10 }}>
+              {dayNight==='day'
+                ? 'tâches classiques, construction, récolte'
+                : 'exclusivités nocturnes, génération de points nocturnes'}
+            </div>
+            {dayNight==='day' ? (
+              <>
+                <div className="vill-state"><div className="icon">🌱</div><div>Cueilleurs, bûcherons, mineurs actifs</div></div>
+                <div className="vill-state"><div className="icon">🏗️</div><div>Construction, recherche diurne</div></div>
+                <div className="vill-state"><div className="icon">📦</div><div>Villageois transportent ressources sur les routes</div></div>
+                <div className="vill-state"><div className="icon">🎯</div><div>Points de recherche standards générés</div></div>
+              </>
+            ) : (
+              <>
+                <div className="vill-state"><div className="icon" style={{color:'var(--accent-day)'}}>🔭</div><div>Astronomes, veilleurs, alchimistes actifs</div></div>
+                <div className="vill-state"><div className="icon" style={{color:'var(--accent-day)'}}>✦</div><div>Bâtiments nocturnes débloqués : Promontoire, Observatoire, Télescope…</div></div>
+                <div className="vill-state"><div className="icon" style={{color:'var(--accent-day)'}}>◉</div><div>Points nocturnes générés → recherches exclusives</div></div>
+                <div className="vill-state"><div className="icon" style={{color:'var(--accent-day)'}}>⚠</div><div>Risques : monstres, froid accru en hiver</div></div>
+              </>
+            )}
+          </div>
+
+          <div className="sketch-box vill-card">
+            <h3 className="h-hand" style={{ fontSize: 26, margin: 0 }}>🍂 Les 4 saisons</h3>
+            <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>cycle annuel, modifie récoltes + besoins</div>
+            <SeasonWheel />
+          </div>
+        </div>
+
+        <hr className="wavy" />
+
+        <h3 className="h-hand" style={{ fontSize: 26 }}>🌙 Recherches nocturnes — progression</h3>
+        <div className="sketch-box" style={{ padding: 16 }}>
+          <div style={{ display:'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+            {['Âge I','Âge II','Âge III','Âge IV','Âge V','Âge VI','Âge VII'].map((a,i) => (
+              <div key={i} style={{ textAlign:'center' }}>
+                <div className="h-hand" style={{ fontSize: 18 }}>{a}</div>
+                <div className="sub muted" style={{ fontSize: 11 }}>{['Pierre','Bronze','Fer','Indus.','Mod.','Atom.','Espace'][i]}</div>
+              </div>
+            ))}
+            {[
+              'Promontoire\n(observer étoiles)',
+              '—',
+              'Observatoire\n(cartographie céleste)',
+              '—',
+              'Grand télescope\n(obs. profonde)',
+              'Radio-télescope\n(signaux)',
+              'Portail orbital\n(endgame trigger)'
+            ].map((v, i) => (
+              <div key={i+10} className={cls('sketch-box', v==='—' && 'ghost')}
+                   style={{ background: v==='—' ? 'transparent' : 'var(--accent-night)', color: v==='—' ? 'var(--ink-faint)' : 'var(--paper)',
+                            borderColor: v==='—' ? 'var(--rule)' : 'var(--accent-night)', textAlign: 'center', fontSize: 12, minHeight: 60,
+                            display:'grid', placeItems:'center', whiteSpace:'pre-line' }}>{v}</div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  function SeasonWheel() {
+    const seasons = [
+      ['Printemps', 'plantation', 'var(--accent-tech)'],
+      ['Été', 'récolte max', 'var(--accent-day)'],
+      ['Automne', 'stockage', 'var(--accent-build)'],
+      ['Hiver', 'survie', 'var(--accent-comm)']
+    ];
+    return (
+      <svg viewBox="-150 -150 300 300" className="season-wheel">
+        {seasons.map((s, i) => {
+          const a0 = (i*90 - 45) * Math.PI/180;
+          const a1 = (i*90 + 45) * Math.PI/180;
+          const r = 120;
+          const x0 = Math.cos(a0)*r, y0 = Math.sin(a0)*r;
+          const x1 = Math.cos(a1)*r, y1 = Math.sin(a1)*r;
+          const mx = Math.cos(i*90 * Math.PI/180) * 80;
+          const my = Math.sin(i*90 * Math.PI/180) * 80;
+          return (
+            <g key={i}>
+              <path d={`M 0 0 L ${x0} ${y0} A ${r} ${r} 0 0 1 ${x1} ${y1} Z`}
+                    fill={s[2]} fillOpacity="0.18" stroke="#1f1a14" strokeWidth="1.5" />
+              <text x={mx} y={my-4} textAnchor="middle" fontFamily="Caveat" fontSize="20" fontWeight="700">{s[0]}</text>
+              <text x={mx} y={my+12} textAnchor="middle" fontFamily="Kalam" fontSize="11" fill="var(--ink-faint)">{s[1]}</text>
+            </g>
+          );
+        })}
+        <circle r="24" fill="var(--paper)" stroke="#1f1a14" strokeWidth="1.5"/>
+        <text y="5" textAnchor="middle" fontFamily="Caveat" fontSize="18">an 1</text>
+      </svg>
+    );
+  }
+
+  // ---- POCs of dep styles tab
+  function PocsTab() {
+    return (
+      <>
+        <h2 className="sec"><span className="n">07</span>POCs — styles de dépendances</h2>
+        <p className="sec-desc">
+          Tu voulais voir plusieurs styles pour représenter les dépendances inter-arbres.
+          Voici 4 approches rapides, à tester sur la même chaîne exemple : <b>Bois → Scierie → Bricoleur</b>.
+          Dis-moi celle qui te parle, je la pousse dans la Vue d'ensemble.
+        </p>
+
+        <div className="grid-2">
+          <PocArrows />
+          <PocColorTrail />
+          <PocHoverHighlight />
+          <PocSidePanel />
+        </div>
+      </>
+    );
+  }
+
+  function PocArrows() {
+    return (
+      <div className="sketch-box poc-card">
+        <h4>① Flèches traversantes</h4>
+        <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>Lignes dessinées entre noeuds des 3 arbres. Visuellement riche mais peut devenir illisible.</div>
+        <svg viewBox="0 0 420 220" width="100%">
+          {/* 3 columns of nodes */}
+          {[
+            ['tech', 'Hache pierre', 60, 40, 'var(--accent-tech)'],
+            ['build','Scierie',      220, 110, 'var(--accent-build)'],
+            ['res',  'Planches',     220, 165, '#8b5a2b'],
+            ['comm', 'Bricoleur',    360, 110, 'var(--accent-comm)'],
+            ['res',  'Bois',         60, 110, '#8b5a2b']
+          ].map(([k, l, x, y, c], i) => (
+            <g key={i}>
+              <rect x={x-50} y={y-14} width="100" height="28" rx="4" fill="var(--paper)" stroke="#1f1a14" strokeWidth="1.5" />
+              <rect x={x-50} y={y-14} width="4" height="28" fill={c} />
+              <text x={x+4} y={y+4} textAnchor="middle" fontFamily="Kalam" fontSize="13">{l}</text>
+            </g>
+          ))}
+          {[
+            [60, 110, 220, 110],    // bois -> scierie
+            [60, 40,  220, 110],    // hache -> scierie
+            [220, 125, 220, 150],   // scierie -> planches
+            [270, 165, 360, 110],   // planches -> bricoleur
+            [270, 110, 360, 110]    // scierie -> bricoleur
+          ].map((c, i) => {
+            const [x1,y1,x2,y2] = c;
+            const mx = (x1+x2)/2, my = (y1+y2)/2 - 12;
+            return <path key={i} d={`M${x1+50} ${y1} Q ${mx} ${my} ${x2-50} ${y2}`} stroke="var(--hl)" strokeWidth="1.5" fill="none" strokeDasharray="0" />
+          })}
+          <text x="210" y="200" textAnchor="middle" fontFamily="Caveat" fontSize="18" fill="var(--ink-faint)">lisible pour 1 chaîne ; ≤ 3 chaînes avant brouillage</text>
+        </svg>
+      </div>
+    );
+  }
+
+  function PocColorTrail() {
+    return (
+      <div className="sketch-box poc-card">
+        <h4>② Pastilles de couleur</h4>
+        <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>Chaque chaîne a sa couleur, les noeuds concernés portent une pastille. Lisible toujours, même avec beaucoup de chaînes.</div>
+        <div style={{ display:'flex', flexDirection:'column', gap: 6 }}>
+          {[
+            ['tech',  'Hache pierre', ['🪵']],
+            ['res',   'Bois',         ['🪵']],
+            ['build', 'Scierie',      ['🪵']],
+            ['res',   'Planches',     ['🪵','🏠']],
+            ['job',   'Bricoleur',    ['🪵','🏠']],
+            ['build', 'Boulangerie',  ['🌾']],
+            ['job',   'Boulanger',    ['🌾']]
+          ].map(([k, l, dots], i) => (
+            <div key={i} className="node" style={{ border:'1.5px solid #1f1a14' }}>
+              <span className="bullet">{l[0]}</span>
+              <span className="lbl">{l}</span>
+              <span style={{ display:'flex', gap: 3 }}>
+                {dots.map((d,j)=>(<span key={j} style={{
+                  width:18, height:18, borderRadius:'50%', border:'1.5px solid #1f1a14',
+                  display:'grid', placeItems:'center', fontSize:10, background:'var(--paper-2)'
+                }}>{d}</span>))}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function PocHoverHighlight() {
+    const [sel, setSel] = useState('Scierie');
+    const RELATED = {
+      'Scierie': new Set(['Scierie','Bois','Hache pierre','Planches','Bricoleur']),
+      'Bois': new Set(['Bois','Scierie','Bûcheron','Hache pierre']),
+      'Bricoleur': new Set(['Bricoleur','Planches','Scierie','Bois'])
+    };
+    const rel = RELATED[sel] || new Set();
+    const nodes = [
+      ['tech', 'Hache pierre'],
+      ['comm', 'Bûcheron'],
+      ['res',  'Bois'],
+      ['build','Scierie'],
+      ['res',  'Planches'],
+      ['comm', 'Bricoleur'],
+      ['build','Maison']
+    ];
+    return (
+      <div className="sketch-box poc-card">
+        <h4>③ Hover / clic → highlight connexe</h4>
+        <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>Clique un noeud → tous les liés s'allument (les autres s'estompent). Très propre mais cache la structure globale.</div>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+          {nodes.map(([k, l]) => (
+            <div key={l}
+                 className={cls('node', k, !rel.has(l) && 'dimmed', rel.has(l) && 'chain-hl')}
+                 onClick={()=>setSel(l)}>
+              <span className="bullet">{l[0]}</span><span className="lbl">{l}</span>
+            </div>
+          ))}
+        </div>
+        <div className="muted" style={{ fontSize: 11, marginTop: 8 }}>sélection : <b>{sel}</b></div>
+      </div>
+    );
+  }
+
+  function PocSidePanel() {
+    return (
+      <div className="sketch-box poc-card">
+        <h4>④ Panneau latéral "chaînes clés"</h4>
+        <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>Les chaînes sont extraites hors du diagramme, dans une liste lisible. Ma préférée pour une mindmap d'auteur (= pour toi), pas forcément pour l'UI in-game.</div>
+        <div style={{ display:'flex', flexDirection:'column', gap: 8 }}>
+          {DATA.chains.slice(0,4).map(ch => (
+            <div key={ch.key} style={{
+              display:'flex', alignItems:'center', gap: 6, padding: '6px 8px',
+              border: '1.5px dashed #1f1a14', borderRadius: 6, background: 'var(--paper-2)'
+            }}>
+              <span style={{ fontSize: 18 }}>{ch.icon}</span>
+              <b style={{ fontFamily:'Caveat', fontSize: 18 }}>{ch.title}</b>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Tweaks panel
+  function TweaksPanel({ state, setState, open, setOpen }) {
+    useEffect(() => {
+      const onMsg = (e) => {
+        if (!e.data) return;
+        if (e.data.type === '__activate_edit_mode') setOpen(true);
+        if (e.data.type === '__deactivate_edit_mode') setOpen(false);
+      };
+      window.addEventListener('message', onMsg);
+      // announce after listener
+      window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+      return () => window.removeEventListener('message', onMsg);
+    }, []);
+    return (
+      <div id="tweaks" className={open ? 'open' : ''}>
+        <h3>Tweaks</h3>
+        <div className="muted" style={{ fontSize: 11, marginBottom: 8 }}>expérimente des modes de visualisation</div>
+
+        <div className="row">
+          <label><input type="checkbox" checked={state.revealAges}
+            onChange={e=>{ setState(s=>({...s, revealAges: e.target.checked})); persist({ revealAges: e.target.checked }); }} /> Tout révéler les âges</label>
+        </div>
+        <div className="row">
+          <label>Orientation</label>
+          <select value={state.orientation} onChange={e=>{ setState(s=>({...s, orientation:e.target.value})); persist({orientation:e.target.value}); }}>
+            <option value="horizontal">Horizontale →</option>
+            <option value="vertical">Verticale ↓ (WIP)</option>
+          </select>
+        </div>
+        <div className="row">
+          <label>Cycle</label>
+          <select value={state.dayNight} onChange={e=>{ setState(s=>({...s, dayNight:e.target.value})); persist({dayNight:e.target.value}); }}>
+            <option value="day">☀ Jour</option>
+            <option value="night">☾ Nuit</option>
+          </select>
+        </div>
+        <hr style={{ border:'none', borderTop:'1.5px dashed var(--rule)', margin:'8px 0' }}/>
+        <div className="row">
+          <label>Filtre arbre</label>
+          <select value={state.filter||''} onChange={e=>setState(s=>({...s, filter:e.target.value||null}))}>
+            <option value="">Tout</option>
+            <option value="tech">Technologie</option>
+            <option value="build">Bâtiments</option>
+            <option value="comm">Communauté</option>
+          </select>
+        </div>
+        <div className="row">
+          <label>Chaîne</label>
+          <select value={state.activeChain?.key||''}
+                  onChange={e=>{
+                    const c = DATA.chains.find(x=>x.key===e.target.value);
+                    setState(s=>({...s, activeChain: c || null}));
+                  }}>
+            <option value="">aucune</option>
+            {DATA.chains.map(c => <option key={c.key} value={c.key}>{c.icon} {c.title}</option>)}
+          </select>
+        </div>
+        <div className="row" style={{ marginTop: 6 }}>
+          <small className="muted">toggle ces options depuis la barre en haut aussi</small>
+        </div>
+      </div>
+    );
+  }
+  function persist(edits) {
+    try { window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*'); } catch(e){}
+  }
+
+  // ---- App
+  function App() {
+    const stored = (() => { try { return JSON.parse(localStorage.getItem('strates-state')||'{}'); } catch { return {}; } })();
+    const [tab, setTab] = useState(stored.tab || 'overview');
+    const [state, setState] = useState({
+      revealAges: TWEAK_DEFAULTS.revealAges,
+      orientation: TWEAK_DEFAULTS.orientation,
+      dayNight: TWEAK_DEFAULTS.dayNight,
+      filter: null,
+      activeChain: null
+    });
+    const [tweaksOpen, setTweaksOpen] = useState(false);
+
+    useEffect(()=>{
+      localStorage.setItem('strates-state', JSON.stringify({ tab }));
+    }, [tab]);
+
+    // If JobsTab asks to go to overview with a chain
+    useEffect(()=>{
+      if (state._goto) {
+        setTab(state._goto);
+        setState(s=>{ const x={...s}; delete x._goto; return x; });
+      }
+    }, [state._goto]);
+
+    return (
+      <>
+        <Header tab={tab} setTab={setTab} />
+        <main>
+          {tab==='overview'  && <OverviewTab state={state} setState={setState}/>}
+          {tab==='trees'     && <TreesTab    state={state} setState={setState}/>}
+          {tab==='core'      && <CoreTab/>}
+          {tab==='villagers' && <VillagersTab/>}
+          {tab==='jobs'      && <JobsTab    state={state} setState={setState}/>}
+          {tab==='time'      && <TimeTab    state={state} setState={setState}/>}
+          {tab==='pocs'      && <PocsTab/>}
+        </main>
+        <TweaksPanel state={state} setState={setState} open={tweaksOpen} setOpen={setTweaksOpen} />
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
