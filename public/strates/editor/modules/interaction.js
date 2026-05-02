@@ -36,6 +36,11 @@ import {
 
 let firstHarvestDone = false
 let _tooltipThrottle = 0
+// Throttle global du pointermove. La grille est passee a 256x256 (65 536
+// instances) et le raycast Three.js sur l InstancedMesh devient couteux.
+// On limite a 20 Hz pour eviter le freeze quand la souris bouge vite.
+let _lastMoveTime = 0
+const POINTERMOVE_THROTTLE_MS = 50
 
 // ============================================================================
 // Curseur wireframe
@@ -901,6 +906,11 @@ dom.addEventListener('pointerdown', (e) => {
 })
 
 dom.addEventListener('pointermove', (e) => {
+  // Throttle a 50 ms : le raycast sur 65 536 instances est trop couteux
+  // pour etre execute a chaque mouvement souris.
+  const _now = performance.now()
+  if (_now - _lastMoveTime < POINTERMOVE_THROTTLE_MS) return
+  _lastMoveTime = _now
   let hoverCell = null
   if (state.fieldPlacementMode) {
     hoverCell = pickCell(e.clientX, e.clientY)
@@ -1069,8 +1079,14 @@ dom.addEventListener('pointerup', (e) => {
 const hoverRaycaster = new THREE.Raycaster()
 const hoverNDC = new THREE.Vector2()
 let hoveredColonist = null
+let _lastHoverMoveTime = 0
 
 dom.addEventListener('pointermove', (e) => {
+  // Throttle a 50 ms : raycast sur tous les colons + pickCell pour le tooltip,
+  // trop couteux a chaque event souris depuis l agrandissement de la grille.
+  const _hnow = performance.now()
+  if (_hnow - _lastHoverMoveTime < POINTERMOVE_THROTTLE_MS) return
+  _lastHoverMoveTime = _hnow
   const rect = dom.getBoundingClientRect()
   hoverNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
   hoverNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
