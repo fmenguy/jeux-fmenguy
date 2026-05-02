@@ -700,6 +700,7 @@ export class Colonist {
             const got = collectRockAt(x, z)
             state.resources.stone += got
             state.stocks.stone += got
+            if (Math.random() < 0.15) { state.resources.silex++; state.stocks.silex++ }
             scheduleFlash(x, z)
             removeJob(x, z, true)
             state.gameStats.minesCompleted++
@@ -737,6 +738,7 @@ export class Colonist {
                     state.cellTop[k] = top - 1
                     incrStockForBiome(biomeHere)
                     if (isRocky) state.resources.stone++
+                    if (biomeHere === 'sand' && Math.random() < 0.35) { state.resources.silex++; state.stocks.silex++ }
                     scheduleFlash(x, z)
                   }
                 }

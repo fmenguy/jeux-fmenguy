@@ -29,6 +29,7 @@ import { showHudToast } from './ui/research-popup.js'
 import { closeBuildingPanel, isBuildingPanelOpen } from './ui/building-panel.js'
 import { currentSeason } from './seasons.js'
 import { confirmCairnPlacement, cancelCairnPlacement } from './age-transitions.js'
+import { showCellTooltip, hideCellTooltip } from './ui/cell-tooltip.js'
 
 let firstHarvestDone = false
 
@@ -1021,6 +1022,11 @@ dom.addEventListener('pointermove', (e) => {
     cursorMesh.visible = false
     clearStrataPreview()
   }
+  if (hoverCell) {
+    showCellTooltip(hoverCell.x, hoverCell.z, e.clientX, e.clientY)
+  } else {
+    hideCellTooltip()
+  }
   if (selectionRect.active) {
     if (!hoverCell) hoverCell = pickCell(e.clientX, e.clientY)
     if (hoverCell) {
@@ -1037,7 +1043,7 @@ dom.addEventListener('pointermove', (e) => {
   if (cell) applyToolAtCell(cell)
 })
 
-dom.addEventListener('pointerleave', () => { cursorMesh.visible = false; clearStrataPreview() })
+dom.addEventListener('pointerleave', () => { cursorMesh.visible = false; clearStrataPreview(); hideCellTooltip() })
 window.addEventListener('pointerup', (e) => {
   state.toolState.isPainting = false
   if (selectionRect.active && e.button === 0) {
