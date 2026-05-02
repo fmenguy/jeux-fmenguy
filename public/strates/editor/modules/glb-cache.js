@@ -12,7 +12,7 @@ const BASE = new URL('../assets/models/fantaisy/', import.meta.url).href
 // Constantes de mise a l'echelle par type (ajuster selon les GLB)
 export const TREE_GLB_SCALE = 0.40
 export const ROCK_GLB_SCALE = 0.32
-export const DEER_GLB_SCALE = 3.0
+export const DEER_GLB_SCALE = 30.0
 
 const MANIFEST = {
   tree: 'Pine.glb',
