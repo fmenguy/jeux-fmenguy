@@ -683,19 +683,23 @@ export function tickDeer(dt) {
 
     if (dist < 0.1) {
       // Nouvelle cible
-      let attempts = 0, nx, nz
+      const deerX = Math.round(d.x), deerZ = Math.round(d.z)
+      const currentTop = state.cellTop[deerZ * GRID + deerX] || 1
+      let attempts = 0, nx = deerX, nz = deerZ
       const radius = 4 + Math.floor(rng() * 5)
-      do {
+      for (let i = 0; i < 12; i++) {
         const angle = rng() * Math.PI * 2
-        nx = Math.round(d.x + Math.cos(angle) * radius)
-        nz = Math.round(d.z + Math.sin(angle) * radius)
-        attempts++
-      } while (attempts < 20 && (
-        nx < 0 || nz < 0 || nx >= GRID || nz >= GRID ||
-        (state.cellBiome[nz * GRID + nx] !== 'grass' && state.cellBiome[nz * GRID + nx] !== 'forest') ||
-        isCellOccupied(nx, nz)
-      ))
-      if (attempts < 20) { d.tx = nx; d.tz = nz; d.x = nx; d.z = nz }
+        const cx = Math.round(d.x + Math.cos(angle) * radius)
+        const cz = Math.round(d.z + Math.sin(angle) * radius)
+        if (cx < 0 || cz < 0 || cx >= GRID || cz >= GRID) continue
+        const biome = state.cellBiome[cz * GRID + cx]
+        if (biome !== 'grass' && biome !== 'forest') continue
+        if (isCellOccupied(cx, cz)) continue
+        const top = state.cellTop[cz * GRID + cx] || 1
+        if (top > currentTop + 1) continue
+        nx = cx; nz = cz; attempts++; break
+      }
+      d.tx = nx; d.tz = nz; d.x = nx; d.z = nz
       d.waitTimer = 60 + rng() * 120
       continue
     }
@@ -706,12 +710,21 @@ export function tickDeer(dt) {
       const fnx = Math.round(px + (fleeDx / flen) * 8)
       const fnz = Math.round(pz + (fleeDz / flen) * 8)
       if (fnx >= 0 && fnz >= 0 && fnx < GRID && fnz < GRID) {
-        d.tx = fnx; d.tz = fnz
+        const fb = state.cellBiome[fnz * GRID + fnx]
+        if ((fb === 'grass' || fb === 'forest') && !isCellOccupied(fnx, fnz)) {
+          d.tx = fnx; d.tz = fnz
+        }
       }
     }
 
+    // Y suit le relief de la cellule courante
+    const curX = Math.min(GRID - 1, Math.max(0, Math.round(px - 0.5)))
+    const curZ = Math.min(GRID - 1, Math.max(0, Math.round(d.group.position.z - 0.5)))
+    const curTop = state.cellTop[curZ * GRID + curX] || 1
+    const targetY = curTop + 0.5
+
     // Deplacement
-    _deerTmpVec.set(tx, d.group.position.y, tz)
+    _deerTmpVec.set(tx, targetY, tz)
     d.group.position.lerp(_deerTmpVec, d.speed)
     d.group.rotation.y = Math.atan2(dx, dz)
 
