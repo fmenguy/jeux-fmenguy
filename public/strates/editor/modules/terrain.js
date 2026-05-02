@@ -335,7 +335,7 @@ export function rebuildTerrainFromState() {
 
 // Calcule l'indicateur cellFertile pour chaque cellule.
 // Une cellule est fertile si son biome est 'grass' ou 'forest' ET
-// (biomeNoise < 0.4 OU distance Manhattan <= 3 d une cellule eau ou sable).
+// son bruit de fertilite independant depasse le seuil (patches naturels ~20%).
 export function computeFertileCells() {
   if (!state.cellFertile || state.cellFertile.length !== GRID * GRID) {
     state.cellFertile = new Uint8Array(GRID * GRID)
@@ -347,20 +347,8 @@ export function computeFertileCells() {
       const k = z * GRID + x
       const biome = state.cellBiome[k]
       if (biome !== 'grass' && biome !== 'forest') continue
-      const noiseLow = state.biomeNoise[k] < 0.15
-      let nearWaterOrSand = false
-      if (!noiseLow) {
-        outer: for (let dz = -2; dz <= 2; dz++) {
-          for (let dx = -2; dx <= 2; dx++) {
-            if (Math.abs(dx) + Math.abs(dz) > 2) continue
-            const nx = x + dx, nz = z + dz
-            if (nx < 0 || nz < 0 || nx >= GRID || nz >= GRID) continue
-            const nb = state.cellBiome[nz * GRID + nx]
-            if (nb === 'water' || nb === 'sand') { nearWaterOrSand = true; break outer }
-          }
-        }
-      }
-      if (noiseLow || nearWaterOrSand) state.cellFertile[k] = 1
+      const fn = fbm(x * 0.04 + 500.0, z * 0.04 + 500.0, 3)
+      if (fn > 0.07) state.cellFertile[k] = 1
     }
   }
 }
