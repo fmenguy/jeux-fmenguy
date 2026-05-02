@@ -6,7 +6,7 @@ import { state } from './modules/state.js'
 import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
-import { refreshBushBerries, countActiveResearchers, tickTreeGrowth, tickFoyers, checkUniqueBuildingButtons, bushLeafMesh } from './modules/placements.js'
+import { refreshBushBerries, countActiveResearchers, tickTreeGrowth, tickFoyers, checkUniqueBuildingButtons, bushLeafMesh, tickDeer } from './modules/placements.js'
 import { tryBlockedTechBubble, hasPendingResearchableTech, unlockTech, queueTech } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
@@ -271,11 +271,7 @@ function tick(nowMs) {
 
   for (const c of state.colonists) c.update(dt)
 
-  if (state.deers) {
-    for (const d of state.deers) {
-      if (d.group.userData.mixer) d.group.userData.mixer.update(dt)
-    }
-  }
+  tickDeer(dt)
 
   // regen des baies
   for (const b of state.bushes) {
