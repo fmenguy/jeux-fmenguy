@@ -823,10 +823,17 @@ export class Colonist {
             } else {
               const deerEntry = state.deers ? state.deers.find(d => d.x === x && d.z === z) : null
               if (deerEntry) {
+                if (!techUnlocked('bow-wood')) {
+                  removeJob(x, z, true)
+                  this.targetJob = null
+                  this.state = 'IDLE'
+                  return
+                }
                 const deerIdx = state.deers.indexOf(deerEntry)
                 state.deers.splice(deerIdx, 1)
                 if (deerEntry.group.parent) deerEntry.group.parent.remove(deerEntry.group)
-                state.resources.viande++
+                state.resources['raw-meat'] = (state.resources['raw-meat'] || 0) + 2
+                state.resources.bone = (state.resources.bone || 0) + 1
                 this.skills.hunting++
                 scheduleFlash(x, z)
                 removeJob(x, z, true)
