@@ -671,7 +671,22 @@ const _deerTmpVec = new THREE.Vector3()
 export function tickDeer(dt) {
   if (!state.deers || !state.deers.length) return
   const rng = Math.random
+  let needCleanup = false
   for (const d of state.deers) {
+    if (d.dead) {
+      d.deadTimer -= dt
+      if (d.deadTimer <= 0) {
+        scene.remove(d.group)
+        d.group.traverse(function(o) {
+          if (o.geometry) o.geometry.dispose()
+          if (o.material) o.material.dispose()
+        })
+        d._remove = true
+        needCleanup = true
+      }
+      continue
+    }
+
     if (d.mixer) d.mixer.update(dt)
 
     if (d.waitTimer > 0) {
@@ -757,6 +772,11 @@ export function tickDeer(dt) {
       if (d._walkAction && !d._walkAction.isRunning()) d._walkAction.play()
       if (d._idleAction && d._idleAction.isRunning()) d._idleAction.stop()
     }
+  }
+  if (needCleanup) {
+    const kept = state.deers.filter(function(d) { return !d._remove })
+    state.deers.length = 0
+    for (const d of kept) state.deers.push(d)
   }
 }
 
