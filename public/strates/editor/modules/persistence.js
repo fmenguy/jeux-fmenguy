@@ -121,7 +121,8 @@ function serializeSnapshot() {
       researchBuildingId: c.researchBuildingId,
       favorite: !!c.favorite,
       hp: c.hp, mor: c.mor, faim: c.faim,
-      age: c.age, skills: c.skills || {}
+      age: c.age, skills: c.skills || {},
+      profession: c.profession ?? null
     })),
     spawn: state.spawn ? { x: state.spawn.x, z: state.spawn.z } : null,
     jobs: Array.from(state.jobs.keys()),
