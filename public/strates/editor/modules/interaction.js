@@ -654,6 +654,10 @@ function applyToolAtCell(cell) {
 
   switch (t) {
     case 'house':
+      if (!state.cellRevealed[cell.z * GRID + cell.x]) {
+        showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+        return
+      }
       if (!isCellOccupied(cell.x, cell.z)) {
         if (addHouse(cell.x, cell.z)) {
           state.gameStats.housesPlaced++
@@ -664,6 +668,10 @@ function applyToolAtCell(cell) {
       }
       break
     case 'research':
+      if (!state.cellRevealed[cell.z * GRID + cell.x]) {
+        showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+        return
+      }
       if (isBuildingUniqueAndPlaced('hutte-du-sage')) break
       if (!isCellOccupied(cell.x, cell.z)) {
         const entry = addResearchHouse(cell.x, cell.z)
@@ -676,6 +684,10 @@ function applyToolAtCell(cell) {
       const prk = cell.z * GRID + cell.x
       if (state.toolState.paintedThisStroke.has('pr' + prk)) break
       state.toolState.paintedThisStroke.add('pr' + prk)
+      if (!state.cellRevealed[prk]) {
+        showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+        return
+      }
       if (!isCellOccupied(cell.x, cell.z)) {
         const entry = addResearchHouse(cell.x, cell.z)
         if (entry) assignResearcherToBuilding(entry)
@@ -688,6 +700,10 @@ function applyToolAtCell(cell) {
       const pfk = cell.z * GRID + cell.x
       if (state.toolState.paintedThisStroke.has('pf' + pfk)) break
       state.toolState.paintedThisStroke.add('pf' + pfk)
+      if (!state.cellRevealed[pfk]) {
+        showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+        return
+      }
       if (!isCellOccupied(cell.x, cell.z)) addFoyer(cell.x, cell.z)
       break
     }
@@ -699,6 +715,10 @@ function applyToolAtCell(cell) {
       const pbk = cell.z * GRID + cell.x
       if (state.toolState.paintedThisStroke.has('pb' + pbk)) break
       state.toolState.paintedThisStroke.add('pb' + pbk)
+      if (!state.cellRevealed[pbk]) {
+        showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+        return
+      }
       if (addBigHouse(cell.x, cell.z)) {
         state.gameStats.housesPlaced++
         spawnColonsAroundHouse(cell.x + 1, cell.z + 1, 4)
@@ -777,6 +797,10 @@ function applyToolToStrata(cells) {
   for (const c of cells) {
     switch (t) {
       case 'house':
+        if (!state.cellRevealed[c.z * GRID + c.x]) {
+          showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+          break
+        }
         if (!isCellOccupied(c.x, c.z)) {
           if (addHouse(c.x, c.z)) {
             state.gameStats.housesPlaced++
@@ -787,6 +811,10 @@ function applyToolToStrata(cells) {
         }
         break
       case 'research':
+        if (!state.cellRevealed[c.z * GRID + c.x]) {
+          showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+          break
+        }
         if (isBuildingUniqueAndPlaced('hutte-du-sage')) break
         if (!isCellOccupied(c.x, c.z)) {
           const entry = addResearchHouse(c.x, c.z)
@@ -799,6 +827,10 @@ function applyToolToStrata(cells) {
         const prk2 = c.z * GRID + c.x
         if (state.toolState.paintedThisStroke.has('pr' + prk2)) break
         state.toolState.paintedThisStroke.add('pr' + prk2)
+        if (!state.cellRevealed[prk2]) {
+          showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+          break
+        }
         if (!isCellOccupied(c.x, c.z)) {
           const entry = addResearchHouse(c.x, c.z)
           if (entry) assignResearcherToBuilding(entry)
@@ -811,6 +843,10 @@ function applyToolToStrata(cells) {
         const pfk2 = c.z * GRID + c.x
         if (state.toolState.paintedThisStroke.has('pf' + pfk2)) break
         state.toolState.paintedThisStroke.add('pf' + pfk2)
+        if (!state.cellRevealed[pfk2]) {
+          showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+          break
+        }
         if (!isCellOccupied(c.x, c.z)) addFoyer(c.x, c.z)
         break
       }
@@ -822,6 +858,10 @@ function applyToolToStrata(cells) {
         const pbk2 = c.z * GRID + c.x
         if (state.toolState.paintedThisStroke.has('pb' + pbk2)) break
         state.toolState.paintedThisStroke.add('pb' + pbk2)
+        if (!state.cellRevealed[pbk2]) {
+          showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
+          break
+        }
         if (addBigHouse(c.x, c.z)) {
           state.gameStats.housesPlaced++
           spawnColonsAroundHouse(c.x + 1, c.z + 1, 4)
