@@ -35,8 +35,8 @@ const DAY = {
 }
 
 const NIGHT = {
-  bg:        new THREE.Color(0x0c1426),
-  fog:       new THREE.Color(0x0c1426),
+  bg:        new THREE.Color(0x050510),
+  fog:       new THREE.Color(0x050510),
   fogDensity: 0.012,
   sunColor:  new THREE.Color(0x7d94c8),
   sunIntensity: 0.35,
@@ -50,23 +50,71 @@ const NIGHT = {
   starsOpacity: 1
 }
 
-// --- Champ d'etoiles ---
+// --- Champ d'etoiles (hemisphere superieure uniquement) ---
 const starsGeo = new THREE.BufferGeometry()
 ;(function buildStars() {
   const positions = new Float32Array(800 * 3)
   for (let i = 0; i < 800; i++) {
-    const theta = Math.acos(2 * Math.random() - 1)
-    const phi = Math.random() * Math.PI * 2
-    positions[i * 3]     = 180 * Math.sin(theta) * Math.cos(phi)
-    positions[i * 3 + 1] = 180 * Math.cos(theta)
-    positions[i * 3 + 2] = 180 * Math.sin(theta) * Math.sin(phi)
+    const theta = Math.random() * Math.PI * 2
+    const phi = Math.random() * Math.PI * 0.5
+    const r = 150 + Math.random() * 30
+    positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta)
+    positions[i * 3 + 1] = r * Math.cos(phi)
+    positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta)
   }
   starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
 })()
-const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.4, sizeAttenuation: true, transparent: true, opacity: 0 })
+const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.45, sizeAttenuation: true, transparent: true, opacity: 0 })
 const stars = new THREE.Points(starsGeo, starsMat)
 stars.frustumCulled = false
 scene.add(stars)
+
+// --- Lucioles ---
+function createFireflies() {
+  const count = 40
+  const geo = new THREE.BufferGeometry()
+  const pos = new Float32Array(count * 3)
+  const phases = new Float32Array(count)
+  for (let i = 0; i < count; i++) {
+    pos[i * 3]     = (Math.random() - 0.5) * 80
+    pos[i * 3 + 1] = 1.0 + Math.random() * 2.5
+    pos[i * 3 + 2] = (Math.random() - 0.5) * 80
+    phases[i] = Math.random() * Math.PI * 2
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+  const mat = new THREE.PointsMaterial({
+    color: 0x88ff55,
+    size: 0.35,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  })
+  const ff = new THREE.Points(geo, mat)
+  ff.visible = false
+  ff.userData.phases = phases
+  scene.add(ff)
+  return ff
+}
+
+const fireflies = createFireflies()
+
+function tickFireflies(time) {
+  if (!fireflies.visible) return
+  const pos = fireflies.geometry.attributes.position.array
+  const phases = fireflies.userData.phases
+  for (let i = 0; i < phases.length; i++) {
+    const ph = phases[i]
+    pos[i * 3]     += Math.sin(time * 0.3 + ph) * 0.008
+    pos[i * 3 + 1] += Math.sin(time * 0.5 + ph * 1.3) * 0.004
+    pos[i * 3 + 2] += Math.cos(time * 0.3 + ph * 0.7) * 0.008
+    if (pos[i * 3 + 1] < 0.8) pos[i * 3 + 1] = 0.8
+    if (pos[i * 3 + 1] > 4.0) pos[i * 3 + 1] = 4.0
+  }
+  fireflies.geometry.attributes.position.needsUpdate = true
+  fireflies.material.opacity = 0.6 + Math.sin(time * 1.2) * 0.25
+}
 
 // --- Etat de la transition ------------------------------------------------
 const TRANSITION_DURATION = 1.5 // secondes
@@ -119,6 +167,7 @@ export function initDayNight() {
   fromMode = mode
   toMode = mode
   transitionT = 1
+  fireflies.visible = !!state.isNight
   applyAmbiance(1, modeParams(mode), modeParams(mode))
   updateHudIcon()
 }
@@ -133,6 +182,7 @@ export function toggleDayNight() {
   fromMode = nowNight ? 'day' : 'night'
   toMode   = nowNight ? 'night' : 'day'
   transitionT = 0
+  fireflies.visible = nowNight
   updateHudIcon()
   if (onModeChange) onModeChange(nowNight)
 }
@@ -166,7 +216,10 @@ export function isColonistOnObservatory(c) {
   return false
 }
 
+let _elapsed = 0
+
 export function tickDayNight(dt) {
+  _elapsed += dt
   if (transitionT < 1) {
     transitionT = Math.min(1, transitionT + dt / TRANSITION_DURATION)
     const k = transitionT < 0.5
@@ -174,6 +227,8 @@ export function tickDayNight(dt) {
       : 1 - Math.pow(-2 * transitionT + 2, 2) / 2
     applyAmbiance(k, modeParams(fromMode), modeParams(toMode))
   }
+
+  tickFireflies(_elapsed)
 
   if (state.isNight) {
     nightPointAccum += dt
