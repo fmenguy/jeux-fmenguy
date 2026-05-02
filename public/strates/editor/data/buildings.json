@@ -128,6 +128,42 @@
       "description": "Symbole tribal. +1 moral a toute la colonie. Pas de production."
     },
     {
+      "id": "champ-ble",
+      "name": "Champ de ble",
+      "age": 2,
+      "category": "alimentation",
+      "size": "1x1",
+      "cost": { "wood": 3, "stone": 2 },
+      "requires": { "tech": ["wheat-field"] },
+      "provides": { "food_per_tick": 0 },
+      "activity": "day",
+      "description": "Stub age 2. Champ de ble domestique. Debloque le metier Agriculteur."
+    },
+    {
+      "id": "grenier",
+      "name": "Grenier",
+      "age": 2,
+      "category": "stockage",
+      "size": "1x1",
+      "cost": { "wood": 15, "stone": 10 },
+      "requires": { "tech": ["granary"] },
+      "provides": { "storage": 0 },
+      "activity": "both",
+      "description": "Stub age 2. Stockage communal du grain. Augmente la capacite de stockage alimentaire."
+    },
+    {
+      "id": "route-pavee",
+      "name": "Route pavee",
+      "age": 2,
+      "category": "infrastructure",
+      "size": "1x1",
+      "cost": { "stone": 10 },
+      "requires": { "tech": ["paved-road"] },
+      "provides": { "speed_bonus": 0 },
+      "activity": "both",
+      "description": "Stub age 2. Revetement de pierre taillee. Les colons se deplacent plus vite sur les routes pavees."
+    },
+    {
       "id": "cairn-pierre",
       "name": "Cairn de pierre",
       "age": 1,
