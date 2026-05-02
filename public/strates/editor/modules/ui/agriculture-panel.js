@@ -167,9 +167,9 @@ const CROPS = [
     name: 'Champ de blé',
     icon: '\u{1F33E}',
     desc: 'Produit du grain. Requiert terrain fertile. 2x2 cases.',
-    cost: { wood: 4, stone: 2 },
-    age: 2,
-    techRequired: 'wheat-field'
+    cost: { wood: 2 },
+    age: 1,
+    techRequired: 'first-field'
   }
 ]
 
@@ -230,7 +230,11 @@ function renderCards() {
       </div>
       <div class="agri-card-desc">${crop.desc}</div>
       <div class="agri-card-foot">
-        <span class="agri-cost">Coût : <b>${crop.cost.wood}</b> bois, <b>${crop.cost.stone}</b> pierre</span>
+        <span class="agri-cost">Coût : ${
+          [crop.cost.wood ? `<b>${crop.cost.wood}</b> bois` : '',
+           crop.cost.stone ? `<b>${crop.cost.stone}</b> pierre` : '']
+          .filter(Boolean).join(', ') || 'gratuit'
+        }</span>
         <span class="agri-badge">Âge ${crop.age}</span>
       </div>
       ${unlocked ? '' : '<div class="agri-card-lockmsg">Recherchez « Premier champ » pour débloquer.</div>'}
@@ -378,8 +382,7 @@ export function confirmFieldPlacement(gx, gz) {
   }
   // Succes : retire les couts et sort du mode
   if (state.resources) {
-    state.resources.wood = Math.max(0, (state.resources.wood || 0) - 4)
-    state.resources.stone = Math.max(0, (state.resources.stone || 0) - 2)
+    state.resources.wood = Math.max(0, (state.resources.wood || 0) - 2)
   }
   state.fieldPlacementMode = null
   document.body.style.cursor = ''
