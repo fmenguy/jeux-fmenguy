@@ -203,6 +203,130 @@
       "unlocks": {},
       "description": "Connaissance des cycles celestes. Reduit la duree de la nuit de 20 secondes.",
       "speech": ["Les etoiles nous guident desormais."]
+    },
+    {
+      "id": "axe-bronze",
+      "name": "Hache Bronze",
+      "age": 2,
+      "branch": "outils",
+      "icon": "🪓",
+      "cost": { "research": 20 },
+      "requires": ["axe-stone"],
+      "unlocks": {
+        "jobs": ["bucheron-bronze"]
+      },
+      "description": "Hache en alliage de bronze. Meilleur rendement par arbre abattu.",
+      "speech": ["Ce metal coupe bien mieux que la pierre."]
+    },
+    {
+      "id": "pick-bronze",
+      "name": "Pioche Bronze",
+      "age": 2,
+      "branch": "outils",
+      "icon": "⛏",
+      "cost": { "research": 20 },
+      "requires": ["pick-stone"],
+      "unlocks": {
+        "resources": ["copper", "coal"]
+      },
+      "description": "Pioche en bronze. Permet d'exploiter les filons de cuivre et de charbon reveles a l'Age de Pierre.",
+      "speech": ["Ces filons n'attendaient que nous."]
+    },
+    {
+      "id": "shovel-bronze",
+      "name": "Pelle Bronze",
+      "age": 2,
+      "branch": "outils",
+      "icon": "🪣",
+      "cost": { "research": 18 },
+      "requires": ["shovel-stone"],
+      "unlocks": {},
+      "description": "Pelle en bronze. Terraformation plus efficace, plus de terrain deplace par colon.",
+      "speech": ["On deplace des montagnes avec ca."]
+    },
+    {
+      "id": "wheat-field",
+      "name": "Champ de ble",
+      "age": 2,
+      "branch": "agriculture",
+      "icon": "🌾",
+      "cost": { "research": 22 },
+      "requires": ["first-field"],
+      "unlocks": {
+        "buildings": ["champ-ble"],
+        "jobs":      ["agriculteur"]
+      },
+      "description": "Culture du ble domestique. Debloque le champ de ble et le metier d'agriculteur.",
+      "speech": ["Le ble nourrit bien plus que les baies."]
+    },
+    {
+      "id": "granary",
+      "name": "Grenier",
+      "age": 2,
+      "branch": "agriculture",
+      "icon": "🏛",
+      "cost": { "research": 20 },
+      "requires": ["wheat-field"],
+      "unlocks": {
+        "buildings": ["grenier"]
+      },
+      "description": "Construction d'un grenier communal. Augmente la capacite de stockage du grain.",
+      "speech": ["Plus de gaspillage, le grain est au sec."]
+    },
+    {
+      "id": "forge",
+      "name": "Forge",
+      "age": 2,
+      "branch": "construction",
+      "icon": "🔨",
+      "cost": { "research": 25 },
+      "requires": ["big-house"],
+      "unlocks": {
+        "buildings": ["forge"],
+        "jobs":      ["forgeron"]
+      },
+      "description": "Foyer de forge pour travailler le metal. Debloque la forge et le metier de forgeron.",
+      "speech": ["Le metal chauffe, la forge sonne."]
+    },
+    {
+      "id": "paved-road",
+      "name": "Route pavee",
+      "age": 2,
+      "branch": "construction",
+      "icon": "🛤",
+      "cost": { "research": 18 },
+      "requires": ["forge"],
+      "unlocks": {
+        "buildings": ["route-pavee"]
+      },
+      "description": "Revetement de pierre taillee. Les colons se deplacent plus vite sur les routes pavees.",
+      "speech": ["Enfin un chemin digne de ce nom."]
+    },
+    {
+      "id": "writing",
+      "name": "Ecriture",
+      "age": 2,
+      "branch": "savoir",
+      "icon": "📜",
+      "cost": { "research": 22 },
+      "requires": ["oral-tradition"],
+      "unlocks": {
+        "features": ["journal-village"]
+      },
+      "description": "Codification du savoir sur tablettes. Debloque le journal du village et augmente passivement la recherche.",
+      "speech": ["Ce qui est ecrit ne s'oublie pas."]
+    },
+    {
+      "id": "cartography",
+      "name": "Cartographie",
+      "age": 2,
+      "branch": "exploration",
+      "icon": "🗺",
+      "cost": { "research": 20 },
+      "requires": ["scouting"],
+      "unlocks": {},
+      "description": "Techniques de releve cartographique. L'explorateur revele une zone plus large lors de ses missions.",
+      "speech": ["Chaque expedition trace une route pour la suivante."]
     }
   ]
 }
