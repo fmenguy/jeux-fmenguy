@@ -635,15 +635,6 @@
 </head>
 <body>
   <script>
-    (function() {
-      const params = new URLSearchParams(window.location.search)
-      const mode = params.get('mode') === 'sandbox' ? 'sandbox' : 'game'
-      document.body.dataset.mode = mode
-      window.STRATES_MODE = mode
-    })()
-  </script>
-
-  <script>
     // U5 : logique d'onglets actionbar + toggle panneaux rail droite
     document.addEventListener('DOMContentLoaded', function() {
       // Onglets actionbar

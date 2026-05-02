@@ -35,7 +35,6 @@ import { initBuildingPanel } from './modules/ui/building-panel.js'
 import { initAgriculturePanel } from './modules/ui/agriculture-panel.js'
 import { initCellTooltip } from './modules/ui/cell-tooltip.js'
 import { initTutoInvite, showTutoInvite } from './modules/ui/tutorial.js'
-import { isSandboxMode, activateSandbox } from './modules/sandbox.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -83,7 +82,6 @@ if (!isNewGame && pendingSlot && hasSave(pendingSlot) && loadGame(pendingSlot)) 
   populateDefaultScene()
 }
 buildVegetation()
-if (isSandboxMode()) activateSandbox()
 setTool('nav')
 setBrush(1)
 refreshToolButtons()
@@ -369,15 +367,7 @@ function tick(nowMs) {
   requestAnimationFrame(tick)
 }
 
-// Initialise les labels de mode
-;(function() {
-  const isSandbox = window.STRATES_MODE === 'sandbox'
-  const badge = document.getElementById('mode-badge')
-  const modeLabel = document.getElementById('hud-mode-label')
-  if (badge)     badge.textContent     = isSandbox ? 'Godmod / Sandbox' : 'Mode jeu'
-  if (modeLabel) modeLabel.textContent = isSandbox ? ', éditeur de carte' : ''
-  document.title = isSandbox ? 'Strates, éditeur' : 'Strates'
-})()
+document.title = 'Strates'
 
 loader.classList.add('hidden')
 tick()
