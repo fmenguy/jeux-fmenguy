@@ -190,6 +190,7 @@ export function buildTerrain() {
   state.cellSurface = new Array(GRID * GRID).fill(null)
   state.cellFertile = new Uint8Array(GRID * GRID)
   state.cellOre = new Array(GRID * GRID).fill(null)
+  state.cellRevealed = new Uint8Array(GRID * GRID)
   state.instanceIndex.length = 0
   for (let i = 0; i < GRID * GRID; i++) state.instanceIndex.push([])
 
@@ -270,9 +271,11 @@ export function buildTerrain() {
   if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
   scene.add(state.instanced)
   computeFertileCells()
+  // Peindre toutes les cellules en noir (fog of war initial : tout masque).
+  // repaintCellSurface applique le noir si cellRevealed[k] === 0.
   for (let z = 0; z < GRID; z++) {
     for (let x = 0; x < GRID; x++) {
-      if (state.cellFertile[z * GRID + x]) repaintCellSurface(x, z)
+      repaintCellSurface(x, z)
     }
   }
   console.log('[fertile] cells marked:', Array.from(state.cellFertile).filter(v => v).length)
@@ -331,6 +334,12 @@ export function rebuildTerrainFromState() {
   state.instanced.instanceMatrix.needsUpdate = true
   if (state.instanced.instanceColor) state.instanced.instanceColor.needsUpdate = true
   scene.add(state.instanced)
+  // S'assurer que cellRevealed est initialise (cas de chargement de sauvegarde).
+  // Si la sauvegarde ne contenait pas cellRevealed, on cree un tableau vide
+  // (tout masque) ; repaintCellSurface appliquera le noir au prochain appel.
+  if (!state.cellRevealed || state.cellRevealed.length !== GRID * GRID) {
+    state.cellRevealed = new Uint8Array(GRID * GRID)
+  }
 }
 
 // Calcule l'indicateur cellFertile pour chaque cellule.
@@ -377,11 +386,37 @@ export function repaintCellSurface(x, z) {
       tmpColor.lerp(FERTILE_TINT, 0.55)
     }
   }
+  // Fog of war : cellule non revelee = noir total
+  if (state.cellRevealed && !state.cellRevealed[k]) {
+    tmpColor.set(0x000000)
+  }
   const i = topVoxelIndex(x, z)
   if (i < 0) return
   state.instanced.setColorAt(i, tmpColor)
   state.origColor[i].copy(tmpColor)
   state.instanced.instanceColor.needsUpdate = true
+}
+
+// Revele les cellules dans un rayon r autour de (cx, cz) et repeint chaque
+// cellule nouvellement revelee. Utilisee par worldgen.js et colonist.js.
+export function revealAround(cx, cz, r) {
+  if (!state.cellRevealed) return
+  const r2 = r * r
+  const x0 = Math.max(0, cx - r)
+  const x1 = Math.min(GRID - 1, cx + r)
+  const z0 = Math.max(0, cz - r)
+  const z1 = Math.min(GRID - 1, cz + r)
+  for (let z = z0; z <= z1; z++) {
+    for (let x = x0; x <= x1; x++) {
+      if ((x - cx) * (x - cx) + (z - cz) * (z - cz) <= r2) {
+        const k = z * GRID + x
+        if (!state.cellRevealed[k]) {
+          state.cellRevealed[k] = 1
+          repaintCellSurface(x, z)
+        }
+      }
+    }
+  }
 }
 
 // ---------- eau ----------

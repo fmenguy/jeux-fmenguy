@@ -10,7 +10,7 @@ import {
 } from './gamedata.js'
 import { state } from './state.js'
 import { scene, camera, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
-import { topVoxelIndex, colorForLayer, isDeepWater } from './terrain.js'
+import { topVoxelIndex, colorForLayer, isDeepWater, revealAround } from './terrain.js'
 import { aStar, findApproach } from './pathfind.js'
 import { jobKey, removeJob } from './jobs.js'
 import {
@@ -744,9 +744,14 @@ export class Colonist {
       const step = speed * dt
       if (dist <= step) {
         this.tx = targetX; this.tz = targetZ
+        const prevX = this.x, prevZ = this.z
         this.x = nx; this.z = nz
         this.pathStep++
         this.updateTrail()
+        // Revelation du fog of war quand le colon change de cellule.
+        if (this.x !== prevX || this.z !== prevZ) {
+          revealAround(this.x, this.z, 8)
+        }
       } else {
         this.tx += (dx / dist) * step
         this.tz += (dz / dist) * step

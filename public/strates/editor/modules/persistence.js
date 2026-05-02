@@ -148,7 +148,7 @@ function serializeSnapshot() {
     questsCompleted: (state.questsCompleted || []).map(q => ({ id: q.id, title: q.title })),
     questsActiveIds: (state.questsActive || []).map(q => q.id),
     season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone, year: state.season.year ?? 1 },
-    visited: state.visited ? Array.from(state.visited) : null,
+    cellRevealed: state.cellRevealed ? Array.from(state.cellRevealed) : null,
     currentAge: state.currentAge || 1,
     ageUnlockedAt: state.ageUnlockedAt || { 1: Date.now() },
     achievements: Array.isArray(state.achievements) ? state.achievements.slice() : [],
@@ -296,11 +296,18 @@ function applySnapshot(data) {
     state.season.cyclesDone = data.season.cyclesDone || 0
     state.season.year = data.season.year ?? (data.season.cyclesDone + 1) ?? 1
   }
-  // fog of war : restaurer la carte d'exploration si presente dans la save
-  if (Array.isArray(data.visited) && data.visited.length === GRID * GRID) {
-    state.visited = Uint8Array.from(data.visited)
+  // fog of war : restaurer la carte d'exploration si presente dans la save.
+  // Ancien format : data.visited (valeurs 0/1/2) - migration : >= 1 = revele.
+  // Nouveau format : data.cellRevealed (valeurs 0/1).
+  if (Array.isArray(data.cellRevealed) && data.cellRevealed.length === GRID * GRID) {
+    state.cellRevealed = Uint8Array.from(data.cellRevealed)
+  } else if (Array.isArray(data.visited) && data.visited.length === GRID * GRID) {
+    state.cellRevealed = new Uint8Array(GRID * GRID)
+    for (let i = 0; i < data.visited.length; i++) {
+      state.cellRevealed[i] = data.visited[i] >= 1 ? 1 : 0
+    }
   } else {
-    state.visited = null  // sera initialise par buildFog()
+    state.cellRevealed = null  // sera initialise par buildTerrain()
   }
   // Lot D : ages
   state.currentAge = data.currentAge || 1

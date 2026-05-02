@@ -12,6 +12,7 @@ export const state = {
   cellSurface: null,
   cellFertile: null,
   cellOre: null,
+  cellRevealed: null,
   instanceIndex: [],
   instanced: null,
   origColor: null,
