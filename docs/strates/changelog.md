@@ -4,6 +4,17 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-04 : Lot B, fix production night points au promontoire
+
+Apres la migration astronome -> chercheur (commit f73b67d), le compteur `nightPoints` ne progressait plus la nuit meme avec un chercheur visiblement present au promontoire. Cause : le pathfinding deposait souvent le colon sur une cellule adjacente au promontoire (palier de hauteur trop important pour atteindre la cellule exacte), or `isColonistOnObservatory` exigeait une egalite stricte sur (x, z).
+
+### Comportement
+
+- `daynight.js` : `isColonistOnObservatory` accepte desormais Manhattan <= 1 autour de la cellule du promontoire (cellule meme + 4 voisins).
+- `placements.js` : `isObservatoryOn` aligne sur la meme tolerance, pour rester coherent avec `pickObservatory` (le colon ne reesssaiera pas un trajet s il est deja dans le voisinage) et avec `stayingOnObservatory` (le chercheur reste IDLE au promontoire la nuit, ne part pas au campfire).
+
+---
+
 ## 2026-05-03 : Lot B, refonte recherche nocturne (option A)
 
 Les points nocturnes deviennent une ressource accumulee par le temps passe en mode nuit avec un astronome assigne sur un promontoire. Une fois accumules, ils peuvent etre depenses a tout moment (jour ou nuit) pour debloquer des techs avec `cost.night > 0`.
