@@ -947,6 +947,12 @@ function renderFicheAction(tech, status, cost) {
   if (status === 'ready' || status === 'available') {
     const queueFull = (researchQueue().length + (activeResearchId() ? 1 : 0)) >= QUEUE_MAX
     if (queueFull) return '<button class="ttp-fiche-btn" disabled>File pleine</button>'
+    // Tech à coût night > 0 : disponible uniquement la nuit.
+    const nightCost = (tech && tech.cost && typeof tech.cost === 'object') ? (tech.cost.night || 0) : 0
+    if (nightCost > 0 && !state.isNight) {
+      return '<button class="ttp-fiche-btn" disabled title="Activez le mode nuit (touche N) pour lancer cette recherche">' +
+             '&#127769; Disponible uniquement la nuit</button>'
+    }
     return '<button class="ttp-fiche-btn" data-act="queue">+ Ajouter a la file &middot; ' + cost + ' &#x2605;</button>'
   }
   // locked

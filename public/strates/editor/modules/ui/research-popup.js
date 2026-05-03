@@ -191,12 +191,18 @@ function showNotif(id, tech) {
   })
 }
 
+// Set défensif : empêche un double popup pour la même tech si techComplete
+// est dispatché plusieurs fois (race au tick, retry après échec, etc.).
+const _notifiedTechIds = new Set()
+
 export function installResearchPopup() {
   if (installed) return
   installed = true
   ensureContainer()
   window.addEventListener('strates:techComplete', function(e) {
     const detail = (e && e.detail) || {}
+    if (!detail.id || _notifiedTechIds.has(detail.id)) return
+    _notifiedTechIds.add(detail.id)
     showNotif(detail.id, detail.tech)
   })
 }
