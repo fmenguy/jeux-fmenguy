@@ -14,6 +14,34 @@ import { getBuildingById } from './gamedata.js'
 import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
 
 // ============================================================================
+// Lot B (engine) : phase de construction. Tout batiment dont la definition
+// JSON declare buildTime > 0 est marque "isUnderConstruction" au placement.
+// Les flags constructionProgress (0..1) et buildTime (s) sont lus par :
+//   - colonist.js (etat BUILDER, fait progresser le chantier)
+//   - construction-fx.js (transparence et barre de progres)
+//   - les call-sites qui doivent ignorer un batiment non termine (chercheur
+//     qui ne s assigne pas a une hutte en chantier, etc.).
+// Les batiments dont buildTime == 0 ou absent sont consideres immediatement
+// actifs (compat retro avec les comportements existants).
+// ============================================================================
+function _markUnderConstruction(entry, buildingId) {
+  if (!entry) return entry
+  entry.buildingId = buildingId
+  const def = getBuildingById(buildingId)
+  const bt = def && typeof def.buildTime === 'number' ? def.buildTime : 0
+  if (bt > 0) {
+    entry.isUnderConstruction = true
+    entry.constructionProgress = 0
+    entry.buildTime = bt
+  } else {
+    entry.isUnderConstruction = false
+    entry.constructionProgress = 1
+    entry.buildTime = 0
+  }
+  return entry
+}
+
+// ============================================================================
 // Arbres (trunk + leaf InstancedMesh)
 // ============================================================================
 const trunkGeo = new THREE.BoxGeometry(0.35, 1.0, 0.35)
@@ -827,7 +855,9 @@ export function addHouse(gx, gz) {
   const g = makeHouse()
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
-  state.houses.push({ x: gx, z: gz, group: g, id: state.houses.length, residents: [] })
+  const entry = { x: gx, z: gz, group: g, id: state.houses.length, residents: [] }
+  _markUnderConstruction(entry, 'cabane')
+  state.houses.push(entry)
   revealAround(gx, gz, 8)
   return true
 }
@@ -866,6 +896,7 @@ export function addFoyer(gx, gz) {
   // Lot B : cuisson de viande. cookTimer monte tant que isCooking est vrai,
   // jusqu a COOK_DURATION secondes, puis produit 1 cooked-meat.
   const entry = { x: gx, z: gz, group: g, light, cookTimer: 0, isCooking: false }
+  _markUnderConstruction(entry, 'foyer')
   state.foyers.push(entry)
   revealAround(gx, gz, 8)
   return true
@@ -911,7 +942,9 @@ export function addBigHouse(gx, gz) {
   const g = makeBigHouse()
   g.position.set(gx + 2, top, gz + 2)
   scene.add(g)
-  state.bigHouses.push({ x: gx, z: gz, group: g })
+  const entry = { x: gx, z: gz, group: g }
+  _markUnderConstruction(entry, 'big-house')
+  state.bigHouses.push(entry)
   revealAround(gx + 2, gz + 2, 8)
   return true
 }
@@ -946,7 +979,9 @@ export function addBigHouseFromSave(ox, oz) {
   const g = makeBigHouse()
   g.position.set(ox + 2, top, oz + 2)
   scene.add(g)
-  state.bigHouses.push({ x: ox, z: oz, group: g })
+  // Restauration depuis save : batiment deja construit dans la sauvegarde.
+  const entry = { x: ox, z: oz, group: g, buildingId: 'big-house', isUnderConstruction: false, constructionProgress: 1, buildTime: 0 }
+  state.bigHouses.push(entry)
 }
 
 // ============================================================================
@@ -992,7 +1027,7 @@ function _placeManorGroup(ox, oz) {
   const g = makeManor()
   g.position.set(ox + 1, top, oz + 1)
   scene.add(g)
-  const entry = { x: ox, z: oz, group: g }
+  const entry = { x: ox, z: oz, group: g, buildingId: 'manor', isUnderConstruction: false, constructionProgress: 1, buildTime: 0 }
   state.manors.push(entry)
   return entry
 }
@@ -1075,6 +1110,7 @@ export function addResearchHouse(gx, gz) {
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
   const entry = { id: state.researchBuildingNextId++, x: gx, z: gz, group: g, assignedColonistId: null }
+  _markUnderConstruction(entry, 'hutte-du-sage')
   state.researchHouses.push(entry)
   revealAround(gx, gz, 8)
   try { window.dispatchEvent(new CustomEvent('strates:buildingPlaced', { detail: { type: 'research', id: entry.id } })) } catch (_) {}
@@ -1093,6 +1129,7 @@ export function findResearchBuildingById(id) {
 
 export function assignResearcherToBuilding(building) {
   if (!building || building.assignedColonistId != null) return false
+  if (building.isUnderConstruction) return false
   let best = null, bestD = Infinity
   for (const c of state.colonists) {
     if (c.researchBuildingId != null) continue
@@ -1295,6 +1332,10 @@ export function addWheatField(gx, gz) {
   }
   if (!state.wheatFields) state.wheatFields = []
   const entry = { x: gx, z: gz, group: g, grain: 0.0 }
+  // Pas de buildTime sur champ-ble dans buildings.json (Lot A age 2). On
+  // marque pour homogeneiser le contrat, mais l absence de buildTime laisse
+  // le champ immediatement actif.
+  _markUnderConstruction(entry, 'champ-ble')
   state.wheatFields.push(entry)
   return entry
 }
@@ -1349,6 +1390,7 @@ export function addCairn(gx, gz) {
   scene.add(g)
   if (!state.cairns) state.cairns = []
   const entry = { x: gx, z: gz, group: g }
+  _markUnderConstruction(entry, 'cairn-pierre')
   state.cairns.push(entry)
   return entry
 }
@@ -1446,6 +1488,7 @@ export function addObservatory(gx, gz) {
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
   const entry = { x: gx, z: gz, group: g }
+  _markUnderConstruction(entry, 'promontoire')
   state.observatories.push(entry)
   const alt = top ?? 3
   const BASE_RADIUS = 20
@@ -1471,7 +1514,10 @@ export function removeObservatoriesIn(cells) {
 
 export function isObservatoryOn(x, z) {
   if (!state.observatories) return false
-  for (const o of state.observatories) if (o.x === x && o.z === z) return true
+  for (const o of state.observatories) {
+    if (o.isUnderConstruction) continue
+    if (o.x === x && o.z === z) return true
+  }
   return false
 }
 
@@ -1821,6 +1867,7 @@ export function tickFoyers(dt) {
   const t = Date.now()
   const step = (typeof dt === 'number' && isFinite(dt)) ? dt : 0
   for (const f of state.foyers) {
+    if (f.isUnderConstruction) continue
     // Fallback procedural : mesh stocke dans userData.flame
     let flame = f.group.userData.flame
     // GLB : chercher un mesh dont le nom contient fire/flame/embers

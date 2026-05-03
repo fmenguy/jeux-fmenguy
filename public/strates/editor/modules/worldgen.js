@@ -30,6 +30,13 @@ export function populateDefaultScene() {
     const z = Math.max(0, Math.min(GRID - 1, spawn.z + oz))
     if (!isCellOccupied(x, z)) addHouse(x, z)
   }
+  // Lot B : le hameau initial est suppose deja construit (les colons demarrent
+  // avec un toit). On force isUnderConstruction = false sur ces maisons pour
+  // ne pas declencher l etat sans-abri au tick 0 de la partie.
+  for (const h of state.houses) {
+    h.isUnderConstruction = false
+    h.constructionProgress = 1
+  }
 
   // Arbres en clusters denses dans les forets
   let placed = 0
