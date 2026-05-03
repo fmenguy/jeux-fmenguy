@@ -130,6 +130,10 @@ export const STRATA_MAX = 200
 export const CONTEXT_COOLDOWN = 45
 export const FIELD_NO_RESEARCH_DELAY_MAX = 30
 export const TECH_BUBBLE_COOLDOWN = 60
+// Lot B : cooldown minimal (secondes) entre deux bulles "idle metier" pour un
+// meme colon. Un colon assigne a un metier mais sans cible disponible parle
+// au plus une fois toutes les IDLE_SPEECH_COOLDOWN secondes.
+export const IDLE_SPEECH_COOLDOWN = 30
 
 // ============================================================================
 // Camera ZQSD/WASD
