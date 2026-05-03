@@ -226,24 +226,33 @@ function tick(nowMs) {
       const cost = techEntry ? ((techEntry.cost && techEntry.cost.research) || 0) : 0
       if (cost > 0 && state.activeResearch.progress >= cost) {
         const completedId = state.activeResearch.id
-        state.activeResearch = null
-        // Le cout a deja ete paye en temps (progression), pas en points stockes.
-        unlockTech(completedId, refreshTechsPanel, { alreadyPaid: true })
-        try {
-          window.dispatchEvent(new CustomEvent('strates:techComplete', {
-            detail: { id: completedId, tech: techEntry }
-          }))
-        } catch (e) { /* ignore */ }
-        // Avancer la file : si une autre tech est enfilee, elle devient active.
-        if (state.researchQueue && state.researchQueue.length > 0) {
-          const nextId = state.researchQueue.shift()
-          state.activeResearch = { id: nextId, progress: 0 }
+        // Tenter le déblocage AVANT de toucher à activeResearch. Si unlockTech
+        // échoue (typiquement nightCost > nightPoints), on garde activeResearch
+        // tel quel : le progress reste plafonné, et un tick ultérieur réessaiera
+        // (ex : le joueur passe en nuit et accumule des nightPoints).
+        const success = unlockTech(completedId, refreshTechsPanel, { alreadyPaid: true })
+        if (success) {
+          state.activeResearch = null
           try {
-            window.dispatchEvent(new CustomEvent('strates:researchStarted', { detail: { id: nextId } }))
-            window.dispatchEvent(new CustomEvent('strates:queueChanged'))
+            window.dispatchEvent(new CustomEvent('strates:techComplete', {
+              detail: { id: completedId, tech: techEntry }
+            }))
           } catch (e) { /* ignore */ }
+          // Avancer la file : si une autre tech est enfilee, elle devient active.
+          if (state.researchQueue && state.researchQueue.length > 0) {
+            const nextId = state.researchQueue.shift()
+            state.activeResearch = { id: nextId, progress: 0 }
+            try {
+              window.dispatchEvent(new CustomEvent('strates:researchStarted', { detail: { id: nextId } }))
+              window.dispatchEvent(new CustomEvent('strates:queueChanged'))
+            } catch (e) { /* ignore */ }
+          } else {
+            try { window.dispatchEvent(new CustomEvent('strates:queueChanged')) } catch (e) { /* ignore */ }
+          }
         } else {
-          try { window.dispatchEvent(new CustomEvent('strates:queueChanged')) } catch (e) { /* ignore */ }
+          // Échec du déblocage : plafonner le progress à cost pour éviter une
+          // dérive numérique inutile au tick suivant.
+          state.activeResearch.progress = cost
         }
       }
       // Retrocompat : HUD researchPoints reflete la progression de la tech en cours.
