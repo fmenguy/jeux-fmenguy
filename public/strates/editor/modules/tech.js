@@ -103,19 +103,19 @@ export function canMineResource(colonist, blockType, blockAltitude) {
 // on ne doit PAS rededuire de researchPoints. Le flag opts.alreadyPaid gere ca.
 export function unlockTech(id, refreshTechsPanel, opts) {
   const t = state.techs[id]
-  if (!t || t.unlocked) return
+  if (!t || t.unlocked) return false
   // SPEC v1 : prerequis donnes par un tableau requires[] (ids de techs).
   // Compatibilite retro avec l'ancien champ scalaire t.req.
   const reqs = Array.isArray(t.requires) && t.requires.length > 0
     ? t.requires
     : (t.req ? [t.req] : [])
   for (const r of reqs) {
-    if (!state.techs[r] || !state.techs[r].unlocked) return
+    if (!state.techs[r] || !state.techs[r].unlocked) return false
   }
   const costNum = (t.cost && typeof t.cost === 'object') ? (t.cost.research || 0) : (t.cost || 0)
   const alreadyPaid = opts && opts.alreadyPaid
   if (!alreadyPaid) {
-    if (state.researchPoints < costNum) return
+    if (state.researchPoints < costNum) return false
     state.researchPoints -= costNum
   }
   // Consommer les points nocturnes si la tech en requiert (ex: astronomy-1).
@@ -127,7 +127,7 @@ export function unlockTech(id, refreshTechsPanel, opts) {
   const nightCost = (techEntry && techEntry.cost && typeof techEntry.cost === 'object')
     ? (techEntry.cost.night || 0) : 0
   if (nightCost > 0) {
-    if ((state.nightPoints || 0) < nightCost) return
+    if ((state.nightPoints || 0) < nightCost) return false
     state.nightPoints -= nightCost
   }
   state.totalResearchSpent = (state.totalResearchSpent || 0) + costNum
@@ -151,6 +151,7 @@ export function unlockTech(id, refreshTechsPanel, opts) {
   if (refreshTechsPanel) refreshTechsPanel()
   const el = document.getElementById('tech-' + id)
   if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 800) }
+  return true
 }
 
 // ============================================================================
@@ -180,6 +181,15 @@ export function queueTech(id) {
     ? TECH_TREE_DATA.techs.find(x => x.id === id)
     : null
   const costObj = techEntry && techEntry.cost && typeof techEntry.cost === 'object' ? techEntry.cost : {}
+  // Tech a coût night > 0 : interdit en mode jour. Le joueur doit basculer
+  // en nuit (touche N) avant de la mettre en file.
+  const nightCost = costObj.night || 0
+  if (nightCost > 0 && !state.isNight) {
+    try {
+      window.dispatchEvent(new CustomEvent('strates:nightTechBlocked', { detail: { id } }))
+    } catch (e) { /* ignore */ }
+    return
+  }
   const totalCost = Object.values(costObj).reduce((s, v) => s + v, 0)
   if (totalCost === 0) {
     unlockTech(id, null, { alreadyPaid: true })
