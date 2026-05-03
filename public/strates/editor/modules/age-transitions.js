@@ -18,9 +18,10 @@ import { GRID, SHALLOW_WATER_LEVEL } from './constants.js'
 import { showHudToast } from './ui/research-popup.js'
 
 // ---------------------------------------------------------------------------
-// Flag dev : si true, la condition "os" est ignoree (Lot B Chasseur pas livre)
+// Flag dev : si true, la condition "os" est ignoree.
+// Lot B Chasseur livre : drop 2 os par cerf, condition reactivee.
 // ---------------------------------------------------------------------------
-const DEV_SKIP_BONES = true
+const DEV_SKIP_BONES = false
 
 // Calcul derive de l'etat reel : somme des couts de recherche des techs debloquees.
 // Plus fiable que state.totalResearchSpent qui peut etre mal incremente sur

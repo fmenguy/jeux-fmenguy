@@ -74,12 +74,12 @@ export const ORE_KEYS = Object.keys(ORE_TYPES)
 // ============================================================================
 // Stocks
 // ============================================================================
-export const STOCK_KEYS = ['stone', 'dirt', 'copper', 'silver', 'iron', 'coal', 'gold', 'amethyst', 'grain']
+export const STOCK_KEYS = ['stone', 'dirt', 'copper', 'silver', 'iron', 'coal', 'gold', 'amethyst', 'grain', 'bone']
 export const STOCK_LABELS = {
   stone: 'pierre', dirt: 'terre',
   copper: 'cuivre', silver: 'argent', iron: 'fer',
   coal: 'charbon', gold: 'or', amethyst: 'amethyste',
-  grain: 'grain'
+  grain: 'grain', bone: 'os'
 }
 export const ORE_TO_STOCK = {
   'ore-gold': 'gold',
