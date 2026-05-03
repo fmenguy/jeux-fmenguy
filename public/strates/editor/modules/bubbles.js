@@ -38,17 +38,20 @@ function _hexToRgba(hex, alpha) {
 
 export function makeBubbleCanvas() {
   const c = document.createElement('canvas')
-  c.width = 512; c.height = 160
+  // Résolution texture augmentée pour des bulles lisibles à zoom standard.
+  // Largeur fixe (le texte se wrap sur plusieurs lignes au-delà), hauteur
+  // ajustée dynamiquement par drawBubble selon le nombre de lignes.
+  c.width = 768; c.height = 240
   return c
 }
 
 export function drawBubble(canvas, text, isHint, opts) {
   const ctx = canvas.getContext('2d')
-  const padX = 24
-  const padY = 16
-  const lineH = 36
-  const bodyFont = '500 28px system-ui, sans-serif'
-  const iconW = isHint ? 28 : 0
+  const padX = 32
+  const padY = 22
+  const lineH = 46
+  const bodyFont = '600 38px system-ui, sans-serif'
+  const iconW = isHint ? 36 : 0
   const maxTextW = canvas.width - padX * 2 - iconW
 
   // Variantes de bulle (Lot E + Lot B). Pour kind === 'idle', le metier
@@ -79,9 +82,9 @@ export function drawBubble(canvas, text, isHint, opts) {
 
   // Hauteur de la bulle selon le nombre de lignes
   const bh = lines.length * lineH + padY * 2
-  const by = 10
-  const tipH = 26
-  const canvasH = by + bh + tipH + 14
+  const by = 14
+  const tipH = 32
+  const canvasH = by + bh + tipH + 18
 
   // Redimensionnement dynamique du canvas (remet le contexte a zero)
   if (canvas.height !== canvasH) canvas.height = canvasH
@@ -90,7 +93,7 @@ export function drawBubble(canvas, text, isHint, opts) {
   ctx.font = bodyFont
 
   const bx = (canvas.width - bw) / 2
-  const r = 16
+  const r = 22
   const fillCol = isHint ? '#dff0ff' : '#ffffff'
   const borderCol = idleBorderCol ? idleBorderCol : (isHint ? '#4a90e2' : 'rgba(0,0,0,0.15)')
   const textCol = isHint ? '#0d2947' : '#1a1f2a'
@@ -119,24 +122,24 @@ export function drawBubble(canvas, text, isHint, opts) {
   const cxp = canvas.width / 2
   const tipY = by + bh + tipH
   ctx.beginPath()
-  ctx.moveTo(cxp - 11, by + bh - 1)
-  ctx.lineTo(cxp + 11, by + bh - 1)
+  ctx.moveTo(cxp - 14, by + bh - 1)
+  ctx.lineTo(cxp + 14, by + bh - 1)
   ctx.lineTo(cxp, tipY)
   ctx.closePath()
   ctx.fillStyle = fillCol; ctx.fill()
   ctx.strokeStyle = borderCol; ctx.stroke()
   // Masque la couture entre le rect et le triangle
   ctx.fillStyle = fillCol
-  ctx.fillRect(cxp - 10, by + bh - 2, 20, 3)
+  ctx.fillRect(cxp - 13, by + bh - 2, 26, 3)
 
   // Pastille indicatrice pour les hints
   if (isHint) {
     ctx.fillStyle = '#ffd98a'
     ctx.beginPath()
-    ctx.arc(bx + 20, by + bh / 2, 8, 0, Math.PI * 2)
+    ctx.arc(bx + 26, by + bh / 2, 11, 0, Math.PI * 2)
     ctx.fill()
     ctx.strokeStyle = '#4a90e2'
-    ctx.lineWidth = 2
+    ctx.lineWidth = 2.5
     ctx.stroke()
   }
 
