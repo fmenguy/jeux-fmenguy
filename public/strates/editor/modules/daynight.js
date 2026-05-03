@@ -218,6 +218,7 @@ function updateHudIcon() {
 export function isColonistOnObservatory(c) {
   if (!state.observatories || !state.observatories.length) return false
   for (const obs of state.observatories) {
+    if (obs.isUnderConstruction) continue
     if (c.x === obs.x && c.z === obs.z) return true
   }
   return false

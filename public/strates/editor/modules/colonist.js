@@ -25,6 +25,7 @@ import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubb
 import { activeSpeakers } from './speech.js'
 import { initColonistNeeds, isNeedCritical } from './needs.js'
 import { NEEDS_DATA } from './gamedata.js'
+import { showHudToast } from './ui/research-popup.js'
 // tasks.js : file de taches, utilisee ici pour marquer la tache courante.
 import { PRIORITY, TASK_KIND } from './tasks.js'
 
@@ -1037,6 +1038,7 @@ export class Colonist {
         site.constructionProgress = 1
         site.isUnderConstruction = false
         site.builderId = null
+        onBuildingComplete(site)
         this.targetConstructionSite = null
         this.currentTask = null
         this.state = 'IDLE'
@@ -1316,6 +1318,29 @@ export function findSpawn() {
     }
   }
   return { x: cx, z: cz }
+}
+
+// Lot B : hook appele a la fin d une construction (constructionProgress >= 1).
+// Centralise les effets gameplay differes (spawn de colons big-house, vision
+// du promontoire, etc.) qui ne doivent s activer qu une fois le batiment fini.
+export function onBuildingComplete(site) {
+  if (!site) return
+  // Big-house : spawn des colons promis a la pose.
+  if (site.buildingId === 'big-house' && site.pendingColonistsSpawn > 0) {
+    const cx = site.x + 2
+    const cz = site.z + 2
+    spawnColonsAroundHouse(cx, cz, site.pendingColonistsSpawn)
+    site.pendingColonistsSpawn = 0
+  }
+  // Promontoire : reveler la zone de vision en differe.
+  if (site.buildingId === 'promontoire' && site.pendingVisionRadius > 0) {
+    const r = site.pendingVisionRadius
+    revealAround(site.x, site.z, r)
+    if (typeof showHudToast === 'function') {
+      showHudToast(`Promontoire achevé, vision ${r} cases`, 3000)
+    }
+    site.pendingVisionRadius = 0
+  }
 }
 
 export function spawnColonist(x, z, opts) {
