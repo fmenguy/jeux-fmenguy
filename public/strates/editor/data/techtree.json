@@ -200,7 +200,6 @@
       "requires": [],
       "unlocks": {
         "buildings": ["promontoire"],
-        "jobs":      ["astronome"],
         "resources": ["night-points"]
       },
       "description": "Construction d'une tour d'observation. Genere des points nocturnes la nuit.",
