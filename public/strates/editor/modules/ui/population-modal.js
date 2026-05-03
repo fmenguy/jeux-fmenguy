@@ -33,11 +33,12 @@ const JOB_SKILL = {
 
 // Mapping profession (ID français) vers assignedJob (ID anglais attendu par le moteur Lot B)
 const PROFESSION_TO_ASSIGNED_JOB = {
-  cueilleur: 'gatherer',
-  bucheron:  'woodcutter',
-  mineur:    'miner',
-  chercheur: 'researcher',
-  chasseur:  'hunter',
+  cueilleur:    'gatherer',
+  bucheron:     'woodcutter',
+  mineur:       'miner',
+  chercheur:    'researcher',
+  chasseur:     'hunter',
+  constructeur: 'builder',
 }
 
 // Helpers de niveau / xp de compétences (lecture seule sur le raw colonist)
