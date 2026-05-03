@@ -331,6 +331,23 @@
       "speech": ["Ce qui est ecrit ne s'oublie pas."]
     },
     {
+      "id": "calendrier",
+      "name": "Calendrier",
+      "age": 2,
+      "branch": "savoir",
+      "icon": "📅",
+      "cost": { "research": 15 },
+      "requires": ["writing"],
+      "unlocks": {
+        "features": ["season-progress-bar"]
+      },
+      "description": "Permet d'anticiper la prochaine saison via une barre de progression dans le HUD.",
+      "speech": [
+        "Compter les jours, anticiper les saisons.",
+        "Le rythme du ciel devient lisible."
+      ]
+    },
+    {
       "id": "cartography",
       "name": "Cartographie",
       "age": 2,
