@@ -91,6 +91,7 @@
       "category": "alimentation",
       "size": "1x1",
       "cost": { "wood": 1 },
+      "buildTime": 0,
       "requires": { "tech": [] },
       "provides": { "berries_per_tick": 0.3 },
       "activity": "day",
@@ -120,18 +121,6 @@
       "provides": { "night_points_per_tick": 1 },
       "activity": "night",
       "description": "Tour d'observation nocturne. Genere des points nocturnes quand un Astronome y stationne la nuit."
-    },
-    {
-      "id": "totem",
-      "name": "Totem",
-      "age": 1,
-      "category": "monument",
-      "size": "1x1",
-      "cost": { "wood": 10 },
-      "requires": { "tech": [] },
-      "provides": { "morale": 1 },
-      "activity": "both",
-      "description": "Symbole tribal. +1 moral a toute la colonie. Pas de production."
     },
     {
       "id": "champ-ble",
