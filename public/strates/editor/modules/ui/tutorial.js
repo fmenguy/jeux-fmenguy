@@ -241,12 +241,21 @@ function injectStyles() {
 
 // ─── Moteur générique ─────────────────────────────────────────────────────────
 
+function sweepOrphanTutoElements() {
+  document.querySelectorAll('.tuto-ring, .tuto-bubble').forEach(el => el.remove())
+}
+
 function runTutorial(steps, storageKey, onComplete, skipBtn) {
   try { if (localStorage.getItem(storageKey)) { onComplete && onComplete(); return } } catch (e) {}
+
+  // Avant de créer un nouveau ring/bubble, balayer les orphelins éventuels
+  // d'un précédent tuto qui aurait fui (skip, double trigger, hot-reload).
+  sweepOrphanTutoElements()
 
   let currentIdx = 0
   let cleanupFn = null
   let timeoutId = null
+  let torndown = false
 
   const ring = document.createElement('div')
   ring.className = 'tuto-ring'
@@ -261,6 +270,7 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
   }
 
   function reposition() {
+    if (torndown) return
     const step = steps[currentIdx]
     if (!step) return
 
@@ -308,11 +318,19 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
   }
 
   function teardown(completed) {
+    if (torndown) return
+    torndown = true
     if (cleanupFn) { cleanupFn(); cleanupFn = null }
     if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
     clearInterval(posTimer)
+    window.removeEventListener('resize', reposition)
+    // Force display:none avant remove pour neutraliser instantanément le rendu.
+    ring.style.display = 'none'
+    bubble.style.display = 'none'
     ring.remove()
     bubble.remove()
+    // Sécurité : balayer aussi les éventuels orphelins (autre instance, hot reload).
+    sweepOrphanTutoElements()
     if (completed) {
       try { localStorage.setItem(storageKey, '1') } catch (e) {}
       onComplete && onComplete()
