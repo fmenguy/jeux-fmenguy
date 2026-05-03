@@ -139,6 +139,7 @@ function serializeSnapshot() {
       state: (c.state === 'WORKING' || c.state === 'MOVING') ? 'IDLE' : c.state,
       researchBuildingId: c.researchBuildingId,
       favorite: !!c.favorite,
+      isStar: !!c.isStar,
       hp: c.hp, mor: c.mor, faim: c.faim,
       age: c.age, skills: c.skills || {},
       profession: c.profession ?? null

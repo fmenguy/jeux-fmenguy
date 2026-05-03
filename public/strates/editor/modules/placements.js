@@ -852,7 +852,7 @@ function makeHouse() {
 
 export function addHouse(gx, gz) {
   const top = state.cellTop[gz * GRID + gx]
-  if (top <= SHALLOW_WATER_LEVEL) return false
+  if (top <= SHALLOW_WATER_LEVEL) return null
   const g = makeHouse()
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
@@ -860,7 +860,7 @@ export function addHouse(gx, gz) {
   _markUnderConstruction(entry, 'cabane')
   state.houses.push(entry)
   revealAround(gx, gz, 8)
-  return true
+  return entry
 }
 
 // ============================================================================
