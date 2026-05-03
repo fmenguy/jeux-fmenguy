@@ -9,24 +9,24 @@
       "requires": {},
       "produces": ["berries"],
       "activity": "day",
-      "description": "Metier starter par defaut. Aucun outil requis. Priorite aux buissons non epuises.",
+      "description": "Métier starter par défaut. Aucun outil requis. Priorité aux buissons non épuisés.",
       "idleSpeech": [
-        "Plus de baies a portee.",
-        "Je n'ai rien a cueillir.",
+        "Plus de baies à portée.",
+        "Je n'ai rien à cueillir.",
         "Faudrait planter des buissons."
       ]
     },
     {
       "id": "bucheron",
-      "name": "Bucheron",
+      "name": "Bûcheron",
       "age": 1,
       "color": "#6a8a3d",
       "requires": { "tech": ["axe-stone"] },
       "produces": ["wood"],
       "activity": "day",
-      "description": "Cherche l'arbre le plus proche. Necessite la Hache en pierre.",
+      "description": "Cherche l'arbre le plus proche. Nécessite la Hache en pierre.",
       "idleSpeech": [
-        "Plus d'arbres a abattre.",
+        "Plus d'arbres à abattre.",
         "Ma hache rouille.",
         "On replante quand ?"
       ]
@@ -39,7 +39,7 @@
       "requires": {},
       "produces": ["stone", "silex", "dirt"],
       "activity": "day",
-      "description": "Travail a mains nues possible en age I. La Pioche en pierre ameliore le rendement. Produit Pierre et Silex (drop rare).",
+      "description": "Travail à mains nues possible en âge I. La Pioche en pierre améliore le rendement. Produit Pierre et Silex (drop rare).",
       "idleSpeech": [
         "Plus de filons accessibles.",
         "Ma pioche s'ennuie.",
@@ -54,11 +54,11 @@
       "requires": { "tech": ["bow-wood"] },
       "produces": ["raw-meat", "bone", "hide"],
       "activity": "day",
-      "description": "Patrouille la zone, attaque les animaux. Risque d'etat Blesse. Necessite la Lance en bois.",
+      "description": "Patrouille la zone, attaque les animaux. Risque d'état Blessé. Nécessite la Lance en bois.",
       "idleSpeech": [
         "Plus de gibier en vue.",
         "Le calme avant la traque.",
-        "Ou sont les cerfs ?"
+        "Où sont les cerfs ?"
       ]
     },
     {
@@ -72,9 +72,9 @@
       "description": "Reste dans la Hutte du sage, produit des points de recherche par tick.",
       "idleSpeech": [
         "Je m'ennuie.",
-        "J'ai rien a faire.",
-        "On a un truc a chercher ?",
-        "Aucune idee a explorer."
+        "J'ai rien à faire.",
+        "On a un truc à chercher ?",
+        "Aucune idée à explorer."
       ]
     },
     {
@@ -85,11 +85,11 @@
       "requires": { "buildings": ["promontoire"] },
       "produces": ["night-points"],
       "activity": "night",
-      "description": "Observe les etoiles depuis le Promontoire. Genere des points nocturnes par tick.",
+      "description": "Observe les étoiles depuis le Promontoire. Génère des points nocturnes par tick.",
       "idleSpeech": [
         "Le ciel est trop lumineux.",
         "Vivement la nuit.",
-        "Les etoiles dorment."
+        "Les étoiles dorment."
       ]
     },
     {
@@ -99,7 +99,7 @@
       "requires": { "tech": ["shovel-stone"] },
       "produces": ["dirt"],
       "activity": "day",
-      "description": "Terrassement et nivellement du terrain. Necessite la Pelle en pierre."
+      "description": "Terrassement et nivellement du terrain. Nécessite la Pelle en pierre."
     },
     {
       "id": "explorateur",
@@ -108,16 +108,16 @@
       "requires": { "tech": ["scouting"] },
       "produces": [],
       "activity": "day",
-      "description": "Etend le rayon de vision de la colonie. Necessite la tech Eclaireur."
+      "description": "Étend le rayon de vision de la colonie. Nécessite la tech Éclaireur."
     },
     {
       "id": "bucheron-bronze",
-      "name": "Bucheron Bronze",
+      "name": "Bûcheron Bronze",
       "age": 2,
       "requires": { "tech": ["axe-bronze"] },
       "produces": ["wood"],
       "activity": "day",
-      "description": "Bucheron equipe d'une hache en bronze. Meilleur rendement par arbre que la hache pierre."
+      "description": "Bûcheron équipé d'une hache en bronze. Meilleur rendement par arbre que la hache pierre."
     },
     {
       "id": "agriculteur",
@@ -126,7 +126,7 @@
       "requires": { "buildings": ["champ-ble"] },
       "produces": ["grain"],
       "activity": "day",
-      "description": "Travaille dans les champs de ble. Necessite un champ de ble construit."
+      "description": "Travaille dans les champs de blé. Nécessite un champ de blé construit."
     },
     {
       "id": "forgeron",
@@ -135,7 +135,7 @@
       "requires": { "buildings": ["forge"] },
       "produces": ["bronze-tools"],
       "activity": "day",
-      "description": "Travaille a la forge. Produit des outils en bronze. Necessite la Forge."
+      "description": "Travaille à la forge. Produit des outils en bronze. Nécessite la Forge."
     },
     {
       "id": "constructeur",
@@ -146,7 +146,7 @@
       "requires": {},
       "produces": [],
       "activity": "day",
-      "description": "Construit les batiments du village.",
+      "description": "Construit les bâtiments du village.",
       "idleSpeech": [
         "Plus de chantier.",
         "Mes outils s'ennuient.",
