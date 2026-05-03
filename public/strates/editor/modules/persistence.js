@@ -4,7 +4,7 @@ import { rebuildTerrainFromState, repaintCellSurface, computeFertileCells } from
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
   addManorFromSave, addBigHouseFromSave, clearAllPlacements, isCellOccupied, addObservatory,
-  addCairn, addWheatField, addDeer, applyFogToAllVegetation
+  addCairn, addWheatField, addDeer, applyFogToAllVegetation, updateFieldMesh
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
@@ -123,7 +123,11 @@ function serializeSnapshot() {
     houses: state.houses.map(h => ({ x: h.x, z: h.z })),
     manors: state.manors.map(m => ({ x: m.x, z: m.z })),
     bigHouses: (state.bigHouses || []).map(b => ({ x: b.x, z: b.z })),
-    wheatFields: (state.wheatFields || []).map(f => ({ x: f.x, z: f.z, grain: f.grain || 0 })),
+    wheatFields: (state.wheatFields || []).map(f => ({
+      x: f.x, z: f.z, grain: f.grain || 0,
+      growthStage: f.growthStage || 'dirt',
+      growthProgress: typeof f.growthProgress === 'number' ? f.growthProgress : 0
+    })),
     researchHouses: state.researchHouses.map(r => ({
       x: r.x, z: r.z, id: r.id,
       assignedColonistIds: Array.isArray(r.assignedColonistIds) ? r.assignedColonistIds.slice() : []
@@ -252,7 +256,11 @@ function applySnapshot(data) {
   if (Array.isArray(data.wheatFields)) {
     for (const f of data.wheatFields) {
       const entry = addWheatField(f.x, f.z)
-      if (entry && typeof f.grain === 'number') entry.grain = f.grain
+      if (!entry) continue
+      if (typeof f.grain === 'number') entry.grain = f.grain
+      if (typeof f.growthProgress === 'number') entry.growthProgress = f.growthProgress
+      // Si la save indique stage 'sprouting', swap immédiatement le mesh.
+      if (f.growthStage === 'sprouting') updateFieldMesh(entry, 'sprouting')
     }
   }
   for (const rh of data.researchHouses) {

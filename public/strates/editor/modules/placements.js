@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import {
   GRID, SHALLOW_WATER_LEVEL, MAX_TREES, MAX_ROCKS, MAX_ORES, MAX_CRYSTALS,
   MAX_BUSHES, MAX_BUSH_LEAVES, MAX_BUSH_BERRIES, BERRIES_PER_BUSH, ORE_TYPES,
-  COOK_DURATION
+  COOK_DURATION, FIELD_GROWTH_DURATION
 } from './constants.js'
 import { state } from './state.js'
 import { prng } from './rng.js'
@@ -12,7 +12,7 @@ import { showHudToast } from './ui/research-popup.js'
 import { findApproach } from './pathfind.js'
 import { dlog, dwarn } from './debug.js'
 import { getBuildingById } from './gamedata.js'
-import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
+import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE, FARM_GLB_SCALE } from './glb-cache.js'
 
 // ============================================================================
 // Lot B (engine) : phase de construction. Tout batiment dont la definition
@@ -1263,38 +1263,97 @@ export function clearAllPlacements() {
 // Champs de ble (Age du Bronze, 2x2 cellules)
 // Necessite des cellules fertiles (state.cellFertile[k] === 1) et libres.
 // ============================================================================
-function makeWheatField(tops) {
-  const g = new THREE.Group()
-  const soilMat  = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.95, flatShading: true })
-  const wheatMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, roughness: 0.85, flatShading: true })
-  // 4 boites plates pour le sol, une par cellule du 2x2
-  const soilGeo = new THREE.BoxGeometry(0.9, 0.05, 0.9)
+// Phases de croissance du champ. L ordre dans le tableau définit la progression
+// quand growthProgress passe les seuils. Pour ajouter une phase 'mature' future,
+// il suffira d ajouter un objet ici et un seuil correspondant.
+const FIELD_STAGES = [
+  { id: 'dirt',      glbKey: 'farm-dirt' },
+  { id: 'sprouting', glbKey: 'farm-sprouting' },
+]
+
+const _bbox = new THREE.Box3()
+const _bsize = new THREE.Vector3()
+
+// Construit le mesh d un champ pour la phase donnée. Tente d utiliser le GLB
+// associé ; en fallback, retourne un mesh procédural minimal (4 dalles brunes).
+// Le group retourné est centré localement (origine à la cellule (gx,gz) du
+// coin haut-gauche du 2x2), il faut le placer ensuite via group.position.set().
+function _makeFieldGroup(stageId, tops) {
+  const stage = FIELD_STAGES.find(s => s.id === stageId) || FIELD_STAGES[0]
+  const baseTop = tops ? tops[0] : 0
+  const wrap = new THREE.Group()
+  const model = stage.glbKey ? getModel(stage.glbKey) : null
+  if (model) {
+    // Centrer le modèle sur le 2x2. Le footprint world s étend de -0.5 à +1.5
+    // en X/Z autour de l origine du Group (qui est posée à gx+0.5, gz+0.5).
+    // Le centre du 2x2 est donc à (+0.5, +0.5) en local.
+    _bbox.setFromObject(model)
+    _bbox.getSize(_bsize)
+    const maxXZ = Math.max(_bsize.x || 1, _bsize.z || 1)
+    const targetXZ = 2.0
+    const autoScale = (targetXZ / maxXZ) * FARM_GLB_SCALE * 2.0
+    model.scale.setScalar(autoScale)
+    // Reposer la base du modèle sur y=0 du group, puis offset XZ vers (0.5, 0.5)
+    _bbox.setFromObject(model)
+    model.position.x += (0.5 - (_bbox.min.x + _bbox.max.x) / 2)
+    model.position.z += (0.5 - (_bbox.min.z + _bbox.max.z) / 2)
+    model.position.y -= _bbox.min.y
+    model.traverse(o => {
+      if (o.isMesh) {
+        o.castShadow = true
+        o.receiveShadow = true
+        o.frustumCulled = false
+      }
+    })
+    wrap.add(model)
+    return wrap
+  }
+  // Fallback procédural : 4 dalles brunes plates, sans piquets ni cylindres
+  // jaunes (qui passaient pour des piquets noirs en silhouette).
+  const soilMat = new THREE.MeshStandardMaterial({
+    color: 0x6e4a22, roughness: 0.96, flatShading: true
+  })
+  const soilGeo = new THREE.BoxGeometry(0.92, 0.08, 0.92)
   const offsets = [[0, 0], [1, 0], [0, 1], [1, 1]]
   for (let i = 0; i < 4; i++) {
     const [dx, dz] = offsets[i]
     const localTop = tops ? tops[i] : 0
-    const baseTop = tops ? tops[0] : 0
     const soil = new THREE.Mesh(soilGeo, soilMat)
-    soil.position.set(-0.5 + dx, (localTop - baseTop) + 0.025, -0.5 + dz)
+    soil.position.set(dx, (localTop - baseTop) + 0.04, dz)
     soil.receiveShadow = true
-    g.add(soil)
+    wrap.add(soil)
   }
-  // 12 epis fins en grille 3x4 sur les 4 cellules
-  const wheatGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.35, 5)
-  // Repartition 3 colonnes x 4 lignes sur 2 unites de cote, soit pas ~0.5
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 3; col++) {
-      const lx = -0.7 + col * 0.7
-      const lz = -0.85 + row * 0.5
-      const ear = new THREE.Mesh(wheatGeo, wheatMat)
-      // tops moyen pour la position verticale
-      const avgTop = tops ? (tops[0] + tops[1] + tops[2] + tops[3]) / 4 - tops[0] : 0
-      ear.position.set(lx, avgTop + 0.225, lz)
-      ear.castShadow = true
-      g.add(ear)
+  return wrap
+}
+
+// Swap propre du mesh d un champ vers une nouvelle phase. Retire le group
+// précédent de la scène et dispose géométries/matériaux, puis attache le
+// nouveau group à la même position.
+export function updateFieldMesh(field, stageId) {
+  if (!field) return
+  if (field.group) {
+    if (field.group.parent) field.group.parent.remove(field.group)
+    field.group.traverse(o => {
+      if (o.isMesh) {
+        if (o.geometry) o.geometry.dispose()
+        if (o.material) {
+          const mats = Array.isArray(o.material) ? o.material : [o.material]
+          for (const m of mats) m.dispose && m.dispose()
+        }
+      }
+    })
+  }
+  const tops = []
+  for (let dz = 0; dz < 2; dz++) {
+    for (let dx = 0; dx < 2; dx++) {
+      tops.push(state.cellTop[(field.z + dz) * GRID + (field.x + dx)])
     }
   }
-  return g
+  const g = _makeFieldGroup(stageId, tops)
+  g.position.set(field.x + 0.5, tops[0], field.z + 0.5)
+  scene.add(g)
+  field.group = g
+  field.growthStage = stageId
 }
 
 /**
@@ -1325,9 +1384,6 @@ export function addWheatField(gx, gz) {
     }
   }
   const baseTop = tops[0]
-  const g = makeWheatField(tops)
-  g.position.set(gx + 0.5, baseTop, gz + 0.5)
-  scene.add(g)
   // Peindre cellSurface = 'field' et repaint chaque voxel top
   for (let dz = 0; dz < 2; dz++) {
     for (let dx = 0; dx < 2; dx++) {
@@ -1338,13 +1394,34 @@ export function addWheatField(gx, gz) {
     }
   }
   if (!state.wheatFields) state.wheatFields = []
-  const entry = { x: gx, z: gz, group: g, grain: 0.0 }
+  // Le mesh sera créé via updateFieldMesh() en stage initial 'dirt'.
+  const entry = { x: gx, z: gz, group: null, grain: 0.0,
+                  growthStage: 'dirt', growthProgress: 0.0 }
+  updateFieldMesh(entry, 'dirt')
   // Pas de buildTime sur champ-ble dans buildings.json (Lot A age 2). On
   // marque pour homogeneiser le contrat, mais l absence de buildTime laisse
   // le champ immediatement actif.
   _markUnderConstruction(entry, 'champ-ble')
   state.wheatFields.push(entry)
   return entry
+}
+
+// Tick des champs : avance growthProgress de 0 à 1 sur FIELD_GROWTH_DURATION
+// secondes pendant la phase 'dirt'. Au franchissement de 1, swap automatique
+// vers la phase 'sprouting'. Phase de transition propre via updateFieldMesh.
+export function tickWheatFields(dt) {
+  if (!state.wheatFields || !state.wheatFields.length) return
+  for (const f of state.wheatFields) {
+    if (!f) continue
+    if (f.isUnderConstruction) continue
+    if (f.growthStage !== 'dirt') continue
+    if (typeof f.growthProgress !== 'number') f.growthProgress = 0
+    f.growthProgress += dt / FIELD_GROWTH_DURATION
+    if (f.growthProgress >= 1) {
+      f.growthProgress = 1
+      updateFieldMesh(f, 'sprouting')
+    }
+  }
 }
 
 // ============================================================================
