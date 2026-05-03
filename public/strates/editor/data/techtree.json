@@ -141,7 +141,7 @@
       "branch": "construction",
       "icon": "💥",
       "cost": { "research": 8 },
-      "requires": ["fire-mastery"],
+      "requires": ["big-house"],
       "unlocks": {
         "features": ["destroy-button"]
       },
