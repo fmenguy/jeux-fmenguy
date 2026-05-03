@@ -6,7 +6,7 @@ import { state } from './modules/state.js'
 import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
-import { refreshBushBerries, tickTreeGrowth, tickFoyers, checkUniqueBuildingButtons, bushLeafMesh, tickDeer } from './modules/placements.js'
+import { refreshBushBerries, tickTreeGrowth, tickFoyers, checkUniqueBuildingButtons, bushLeafMesh, tickDeer, tickWheatFields } from './modules/placements.js'
 import { tryBlockedTechBubble, hasPendingResearchableTech, unlockTech, queueTech } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
@@ -329,6 +329,7 @@ function tick(nowMs) {
   tickVegetationSeasons(dt)
   tickTreeGrowth(dt)
   tickFoyers(dt)
+  tickWheatFields(dt)
   tickWeather(dt)
   tickAudio()
   // HUD saison

@@ -13,11 +13,16 @@ const BASE = new URL('../assets/models/fantaisy/', import.meta.url).href
 export const TREE_GLB_SCALE = 0.40
 export const ROCK_GLB_SCALE = 0.32
 export const DEER_GLB_SCALE = 0.5
+// Scale appliqué aux GLB Farm/Farm Dirt après centrage. Le footprint cible
+// est 2x2 cellules ; le scale dépend de la taille native du GLB (ajustable).
+export const FARM_GLB_SCALE = 0.5
 
 const MANIFEST = {
   tree: 'Pine.glb',
   rock: 'Rock.glb',
   deer: 'Deer.glb',
+  'farm-dirt':      'Farm Dirt.glb',
+  'farm-sprouting': 'Farm.glb',
   // house, hut, bonfire retires — fallback procedural utilise
 }
 

@@ -34,6 +34,9 @@ export const BERRIES_PER_BUSH = 3
 export const HARVEST_DURATION = 1.5
 export const HARVEST_RADIUS = 8
 export const BERRY_REGEN_INTERVAL = 20
+// Champ : durée (secondes) entre la fin de construction (stage 'dirt')
+// et le passage à la phase 'sprouting' (jeunes pousses vertes).
+export const FIELD_GROWTH_DURATION = 60
 
 // Satiete attribuee par unite consommee. Valeurs de reference pour la chaine
 // alimentaire (Lot B). Ces constantes sont utilisees comme valeurs cibles ;
