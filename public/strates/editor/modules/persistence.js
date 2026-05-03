@@ -62,12 +62,16 @@ export function resetTutorialFlags() {
 
 export function saveGame(slot = 'auto') {
   if (!state.cellTop) return false
-  const snap = serializeSnapshot()
+  // Wrap complet : si serializeSnapshot ou JSON.stringify throw (champ
+  // récemment ajouté qui contient un objet circulaire ou Map non sérialisable
+  // par exemple), on logge et on retourne false sans crasher l UI.
   try {
-    localStorage.setItem(STORAGE_KEY_PREFIX + slot, JSON.stringify(snap))
+    const snap = serializeSnapshot()
+    const json = JSON.stringify(snap)
+    localStorage.setItem(STORAGE_KEY_PREFIX + slot, json)
     return true
   } catch (e) {
-    console.warn('Strates save failed', e)
+    console.error('[strates] saveGame failed for slot=' + slot, e)
     return false
   }
 }
