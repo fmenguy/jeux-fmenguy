@@ -114,7 +114,7 @@
 /* Checklist conditions dans le tooltip Cairn */
 #cairn-conditions-tooltip {
   position: fixed;
-  bottom: 130px;
+  bottom: 160px;
   left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(180deg, rgba(14, 18, 26, 0.97), rgba(10, 13, 19, 0.99));
@@ -126,7 +126,7 @@
   line-height: 1.6;
   min-width: 260px;
   max-width: 340px;
-  z-index: 26;
+  z-index: 30;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s ease;
