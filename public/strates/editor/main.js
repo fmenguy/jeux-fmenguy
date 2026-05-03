@@ -16,7 +16,7 @@ import {
   tickResourceAnim
 } from './modules/hud.js'
 import { setTool, setBrush, refreshToolButtons } from './modules/interaction.js'
-import { hasSave, loadGame, startAutoSave } from './modules/persistence.js'
+import { hasSave, loadGame, startAutoSave, resetTutorialFlags } from './modules/persistence.js'
 import { loadGameData } from './modules/gamedata.js'
 import { tickSeasons, currentSeason, forceSeasonRepaint } from './modules/seasons.js'
 import { buildVegetation, tickVegetationSeasons } from './modules/vegetation.js'
@@ -77,6 +77,7 @@ if (TECH_TREE_DATA && TECH_TREE_DATA.techs) {
 buildTerrain()
 const isNewGame = (() => { try { const v = localStorage.getItem('strates-new-game'); localStorage.removeItem('strates-new-game'); return !!v } catch(e) { return false } })()
 const pendingSlot = (() => { try { const v = localStorage.getItem('strates-pending-load'); localStorage.removeItem('strates-pending-load'); return v } catch(e) { return null } })()
+if (isNewGame) resetTutorialFlags()
 if (!isNewGame && pendingSlot && hasSave(pendingSlot) && loadGame(pendingSlot)) {
   forceSeasonRepaint()
 } else if (!isNewGame && hasSave('auto') && loadGame('auto')) {
