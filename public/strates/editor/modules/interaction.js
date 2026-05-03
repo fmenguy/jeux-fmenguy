@@ -19,7 +19,7 @@ import { canMineCell, techUnlocked, hasTreeAt } from './tech.js'
 import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
-import { saveGame, loadGame, hasSave, deleteSave, listSlots } from './persistence.js'
+import { saveGame, loadGame, hasSave, deleteSave, listSlots, resetTutorialFlags } from './persistence.js'
 import { openCharSheet, isCharSheetOpen, closeCharSheet } from './charsheet-ui.js'
 import { closeHelpOverlay, isHelpOverlayOpen } from './help-overlay.js'
 import { closeTechTreePanel, closeBranch } from './ui/techtree-panel.js'
@@ -325,6 +325,7 @@ const btnReset = document.getElementById('btn-reset')
 if (btnReset) btnReset.addEventListener('click', () => {
   if (!confirm('Nouvelle partie ? La sauvegarde actuelle sera effacee.')) return
   deleteSave('auto')
+  resetTutorialFlags()
   resetWorld(refreshHUD)
 })
 

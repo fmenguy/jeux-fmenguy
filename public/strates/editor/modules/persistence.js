@@ -42,6 +42,24 @@ export function deleteSave(slot = 'auto') {
   localStorage.removeItem(STORAGE_KEY_PREFIX + slot)
 }
 
+// Sweep des flags de tutoriels dans localStorage. Appele uniquement sur
+// "Nouvelle partie" (pas sur un simple reload de save), pour que tous les
+// tutos (principal, chercheur, interface, constructeur, etc.) rejouent.
+// Ne touche pas aux saves ni aux preferences user.
+export function resetTutorialFlags() {
+  try {
+    const toRemove = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (!k) continue
+      if (!k.startsWith('strates.')) continue
+      if (!/tuto/i.test(k)) continue
+      toRemove.push(k)
+    }
+    for (const k of toRemove) localStorage.removeItem(k)
+  } catch (e) {}
+}
+
 export function saveGame(slot = 'auto') {
   if (!state.cellTop) return false
   const snap = serializeSnapshot()
