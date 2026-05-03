@@ -135,6 +135,20 @@
       "speech": ["Un toit minimal, mais c'est mieux que rien."]
     },
     {
+      "id": "demolition",
+      "name": "Demolition",
+      "age": 1,
+      "branch": "construction",
+      "icon": "💥",
+      "cost": { "research": 8 },
+      "requires": ["fire-mastery"],
+      "unlocks": {
+        "features": ["destroy-button"]
+      },
+      "description": "Permet de demanteler les batiments existants pour recuperer 50% des ressources de construction.",
+      "speech": ["Ce qu'on a bati, on peut le defaire."]
+    },
+    {
       "id": "basic-research",
       "name": "Recherche de base",
       "age": 1,
