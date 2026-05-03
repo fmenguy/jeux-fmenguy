@@ -3,6 +3,7 @@ import { state } from './state.js'
 import { scene, sun, hemi, sky, sunDir } from './scene.js'
 import { refreshHUD, formatNum } from './hud.js'
 import { techUnlocked } from './tech.js'
+import { computeJobProductivity } from './productivity.js'
 
 // ============================================================================
 // Cycle jour/nuit (MVP C).
@@ -123,9 +124,16 @@ let transitionT = 1              // 1 = pleinement au mode courant
 let fromMode = 'day'
 let toMode   = 'day'
 
-// Tick pour les points nocturnes
-const NIGHT_POINT_INTERVAL = 5 // secondes
-let nightPointAccum = 0
+// Production de points nocturnes (flux continu).
+// Tant que state.isNight === true ET qu au moins un astronome est actif sur un
+// promontoire, on accumule des points a un rythme proportionnel a la
+// productivite agregee du metier 'astronome' (cf. productivity.js).
+// Formule : delta = computeJobProductivity(state, 'astronome') * NIGHT_POINT_BASE_RATE * dt
+// Pas de plafond. Les points sont conserves d une nuit a l autre et
+// peuvent etre depenses de jour comme de nuit pour debloquer des techs
+// avec cost.night > 0 (cf. tech.js et main.js).
+const NIGHT_POINT_BASE_RATE = 1.0 // points par seconde par "unite de productivite" (1 astronome skill 10 = 1.0/s)
+let nightPointFloat = 0
 
 // Duree de base de la nuit (en secondes). astronomy-1 la reduit de 20 s.
 const BASE_NIGHT_DURATION = 120 // secondes
@@ -176,6 +184,9 @@ export function initDayNight() {
   transitionT = 1
   fireflies.visible = !!state.isNight
   applyAmbiance(1, modeParams(mode), modeParams(mode))
+  // Re-align l accumulateur float sur la valeur courante de state.nightPoints
+  // (ex: chargement d une partie sauvegardee, depense ailleurs).
+  nightPointFloat = state.nightPoints || 0
   updateHudIcon()
 }
 
@@ -238,23 +249,39 @@ export function tickDayNight(dt) {
 
   tickFireflies(_elapsed)
 
+  // Si state.nightPoints a ete decremente ailleurs (depense d une tech),
+  // resynchroniser l accumulateur float pour eviter une derive.
+  if (state.nightPoints < Math.floor(nightPointFloat)) {
+    nightPointFloat = state.nightPoints
+  }
+
   if (state.isNight) {
-    nightPointAccum += dt
-    if (nightPointAccum >= NIGHT_POINT_INTERVAL) {
-      nightPointAccum -= NIGHT_POINT_INTERVAL
-      let gained = 0
-      for (const c of state.colonists) {
-        if (c.state !== 'IDLE') continue
-        if (isColonistOnObservatory(c)) gained++
-      }
-      if (gained > 0) {
-        state.nightPoints += gained
+    // Productivite restreinte aux astronomes effectivement positionnes sur un
+    // promontoire. On reproduit la formule de computeJobProductivity en
+    // filtrant explicitement sur isColonistOnObservatory (les promontoires ne
+    // sont pas un etat colonist, donc onlyState ne suffirait pas).
+    let total = 0
+    let count = 0
+    for (const c of state.colonists) {
+      if (c.profession !== 'astronome') continue
+      if (!isColonistOnObservatory(c)) continue
+      const lvl = (typeof c.skillLevel === 'function') ? c.skillLevel('research') : 0
+      total += lvl / 10
+      count++
+    }
+    if (count > 0) {
+      // Plancher: au moins count * 0.1 (skill 0 produit un minimum, comme
+      // computeJobProductivity).
+      const prod = Math.max(total, count * 0.1)
+      const before = Math.floor(nightPointFloat)
+      nightPointFloat += prod * NIGHT_POINT_BASE_RATE * dt
+      const after = Math.floor(nightPointFloat)
+      if (after !== before) {
+        state.nightPoints = after
         const np = document.getElementById('r-nightpoints')
         if (np) np.textContent = state.nightPoints
       }
     }
-  } else {
-    nightPointAccum = 0
   }
 }
 

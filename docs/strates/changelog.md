@@ -4,6 +4,28 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-03 : Lot B, refonte recherche nocturne (option A)
+
+Les points nocturnes deviennent une ressource accumulee par le temps passe en mode nuit avec un astronome assigne sur un promontoire. Une fois accumules, ils peuvent etre depenses a tout moment (jour ou nuit) pour debloquer des techs avec `cost.night > 0`.
+
+### Comportement
+
+- `daynight.js` : production basee sur `computeJobProductivity` agregee sur les astronomes sur promontoire. Flux continu (par seconde, plus par paliers de 5 s). Conditionnee a `state.isNight === true`. Pas de plafond. Synchro `state.nightPoints` (int) avec un accumulateur float interne.
+- `tech.js` : `queueTech` ne bloque plus une tech `cost.night > 0` en mode jour. Les points nocturnes sont consommes a la completion via `unlockTech`. Si stocks insuffisants : retour false, la recherche reste plafonnee a 100 % et reessaiera chaque tick.
+- `main.js` : deja en place, plafonne `activeResearch.progress` quand `unlockTech` echoue et reessaie au tick suivant.
+- `ui/techtree-panel.js` : suppression du bouton "Disponible uniquement la nuit". Affichage du cout night dans la fiche. Bouton "Ajouter a la file" affiche le cout night, tooltip explicatif si stocks insuffisants.
+- `ui/techtree-node.js` : cout night affiche dans la card.
+
+### Bug Astronomie I
+
+La tech Astronomie I est desormais debloquable de maniere coherente : mise en file de jour, progression normale, completion au moment ou les stocks de points nocturnes suffisent.
+
+### TODO
+
+- Tutoriel premier deblocage tech nocturne (Lot E).
+
+---
+
 ## 2026-04-23 (session 18) : Lot A -- corrections conformite pilotage v0.3
 
 ### Conformite verifee

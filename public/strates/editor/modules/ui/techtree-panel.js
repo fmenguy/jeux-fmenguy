@@ -910,7 +910,14 @@ function renderFiche(tech) {
     '</div>' +
     '<div class="ttp-fiche-body" id="ttp-fiche-body">' +
     '  <div style="font-family:var(--ttp-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ttp-ink-3);margin-bottom:1px">Cout</div>' +
-    '  <div style="font-size:13px;color:var(--ttp-ink)">&#x2605; <b>' + cost + '</b> pts recherche</div>' +
+    '  <div style="font-size:13px;color:var(--ttp-ink)">&#x2605; <b>' + cost + '</b> pts recherche' +
+    (((tech.cost && typeof tech.cost === 'object' && tech.cost.night) || 0) > 0
+      ? ' &middot; &#127769; <b>' + tech.cost.night + '</b> pts nocturnes' +
+        (((state.nightPoints || 0) < tech.cost.night)
+          ? ' <span style="color:#c66" title="Stocks de points nocturnes insuffisants. Passez en mode nuit avec un astronome sur un promontoire pour en accumuler.">(stock ' + (state.nightPoints || 0) + ')</span>'
+          : ' <span style="color:var(--ttp-ink-3)">(stock ' + (state.nightPoints || 0) + ')</span>')
+      : '') +
+    '</div>' +
     (desc ? '<div style="font-size:12px;color:var(--ttp-ink-2);margin-top:2px;line-height:1.35">' + escapeHTML(desc) + '</div>' : '') +
     (speech ? '<div style="font-size:11px;color:var(--ttp-ink-3);font-style:italic;margin-top:1px;line-height:1.3">' + escapeHTML(speech) + '</div>' : '') +
     '</div>' +
@@ -947,13 +954,20 @@ function renderFicheAction(tech, status, cost) {
   if (status === 'ready' || status === 'available') {
     const queueFull = (researchQueue().length + (activeResearchId() ? 1 : 0)) >= QUEUE_MAX
     if (queueFull) return '<button class="ttp-fiche-btn" disabled>File pleine</button>'
-    // Tech à coût night > 0 : disponible uniquement la nuit.
+    // Tech a cout night > 0 : autorisee de jour comme de nuit. Si les stocks
+    // de points nocturnes sont insuffisants, on affiche un avertissement non
+    // bloquant (le joueur peut quand meme la mettre en file, la recherche
+    // restera en attente a la completion).
+    // TODO: tutoriel premier deblocage tech nocturne (Lot E ?)
     const nightCost = (tech && tech.cost && typeof tech.cost === 'object') ? (tech.cost.night || 0) : 0
-    if (nightCost > 0 && !state.isNight) {
-      return '<button class="ttp-fiche-btn" disabled title="Activez le mode nuit (touche N) pour lancer cette recherche">' +
-             '&#127769; Disponible uniquement la nuit</button>'
+    let label = '+ Ajouter a la file &middot; ' + cost + ' &#x2605;'
+    if (nightCost > 0) {
+      label = '+ Ajouter a la file &middot; ' + cost + ' &#x2605; + ' + nightCost + ' &#127769;'
     }
-    return '<button class="ttp-fiche-btn" data-act="queue">+ Ajouter a la file &middot; ' + cost + ' &#x2605;</button>'
+    const tipAttr = (nightCost > 0 && (state.nightPoints || 0) < nightCost)
+      ? ' title="Stocks de points nocturnes insuffisants. Passez en mode nuit avec un astronome sur un promontoire pour en accumuler."'
+      : ''
+    return '<button class="ttp-fiche-btn" data-act="queue"' + tipAttr + '>' + label + '</button>'
   }
   // locked
   return '<button class="ttp-fiche-btn" data-act="chain">&#x2933; Mettre le chemin en file</button>' +
