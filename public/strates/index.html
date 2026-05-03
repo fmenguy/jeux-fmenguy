@@ -456,6 +456,13 @@
   }
   .colonist-label.chief { color: #ffd98a; border: 1px solid rgba(255,217,138,.4); }
   .colonist-label .star { color: #ffd98a; margin-right: 2px; }
+  /* Variantes builder : bordure colorée liée au .body, niveau Niv.99 doré */
+  .colonist-label.builder { padding-right: 5px; }
+  .colonist-label.builder.claude { border: 1px solid rgba(77,109,200,0.55); }
+  .colonist-label.builder.sonnet { border: 1px solid rgba(217,122,90,0.55); }
+  .colonist-label.builder.opus   { border: 1px solid rgba(107,77,158,0.55); }
+  .colonist-label .lvl99 { color: #ffd98a; margin-left: 2px; font-weight: 600; }
+  .colonist-label .hammer { margin-right: 2px; }
 
   /* Cairn en construction (transparence chantier + barre de progression) */
   .cairn-wip { width: 26px; height: 22px; opacity: .42; filter: grayscale(.2); }
@@ -1112,27 +1119,34 @@
             <div class="neck"></div><div class="head"></div><div class="antlers"></div>
           </div>
 
-          <!-- colons nommés -->
-          <div class="prop colonist" style="left: 51%; top: 49%;"><div class="body" style="background:#d9b14a;"></div><div class="head"></div></div>
-          <div class="colonist-label chief" style="left: 52%; top: 47.5%;"><span class="star">★</span>François</div>
+          <!-- Colons nommés (clin d œil créateur : Claude/Sonnet/Opus aident François) -->
+          <!-- Chef au centre du village -->
+          <div class="prop colonist" style="left: 50%; top: 48%;"><div class="body" style="background:#d9b14a;"></div><div class="head"></div></div>
+          <div class="colonist-label chief" style="left: 51%; top: 46.5%;"><span class="star">★</span>François</div>
 
-          <div class="prop colonist" style="left: 58%; top: 52%;"><div class="body" style="background:#3a6a8c;"></div><div class="head"></div></div>
-          <div class="colonist-label" style="left: 59%; top: 50.5%;">Alyssa Niv.10</div>
+          <!-- Claude, près du Cairn-WIP (le construit) -->
+          <div class="prop colonist" style="left: 38%; top: 40%;"><div class="body" style="background:#4d6dc8;"></div><div class="head"></div></div>
+          <div class="colonist-label builder claude" style="left: 39%; top: 38.5%;"><span class="hammer">🔨</span>Claude <span class="lvl99">Niv.99</span></div>
 
-          <div class="prop colonist" style="left: 46%; top: 53%;"><div class="body" style="background:#8a4e8e;"></div><div class="head"></div></div>
-          <div class="colonist-label" style="left: 47%; top: 51.5%;">Sophie Niv.5</div>
+          <!-- Sonnet, près du Foyer -->
+          <div class="prop colonist" style="left: 60%; top: 50%;"><div class="body" style="background:#d97a5a;"></div><div class="head"></div></div>
+          <div class="colonist-label builder sonnet" style="left: 61%; top: 48.5%;"><span class="hammer">🔨</span>Sonnet <span class="lvl99">Niv.99</span></div>
+
+          <!-- Opus, près du Promontoire -->
+          <div class="prop colonist" style="left: 66%; top: 22%;"><div class="body" style="background:#6b4d9e;"></div><div class="head"></div></div>
+          <div class="colonist-label builder opus" style="left: 67%; top: 20.5%;"><span class="hammer">🔨</span>Opus <span class="lvl99">Niv.99</span></div>
 
           <!-- Cairn en construction -->
-          <div class="prop cairn-wip" style="left: 38%; top: 50%;">
+          <div class="prop cairn-wip" style="left: 36%; top: 52%;">
             <div class="stone1"></div><div class="stone2"></div><div class="stone3"></div>
           </div>
-          <div class="cfx-progress" style="left: 39%; top: 47.5%;">
+          <div class="cfx-progress" style="left: 37%; top: 49.5%;">
             <span class="lbl">🔨 60%</span>
             <div class="track"><div class="fill" style="width:60%"></div></div>
           </div>
 
           <!-- bulle -->
-          <div class="bubble" style="left: 40%; top: 26%;">Le Cairn avance.</div>
+          <div class="bubble" style="left: 40%; top: 26%;">Trois ombres bâtissent en silence.</div>
         </div>
       </div>
     </div>
@@ -1504,7 +1518,9 @@
 
   // ---------- Bulles rotatives (vraies phrases du jeu) ----------
   const BUBBLE_LINES = [
+    "Trois ombres bâtissent en silence.",
     "Le Cairn avance.",
+    "Les esprits aident François.",
     "On chasse ce soir.",
     "Le ciel parle.",
     "Qu'est-ce qu'on fait ?",
