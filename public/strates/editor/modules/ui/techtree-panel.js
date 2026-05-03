@@ -208,8 +208,12 @@ export function refreshTechTree() {
       const card = root.querySelector('.ttp-tech[data-id="' + cssEscape(selectedTechId) + '"]')
       if (card) card.classList.add('selected')
     }
-    renderQueue()
   }
+  // La file de recherche est visible aussi en mode global (constellation),
+  // il faut donc toujours la rafraichir pour que le clic sur la croix d une
+  // bulle (cancelResearch puis dispatch queueChanged) repercute la mise a
+  // jour dans le DOM.
+  renderQueue()
 }
 if (typeof window !== 'undefined') {
   window.refreshTechTree = refreshTechTree
@@ -449,6 +453,8 @@ function render() {
   if (root.classList.contains('detail-mode') && currentBranch) {
     renderBranchDetail(currentBranch)
   }
+  // File de recherche visible egalement en mode global (constellation).
+  renderQueue()
 }
 
 function renderTopbar() {
@@ -1065,7 +1071,7 @@ function renderQueue() {
         ringHtml +
         '<span class="ic">' + escapeHTML(t.icon || '') + '</span>' +
         '<div class="cost-pill">' + cost + '&#x2605;</div>' +
-        (it.isCurrent ? '' : '<button class="x" title="Retirer">&times;</button>') +
+        '<button class="x" title="Retirer">&times;</button>' +
         '<div class="tip">' + escapeHTML(t.name) + (it.isCurrent ? ' (en cours)' : '') + '</div>'
       slot.addEventListener('click', function(e) {
         if (e.target.closest('.x')) return
