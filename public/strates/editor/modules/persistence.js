@@ -366,6 +366,9 @@ function applySnapshot(data) {
 
   // colons
   for (const csav of (data.colonists || [])) {
+    // Lot B : migration des sauvegardes anterieures. L ancien metier
+    // 'astronome' a ete fusionne dans 'chercheur' (bivalent jour/nuit).
+    if (csav && csav.profession === 'astronome') csav.profession = 'chercheur'
     const c = spawnColonist(csav.x, csav.z, { restore: csav })
     if (typeof csav.tx === 'number') c.tx = csav.tx
     if (typeof csav.tz === 'number') c.tz = csav.tz
