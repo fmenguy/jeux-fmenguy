@@ -542,7 +542,7 @@ const INTERFACE_TOUR_STEPS = [
   {
     label: 'Interface · 2/6',
     sel:   '#daynight-pill',
-    text:  'Bascule jour ↔ nuit (touche N). La nuit, vos astronomes au promontoire génèrent des points nocturnes 🌙 pour débloquer des techs spéciales.',
+    text:  'Bascule jour ↔ nuit (touche N). La nuit, vos chercheurs assignés à un promontoire génèrent des points nocturnes 🌙 pour débloquer des techs spéciales.',
   },
   {
     label: 'Interface · 3/6',

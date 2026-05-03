@@ -763,7 +763,7 @@ function renderBranchDetail(brId) {
         vc: br.color,
         disabled: nightShort,
         disabledTitle: nightShort
-          ? ('Stocks insuffisants, il faut ' + nCost + ' pts nocturnes (vous avez ' + nStock + '). Passez en mode nuit avec un astronome sur un promontoire pour en accumuler.')
+          ? ('Stocks insuffisants, il faut ' + nCost + ' pts nocturnes (vous avez ' + nStock + '). Passez en mode nuit avec un chercheur assigne a un promontoire pour en accumuler.')
           : '',
       })
       node.style.left = cx + 'px'
@@ -929,7 +929,7 @@ function renderFiche(tech) {
     (((tech.cost && typeof tech.cost === 'object' && tech.cost.night) || 0) > 0
       ? ' &middot; &#127769; <b>' + tech.cost.night + '</b> pts nocturnes' +
         (((state.nightPoints || 0) < tech.cost.night)
-          ? ' <span style="color:#c66" title="Stocks de points nocturnes insuffisants. Passez en mode nuit avec un astronome sur un promontoire pour en accumuler.">(stock ' + (state.nightPoints || 0) + ')</span>'
+          ? ' <span style="color:#c66" title="Stocks de points nocturnes insuffisants. Passez en mode nuit avec un chercheur assigne a un promontoire pour en accumuler.">(stock ' + (state.nightPoints || 0) + ')</span>'
           : ' <span style="color:var(--ttp-ink-3)">(stock ' + (state.nightPoints || 0) + ')</span>')
       : '') +
     '</div>' +
@@ -980,7 +980,7 @@ function renderFicheAction(tech, status, cost) {
     }
     const nightStock = state.nightPoints || 0
     if (nightCost > 0 && nightStock < nightCost) {
-      const tip = 'Stocks insuffisants, il faut ' + nightCost + ' pts nocturnes (vous avez ' + nightStock + '). Passez en mode nuit avec un astronome sur un promontoire pour en accumuler.'
+      const tip = 'Stocks insuffisants, il faut ' + nightCost + ' pts nocturnes (vous avez ' + nightStock + '). Passez en mode nuit avec un chercheur assigne a un promontoire pour en accumuler.'
       return '<button class="ttp-fiche-btn" disabled title="' + tip + '">' + label + '</button>'
     }
     return '<button class="ttp-fiche-btn" data-act="queue">' + label + '</button>'
