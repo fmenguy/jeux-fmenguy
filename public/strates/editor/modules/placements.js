@@ -1132,6 +1132,10 @@ export function assignResearcherToBuilding(building) {
   if (building.isUnderConstruction) return false
   let best = null, bestD = Infinity
   for (const c of state.colonists) {
+    // Lot B : seuls les colons explicitement profession === 'chercheur'
+    // peuvent etre assignes a la Hutte du sage. Plus de fallback sur le chef
+    // ou un colon IDLE quelconque.
+    if (c.profession !== 'chercheur') continue
     if (c.researchBuildingId != null) continue
     if (c.state !== 'IDLE') continue
     const d = Math.abs(c.x - building.x) + Math.abs(c.z - building.z)
