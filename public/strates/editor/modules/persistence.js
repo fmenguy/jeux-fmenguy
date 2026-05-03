@@ -16,8 +16,60 @@ import { clearVegetation } from './vegetation.js'
 // ============================================================================
 
 const STORAGE_KEY_PREFIX = 'strates-save-'
-const SAVE_VERSION = 1
+const SAVE_VERSION = 2
 export const MANUAL_SLOT_COUNT = 5
+
+// ---------------- codec base64 pour TypedArray ----------------
+// Les arrays terrain (heightmap Float32, cellTop Int16, etc.) sont volumineux
+// (GRID*GRID = 65536 cellules). Sérialisés en JSON brut, ils explosent le quota
+// localStorage (~5-10 Mo). On les encode en base64 (1 char par octet) pour
+// diviser la taille par 5 à 10.
+
+function typedArrayToB64(arr) {
+  if (!arr) return null
+  const bytes = new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength)
+  // Chunked pour éviter "Maximum call stack size exceeded" sur grands buffers.
+  let binary = ''
+  const CHUNK = 0x8000
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    const slice = bytes.subarray(i, Math.min(i + CHUNK, bytes.length))
+    binary += String.fromCharCode.apply(null, slice)
+  }
+  return btoa(binary)
+}
+
+function b64ToTypedArray(b64, Ctor) {
+  const binary = atob(b64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return new Ctor(bytes.buffer, bytes.byteOffset, bytes.byteLength / Ctor.BYTES_PER_ELEMENT)
+}
+
+// Dictionnaire des biomes (string -> uint8). 0 = null/inconnu.
+const BIOME_DICT = ['', 'grass', 'forest', 'sand', 'water', 'rock', 'snow', 'dirt', 'meadow', 'beach', 'mountain', 'tundra', 'desert', 'swamp']
+
+function cellBiomeToB64(arr) {
+  if (!arr) return null
+  const idx = new Uint8Array(arr.length)
+  for (let i = 0; i < arr.length; i++) {
+    const v = arr[i]
+    if (v == null || v === '') { idx[i] = 0; continue }
+    const k = BIOME_DICT.indexOf(v)
+    idx[i] = (k >= 0) ? k : 0
+  }
+  return typedArrayToB64(idx)
+}
+
+function b64ToCellBiome(b64, fallbackArr) {
+  if (!b64) return fallbackArr ? fallbackArr.slice() : []
+  const idx = b64ToTypedArray(b64, Uint8Array)
+  const out = new Array(idx.length)
+  for (let i = 0; i < idx.length; i++) {
+    const k = idx[i]
+    out[i] = (k > 0 && k < BIOME_DICT.length) ? BIOME_DICT[k] : null
+  }
+  return out
+}
 
 export function listSlots() {
   const out = []
@@ -68,6 +120,9 @@ export function saveGame(slot = 'auto') {
   try {
     const snap = serializeSnapshot()
     const json = JSON.stringify(snap)
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug('[strates] save slot=' + slot + ' size=' + (json.length / 1024).toFixed(1) + ' KB')
+    }
     localStorage.setItem(STORAGE_KEY_PREFIX + slot, json)
     return true
   } catch (e) {
@@ -81,7 +136,8 @@ export function loadGame(slot = 'auto') {
   if (!raw) return false
   try {
     const data = JSON.parse(raw)
-    if (!data || data.version !== SAVE_VERSION) return false
+    // v1 (arrays JSON bruts) et v2 (typed arrays base64) sont supportés au load.
+    if (!data || (data.version !== 1 && data.version !== 2)) return false
     applySnapshot(data)
     return true
   } catch (e) {
@@ -108,10 +164,11 @@ function serializeSnapshot() {
     version: SAVE_VERSION,
     savedAt: Date.now(),
     terrain: {
-      heightmap: Array.from(state.heightmap),
-      biomeNoise: Array.from(state.biomeNoise),
-      cellTop: Array.from(state.cellTop),
-      cellBiome: state.cellBiome.slice(),
+      heightmap_b64: typedArrayToB64(state.heightmap),
+      biomeNoise_b64: typedArrayToB64(state.biomeNoise),
+      cellTop_b64: typedArrayToB64(state.cellTop),
+      cellFertile_b64: state.cellFertile ? typedArrayToB64(state.cellFertile) : null,
+      cellBiome_b64: cellBiomeToB64(state.cellBiome),
       cellSurface: state.cellSurface.slice(),
       cellOre: state.cellOre.slice()
     },
@@ -175,7 +232,7 @@ function serializeSnapshot() {
     questsCompleted: (state.questsCompleted || []).map(q => ({ id: q.id, title: q.title })),
     questsActiveIds: (state.questsActive || []).map(q => q.id),
     season: { idx: state.season.idx, elapsed: state.season.elapsed, cyclesDone: state.season.cyclesDone, year: state.season.year ?? 1 },
-    cellRevealed: state.cellRevealed ? Array.from(state.cellRevealed) : null,
+    cellRevealed_b64: state.cellRevealed ? typedArrayToB64(state.cellRevealed) : null,
     currentAge: state.currentAge || 1,
     ageUnlockedAt: state.ageUnlockedAt || { 1: Date.now() },
     achievements: Array.isArray(state.achievements) ? state.achievements.slice() : [],
@@ -225,12 +282,25 @@ function applySnapshot(data) {
   clearEverything()
 
   // terrain : on reinjecte les typed arrays dans state puis on reconstruit les voxels
-  state.heightmap = Float32Array.from(data.terrain.heightmap)
-  state.biomeNoise = Float32Array.from(data.terrain.biomeNoise)
-  state.cellTop = Int16Array.from(data.terrain.cellTop)
-  state.cellBiome = data.terrain.cellBiome.slice()
-  state.cellSurface = data.terrain.cellSurface.slice()
-  state.cellOre = data.terrain.cellOre.slice()
+  // v2 : base64. v1 (legacy) : arrays JSON bruts.
+  const t = data.terrain
+  state.heightmap = t.heightmap_b64
+    ? b64ToTypedArray(t.heightmap_b64, Float32Array)
+    : Float32Array.from(t.heightmap)
+  state.biomeNoise = t.biomeNoise_b64
+    ? b64ToTypedArray(t.biomeNoise_b64, Float32Array)
+    : Float32Array.from(t.biomeNoise)
+  state.cellTop = t.cellTop_b64
+    ? b64ToTypedArray(t.cellTop_b64, Int16Array)
+    : Int16Array.from(t.cellTop)
+  if (t.cellFertile_b64) {
+    state.cellFertile = b64ToTypedArray(t.cellFertile_b64, Uint8Array)
+  }
+  state.cellBiome = t.cellBiome_b64
+    ? b64ToCellBiome(t.cellBiome_b64)
+    : t.cellBiome.slice()
+  state.cellSurface = t.cellSurface.slice()
+  state.cellOre = t.cellOre.slice()
   rebuildTerrainFromState()
   computeFertileCells()
 
@@ -348,7 +418,10 @@ function applySnapshot(data) {
   // fog of war : restaurer la carte d'exploration si presente dans la save.
   // Ancien format : data.visited (valeurs 0/1/2) - migration : >= 1 = revele.
   // Nouveau format : data.cellRevealed (valeurs 0/1).
-  if (Array.isArray(data.cellRevealed) && data.cellRevealed.length === GRID * GRID) {
+  if (typeof data.cellRevealed_b64 === 'string' && data.cellRevealed_b64) {
+    const decoded = b64ToTypedArray(data.cellRevealed_b64, Uint8Array)
+    state.cellRevealed = (decoded.length === GRID * GRID) ? decoded : null
+  } else if (Array.isArray(data.cellRevealed) && data.cellRevealed.length === GRID * GRID) {
     state.cellRevealed = Uint8Array.from(data.cellRevealed)
   } else if (Array.isArray(data.visited) && data.visited.length === GRID * GRID) {
     state.cellRevealed = new Uint8Array(GRID * GRID)
