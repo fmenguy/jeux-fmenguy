@@ -13,8 +13,9 @@ import {
 import { state } from './state.js'
 import { scene, camera, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
 import { topVoxelIndex, colorForLayer, isDeepWater, revealAround } from './terrain.js'
-import { aStar, findApproach } from './pathfind.js'
+import { aStar, findApproach, findBuildSlot } from './pathfind.js'
 import { jobKey, removeJob } from './jobs.js'
+import { dlog } from './debug.js'
 import {
   findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn,
   isRockOn, collectRockAt, isBushOn, grabBushAt
@@ -25,7 +26,7 @@ import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
 import { activeSpeakers } from './speech.js'
 import { initColonistNeeds, isNeedCritical } from './needs.js'
-import { NEEDS_DATA } from './gamedata.js'
+import { NEEDS_DATA, JOBS_DATA } from './gamedata.js'
 import { showHudToast } from './ui/research-popup.js'
 // tasks.js : file de taches, utilisee ici pour marquer la tache courante.
 import { PRIORITY, TASK_KIND } from './tasks.js'
@@ -64,6 +65,18 @@ export function topY(x, z) {
   const t = state.cellTop[z * GRID + x]
   if (t >= WATER_LEVEL && t <= SHALLOW_WATER_LEVEL) return t - 0.2
   return t
+}
+
+// Lot B : retourne la taille (w x d) du footprint d un chantier en cours, en
+// inspectant le tableau dans state qui le contient. Defaut : 1x1.
+// Bati en dur car les footprints sont fixes par type de batiment (cf.
+// placements.js). Future evolution : champ explicit footprint sur l entree.
+function getSiteFootprint(site) {
+  if (!site) return { w: 1, d: 1 }
+  if (state.bigHouses && state.bigHouses.indexOf(site) !== -1) return { w: 4, d: 4 }
+  if (state.manors && state.manors.indexOf(site) !== -1) return { w: 2, d: 2 }
+  if (state.wheatFields && state.wheatFields.indexOf(site) !== -1) return { w: 2, d: 2 }
+  return { w: 1, d: 1 }
 }
 
 // Lot B : satiete par unite consommee, lue dans needs.json (satisfied_by).
@@ -129,6 +142,9 @@ export class Colonist {
     // Lot B : chantier cible quand le colon est constructeur. Mis a null
     // quand le batiment est termine ou inaccessible.
     this.targetConstructionSite = null
+    // Lot B : slot de travail (cellule autour du chantier) attribue a ce
+    // colon. Permet plusieurs constructeurs sans superposition (style AoE).
+    this.builderSlot = null
     this.workTimer = 0
     this.huntTimer = 0
     this.bounce = 0
@@ -253,6 +269,18 @@ export class Colonist {
     this.group.add(body); this.group.add(head)
     this.group.add(legL); this.group.add(legR)
     this.group.add(armL); this.group.add(armR)
+
+    // Chapeau de metier : visible quand assignedJob != null et que le colon
+    // n est pas Chief. Couleur = job.color (jobs.json, fournie par Lot A).
+    // Forme : cone bas-poly voxel (8 segments, flatShading) au-dessus de la tete.
+    this._hatMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.65, flatShading: true })
+    const hat = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.32, 8), this._hatMat)
+    hat.position.y = 1.66
+    hat.castShadow = true
+    hat.visible = false
+    this._hat = hat
+    this.group.add(hat)
+
     this.group.position.set(this.tx, this.ty, this.tz)
     scene.add(this.group)
     this.lineMat = new THREE.LineDashedMaterial({ color: col, dashSize: 0.2, gapSize: 0.15, transparent: true, opacity: 0.6 })
@@ -298,13 +326,30 @@ export class Colonist {
     bowGroup.visible = false
     this.group.add(bowGroup)
     this._bowGroup = bowGroup
+
+    this.updateHat()
   }
 
-  say(line, isHint) {
+  // Met a jour le chapeau de metier selon assignedJob/profession/isChief.
+  // Appele en fin de constructeur (couvre new spawn ET restore via opts.restore)
+  // et apres chaque changement d assignation (population-modal).
+  updateHat() {
+    if (!this._hat || !this._hatMat) return
+    if (this.isChief) { this._hat.visible = false; return }
+    if (!this.assignedJob || !this.profession) { this._hat.visible = false; return }
+    const jobs = (JOBS_DATA && JOBS_DATA.jobs) || []
+    const job = jobs.find(j => j.id === this.profession)
+    if (!job || !job.color) { this._hat.visible = false; return }
+    this._hatMat.color.set(job.color)
+    this._hat.visible = true
+  }
+
+  say(line, isHint, opts) {
     this.lastLine = line
     this.lastLineHint = !!isHint
+    this._bubbleOpts = opts || null
     this._bubbleTruncated = null
-    const { bw, bh } = drawBubble(this.bubbleCanvas, line, !!isHint)
+    const { bw, bh } = drawBubble(this.bubbleCanvas, line, !!isHint, opts)
     this.bubbleTex.needsUpdate = true
     this._bubbleBaseW = Math.max(1.2, (bw / 512) * 3.2)
     this._bubbleBaseH = Math.max(0.4, (bh / 160) * 0.75)
@@ -347,7 +392,7 @@ export class Colonist {
       const text = truncate && this.lastLine.length > 20
         ? this.lastLine.slice(0, 20) + '…'
         : this.lastLine
-      const { bw: tw, bh: th } = drawBubble(this.bubbleCanvas, text, !!this.lastLineHint)
+      const { bw: tw, bh: th } = drawBubble(this.bubbleCanvas, text, !!this.lastLineHint, this._bubbleOpts)
       this._bubbleBaseW = Math.max(1.2, (tw / 512) * 3.2)
       this._bubbleBaseH = Math.max(0.4, (th / 160) * 0.75)
       this.bubbleTex.needsUpdate = true
@@ -656,13 +701,23 @@ export class Colonist {
       if (score < bestScore) { bestScore = score; best = b }
     }
     if (!best) return false
-    const approach = findApproach(this.x, this.z, best.x, best.z)
-    if (!approach) return false
+    // Lot B : repartition des constructeurs autour du chantier (style AoE).
+    // Chaque builder prend un slot distinct sur le perimetre exterieur du
+    // footprint. builderSlots est une Map<colonistId, "x,z"> stockee sur le
+    // chantier ; takenSet permet a findBuildSlot d eviter les slots deja pris.
+    const fp = getSiteFootprint(best)
+    if (!best.builderSlots) best.builderSlots = new Map()
+    const takenSet = new Set()
+    for (const k of best.builderSlots.values()) takenSet.add(k)
+    const slot = findBuildSlot(this.x, this.z, best.x, best.z, fp.w, fp.d, takenSet)
+    if (!slot) return false
     if (!best.builders) best.builders = new Set()
     best.builders.add(this.id)
+    best.builderSlots.set(this.id, slot.x + ',' + slot.z)
     best.activeBuildersCount = best.builders.size
     this.targetConstructionSite = best
-    this.path = approach.path
+    this.builderSlot = { x: slot.x, z: slot.z }
+    this.path = slot.path
     this.pathStep = 0
     this.state = 'MOVING'
     this.isWandering = false
@@ -883,6 +938,11 @@ export class Colonist {
         if (this.profession === 'chasseur' && this.assignedJob === 'hunter') {
           let best = null, bestD = Infinity
           for (const d of (state.deers || [])) {
+            // Garde anti-fuite : on ignore les cerfs morts (encore dans state.deers
+            // pendant deadTimer) et ceux deja cibles par un autre chasseur. Sans
+            // ces deux filtres, le tir au WORKING redrop la viande sur un cadavre.
+            if (d.dead) continue
+            if (d.claimedBy && d.claimedBy !== this) continue
             if (state.jobs.has(jobKey(d.x, d.z))) continue
             const dist = Math.abs(d.x - this.x) + Math.abs(d.z - this.z)
             if (dist < bestD) { bestD = dist; best = d }
@@ -890,6 +950,7 @@ export class Colonist {
           if (best) {
             const approach = findApproach(this.x, this.z, best.x, best.z)
             if (approach) {
+              best.claimedBy = this
               this.targetJob = { x: best.x, z: best.z, claimedBy: this, auto: true, kind: 'hunt' }
               this.path = approach.path; this.pathStep = 0
               this.state = 'MOVING'; this.isWandering = false; this.updateTrail()
@@ -985,8 +1046,22 @@ export class Colonist {
       }
       // Tir a distance : si job de chasse et cerf dans portee 6, arreter le deplacement
       if (this.targetJob && this.targetJob.kind === 'hunt') {
-        const deerEntry = state.deers ? state.deers.find(d => d.x === this.targetJob.x && d.z === this.targetJob.z) : null
-        if (deerEntry) {
+        // Filtre dead : un cerf abattu reste 4s dans state.deers (deadTimer)
+        // pour l animation de chute. Sans ce filtre, un autre colon pouvait
+        // viser un cadavre, arriver, tirer, et redrop la viande/os.
+        const deerEntry = state.deers ? state.deers.find(d => d.x === this.targetJob.x && d.z === this.targetJob.z && !d.dead) : null
+        if (!deerEntry) {
+          // Cible disparue ou morte avant l arrivee : on abandonne sans drop.
+          if (state.jobs.has(jobKey(this.targetJob.x, this.targetJob.z))) {
+            removeJob(this.targetJob.x, this.targetJob.z, true)
+          }
+          this.targetJob = null
+          this.state = 'IDLE'
+          this.path = null
+          this.lineGeo.setFromPoints([])
+          return
+        }
+        {
           const huntDx = deerEntry.x - this.x
           const huntDz = deerEntry.z - this.z
           const huntDist = Math.hypot(huntDx, huntDz)
@@ -1072,8 +1147,10 @@ export class Colonist {
         // Chantier disparu (annule, supprime) ou termine entre temps.
         if (site && site.builders) {
           site.builders.delete(this.id)
+          if (site.builderSlots) site.builderSlots.delete(this.id)
           site.activeBuildersCount = site.builders.size
         }
+        this.builderSlot = null
         this.targetConstructionSite = null
         this.state = 'IDLE'
         this.path = null
@@ -1104,6 +1181,8 @@ export class Colonist {
           site.builders.clear()
           site.activeBuildersCount = 0
         }
+        if (site.builderSlots) site.builderSlots.clear()
+        this.builderSlot = null
         onBuildingComplete(site)
         this.targetConstructionSite = null
         this.currentTask = null
@@ -1136,7 +1215,10 @@ export class Colonist {
         if (this.huntTimer < 0.8) return
         // Tir declenche
         const { x, z } = this.targetJob
-        const deerEntry = state.deers ? state.deers.find(d => d.x === x && d.z === z) : null
+        // Filtre dead : un cerf abattu reste 4s dans state.deers (animation
+        // de chute via deadTimer). Sans ce filtre, un autre tireur arrivait
+        // sur la cellule et redroppait viande/os, d ou la fuite continue.
+        const deerEntry = state.deers ? state.deers.find(d => d.x === x && d.z === z && !d.dead) : null
         if (deerEntry) {
           if (!techUnlocked('bow-wood')) {
             removeJob(x, z, true)
@@ -1148,6 +1230,7 @@ export class Colonist {
           }
           deerEntry.dead = true
           deerEntry.deadTimer = 4.0
+          deerEntry.claimedBy = null
           deerEntry.group.rotation.x = Math.PI / 2
           if (deerEntry.mixer) { deerEntry.mixer.stopAllAction(); deerEntry.mixer = null }
           // Drop spec : 3 viande crue, 2 os, 1 cuir.
@@ -1159,11 +1242,21 @@ export class Colonist {
           state.resources['hide']     = (state.resources['hide']     || 0) + 1
           state.stocks.bone           = (state.stocks.bone           || 0) + 2
           this.skills.hunting++
+          dlog('[hunt] kill', {
+            colonist: this.name,
+            profession: this.profession,
+            assignedJob: this.assignedJob,
+            x, z,
+            auto: !!(this.targetJob && this.targetJob.auto),
+            rawMeat: state.resources['raw-meat'],
+            bone: state.resources['bone']
+          })
           scheduleFlash(x, z)
           removeJob(x, z, true)
           state.gameStats.minesCompleted++
         } else {
-          // Cerf disparu entre temps
+          // Cerf disparu ou deja mort entre temps : aucun drop, on libere.
+          dlog('[hunt] no-op (cible morte ou disparue)', { colonist: this.name, x, z })
           removeJob(x, z, true)
         }
         this.targetJob = null
@@ -1353,6 +1446,9 @@ export class Colonist {
     // compteur d activite.
     if (this.targetConstructionSite && this.targetConstructionSite.builders) {
       this.targetConstructionSite.builders.delete(this.id)
+      if (this.targetConstructionSite.builderSlots) {
+        this.targetConstructionSite.builderSlots.delete(this.id)
+      }
       this.targetConstructionSite.activeBuildersCount = this.targetConstructionSite.builders.size
     }
     scene.remove(this.group)

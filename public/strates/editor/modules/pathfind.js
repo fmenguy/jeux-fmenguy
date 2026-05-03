@@ -84,3 +84,60 @@ export function findApproach(sx, sz, tx, tz) {
   }
   return best
 }
+
+// Lot B : enumere toutes les cellules formant le perimetre exterieur d un
+// batiment de footprint w x d dont l origine (coin min) est (ox, oz). Inclut
+// les 4 coins (style Age of Empires : 8 slots autour d un 1x1, perimetre
+// complet pour 2x2 ou 4x4). Filtre les cellules hors grille, en eau profonde
+// ou non passables.
+export function listBuildSlots(ox, oz, w, d) {
+  const slots = []
+  // Bord haut (z = oz - 1) et bord bas (z = oz + d), de x = ox - 1 a ox + w
+  for (let x = ox - 1; x <= ox + w; x++) {
+    slots.push([x, oz - 1])
+    slots.push([x, oz + d])
+  }
+  // Bord gauche et droite, de z = oz a oz + d - 1 (coins deja inclus au-dessus)
+  for (let z = oz; z < oz + d; z++) {
+    slots.push([ox - 1, z])
+    slots.push([ox + w, z])
+  }
+  // Filtre hors-grille, eau profonde, hors-sol.
+  const valid = []
+  for (const [x, z] of slots) {
+    if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
+    if (isDeepWater(x, z)) continue
+    const top = state.cellTop[z * GRID + x]
+    if (top <= 0) continue
+    valid.push({ x, z })
+  }
+  return valid
+}
+
+// Lot B : choisit pour un constructeur un slot de travail autour d un chantier
+// (footprint w x d, origine ox, oz). Evite les slots deja pris (takenSet de
+// cles "x,z"). Retourne { x, z, path } ou null si aucun slot accessible.
+// Heuristique : tri par distance Manhattan au demandeur, puis tentative aStar.
+export function findBuildSlot(sx, sz, ox, oz, w, d, takenSet) {
+  const slots = listBuildSlots(ox, oz, w, d)
+  // Tri par distance Manhattan croissante au demandeur.
+  slots.sort((a, b) => {
+    const da = Math.abs(a.x - sx) + Math.abs(a.z - sz)
+    const db = Math.abs(b.x - sx) + Math.abs(b.z - sz)
+    return da - db
+  })
+  // Pass 1 : slots non pris.
+  for (const s of slots) {
+    const key = s.x + ',' + s.z
+    if (takenSet && takenSet.has(key)) continue
+    const path = aStar(sx, sz, s.x, s.z)
+    if (path) return { x: s.x, z: s.z, path }
+  }
+  // Pass 2 (fallback) : si tous les slots sont pris, autoriser le partage du
+  // slot le plus proche accessible. Evite que le constructeur reste bloque.
+  for (const s of slots) {
+    const path = aStar(sx, sz, s.x, s.z)
+    if (path) return { x: s.x, z: s.z, path }
+  }
+  return null
+}
