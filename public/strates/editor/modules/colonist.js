@@ -18,7 +18,7 @@ import {
   findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn,
   isRockOn, collectRockAt, isBushOn, grabBushAt
 } from './placements.js'
-import { findNearestBush, refreshBushBerries } from './placements.js'
+import { findNearestBush, refreshBushBerries, isObservatoryOn } from './placements.js'
 import { techUnlocked } from './tech.js'
 import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
@@ -573,6 +573,33 @@ export class Colonist {
     return true
   }
 
+  // Lot B : ASTRONOME. La nuit, un colon de profession astronome rejoint le
+  // promontoire d'observation le plus proche et s y stationne. Les points
+  // nocturnes sont generes par tickDayNight via isColonistOnObservatory()
+  // tant que le colon est IDLE sur la cellule du promontoire.
+  pickObservatory() {
+    if (!state.observatories || !state.observatories.length) return false
+    // Deja sur un promontoire : rester IDLE, les points sont generes auto.
+    if (isObservatoryOn(this.x, this.z)) return false
+    let best = null, bestD = Infinity
+    for (const o of state.observatories) {
+      const d = Math.abs(o.x - this.x) + Math.abs(o.z - this.z)
+      if (d < bestD) { bestD = d; best = o }
+    }
+    if (!best) return false
+    const path = aStar(this.x, this.z, best.x, best.z)
+    if (!path) return false
+    this.path = path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    // isWandering=true pour qu en fin de path le colon retombe en IDLE
+    // (et non en WORKING). Une fois sur la cellule du promontoire, les
+    // prochaines decisions IDLE retourneront false ici donc le colon reste.
+    this.isWandering = true
+    this.updateTrail()
+    return true
+  }
+
   updateTrail() {
     if (!this.path) { this.lineGeo.setFromPoints([]); return }
     const pts = []
@@ -756,6 +783,15 @@ export class Colonist {
             }
           }
         }
+        // Lot B : ASTRONOME. La nuit, un colon astronome rejoint un
+        // promontoire pour generer des nightPoints (via isColonistOnObservatory
+        // dans daynight.js). Le jour, comportement IDLE / LEISURE normal.
+        if (this.profession === 'astronome' && state.isNight) {
+          if (this.pickObservatory()) {
+            this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE, reason: 'astronome' }
+            return
+          }
+        }
         // Lot B LEISURE : si de la viande crue traine dans les stocks et
         // qu un foyer libre est dispo, n importe quel colon peut prendre
         // l initiative d aller la cuire. Action collective non specifique
@@ -771,8 +807,25 @@ export class Colonist {
       //   this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
       //   return
       // }
+      // Lot B : astronome stationne sur son promontoire la nuit, ni campfire
+      // social ni wander pour ne pas perdre les nightPoints.
+      const stayingOnObservatory = (
+        this.profession === 'astronome' && state.isNight && isObservatoryOn(this.x, this.z)
+      )
       // Nuit : attirance vers le foyer le plus proche (feu de camp social).
-      if (state.isNight && this.pickCampfire()) return
+      if (state.isNight && !stayingOnObservatory && this.pickCampfire()) return
+      if (stayingOnObservatory) {
+        // Petite rotation lente de la tete pour montrer qu il scrute le ciel.
+        this.lookTimer -= dt
+        if (this.lookTimer <= 0) {
+          this.targetYaw = this.group.rotation.y + (Math.random() - 0.5) * 1.0
+          this.lookTimer = 2 + Math.random() * 3
+        }
+        const dy = this.targetYaw - this.group.rotation.y
+        this.group.rotation.y += dy * Math.min(1, dt * 1.0)
+        this.group.position.set(this.tx, this.ty, this.tz)
+        return
+      }
       this.wanderPause -= dt
       this.lookTimer -= dt
       if (this.lookTimer <= 0) {
