@@ -5,7 +5,7 @@ import {
   GENDER_SYMBOLS, GENDER_COLORS,
   CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK,
   RAW_MEAT_SATIETY, COOKED_MEAT_SATIETY,
-  MAX_BUILDER_DISTANCE
+  MAX_BUILDER_DISTANCE, STAR_COLONIST_CHANCE
 } from './constants.js'
 import {
   MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
@@ -145,6 +145,9 @@ export class Colonist {
     this.researchBuildingId = null
     this.lastContextLine = null
     this.favorite = false
+    // Lot B : flag "etoile" (5% au spawn par maison construite). Affecte
+    // potentiellement l UI population et les bulles. Par defaut faux.
+    this.isStar = false
     // Lot B, moteur comportemental
     this.needs = new Map()
     this.jobQueue = []                   // tableau de Task, priorite decroissante
@@ -176,6 +179,7 @@ export class Colonist {
       this.isChief = !!r.isChief
       this.researchBuildingId = r.researchBuildingId != null ? r.researchBuildingId : null
       this.favorite = !!r.favorite
+      this.isStar = !!r.isStar
       if (typeof r.ty === 'number') this.ty = r.ty
       if (r.state) this.state = r.state
       if (typeof r.hp    === 'number') this.hp    = r.hp
@@ -1401,6 +1405,11 @@ export function onBuildingComplete(site) {
     spawnColonsAroundHouse(cx, cz, site.pendingColonistsSpawn)
     site.pendingColonistsSpawn = 0
   }
+  // Cabane : meme pattern, spawn differe a la fin de construction.
+  if (site.buildingId === 'cabane' && site.pendingColonistsSpawn > 0) {
+    spawnColonsAroundHouse(site.x, site.z, site.pendingColonistsSpawn)
+    site.pendingColonistsSpawn = 0
+  }
   // Promontoire : reveler la zone de vision en differe.
   if (site.buildingId === 'promontoire' && site.pendingVisionRadius > 0) {
     const r = site.pendingVisionRadius
@@ -1439,6 +1448,45 @@ export function clearColonists() {
   state.usedNames.clear()
 }
 
+// Lot B : applique des niveaux aleatoires faibles (1 a 3 dans 2 ou 3 skills)
+// a un colon nouvellement spawne par construction de maison, et tire la chance
+// "star" (STAR_COLONIST_CHANCE) qui place une de ses skills directement au
+// niveau 10 (200 XP, plafond skillLevel). Toast d annonce si star.
+// Le hameau initial (worldgen) n appelle pas cette fonction et garde le RNG
+// _randSkill par defaut du constructeur.
+function applyRandomLevelsAndStar(c) {
+  if (!c || !c.skills) return
+  const skillIds = Object.keys(c.skills)
+  if (skillIds.length === 0) return
+  // Reset a 0 toutes les skills (le constructeur a deja tire 1-5).
+  for (const id of skillIds) c.skills[id] = 0
+  // 2 ou 3 skills aleatoires recoivent 1 a 3 XP brut. NB : skillLevel = floor(xp/20)
+  // donc 1-3 XP donne niveau 0 affiche. Pour avoir un niveau visible 1 a 3, il
+  // faut 20 a 79 XP. On interprete la spec "niveau 1-3" en XP correspondant.
+  const pool = skillIds.slice()
+  const picked = []
+  const target = 2 + Math.floor(Math.random() * 2) // 2 ou 3
+  for (let i = 0; i < target && pool.length > 0; i++) {
+    const idx = Math.floor(Math.random() * pool.length)
+    picked.push(pool.splice(idx, 1)[0])
+  }
+  for (const sk of picked) {
+    const lvl = 1 + Math.floor(Math.random() * 3) // 1, 2 ou 3
+    c.skills[sk] = lvl * 20
+  }
+  // Star : 5% de chance, une skill aleatoire passe niveau 10 (200 XP).
+  if (Math.random() < STAR_COLONIST_CHANCE) {
+    const starSkill = skillIds[Math.floor(Math.random() * skillIds.length)]
+    c.skills[starSkill] = 200
+    c.isStar = true
+    if (typeof showHudToast === 'function') {
+      showHudToast(`Une étoile est née : ${c.name || 'colon'}.`, 4000)
+    }
+  } else {
+    c.isStar = false
+  }
+}
+
 export function spawnColonsAroundHouse(hx, hz, count) {
   const spawned = []
   const tried = new Set()
@@ -1465,7 +1513,10 @@ export function spawnColonsAroundHouse(hx, hz, count) {
         for (const c of state.colonists) if (c.x === x && c.z === z) { occ = true; break }
         if (occ) continue
         const c = spawnColonist(x, z)
-        if (c) c.assignedBuildingId = shelterId
+        if (c) {
+          c.assignedBuildingId = shelterId
+          applyRandomLevelsAndStar(c)
+        }
         spawned.push({ x, z })
       }
     }
@@ -1474,7 +1525,10 @@ export function spawnColonsAroundHouse(hx, hz, count) {
     const fx = Math.max(0, Math.min(GRID - 1, hx + spawned.length))
     const fz = Math.max(0, Math.min(GRID - 1, hz))
     const c = spawnColonist(fx, fz)
-    if (c) c.assignedBuildingId = shelterId
+    if (c) {
+      c.assignedBuildingId = shelterId
+      applyRandomLevelsAndStar(c)
+    }
     spawned.push({ x: fx, z: fz })
   }
   return spawned

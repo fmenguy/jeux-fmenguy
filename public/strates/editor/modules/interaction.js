@@ -687,9 +687,15 @@ function applyToolAtCell(cell) {
         return
       }
       if (!isCellOccupied(cell.x, cell.z)) {
-        if (addHouse(cell.x, cell.z)) {
+        const cbEntry = addHouse(cell.x, cell.z)
+        if (cbEntry) {
           state.gameStats.housesPlaced++
-          spawnColonsAroundHouse(cell.x, cell.z, 2)
+          if (cbEntry.isUnderConstruction) {
+            // Lot B : spawn differe a la fin de construction (onBuildingComplete).
+            cbEntry.pendingColonistsSpawn = 2
+          } else {
+            spawnColonsAroundHouse(cell.x, cell.z, 2)
+          }
           const manor = checkManorMerge(cell.x, cell.z)
           if (manor) spawnColonsAroundHouse(manor.x + 1, manor.z + 1, 2)
         }
@@ -842,9 +848,15 @@ function applyToolToStrata(cells) {
           break
         }
         if (!isCellOccupied(c.x, c.z)) {
-          if (addHouse(c.x, c.z)) {
+          const cbEntry2 = addHouse(c.x, c.z)
+          if (cbEntry2) {
             state.gameStats.housesPlaced++
-            spawnColonsAroundHouse(c.x, c.z, 2)
+            if (cbEntry2.isUnderConstruction) {
+              // Lot B : spawn differe a la fin de construction.
+              cbEntry2.pendingColonistsSpawn = 2
+            } else {
+              spawnColonsAroundHouse(c.x, c.z, 2)
+            }
             const manor = checkManorMerge(c.x, c.z)
             if (manor) spawnColonsAroundHouse(manor.x + 1, manor.z + 1, 2)
           }

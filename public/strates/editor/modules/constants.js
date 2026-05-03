@@ -49,6 +49,11 @@ export const CHIEF_NAME = 'François'
 export const CHIEF_STAR = '\u2605'
 export const CHIEF_COLOR = '#f2c94c'
 
+// Lot B : probabilite qu un colon nouvellement spawne (par construction de
+// maison, hors hameau initial) soit une "etoile", c est a dire qu une de ses
+// competences soit deja au niveau 10. Reste rare (5%).
+export const STAR_COLONIST_CHANCE = 0.05
+
 // ============================================================================
 // Palette couleurs terrain
 // ============================================================================
