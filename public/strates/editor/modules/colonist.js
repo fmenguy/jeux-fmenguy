@@ -700,9 +700,10 @@ export class Colonist {
 
     if (this.state === 'RESEARCHING') {
       this.lineGeo.setFromPoints([])
-      // Lot B : la profession peut changer pendant que le colon recherche.
-      // Si ce n est plus un 'chercheur', on libere la hutte et on quitte.
-      if (this.profession !== 'chercheur') {
+      // Gate universel : profession === 'chercheur' ET assignedJob === 'researcher'.
+      // Si l une des deux conditions tombe (changement de metier ou desassignation
+      // depuis le panneau Population), on libere la hutte et on quitte.
+      if (this.profession !== 'chercheur' || this.assignedJob !== 'researcher') {
         const b = findResearchBuildingById(this.researchBuildingId)
         if (b && b.assignedColonistId === this.id) b.assignedColonistId = null
         this.researchBuildingId = null
@@ -735,10 +736,10 @@ export class Colonist {
     if (this.state === 'IDLE') {
       this.lineGeo.setFromPoints([])
       if (this.researchBuildingId != null) {
-        // Lot B : si la profession du colon n est plus 'chercheur' (le joueur
-        // a change son metier), on libere immediatement la hutte et le colon
-        // redevient IDLE normal.
-        if (this.profession !== 'chercheur') {
+        // Gate universel : profession === 'chercheur' ET assignedJob === 'researcher'.
+        // Si le joueur change le metier OU desassigne le role, on libere
+        // immediatement la hutte et le colon redevient IDLE normal.
+        if (this.profession !== 'chercheur' || this.assignedJob !== 'researcher') {
           const b = findResearchBuildingById(this.researchBuildingId)
           if (b && b.assignedColonistId === this.id) b.assignedColonistId = null
           this.researchBuildingId = null
