@@ -308,8 +308,8 @@ export class Colonist {
     this.bubbleMat = new THREE.SpriteMaterial({ map: this.bubbleTex, transparent: true, depthTest: false, depthWrite: false })
     this.bubbleMat.opacity = 0
     this.bubble = new THREE.Sprite(this.bubbleMat)
-    this.bubble.scale.set(2.4, 0.75, 1)
-    this.bubble.position.set(0, 2.75, 0)
+    this.bubble.scale.set(3.4, 1.1, 1)
+    this.bubble.position.set(0, 2.95, 0)
     this.bubble.visible = false
     this.bubble.renderOrder = 999
     this.group.add(this.bubble)
@@ -426,8 +426,11 @@ export class Colonist {
     this._bubbleTruncated = null
     const { bw, bh } = drawBubble(this.bubbleCanvas, line, !!isHint, opts)
     this.bubbleTex.needsUpdate = true
-    this._bubbleBaseW = Math.max(1.2, (bw / 512) * 3.2)
-    this._bubbleBaseH = Math.max(0.4, (bh / 160) * 0.75)
+    // Conversion canvas → world : la résolution texture est 768×240 pixels.
+    // Les coefficients 4.5 et 1.05 dimensionnent le sprite en unités world
+    // pour une bulle parfaitement lisible à distance caméra normale (~16 u).
+    this._bubbleBaseW = Math.max(1.8, (bw / 768) * 4.5)
+    this._bubbleBaseH = Math.max(0.6, (bh / 240) * 1.05)
     this.bubble.scale.set(this._bubbleBaseW, this._bubbleBaseH, 1)
     this.speechTimer = isHint ? 6.0 : 4.0
     this.bubble.visible = true
@@ -452,13 +455,15 @@ export class Colonist {
 
     this.bubble.visible = true
 
-    // Scale proportionnel à la distance, ancrage bas du sprite
-    const zoomFactor = Math.max(0.7, Math.min(2.2, dist / 16))
-    const baseW = this._bubbleBaseW || 2.4
-    const baseH = this._bubbleBaseH || 0.75
+    // Scale proportionnel à la distance, ancrage bas du sprite. Min relevé
+    // à 0.95 pour rester lisible au zoom rapproché ; max conservé à 2.2 pour
+    // ne pas envahir l écran en vue dézoomée.
+    const zoomFactor = Math.max(0.95, Math.min(2.2, dist / 16))
+    const baseW = this._bubbleBaseW || 3.4
+    const baseH = this._bubbleBaseH || 1.1
     this.bubble.scale.set(baseW * zoomFactor, baseH * zoomFactor, 1)
     // Ajuste Y pour que le bas du sprite reste ancré au-dessus de la tête
-    this.bubble.position.set(0, 2.375 + (baseH / 2) * zoomFactor, 0)
+    this.bubble.position.set(0, 2.5 + (baseH / 2) * zoomFactor, 0)
 
     // Troncature au-delà de 25 unités : redraw uniquement au changement de seuil
     const truncate = dist > 25
@@ -468,8 +473,8 @@ export class Colonist {
         ? this.lastLine.slice(0, 20) + '…'
         : this.lastLine
       const { bw: tw, bh: th } = drawBubble(this.bubbleCanvas, text, !!this.lastLineHint, this._bubbleOpts)
-      this._bubbleBaseW = Math.max(1.2, (tw / 512) * 3.2)
-      this._bubbleBaseH = Math.max(0.4, (th / 160) * 0.75)
+      this._bubbleBaseW = Math.max(1.8, (tw / 768) * 4.5)
+      this._bubbleBaseH = Math.max(0.6, (th / 240) * 1.05)
       this.bubbleTex.needsUpdate = true
     }
 
