@@ -258,6 +258,8 @@ export class PopulationModal {
       raw.profession = jobId
       raw.assignedJob = PROFESSION_TO_ASSIGNED_JOB[jobId] || jobId
     }
+    // Lot E : chapeau de metier 3D (couleur job.color) sur le mesh du colon.
+    if (typeof raw.updateHat === 'function') raw.updateHat()
     // Garder le sous-panneau ouvert pour permettre d'assigner plusieurs colons a la suite
     this._renderBody()
   }
