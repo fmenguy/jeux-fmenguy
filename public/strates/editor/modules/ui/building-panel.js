@@ -341,11 +341,40 @@ function buildContent(type, building) {
   return sections.join('')
 }
 
+// Recalcule l état du bouton démolir d après l état courant (type bâtiment +
+// tech 'demolition'). Idempotent, sans effet si le footer est déjà masqué
+// ou si le panneau n est pas monté. Appelé depuis openBuildingPanel ET en
+// réaction à strates:techComplete pour que le déblocage de demolition se
+// répercute en live sur une fiche déjà ouverte.
+function _refreshDestroyButton() {
+  if (!panelEl || !_currentType) return
+  const footerEl = document.getElementById('bp-footer')
+  const destroyBtn = document.getElementById('bp-destroy-btn')
+  const hideFooter = NON_DESTRUCTIBLE.has(_currentType)
+  if (footerEl) footerEl.style.display = hideFooter ? 'none' : 'block'
+  if (destroyBtn && !hideFooter) {
+    const canDemolish = techUnlocked('demolition')
+    destroyBtn.disabled = !canDemolish
+    destroyBtn.classList.toggle('locked', !canDemolish)
+    destroyBtn.title = canDemolish
+      ? 'Détruit le bâtiment et rembourse 50% du coût'
+      : 'Recherche Démolition requise'
+  }
+}
+
 export function initBuildingPanel() {
   window.addEventListener('strates:buildingClicked', function(e) {
     const d = e && e.detail
     if (!d) return
     openBuildingPanel(d.type, d.building)
+  })
+  // Si la tech 'demolition' est débloquée pendant que la fiche est ouverte,
+  // rafraîchir le bouton sans attendre une réouverture.
+  window.addEventListener('strates:techComplete', function(e) {
+    const id = e && e.detail && e.detail.id
+    if (id !== 'demolition') return
+    if (!panelEl || panelEl.classList.contains('hidden')) return
+    _refreshDestroyButton()
   })
 }
 
@@ -357,18 +386,7 @@ export function openBuildingPanel(type, building) {
   document.getElementById('bp-icon').textContent  = meta.icon
   document.getElementById('bp-title').textContent = meta.name
   bodyEl.innerHTML = buildContent(type, building)
-  const footerEl = document.getElementById('bp-footer')
-  const destroyBtn = document.getElementById('bp-destroy-btn')
-  const hideFooter = NON_DESTRUCTIBLE.has(type)
-  if (footerEl) footerEl.style.display = hideFooter ? 'none' : 'block'
-  if (destroyBtn && !hideFooter) {
-    const canDemolish = techUnlocked('demolition')
-    destroyBtn.disabled = !canDemolish
-    destroyBtn.classList.toggle('locked', !canDemolish)
-    destroyBtn.title = canDemolish
-      ? 'Détruit le bâtiment et rembourse 50% du coût'
-      : 'Recherche Démolition requise'
-  }
+  _refreshDestroyButton()
   panelEl.classList.remove('hidden')
   // Forcer un redémarrage de l'animation slide-in
   panelEl.style.animation = 'none'
