@@ -951,6 +951,11 @@ window.addEventListener('blur', () => {
   isShiftDown = false; clearStrataPreview(); strataPreviewKey = null; strataCachedCells = null
 })
 
+// Raycaster + NDC partagés entre pickColonist (clic) et le handler de hover.
+// Déclarés en haut du module pour éviter toute confusion d ordre.
+const hoverRaycaster = new THREE.Raycaster()
+const hoverNDC = new THREE.Vector2()
+
 function pickColonist(clientX, clientY) {
   const rect = dom.getBoundingClientRect()
   hoverNDC.x = ((clientX - rect.left) / rect.width) * 2 - 1
@@ -1179,8 +1184,6 @@ dom.addEventListener('pointerup', (e) => {
 // ---------------------------------------------------------------------------
 // Survol colon : affiche label
 // ---------------------------------------------------------------------------
-const hoverRaycaster = new THREE.Raycaster()
-const hoverNDC = new THREE.Vector2()
 let hoveredColonist = null
 let _lastHoverMoveTime = 0
 
