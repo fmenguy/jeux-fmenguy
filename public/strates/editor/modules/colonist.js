@@ -705,7 +705,10 @@ export class Colonist {
       // depuis le panneau Population), on libere la hutte et on quitte.
       if (this.profession !== 'chercheur' || this.assignedJob !== 'researcher') {
         const b = findResearchBuildingById(this.researchBuildingId)
-        if (b && b.assignedColonistId === this.id) b.assignedColonistId = null
+        if (b && Array.isArray(b.assignedColonistIds)) {
+          const i = b.assignedColonistIds.indexOf(this.id)
+          if (i >= 0) b.assignedColonistIds.splice(i, 1)
+        }
         this.researchBuildingId = null
         this.state = 'IDLE'
         return
@@ -746,15 +749,18 @@ export class Colonist {
         this.assignedJob === 'researcher' &&
         state.researchHouses && state.researchHouses.length > 0
       ) {
+        // Lot B : la Hutte du sage accepte plusieurs chercheurs. On choisit
+        // la plus proche, peu importe le nombre deja assignes. Repartition
+        // naturelle si plusieurs huttes presentes : chacun va vers la sienne.
         let bestHut = null, bestHutD = Infinity
         for (const h of state.researchHouses) {
           if (h.isUnderConstruction) continue
-          if (h.assignedColonistId != null) continue
+          if (!Array.isArray(h.assignedColonistIds)) h.assignedColonistIds = []
           const d = Math.abs(h.x - this.x) + Math.abs(h.z - this.z)
           if (d < bestHutD) { bestHutD = d; bestHut = h }
         }
         if (bestHut) {
-          bestHut.assignedColonistId = this.id
+          if (!bestHut.assignedColonistIds.includes(this.id)) bestHut.assignedColonistIds.push(this.id)
           this.researchBuildingId = bestHut.id
         }
       }
@@ -764,7 +770,10 @@ export class Colonist {
         // immediatement la hutte et le colon redevient IDLE normal.
         if (this.profession !== 'chercheur' || this.assignedJob !== 'researcher') {
           const b = findResearchBuildingById(this.researchBuildingId)
-          if (b && b.assignedColonistId === this.id) b.assignedColonistId = null
+          if (b && Array.isArray(b.assignedColonistIds)) {
+            const i = b.assignedColonistIds.indexOf(this.id)
+            if (i >= 0) b.assignedColonistIds.splice(i, 1)
+          }
           this.researchBuildingId = null
         }
       }
@@ -783,7 +792,10 @@ export class Colonist {
             return
           }
           // Chemin inaccessible : liberer l assignation pour permettre reassignation
-          if (building.assignedColonistId === this.id) building.assignedColonistId = null
+          if (Array.isArray(building.assignedColonistIds)) {
+            const i = building.assignedColonistIds.indexOf(this.id)
+            if (i >= 0) building.assignedColonistIds.splice(i, 1)
+          }
           this.researchBuildingId = null
         }
       }

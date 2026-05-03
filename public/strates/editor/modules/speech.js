@@ -74,7 +74,7 @@ export function tryTriggerContextBubble(nowSec) {
 
   const fieldCount = countFields()
   const hasResearch = state.researchHouses.length > 0
-  const hasAssignedResearcher = state.researchHouses.some(r => r.assignedColonistId != null)
+  const hasAssignedResearcher = state.researchHouses.some(r => Array.isArray(r.assignedColonistIds) && r.assignedColonistIds.length > 0)
 
   if (fieldCount >= 2 && !hasResearch) {
     if (state.contextBubbles.fieldTriggerStartAt < 0) state.contextBubbles.fieldTriggerStartAt = nowSec

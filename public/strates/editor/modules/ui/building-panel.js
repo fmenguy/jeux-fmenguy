@@ -315,13 +315,13 @@ function buildContent(type, building) {
   }
 
   if (type === 'research') {
-    const assignedId = building.assignedColonistId
-    const chercheur = assignedId != null ? colonistById(assignedId) : null
+    const ids = Array.isArray(building.assignedColonistIds) ? building.assignedColonistIds : []
+    const rows = ids.map(id => colonistById(id) ? residentRow(id) : null).filter(Boolean)
     sections.push(
       '<div class="bp-section">' +
-        '<h4>Chercheur</h4>' +
-        (chercheur
-          ? residentRow(assignedId)
+        '<h4>Chercheurs (' + rows.length + ')</h4>' +
+        (rows.length
+          ? rows.join('')
           : '<div class="bp-empty">Aucun chercheur assigné</div>') +
       '</div>'
     )
