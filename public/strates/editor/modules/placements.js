@@ -946,7 +946,7 @@ export function addBigHouse(gx, gz) {
   _markUnderConstruction(entry, 'big-house')
   state.bigHouses.push(entry)
   revealAround(gx + 2, gz + 2, 8)
-  return true
+  return entry
 }
 
 export function removeBigHousesIn(cells) {
@@ -1494,8 +1494,14 @@ export function addObservatory(gx, gz) {
   const BASE_RADIUS = 20
   const HEIGHT_BONUS = Math.max(0, alt - 3) * 2
   const radius = Math.min(35, BASE_RADIUS + HEIGHT_BONUS)
-  revealAround(gx, gz, radius)
-  showHudToast(`Promontoire érigé, vision ${radius} cases`, 3000)
+  // Lot B : la zone de vision n est activee qu en fin de construction. On
+  // memorise le rayon pour que onBuildingComplete declenche revealAround.
+  entry.pendingVisionRadius = radius
+  if (!entry.isUnderConstruction) {
+    revealAround(gx, gz, radius)
+    showHudToast(`Promontoire érigé, vision ${radius} cases`, 3000)
+    entry.pendingVisionRadius = 0
+  }
   return entry
 }
 

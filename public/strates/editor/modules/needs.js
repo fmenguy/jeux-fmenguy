@@ -79,8 +79,19 @@ function evalRuleNeed(colonist, need) {
     // La Cabane age I correspond au building id "cabane". Tout batiment
     // habitable (subtype habitation) coche la case, defensivement.
     const b = getBuildingById(bid)
-    if (b && (b.id === 'cabane' || b.id === 'abri-fortune' || b.subtype === 'habitation')) return false
-    return true
+    const isHabitableId = b && (b.id === 'cabane' || b.id === 'abri-fortune' || b.subtype === 'habitation' || b.category === 'habitation')
+    if (!isHabitableId) return true
+    // Lot B : il faut au moins une habitation effectivement construite (non en
+    // chantier) sur la carte. Sinon le colon est sans-abri meme si son
+    // assignedBuildingId est valide.
+    let hasBuiltShelter = false
+    if (state.houses) {
+      for (const h of state.houses) { if (!h.isUnderConstruction) { hasBuiltShelter = true; break } }
+    }
+    if (!hasBuiltShelter && state.bigHouses) {
+      for (const bh of state.bigHouses) { if (!bh.isUnderConstruction) { hasBuiltShelter = true; break } }
+    }
+    return !hasBuiltShelter
   }
   if (need.rule === 'colonist_was_attacked') {
     return !!colonist.wasAttacked

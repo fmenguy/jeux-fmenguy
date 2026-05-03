@@ -725,9 +725,15 @@ function applyToolAtCell(cell) {
         showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
         return
       }
-      if (addBigHouse(cell.x, cell.z)) {
+      const bhEntry = addBigHouse(cell.x, cell.z)
+      if (bhEntry) {
         state.gameStats.housesPlaced++
-        spawnColonsAroundHouse(cell.x + 1, cell.z + 1, 4)
+        if (bhEntry.isUnderConstruction) {
+          // Lot B : spawn differe a la fin de construction (onBuildingComplete).
+          bhEntry.pendingColonistsSpawn = 4
+        } else {
+          spawnColonsAroundHouse(cell.x + 1, cell.z + 1, 4)
+        }
       }
       break
     }
@@ -874,9 +880,14 @@ function applyToolToStrata(cells) {
           showHudToast('Zone inexplorée, impossible de construire ici.', 2500)
           break
         }
-        if (addBigHouse(c.x, c.z)) {
+        const bhEntry2 = addBigHouse(c.x, c.z)
+        if (bhEntry2) {
           state.gameStats.housesPlaced++
-          spawnColonsAroundHouse(c.x + 1, c.z + 1, 4)
+          if (bhEntry2.isUnderConstruction) {
+            bhEntry2.pendingColonistsSpawn = 4
+          } else {
+            spawnColonsAroundHouse(c.x + 1, c.z + 1, 4)
+          }
         }
         break
       }
