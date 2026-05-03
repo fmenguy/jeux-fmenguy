@@ -268,13 +268,18 @@ function _injectCairnButton() {
   }
 
   _cairnBtn = document.createElement('button')
-  _cairnBtn.className = 'tool locked'
+  // On utilise 'tool' sans 'locked' pour que pointer-events reste actif
+  // (le CSS .tool.locked applique pointer-events:none ce qui bloque le tooltip)
+  // L'apparence "verrouillee" est geree par les styles inline.
+  _cairnBtn.className = 'tool'
   _cairnBtn.dataset.tool = 'cairn'
   _cairnBtn.title = 'Poser le Cairn (passage à l\'âge du Bronze)'
   _cairnBtn.innerHTML = '<span class="nm">Cairn</span><span class="key">C</span>'
-  _cairnBtn.style.border    = '1px solid rgba(212,184,112,0.7)'
-  _cairnBtn.style.boxShadow = '0 0 8px rgba(212,184,112,0.45)'
-  _cairnBtn.style.opacity   = '0.5'
+  _cairnBtn.style.border        = '1px solid rgba(212,184,112,0.7)'
+  _cairnBtn.style.boxShadow     = '0 0 8px rgba(212,184,112,0.45)'
+  _cairnBtn.style.opacity       = '0.5'
+  _cairnBtn.style.cursor        = 'not-allowed'
+  _cairnBtn.style.pointerEvents = 'auto'
   monumentGroup.appendChild(_cairnBtn)
 
   _cairnBtn.addEventListener('click', _onCairnClick)
@@ -452,18 +457,23 @@ export function checkCairnOverlay() {
     }
 
     // Sinon : reflet des conditions
+    // On ne touche pas pointer-events pour conserver le survol tooltip
+    // La classe 'locked' est retiree pour eviter que le CSS n'ecrase pointer-events
     const { ok } = canBuildCairn(state)
+    _cairnBtn.classList.remove('locked')
     if (ok) {
-      _cairnBtn.style.border    = '1px solid rgba(212,184,112,0.9)'
-      _cairnBtn.style.boxShadow = '0 0 8px rgba(212,184,112,0.8)'
-      _cairnBtn.style.opacity   = '1'
-      _cairnBtn.classList.remove('locked')
+      _cairnBtn.style.border        = '1px solid rgba(212,184,112,0.9)'
+      _cairnBtn.style.boxShadow     = '0 0 8px rgba(212,184,112,0.8)'
+      _cairnBtn.style.opacity       = '1'
+      _cairnBtn.style.cursor        = 'pointer'
+      _cairnBtn.style.pointerEvents = 'auto'
       _cairnBtn.title = 'Poser le Cairn (conditions réunies !)'
     } else {
-      _cairnBtn.style.border    = '1px solid rgba(212,184,112,0.7)'
-      _cairnBtn.style.boxShadow = '0 0 8px rgba(212,184,112,0.45)'
-      _cairnBtn.style.opacity   = '0.5'
-      _cairnBtn.classList.add('locked')
+      _cairnBtn.style.border        = '1px solid rgba(212,184,112,0.7)'
+      _cairnBtn.style.boxShadow     = '0 0 8px rgba(212,184,112,0.45)'
+      _cairnBtn.style.opacity       = '0.5'
+      _cairnBtn.style.cursor        = 'not-allowed'
+      _cairnBtn.style.pointerEvents = 'auto'
       _cairnBtn.title = 'Cairn de pierre (conditions non réunies, survolez pour voir)'
     }
   }
