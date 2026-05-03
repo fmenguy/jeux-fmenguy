@@ -735,6 +735,29 @@ export class Colonist {
 
     if (this.state === 'IDLE') {
       this.lineGeo.setFromPoints([])
+      // Lot B : auto-attribution differee. Quand le joueur assigne un colon
+      // (chef ou non) au metier 'chercheur' apres la pose de la Hutte du sage,
+      // personne ne lie le colon a la hutte. On rattrape ici : tout colon IDLE
+      // avec profession === 'chercheur' ET assignedJob === 'researcher' ET sans
+      // researchBuildingId cherche la hutte libre la plus proche.
+      if (
+        this.researchBuildingId == null &&
+        this.profession === 'chercheur' &&
+        this.assignedJob === 'researcher' &&
+        state.researchHouses && state.researchHouses.length > 0
+      ) {
+        let bestHut = null, bestHutD = Infinity
+        for (const h of state.researchHouses) {
+          if (h.isUnderConstruction) continue
+          if (h.assignedColonistId != null) continue
+          const d = Math.abs(h.x - this.x) + Math.abs(h.z - this.z)
+          if (d < bestHutD) { bestHutD = d; bestHut = h }
+        }
+        if (bestHut) {
+          bestHut.assignedColonistId = this.id
+          this.researchBuildingId = bestHut.id
+        }
+      }
       if (this.researchBuildingId != null) {
         // Gate universel : profession === 'chercheur' ET assignedJob === 'researcher'.
         // Si le joueur change le metier OU desassigne le role, on libere
