@@ -1049,7 +1049,11 @@ export class Colonist {
         // Filtre dead : un cerf abattu reste 4s dans state.deers (deadTimer)
         // pour l animation de chute. Sans ce filtre, un autre colon pouvait
         // viser un cadavre, arriver, tirer, et redrop la viande/os.
-        const deerEntry = state.deers ? state.deers.find(d => d.x === this.targetJob.x && d.z === this.targetJob.z && !d.dead) : null
+        // Filtre claimedBy : si un autre chasseur a claim, on lache.
+        const deerEntry = state.deers ? state.deers.find(d =>
+          d.x === this.targetJob.x && d.z === this.targetJob.z &&
+          !d.dead && d.group && (!d.claimedBy || d.claimedBy === this)
+        ) : null
         if (!deerEntry) {
           // Cible disparue ou morte avant l arrivee : on abandonne sans drop.
           // On libere aussi tout claim residuel sur l ancien cerf de la cellule.
@@ -1224,7 +1228,13 @@ export class Colonist {
         // Filtre dead : un cerf abattu reste 4s dans state.deers (animation
         // de chute via deadTimer). Sans ce filtre, un autre tireur arrivait
         // sur la cellule et redroppait viande/os, d ou la fuite continue.
-        const deerEntry = state.deers ? state.deers.find(d => d.x === x && d.z === z && !d.dead) : null
+        // Garde supplementaire (anti-fuite) : group present et claimedBy
+        // egal a nous ou null. Un cerf claim par un autre chasseur ne peut
+        // plus generer de drop.
+        const deerEntry = state.deers ? state.deers.find(d =>
+          d.x === x && d.z === z && !d.dead && d.group &&
+          (!d.claimedBy || d.claimedBy === this)
+        ) : null
         if (deerEntry) {
           if (!techUnlocked('bow-wood')) {
             removeJob(x, z, true)
@@ -1243,26 +1253,33 @@ export class Colonist {
           // raw-meat et hide en resources (consommables / artisanat).
           // bone en resources ET en stocks.bone (utilise par age-transitions
           // pour la condition Cairn de passage au Bronze).
-          state.resources['raw-meat'] = (state.resources['raw-meat'] || 0) + 3
-          state.resources['bone']     = (state.resources['bone']     || 0) + 2
+          const rawBefore = state.resources['raw-meat'] || 0
+          const boneBefore = state.resources['bone'] || 0
+          state.resources['raw-meat'] = rawBefore + 3
+          state.resources['bone']     = boneBefore + 2
           state.resources['hide']     = (state.resources['hide']     || 0) + 1
           state.stocks.bone           = (state.stocks.bone           || 0) + 2
           this.skills.hunting++
-          dlog('[hunt] kill', {
+          dlog('[hunt] kill (drop +3 raw-meat, +2 bone, +1 hide)', {
             colonist: this.name,
             profession: this.profession,
             assignedJob: this.assignedJob,
             x, z,
             auto: !!(this.targetJob && this.targetJob.auto),
-            rawMeat: state.resources['raw-meat'],
-            bone: state.resources['bone']
+            rawMeatBefore: rawBefore,
+            rawMeatAfter: state.resources['raw-meat'],
+            boneBefore: boneBefore,
+            boneAfter: state.resources['bone']
           })
           scheduleFlash(x, z)
           removeJob(x, z, true)
           state.gameStats.minesCompleted++
         } else {
-          // Cerf disparu ou deja mort entre temps : aucun drop, on libere.
-          dlog('[hunt] no-op (cible morte ou disparue)', { colonist: this.name, x, z })
+          // Cerf disparu, deja mort, ou claim par un autre : aucun drop.
+          dlog('[hunt] no-op (cible morte/disparue/claim autre)', {
+            colonist: this.name, x, z,
+            deersCount: state.deers ? state.deers.length : 0
+          })
           removeJob(x, z, true)
         }
         this.targetJob = null
