@@ -15,20 +15,22 @@ const TABS = [
 ]
 
 const JOB_DEFS = [
-  { id: 'cueilleur',  label: 'Cueilleur',  icon: '🫐', desc: 'Récolte les baies et ressources naturelles', req: null },
-  { id: 'bucheron',   label: 'Bûcheron',   icon: '🪓', desc: 'Abat les arbres proches',                   req: 'Hache pierre' },
-  { id: 'mineur',     label: 'Mineur',     icon: '⛏',  desc: 'Extrait la pierre et les minerais',          req: null },
-  { id: 'chercheur',  label: 'Chercheur',  icon: '📜', desc: 'Génère des points de recherche',             req: 'Hutte du sage' },
-  { id: 'chasseur',   label: 'Chasseur',   icon: '🏹', desc: 'Chasse le gibier, rapporte viande et os',    req: 'Arc' },
+  { id: 'cueilleur',    label: 'Cueilleur',    icon: '🫐', desc: 'Récolte les baies et ressources naturelles', req: null },
+  { id: 'bucheron',     label: 'Bûcheron',     icon: '🪓', desc: 'Abat les arbres proches',                   req: 'Hache pierre' },
+  { id: 'mineur',       label: 'Mineur',       icon: '⛏',  desc: 'Extrait la pierre et les minerais',          req: null },
+  { id: 'chercheur',    label: 'Chercheur',    icon: '📜', desc: 'Génère des points de recherche',             req: 'Hutte du sage' },
+  { id: 'chasseur',     label: 'Chasseur',     icon: '🏹', desc: 'Chasse le gibier, rapporte viande et os',    req: 'Arc' },
+  { id: 'constructeur', label: 'Constructeur', icon: '🔨', desc: 'Construit les bâtiments du village',         req: null },
 ]
 
 // Mapping métier vers compétence pour afficher le niveau dans les chips
 const JOB_SKILL = {
-  bucheron:  'logging',
-  mineur:    'mining',
-  cueilleur: 'gathering',
-  chasseur:  'hunting',
-  chercheur: 'research',
+  bucheron:     'logging',
+  mineur:       'mining',
+  cueilleur:    'gathering',
+  chasseur:     'hunting',
+  chercheur:    'research',
+  constructeur: 'building',
 }
 
 // Mapping profession (ID français) vers assignedJob (ID anglais attendu par le moteur Lot B)
@@ -436,6 +438,15 @@ export class PopulationModal {
   _htmlJobAssignPanel(jd, colonists) {
     const skillName = JOB_SKILL[jd.id]
     const disponibles = colonists.filter(c => !c.profession || c.profession === jd.id)
+    // Tri : chef en premier, puis par niveau du métier DESC, puis nom asc
+    disponibles.sort((a, b) => {
+      if (a.chief && !b.chief) return -1
+      if (b.chief && !a.chief) return 1
+      const la = skillName ? skillLevelOf(a._raw, skillName) : 0
+      const lb = skillName ? skillLevelOf(b._raw, skillName) : 0
+      if (la !== lb) return lb - la
+      return String(a.name).localeCompare(String(b.name))
+    })
     const rows = disponibles.map(c => {
       const isCurrent = c.profession === jd.id
       const lvl = skillName ? skillLevelOf(c._raw, skillName) : 0
