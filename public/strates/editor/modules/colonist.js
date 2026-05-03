@@ -846,9 +846,14 @@ export class Colonist {
           deerEntry.deadTimer = 4.0
           deerEntry.group.rotation.x = Math.PI / 2
           if (deerEntry.mixer) { deerEntry.mixer.stopAllAction(); deerEntry.mixer = null }
-          state.resources['raw-meat'] = (state.resources['raw-meat'] || 0) + 2
-          state.resources['bone']     = (state.resources['bone']     || 0) + 1
+          // Drop spec : 3 viande crue, 2 os, 1 cuir.
+          // raw-meat et hide en resources (consommables / artisanat).
+          // bone en resources ET en stocks.bone (utilise par age-transitions
+          // pour la condition Cairn de passage au Bronze).
+          state.resources['raw-meat'] = (state.resources['raw-meat'] || 0) + 3
+          state.resources['bone']     = (state.resources['bone']     || 0) + 2
           state.resources['hide']     = (state.resources['hide']     || 0) + 1
+          state.stocks.bone           = (state.stocks.bone           || 0) + 2
           this.skills.hunting++
           scheduleFlash(x, z)
           removeJob(x, z, true)
