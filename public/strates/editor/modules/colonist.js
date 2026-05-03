@@ -403,9 +403,6 @@ export class Colonist {
         }
         return true
       }
-      case 'astronome': {
-        return state.isNight !== true
-      }
       case 'constructeur': {
         const lists = [
           state.foyers, state.houses, state.bigHouses, state.researchHouses,
@@ -762,9 +759,9 @@ export class Colonist {
     return true
   }
 
-  // Lot B : ASTRONOME. La nuit, un colon de profession astronome rejoint le
-  // promontoire d'observation le plus proche et s y stationne. Les points
-  // nocturnes sont generes par tickDayNight via isColonistOnObservatory()
+  // Lot B : OBSERVATEUR (chercheur la nuit). Un colon de profession chercheur
+  // rejoint le promontoire d observation le plus proche et s y stationne. Les
+  // points nocturnes sont generes par tickDayNight via isColonistOnObservatory()
   // tant que le colon est IDLE sur la cellule du promontoire.
   pickObservatory() {
     if (!state.observatories || !state.observatories.length) return false
@@ -906,6 +903,27 @@ export class Colonist {
         this.state = 'IDLE'
         return
       }
+      // Lot B : chercheur bivalent. La nuit, s il existe un promontoire actif,
+      // le chercheur libere la hutte du sage et bascule en IDLE pour que
+      // l auto-attribution promontoire prenne le relais au prochain tick.
+      if (state.isNight) {
+        let hasActiveObs = false
+        if (state.observatories && state.observatories.length) {
+          for (const o of state.observatories) {
+            if (!o.isUnderConstruction) { hasActiveObs = true; break }
+          }
+        }
+        if (hasActiveObs) {
+          const b = findResearchBuildingById(this.researchBuildingId)
+          if (b && Array.isArray(b.assignedColonistIds)) {
+            const i = b.assignedColonistIds.indexOf(this.id)
+            if (i >= 0) b.assignedColonistIds.splice(i, 1)
+          }
+          this.researchBuildingId = null
+          this.state = 'IDLE'
+          return
+        }
+      }
       const building = findResearchBuildingById(this.researchBuildingId)
       if (!building) {
         this.researchBuildingId = null
@@ -936,7 +954,16 @@ export class Colonist {
       // personne ne lie le colon a la hutte. On rattrape ici : tout colon IDLE
       // avec profession === 'chercheur' ET assignedJob === 'researcher' ET sans
       // researchBuildingId cherche la hutte libre la plus proche.
+      // Lot B : nuit avec promontoire actif, on ne re-attribue PAS la hutte
+      // au chercheur (il va aller au promontoire via le bloc dedie plus bas).
+      let _nightHasObs = false
+      if (state.isNight && state.observatories && state.observatories.length) {
+        for (const o of state.observatories) {
+          if (!o.isUnderConstruction) { _nightHasObs = true; break }
+        }
+      }
       if (
+        !_nightHasObs &&
         this.researchBuildingId == null &&
         this.profession === 'chercheur' &&
         this.assignedJob === 'researcher' &&
@@ -1096,13 +1123,24 @@ export class Colonist {
             }
           }
         }
-        // Lot B : ASTRONOME. La nuit, un colon astronome rejoint un
-        // promontoire pour generer des nightPoints (via isColonistOnObservatory
-        // dans daynight.js). Le jour, comportement IDLE / LEISURE normal.
-        if (this.profession === 'astronome' && state.isNight) {
-          if (this.pickObservatory()) {
-            this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE, reason: 'astronome' }
-            return
+        // Lot B : CHERCHEUR bivalent. La nuit, s il existe au moins un
+        // promontoire actif, le chercheur le rejoint pour generer des
+        // nightPoints (via isColonistOnObservatory dans daynight.js). Sinon
+        // il reste a la Hutte du sage (gere plus haut). Note : la liberation
+        // de la hutte (assignedColonistIds, researchBuildingId) est faite
+        // dans le bloc RESEARCHING via la detection state.isNight.
+        if (this.profession === 'chercheur' && state.isNight) {
+          let hasActiveObs = false
+          if (state.observatories && state.observatories.length) {
+            for (const o of state.observatories) {
+              if (!o.isUnderConstruction) { hasActiveObs = true; break }
+            }
+          }
+          if (hasActiveObs) {
+            if (this.pickObservatory()) {
+              this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE, reason: 'astronome' }
+              return
+            }
           }
         }
         // Lot B LEISURE : si de la viande crue traine dans les stocks et
@@ -1120,10 +1158,10 @@ export class Colonist {
       //   this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
       //   return
       // }
-      // Lot B : astronome stationne sur son promontoire la nuit, ni campfire
+      // Lot B : chercheur stationne sur son promontoire la nuit, ni campfire
       // social ni wander pour ne pas perdre les nightPoints.
       const stayingOnObservatory = (
-        this.profession === 'astronome' && state.isNight && isObservatoryOn(this.x, this.z)
+        this.profession === 'chercheur' && state.isNight && isObservatoryOn(this.x, this.z)
       )
       // Nuit : attirance vers le foyer le plus proche (feu de camp social).
       if (state.isNight && !stayingOnObservatory && this.pickCampfire()) return

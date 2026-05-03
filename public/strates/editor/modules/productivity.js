@@ -26,14 +26,12 @@ export const SKILL_FOR_JOB = Object.freeze({
   cueilleur:    'gathering',
   chasseur:     'hunting',
   chercheur:    'research',
-  astronome:    'research',
   constructeur: 'building'
 })
 
 export const MIN_COLONISTS_FOR_JOB = Object.freeze({
   constructeur: 1,
   chercheur:    1,
-  astronome:    1,
   bucheron:     1,
   mineur:       1,
   cueilleur:    1,
