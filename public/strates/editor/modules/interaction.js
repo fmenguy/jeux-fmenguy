@@ -394,7 +394,19 @@ function renderSaveSlots() {
     const bSave = document.createElement('button')
     bSave.className = 'btn-save'
     bSave.textContent = slot.meta ? 'Ecraser' : 'Sauver'
-    bSave.addEventListener('click', () => { saveGame(slot.index); renderSaveSlots() })
+    bSave.addEventListener('click', () => {
+      const wasOccupied = !!slot.meta
+      const ok = saveGame(slot.index)
+      if (ok) {
+        showHudToast(
+          wasOccupied ? ('Slot ' + slot.index + ' écrasé.') : ('Sauvegardé dans le slot ' + slot.index + '.'),
+          2500
+        )
+      } else {
+        showHudToast('Échec de la sauvegarde du slot ' + slot.index + ' (voir console).', 3500)
+      }
+      renderSaveSlots()
+    })
     row.appendChild(bSave)
     const bLoad = document.createElement('button')
     bLoad.className = 'btn-load'
