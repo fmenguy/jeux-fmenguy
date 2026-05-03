@@ -114,9 +114,8 @@
 /* Checklist conditions dans le tooltip Cairn */
 #cairn-conditions-tooltip {
   position: fixed;
-  bottom: 160px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: auto;
+  left: auto;
   background: linear-gradient(180deg, rgba(14, 18, 26, 0.97), rgba(10, 13, 19, 0.99));
   border: 1px solid rgba(255, 196, 80, 0.4);
   border-radius: 12px;

@@ -370,7 +370,6 @@ function _consumeCairnResources() {
 // ---------------------------------------------------------------------------
 
 function _showCondTooltip() {
-  // Re-fetch si null (init appelé avant DOM complet)
   if (!_condTooltip) _condTooltip = document.getElementById('cairn-conditions-tooltip')
   if (!_condTooltip) return
 
@@ -405,6 +404,16 @@ function _showCondTooltip() {
       </div>
     `).join('')
   }
+
+  // Positionner au-dessus du bouton (évite les problèmes avec bottom: fixe)
+  if (_cairnBtn) {
+    const rect = _cairnBtn.getBoundingClientRect()
+    _condTooltip.style.bottom    = (window.innerHeight - rect.top + 8) + 'px'
+    _condTooltip.style.left      = (rect.left + rect.width / 2) + 'px'
+    _condTooltip.style.transform = 'translateX(-50%)'
+    _condTooltip.style.top       = 'auto'
+  }
+
   _condTooltip.classList.add('tooltip-visible')
 }
 
