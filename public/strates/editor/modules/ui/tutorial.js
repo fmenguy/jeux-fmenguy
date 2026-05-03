@@ -518,12 +518,18 @@ const INTERFACE_TOUR_STEPS = [
   },
 ]
 
+// Moteur mixte : par défaut chaque étape avance via un bouton "Suivant".
+// Si une étape déclare step.kind ('event' | 'click' | 'click-or-timeout'),
+// elle attend l action gameplay correspondante (comme runTutorial). Dans ce
+// cas pas de bouton Suivant. step.autoWhen() peut aussi auto-avancer.
 function runInfoTour(steps, storageKey, onComplete) {
   try { if (localStorage.getItem(storageKey)) { onComplete && onComplete(); return } } catch (e) {}
   sweepOrphanTutoElements()
 
   let currentIdx = 0
   let torndown = false
+  let cleanupFn = null
+  let timeoutId = null
 
   const ring = document.createElement('div')
   ring.className = 'tuto-ring'
@@ -537,6 +543,8 @@ function runInfoTour(steps, storageKey, onComplete) {
     if (torndown) return
     const step = steps[currentIdx]
     if (!step) return
+
+    if (step.autoWhen && step.autoWhen()) { advance(); return }
 
     if (!step.sel) {
       // Bulle centrée, pas de ring
@@ -581,6 +589,8 @@ function runInfoTour(steps, storageKey, onComplete) {
   function teardown(completed) {
     if (torndown) return
     torndown = true
+    if (cleanupFn) { cleanupFn(); cleanupFn = null }
+    if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
     clearInterval(posTimer)
     window.removeEventListener('resize', reposition)
     ring.style.display = 'none'
@@ -596,6 +606,8 @@ function runInfoTour(steps, storageKey, onComplete) {
 
   function advance() {
     if (torndown) return
+    if (cleanupFn) { cleanupFn(); cleanupFn = null }
+    if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
     currentIdx++
     if (currentIdx >= steps.length) { teardown(true); return }
     showStep(currentIdx)
@@ -604,12 +616,48 @@ function runInfoTour(steps, storageKey, onComplete) {
   function showStep(idx) {
     const step = steps[idx]
     const isLast = idx === steps.length - 1
-    const btnLabel = isLast ? 'Terminer' : 'Suivant ▶'
-    bubble.innerHTML =
+    const isInteractive = !!step.kind
+
+    let inner =
       '<span class="tuto-step-label">' + step.label + '</span>' +
-      '<span>' + step.text + '</span>' +
-      '<button class="tuto-info-next">' + btnLabel + '</button>'
-    bubble.querySelector('.tuto-info-next').addEventListener('click', advance)
+      '<span>' + step.text + '</span>'
+    if (!isInteractive) {
+      const btnLabel = isLast ? 'Terminer' : 'Suivant ▶'
+      inner += '<button class="tuto-info-next">' + btnLabel + '</button>'
+    }
+    bubble.innerHTML = inner
+    if (!isInteractive) {
+      bubble.querySelector('.tuto-info-next').addEventListener('click', advance)
+    }
+
+    if (cleanupFn) { cleanupFn(); cleanupFn = null }
+    if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
+
+    if (step.kind === 'click' || step.kind === 'click-or-timeout') {
+      const handler = e => {
+        if (e.target.closest(step.clickSel)) {
+          document.removeEventListener('click', handler, true)
+          cleanupFn = null
+          advance()
+        }
+      }
+      document.addEventListener('click', handler, true)
+      cleanupFn = () => document.removeEventListener('click', handler, true)
+      if (step.kind === 'click-or-timeout' && step.timeout) {
+        timeoutId = setTimeout(() => { timeoutId = null; advance() }, step.timeout)
+      }
+    } else if (step.kind === 'event') {
+      const handler = e => {
+        if (!step.filter || step.filter(e)) {
+          window.removeEventListener(step.event, handler)
+          cleanupFn = null
+          advance()
+        }
+      }
+      window.addEventListener(step.event, handler)
+      cleanupFn = () => window.removeEventListener(step.event, handler)
+    }
+
     ring.style.display = 'none'
     reposition()
     requestAnimationFrame(() => requestAnimationFrame(reposition))
@@ -620,6 +668,96 @@ function runInfoTour(steps, storageKey, onComplete) {
 
   showStep(0)
   return { teardown }
+}
+
+// ─── Tuto Métier-Chercheur (déclenché à la fin du tuto Hutte du sage) ─────────
+
+const RESEARCHER_TUTO_STEPS = [
+  {
+    label: 'Chercheur · 1/6',
+    sel:   null,
+    text:  'La Hutte du sage est là, mais personne ne fait de recherche. Assignons François comme Chercheur.',
+  },
+  {
+    label: 'Chercheur · 2/6',
+    sel:   '.rail-btn[data-panel="population"]',
+    text:  'Ouvrez le panneau Population.',
+    kind:  'event',
+    event: 'strates:populationOpen',
+    autoWhen: () => {
+      const el = document.getElementById('popPanel')
+      return !!(el && el.classList.contains('open'))
+    },
+  },
+  {
+    label: 'Chercheur · 3/6',
+    sel:   '.pv2-tab[data-tab="metiers"]',
+    fallback: '#popPanel',
+    text:  'Cliquez sur Métiers.',
+    kind:  'click',
+    clickSel: '.pv2-tab[data-tab="metiers"]',
+    autoWhen: () => {
+      const tab = document.querySelector('.pv2-tab[data-tab="metiers"]')
+      return !!(tab && tab.classList.contains('active'))
+    },
+  },
+  {
+    label: 'Chercheur · 4/6',
+    sel:   '.pv2-job-card[data-job-id="chercheur"]',
+    fallback: '#popPanel',
+    text:  'Cliquez sur Chercheur pour voir la liste d assignation.',
+    kind:  'click',
+    clickSel: '.pv2-job-card[data-job-id="chercheur"]',
+    autoWhen: () => {
+      const card = document.querySelector('.pv2-job-card[data-job-id="chercheur"]')
+      return !!(card && card.classList.contains('open'))
+    },
+  },
+  {
+    label: 'Chercheur · 5/6',
+    sel:   '.pv2-job-card[data-job-id="chercheur"] .pv2-assign-row:first-of-type .pv2-job-action',
+    fallback: '.pv2-job-card[data-job-id="chercheur"]',
+    text:  'Assignez François ★ (chef) comme Chercheur. Plus son niveau augmentera, plus la recherche ira vite.',
+    kind:  'click-or-timeout',
+    clickSel: '.pv2-job-action[data-job-id="chercheur"]',
+    timeout: 180000,
+    autoWhen: () => {
+      return !!(state.colonists && state.colonists.some(c => c.isChief && c.assignedJob === 'researcher'))
+    },
+  },
+  {
+    label: 'Chercheur · 6/6',
+    sel:   null,
+    text:  'Parfait. La recherche est lancée. Plus tard vous pourrez assigner plusieurs chercheurs pour aller plus vite.',
+  },
+]
+
+let researcherTutoActive = false
+
+function maybeRunResearcherTuto() {
+  if (researcherTutoActive) return
+  try {
+    if (localStorage.getItem('strates.researcherTutoDone')) {
+      // Déjà fait : enchaîner directement le tuto Interface
+      maybeRunInterfaceTour()
+      return
+    }
+    if (localStorage.getItem('strates.tutoSkipped')) return
+  } catch (e) {}
+  injectStyles()
+  researcherTutoActive = true
+  isTutoActive = true
+  try {
+    runInfoTour(RESEARCHER_TUTO_STEPS, 'strates.researcherTutoDone', () => {
+      researcherTutoActive = false
+      isTutoActive = false
+      showFlash('Recherche lancée !')
+      setTimeout(maybeRunInterfaceTour, 1300)
+    })
+  } catch (e) {
+    researcherTutoActive = false
+    isTutoActive = false
+  }
 }
 
 let interfaceTourActive = false
@@ -666,8 +804,9 @@ function runTutorials() {
   function onTutoDone() {
     isTutoActive = false
     showFlash("C'est parti !")
-    // Enchaîne la visite guidée de l interface après un court délai
-    setTimeout(maybeRunInterfaceTour, 1300)
+    // Chaîne : Hutte du sage → Métier-Chercheur → Interface tour.
+    // maybeRunResearcherTuto enchaîne lui-même vers maybeRunInterfaceTour.
+    setTimeout(maybeRunResearcherTuto, 1300)
   }
 
   try {
