@@ -22,13 +22,27 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
   }
 }
 
+// Convertit '#rrggbb' en 'rgba(r,g,b,a)'. Utilise pour la lueur des bulles
+// idle (Lot E) qui prend la couleur du metier en alpha 0.4.
+function _hexToRgba(hex, alpha) {
+  if (typeof hex !== 'string') return 'rgba(0,0,0,' + alpha + ')'
+  const m = hex.replace('#', '')
+  const v = m.length === 3
+    ? m.split('').map(c => c + c).join('')
+    : m
+  const r = parseInt(v.slice(0, 2), 16) || 0
+  const g = parseInt(v.slice(2, 4), 16) || 0
+  const b = parseInt(v.slice(4, 6), 16) || 0
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')'
+}
+
 export function makeBubbleCanvas() {
   const c = document.createElement('canvas')
   c.width = 512; c.height = 160
   return c
 }
 
-export function drawBubble(canvas, text, isHint) {
+export function drawBubble(canvas, text, isHint, opts) {
   const ctx = canvas.getContext('2d')
   const padX = 24
   const padY = 16
@@ -36,6 +50,11 @@ export function drawBubble(canvas, text, isHint) {
   const bodyFont = '500 28px system-ui, sans-serif'
   const iconW = isHint ? 28 : 0
   const maxTextW = canvas.width - padX * 2 - iconW
+
+  // Variantes de bulle (Lot E + Lot B). Pour kind === 'idle', le metier
+  // colore la bordure et ajoute une lueur soft. opts = { kind, borderColor }.
+  const isIdle = !!(opts && opts.kind === 'idle' && opts.borderColor)
+  const idleBorderCol = isIdle ? opts.borderColor : null
 
   // Word wrapping
   ctx.font = bodyFont
@@ -73,11 +92,20 @@ export function drawBubble(canvas, text, isHint) {
   const bx = (canvas.width - bw) / 2
   const r = 16
   const fillCol = isHint ? '#dff0ff' : '#ffffff'
-  const borderCol = isHint ? '#4a90e2' : 'rgba(0,0,0,0.15)'
+  const borderCol = idleBorderCol ? idleBorderCol : (isHint ? '#4a90e2' : 'rgba(0,0,0,0.15)')
   const textCol = isHint ? '#0d2947' : '#1a1f2a'
-  const borderW = isHint ? 3 : 2
+  const borderW = (idleBorderCol || isHint) ? 3 : 2
 
-  // Ombre portee
+  // Ombre portee + lueur metier (idle)
+  if (idleBorderCol) {
+    // Soft glow couleur metier (rgba ~0.4) sous la bulle.
+    ctx.save()
+    ctx.shadowColor = _hexToRgba(idleBorderCol, 0.4)
+    ctx.shadowBlur = 18
+    ctx.fillStyle = 'rgba(0,0,0,0)'
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill()
+    ctx.restore()
+  }
   ctx.fillStyle = 'rgba(0,0,0,0.22)'
   ctx.beginPath(); ctx.roundRect(bx + 3, by + 4, bw, bh, r); ctx.fill()
 
