@@ -5,7 +5,8 @@ import {
   GENDER_SYMBOLS, GENDER_COLORS,
   CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK,
   RAW_MEAT_SATIETY, COOKED_MEAT_SATIETY,
-  MAX_BUILDER_DISTANCE, STAR_COLONIST_CHANCE
+  MAX_BUILDER_DISTANCE, STAR_COLONIST_CHANCE,
+  IDLE_SPEECH_COOLDOWN
 } from './constants.js'
 import {
   MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
@@ -34,6 +35,12 @@ import { PRIORITY, TASK_KIND } from './tasks.js'
 export const COLONIST_COLORS = [0xffcf6b, 0x6bd0ff, 0xff8a8a, 0xb78aff, 0x8aff9c, 0xffa07a, 0x98ddca]
 
 function _randSkill() { return Math.floor(Math.random() * 5) + 1 }
+
+// Lot B : helper d acces au job par id, lecture des donnees JSON via gamedata.
+function jobOf(professionId) {
+  if (!professionId || !JOBS_DATA || !Array.isArray(JOBS_DATA.jobs)) return null
+  return JOBS_DATA.jobs.find(j => j.id === professionId) || null
+}
 const PROFESSION_TO_KIND = {
   bucheron:  'hache',
   mineur:    'pick',
@@ -158,6 +165,9 @@ export class Colonist {
     this.speechTimer = 0
     this.nextSpeech = 10 + Math.random() * 10
     this.lastLine = null
+    // Lot B : timestamp (secondes) de la derniere bulle "idle metier" pour
+    // throttler a IDLE_SPEECH_COOLDOWN. Runtime only, pas persiste.
+    this._lastIdleSpeechAt = 0
     this.researchBuildingId = null
     this.lastContextLine = null
     this.favorite = false
@@ -342,6 +352,69 @@ export class Colonist {
     if (!job || !job.color) { this._hat.visible = false; return }
     this._hatMat.color.set(job.color)
     this._hat.visible = true
+  }
+
+  // Lot B : evalue si le metier assigne a ce colon n a aucune cible exploitable
+  // a l instant present. Sert a declencher les bulles idleSpeech dans l etat
+  // IDLE quand le colon est employe mais sans travail possible. Lecture seule.
+  _hasNoTaskForProfession() {
+    switch (this.profession) {
+      case 'chercheur': {
+        if (!state.activeResearch) return true
+        const huts = state.researchHouses || []
+        if (huts.length === 0) return true
+        return huts.every(h => h.isUnderConstruction === true)
+      }
+      case 'bucheron': {
+        const trees = state.trees || []
+        if (trees.length === 0) return true
+        for (const t of trees) {
+          if (t.growth >= 0.66 && !state.jobs.has(jobKey(t.x, t.z))) return false
+        }
+        return true
+      }
+      case 'mineur': {
+        const ores = state.ores || []
+        if (ores.length === 0) return true
+        for (const o of ores) {
+          if (o.isUnderConstruction) continue
+          if (state.jobs.has(jobKey(o.x, o.z))) continue
+          const block = classifyMineableBlock ? classifyMineableBlock(o.x, o.z) : null
+          if (canMineResource(this, block, o.altitude != null ? o.altitude : 0)) return false
+        }
+        return true
+      }
+      case 'cueilleur': {
+        const bushes = state.bushes || []
+        for (const b of bushes) {
+          if (b.berries > 0) return false
+        }
+        return true
+      }
+      case 'chasseur': {
+        const deers = state.deers || []
+        for (const d of deers) {
+          if (!d.dead) return false
+        }
+        return true
+      }
+      case 'astronome': {
+        return state.isNight !== true
+      }
+      case 'constructeur': {
+        const lists = [
+          state.foyers, state.houses, state.bigHouses, state.researchHouses,
+          state.observatories, state.cairns, state.wheatFields, state.manors
+        ]
+        for (const arr of lists) {
+          if (!arr) continue
+          for (const b of arr) if (b && b.isUnderConstruction) return false
+        }
+        return true
+      }
+      default:
+        return false
+    }
   }
 
   say(line, isHint, opts) {
@@ -1015,6 +1088,26 @@ export class Colonist {
         else this.wanderPause = 1 + Math.random() * 2
       }
       this.group.position.set(this.tx, this.ty, this.tz)
+      // Lot B : bulle "idle metier". Un colon assigne a un metier mais sans
+      // cible exploitable peut prononcer une phrase d idleSpeech (donnees JSON
+      // via gamedata, lecture seule). Throttle a IDLE_SPEECH_COOLDOWN par colon.
+      // Priorite sur la flanerie aleatoire : si on parle ici, on saute le pool
+      // generique en repoussant nextSpeech.
+      if (this.profession && this.speechTimer <= 0) {
+        const job = jobOf(this.profession)
+        const pool = job && Array.isArray(job.idleSpeech) ? job.idleSpeech : null
+        if (pool && pool.length > 0) {
+          const nowSec = performance.now() / 1000
+          if ((nowSec - this._lastIdleSpeechAt) > IDLE_SPEECH_COOLDOWN) {
+            if (this._hasNoTaskForProfession() && activeSpeakers() < 2) {
+              const phrase = pool[Math.floor(Math.random() * pool.length)]
+              this.say(phrase, false, { kind: 'idle', borderColor: job.color })
+              this._lastIdleSpeechAt = nowSec
+              this.nextSpeech = 12 + Math.random() * 8
+            }
+          }
+        }
+      }
       this.nextSpeech -= dt
       if (this.nextSpeech <= 0) {
         if (this.speechTimer <= 0 && activeSpeakers() < 2) {
