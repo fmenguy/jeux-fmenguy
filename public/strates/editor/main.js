@@ -38,6 +38,7 @@ import { initCellTooltip } from './modules/ui/cell-tooltip.js'
 import { initTutoInvite, showTutoInvite } from './modules/ui/tutorial.js'
 import { buildFog, tickFog } from './modules/fog.js'
 import { tickConstructionFX } from './modules/construction-fx.js'
+import { initSeasonBar, tickSeasonBar } from './modules/ui/season-bar.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -106,6 +107,7 @@ bindDayNightUI()
 refreshNightPointsHUD()
 initAgeTransitions()
 initTutoInvite()
+initSeasonBar()
 
 const btnPauseTuto = document.getElementById('pause-tuto')
 if (btnPauseTuto) btnPauseTuto.addEventListener('click', () => {
@@ -340,6 +342,7 @@ function tick(nowMs) {
     }
     const yearEl = document.getElementById('time-year')
     if (yearEl) yearEl.textContent = state.season.year ?? 1
+    tickSeasonBar()
   }
 
   updateQuests(t)
