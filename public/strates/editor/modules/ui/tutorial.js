@@ -321,7 +321,13 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
   let currentIdx = 0
   let cleanupFn = null
   let timeoutId = null
+  let stepRepositionTimers = []
   let torndown = false
+
+  function clearStepRepositionTimers() {
+    for (const t of stepRepositionTimers) clearTimeout(t)
+    stepRepositionTimers = []
+  }
 
   const ring = document.createElement('div')
   ring.className = 'tuto-ring'
@@ -377,6 +383,7 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
     torndown = true
     if (cleanupFn) { cleanupFn(); cleanupFn = null }
     if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
+    clearStepRepositionTimers()
     clearInterval(posTimer)
     window.removeEventListener('resize', reposition)
     // Force display:none avant remove pour neutraliser instantanément le rendu.
@@ -402,6 +409,15 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
     reposition()
     ring.style.display = 'none'
     requestAnimationFrame(() => requestAnimationFrame(reposition))
+
+    // Couvre les transitions CSS de l UI cible (ex : transform 0.4s du
+    // ttp-branch-canvas quand on entre dans une branche du tech tree).
+    // Sans ces tirs, le ring du step suivant se positionne au milieu de
+    // la transition et reste decale jusqu au prochain setInterval.
+    clearStepRepositionTimers()
+    for (const ms of [80, 200, 400, 600, 900]) {
+      stepRepositionTimers.push(setTimeout(reposition, ms))
+    }
 
     if (cleanupFn) { cleanupFn(); cleanupFn = null }
     if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
