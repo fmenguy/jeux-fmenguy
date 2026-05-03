@@ -15,6 +15,12 @@ export const FALLOFF_SPAN = 16
 export const VOXEL = 1
 export const COLONIST_SPEED = 2.0
 export const WORK_DURATION = 2.0
+// Lot B : multiplicateur de productivite pour les taches "basiques" prises
+// par un colon NON assigne au metier correspondant. Cueillette de baies et
+// minage de pierre basique sont autorises a tous, mais a vitesse reduite si
+// non specialise. Applique sur la duree (la divise en realite : duree =
+// duree_base / mul, donc mul=0.5 -> duree doublee). Voir colonist.js WORKING.
+export const UNASSIGNED_PRODUCTIVITY_MUL = 0.5
 export const MAX_STEP = 2
 export const GRAVITY = 20
 export const MAX_TREES = 6000
