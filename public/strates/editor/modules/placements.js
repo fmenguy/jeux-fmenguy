@@ -10,6 +10,7 @@ import { scene, tmpObj, tmpColor } from './scene.js'
 import { repaintCellSurface, setOnCellRevealed, revealAround } from './terrain.js'
 import { showHudToast } from './ui/research-popup.js'
 import { findApproach } from './pathfind.js'
+import { dlog, dwarn } from './debug.js'
 import { getBuildingById } from './gamedata.js'
 import { getModel, getModelClips, TREE_GLB_SCALE, ROCK_GLB_SCALE, DEER_GLB_SCALE } from './glb-cache.js'
 
@@ -627,7 +628,7 @@ function _makeDeerElance() {
 }
 
 export function addDeer(gx, gz) {
-  console.log('[deer] addDeer called at', gx, gz)
+  dlog('[deer] addDeer called at', gx, gz)
   const biome = state.cellBiome[gz * GRID + gx]
   if (biome !== 'grass' && biome !== 'forest') return null
   const top = state.cellTop[gz * GRID + gx]
@@ -656,12 +657,12 @@ export function addDeer(gx, gz) {
         o.frustumCulled = false
       }
     })
-    console.log('[deer] meshes found in traverse:', meshCount)
+    dlog('[deer] meshes found in traverse:', meshCount)
     scene.add(model)
     model.updateMatrixWorld(true)
-    console.log('[deer] addDeer GLB pos:', model.position.x.toFixed(1), model.position.y.toFixed(1), model.position.z.toFixed(1), 'scale:', DEER_GLB_SCALE)
+    dlog('[deer] addDeer GLB pos:', model.position.x.toFixed(1), model.position.y.toFixed(1), model.position.z.toFixed(1), 'scale:', DEER_GLB_SCALE)
     if (meshCount === 0) {
-      console.warn('[deer] GLB clone vide, fallback procedural style D pour cette tuile')
+      dwarn('[deer] GLB clone vide, fallback procedural style D pour cette tuile')
       scene.remove(model)
       const g = _makeDeerElance()
       g.position.set(gx + 0.5 + jx, top, gz + 0.5 + jz)
@@ -689,7 +690,7 @@ export function addDeer(gx, gz) {
   g.rotation.y = rotY
   g.traverse(function(o) { if (o.isMesh) o.frustumCulled = false })
   scene.add(g)
-  console.log('[deer] addDeer fallback style D pos:', g.position.x.toFixed(1), g.position.y.toFixed(1), g.position.z.toFixed(1))
+  dlog('[deer] addDeer fallback style D pos:', g.position.x.toFixed(1), g.position.y.toFixed(1), g.position.z.toFixed(1))
   const entry = { x: gx, z: gz, group: g, mixer: null, tx: gx, tz: gz, waitTimer: 60 + Math.random() * 120, speed: 0.012 + Math.random() * 0.006 }
   state.deers.push(entry)
   return entry
