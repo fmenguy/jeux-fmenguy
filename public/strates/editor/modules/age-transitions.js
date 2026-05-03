@@ -215,9 +215,6 @@ function _applyBronzeAge() {
   // Sauvegarde checkpoint
   saveGame('auto')
 
-  // Mettre a jour le badge HUD si present
-  _updateBadge()
-
   console.info('[age-transitions] Passage à l\'Âge du Bronze accompli.')
 }
 
@@ -243,15 +240,10 @@ function _triggerCelebrationBubbles() {
 
 let _cairnBtn = null
 let _condTooltip = null
-let _badgeEl = null
-let _badgeBar = null
 
 export function initAgeTransitions() {
   _injectCairnButton()
   _condTooltip = document.getElementById('cairn-conditions-tooltip')
-  _badgeEl = document.getElementById('cairn-overlay-badge')
-  _badgeBar = document.getElementById('cairn-badge-bar')
-  _updateBadge()
   // Applique l'etat initial du bouton (grise si deja en Bronze au reload)
   checkCairnOverlay()
 }
@@ -421,26 +413,6 @@ function _hideCondTooltip() {
   if (_condTooltip) _condTooltip.classList.remove('tooltip-visible')
 }
 
-// ---------------------------------------------------------------------------
-// Badge "Monument proche" (affiche quand progression > 80%)
-// ---------------------------------------------------------------------------
-
-function _updateBadge() {
-  if (!_badgeEl) return
-  if (state.currentAge >= 2) {
-    _badgeEl.classList.remove('badge-visible')
-    return
-  }
-  const prog = getCairnProgress(state)
-  if (_badgeBar) _badgeBar.style.width = (prog * 100).toFixed(0) + '%'
-
-  if (prog >= 0.8) {
-    _badgeEl.classList.add('badge-visible')
-  } else {
-    _badgeEl.classList.remove('badge-visible')
-  }
-}
-
 // Retourne true si un Cairn a deja ete pose (unique par partie)
 function _cairnAlreadyBuilt() {
   if (state.currentAge >= 2) return true
@@ -453,8 +425,6 @@ function _cairnAlreadyBuilt() {
  * le badge et l'etat du bouton Cairn.
  */
 export function checkCairnOverlay() {
-  _updateBadge()
-
   if (_cairnBtn) {
     // Si le Cairn est deja pose, griser le bouton definitivement
     if (_cairnAlreadyBuilt()) {

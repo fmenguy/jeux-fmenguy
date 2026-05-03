@@ -62,55 +62,6 @@
   transform: scale(1);
 }
 
-/* Badge "Monument" sur l'actionbar */
-#cairn-overlay-badge {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, rgba(255, 196, 80, 0.22), rgba(168, 134, 42, 0.38));
-  border: 1px solid rgba(255, 196, 80, 0.55);
-  border-radius: 10px;
-  padding: 8px 18px;
-  color: #fff5d8;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: 700;
-  backdrop-filter: blur(8px);
-  z-index: 25;
-  cursor: default;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-  transform: translateX(-50%) translateY(6px);
-}
-
-#cairn-overlay-badge.badge-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-#cairn-overlay-badge .badge-bar-wrap {
-  margin-top: 6px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-#cairn-overlay-badge .badge-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #a8862a, #ffd98a);
-  border-radius: 2px;
-  transition: width 0.5s ease;
-}
-
-#cairn-overlay-badge .badge-label {
-  text-align: center;
-  margin-bottom: 4px;
-}
-
 /* Checklist conditions dans le tooltip Cairn */
 #cairn-conditions-tooltip {
   position: fixed;
