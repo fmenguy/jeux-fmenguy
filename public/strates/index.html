@@ -411,6 +411,88 @@
     border-radius: 50% 50% 45% 45%;
   }
 
+  /* Promontoire (tour observatoire) */
+  .promontoire { width: 24px; height: 56px; }
+  .promontoire .pillar { position: absolute; left: 50%; bottom: 0; width: 14px; height: 40px; background: linear-gradient(to right, #6a6256 0%, #8a8170 50%, #6a6256 100%); transform: translateX(-50%); border-radius: 2px; box-shadow: inset 0 -2px 0 #4a4438; }
+  .promontoire .top { position: absolute; left: 50%; bottom: 38px; width: 24px; height: 6px; background: #5a5446; transform: translateX(-50%); border-radius: 2px; }
+  .promontoire .astro { position: absolute; left: 50%; bottom: 44px; width: 10px; height: 14px; transform: translateX(-50%); }
+  .promontoire .astro .head { position: absolute; left: 50%; bottom: 8px; width: 6px; height: 6px; background: #ead3b0; border-radius: 50%; transform: translateX(-50%); }
+  .promontoire .astro .body { position: absolute; left: 50%; bottom: 0; width: 5px; height: 8px; background: #4a3a6a; border-radius: 1px; transform: translateX(-50%); }
+  .promontoire .moon-icon { position: absolute; right: -10px; top: 2px; font-size: 11px; line-height: 1; opacity: .8; filter: drop-shadow(0 0 3px rgba(180,200,255,.55)); }
+
+  /* Foyer (feu de camp) */
+  .foyer { width: 18px; height: 22px; }
+  .foyer .logs { position: absolute; left: 50%; bottom: 0; width: 14px; height: 5px; background: #5a3e28; transform: translateX(-50%); border-radius: 2px; box-shadow: inset 0 -1px 0 #3a2818; }
+  .foyer .flame { position: absolute; left: 50%; bottom: 4px; width: 10px; height: 14px; background: radial-gradient(ellipse at 50% 80%, #ffd86a 0%, #ff8a2a 55%, #c9442c 90%); border-radius: 50% 50% 30% 30%; transform: translateX(-50%); animation: flameFlicker 1.6s ease-in-out infinite; box-shadow: 0 0 10px rgba(255,138,42,.55); }
+  @keyframes flameFlicker {
+    0%,100% { transform: translateX(-50%) scaleY(1) scaleX(1); }
+    50%     { transform: translateX(-50%) scaleY(1.14) scaleX(.92) translateY(-1px); }
+  }
+
+  /* Cerf (silhouette brune) */
+  .deer { width: 24px; height: 18px; }
+  .deer .body { position: absolute; left: 2px; bottom: 4px; width: 16px; height: 8px; background: #8a5e3a; border-radius: 4px; box-shadow: inset 0 -2px 0 #6a4628; }
+  .deer .neck { position: absolute; left: 13px; bottom: 8px; width: 4px; height: 8px; background: #7a4e2a; transform: rotate(20deg); transform-origin: bottom center; border-radius: 2px; }
+  .deer .head { position: absolute; left: 15px; bottom: 13px; width: 7px; height: 5px; background: #8a5e3a; border-radius: 50% 30% 30% 50%; }
+  .deer .antlers { position: absolute; left: 17px; bottom: 17px; width: 5px; height: 4px; border-left: 1.5px solid #4a3018; border-top: 1.5px solid #4a3018; }
+  .deer .leg { position: absolute; bottom: 0; width: 1.6px; height: 5px; background: #4a3018; }
+  .deer .leg.l1 { left: 4px; } .deer .leg.l2 { left: 7px; } .deer .leg.l3 { left: 13px; } .deer .leg.l4 { left: 16px; }
+
+  /* Étiquette colon (style fiche personnage) */
+  .colonist-label {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    font-family: var(--mono);
+    font-size: 8.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(28,26,20,0.86);
+    color: #f3ecdd;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    box-shadow: 0 1px 3px rgba(0,0,0,.45);
+    pointer-events: none;
+  }
+  .colonist-label.chief { color: #ffd98a; border: 1px solid rgba(255,217,138,.4); }
+  .colonist-label .star { color: #ffd98a; margin-right: 2px; }
+
+  /* Cairn en construction (transparence chantier + barre de progression) */
+  .cairn-wip { width: 26px; height: 22px; opacity: .42; filter: grayscale(.2); }
+  .cairn-wip .stone1 { position: absolute; left: 3px; bottom: 0; width: 20px; height: 8px; background: #8a8170; border-radius: 6px 6px 4px 4px; box-shadow: inset 0 -1px 0 #6a6256; }
+  .cairn-wip .stone2 { position: absolute; left: 6px; bottom: 7px; width: 14px; height: 7px; background: #918872; border-radius: 5px; box-shadow: inset 0 -1px 0 #6a6256; }
+  .cairn-wip .stone3 { position: absolute; left: 9px; bottom: 13px; width: 8px; height: 6px; background: #a69e8a; border-radius: 3px; }
+  .cfx-progress {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    pointer-events: none;
+  }
+  .cfx-progress .lbl {
+    font-family: var(--mono); font-size: 8.5px;
+    color: #f3ecdd; letter-spacing: 0.04em;
+    text-shadow: 0 0 3px rgba(0,0,0,.85);
+  }
+  .cfx-progress .track { width: 38px; height: 4px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,217,138,.5); border-radius: 2px; overflow: hidden; }
+  .cfx-progress .fill { height: 100%; background: linear-gradient(90deg, #d4b870, #ffd98a); }
+
+  /* Lune subtile dans le ciel (cycle jour/nuit) */
+  .moon {
+    position: absolute;
+    left: 14%; top: 16%;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 38%, #f4ecd6 0%, #c9bda5 55%, rgba(201,189,165,0) 72%);
+    opacity: .32;
+    animation: moonPulse 8s ease-in-out infinite;
+    pointer-events: none;
+    filter: blur(.4px);
+  }
+  @keyframes moonPulse {
+    0%,100% { opacity: .28; }
+    50%     { opacity: .5; }
+  }
+  [data-theme="dark"] .moon { opacity: .55; }
+
   /* Bulle de colon (signature Dorfromantik-ish) */
   .bubble {
     position: absolute;
@@ -984,6 +1066,7 @@
     <div class="sun"></div>
     <div class="mist m1"></div>
     <div class="mist m2"></div>
+    <div class="moon"></div>
 
     <div class="scene-wrap">
       <div class="voxel">
@@ -999,21 +1082,56 @@
           <div class="edge e-grass"></div>
           <div class="layer grass"></div>
 
-          <!-- props -->
-          <div class="prop tree" style="left: 42%; top: 30%;"><div class="trunk"></div><div class="crown"></div></div>
-          <div class="prop tree" style="left: 58%; top: 34%; transform: scale(.85);"><div class="trunk"></div><div class="crown"></div></div>
+          <!-- arbres -->
+          <div class="prop tree" style="left: 30%; top: 30%;"><div class="trunk"></div><div class="crown"></div></div>
+          <div class="prop tree" style="left: 42%; top: 32%; transform: scale(.85);"><div class="trunk"></div><div class="crown"></div></div>
           <div class="prop tree" style="left: 36%; top: 42%; transform: scale(.75);"><div class="trunk"></div><div class="crown"></div></div>
+
+          <!-- promontoire (tour observatoire) en hauteur -->
+          <div class="prop promontoire" style="left: 64%; top: 18%;">
+            <span class="moon-icon">🌙</span>
+            <div class="pillar"></div>
+            <div class="top"></div>
+            <div class="astro"><div class="body"></div><div class="head"></div></div>
+          </div>
+
+          <!-- bâtiments du village -->
           <div class="prop house" style="left: 50%; top: 46%;"><div class="wall"></div><div class="roof"></div><div class="door"></div></div>
           <div class="prop lab"   style="left: 62%; top: 48%; transform: scale(.9);"><div class="wall"></div><div class="roof"></div></div>
+          <div class="prop foyer" style="left: 56%; top: 44%;"><div class="flame"></div><div class="logs"></div></div>
+
+          <!-- baies -->
           <div class="prop berry" style="left: 44%; top: 52%;"></div>
           <div class="prop berry" style="left: 48%; top: 54%;"></div>
 
-          <!-- colons -->
-          <div class="prop colonist" style="left: 47%; top: 49%;"><div class="body"></div><div class="head"></div></div>
-          <div class="prop colonist" style="left: 55%; top: 52%;"><div class="body" style="background:#3a6a8c;"></div><div class="head"></div></div>
+          <!-- cerf aux abords de la forêt -->
+          <div class="prop deer" style="left: 26%; top: 38%;">
+            <div class="body"></div>
+            <div class="leg l1"></div><div class="leg l2"></div><div class="leg l3"></div><div class="leg l4"></div>
+            <div class="neck"></div><div class="head"></div><div class="antlers"></div>
+          </div>
+
+          <!-- colons nommés -->
+          <div class="prop colonist" style="left: 51%; top: 49%;"><div class="body" style="background:#d9b14a;"></div><div class="head"></div></div>
+          <div class="colonist-label chief" style="left: 52%; top: 47.5%;"><span class="star">★</span>François</div>
+
+          <div class="prop colonist" style="left: 58%; top: 52%;"><div class="body" style="background:#3a6a8c;"></div><div class="head"></div></div>
+          <div class="colonist-label" style="left: 59%; top: 50.5%;">Alyssa Niv.10</div>
+
+          <div class="prop colonist" style="left: 46%; top: 53%;"><div class="body" style="background:#8a4e8e;"></div><div class="head"></div></div>
+          <div class="colonist-label" style="left: 47%; top: 51.5%;">Sophie Niv.5</div>
+
+          <!-- Cairn en construction -->
+          <div class="prop cairn-wip" style="left: 38%; top: 50%;">
+            <div class="stone1"></div><div class="stone2"></div><div class="stone3"></div>
+          </div>
+          <div class="cfx-progress" style="left: 39%; top: 47.5%;">
+            <span class="lbl">🔨 60%</span>
+            <div class="track"><div class="fill" style="width:60%"></div></div>
+          </div>
 
           <!-- bulle -->
-          <div class="bubble" style="left: 48%; top: 30%;">Joli panorama.</div>
+          <div class="bubble" style="left: 40%; top: 26%;">Le Cairn avance.</div>
         </div>
       </div>
     </div>
@@ -1385,12 +1503,14 @@
 
   // ---------- Bulles rotatives (vraies phrases du jeu) ----------
   const BUBBLE_LINES = [
-    "Joli panorama.",
+    "Le Cairn avance.",
+    "On chasse ce soir.",
+    "Le ciel parle.",
     "Qu'est-ce qu'on fait ?",
     "On pourrait construire quelque chose.",
     "C'est loin, le prochain âge ?",
     "J'ai rêvé qu'on avait une forge.",
-    "Regarde, un oiseau.",
+    "Regarde, un cerf.",
     "Tu crois qu'il va pleuvoir ?",
     "J'aime bien cet endroit.",
     "Y'a quelqu'un qui sait faire du pain ?",
