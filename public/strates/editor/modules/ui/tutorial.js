@@ -728,12 +728,12 @@ function runInfoTour(steps, storageKey, onComplete) {
 
 const RESEARCHER_TUTO_STEPS = [
   {
-    label: 'Chercheur · 1/6',
+    label: 'Chercheur · 1/7',
     sel:   null,
     text:  'La Hutte du sage est là, mais personne ne fait de recherche. Assignons François comme Chercheur.',
   },
   {
-    label: 'Chercheur · 2/6',
+    label: 'Chercheur · 2/7',
     sel:   '.rail-btn[data-panel="population"]',
     text:  'Ouvrez le panneau Population.',
     kind:  'event',
@@ -744,7 +744,7 @@ const RESEARCHER_TUTO_STEPS = [
     },
   },
   {
-    label: 'Chercheur · 3/6',
+    label: 'Chercheur · 3/7',
     sel:   '.pv2-tab[data-tab="metiers"]',
     fallback: '#popPanel',
     text:  'Cliquez sur Métiers.',
@@ -756,7 +756,7 @@ const RESEARCHER_TUTO_STEPS = [
     },
   },
   {
-    label: 'Chercheur · 4/6',
+    label: 'Chercheur · 4/7',
     sel:   '.pv2-job-card[data-job-id="chercheur"]',
     fallback: '#popPanel',
     text:  'Cliquez sur Chercheur pour voir la liste d assignation.',
@@ -768,7 +768,7 @@ const RESEARCHER_TUTO_STEPS = [
     },
   },
   {
-    label: 'Chercheur · 5/6',
+    label: 'Chercheur · 5/7',
     sel:   '.pv2-job-card[data-job-id="chercheur"] .pv2-assign-row:first-of-type .pv2-job-action',
     fallback: '.pv2-job-card[data-job-id="chercheur"]',
     text:  'Assignez François ★ (chef) comme Chercheur. Plus son niveau augmentera, plus la recherche ira vite.',
@@ -780,7 +780,20 @@ const RESEARCHER_TUTO_STEPS = [
     },
   },
   {
-    label: 'Chercheur · 6/6',
+    label: 'Chercheur · 6/7',
+    sel:   '#popPanel .pop-close',
+    fallback: '#popPanel',
+    text:  'Parfait. Maintenant fermez le panneau Population pour continuer.',
+    kind:  'click-or-timeout',
+    clickSel: '#popPanel .pop-close, #popPanel .pv2-close',
+    timeout: 120000,
+    autoWhen: () => {
+      const el = document.getElementById('popPanel')
+      return !el || !el.classList.contains('open')
+    },
+  },
+  {
+    label: 'Chercheur · 7/7',
     sel:   null,
     text:  'Parfait. La recherche est lancée. Plus tard vous pourrez assigner plusieurs chercheurs pour aller plus vite.',
   },
