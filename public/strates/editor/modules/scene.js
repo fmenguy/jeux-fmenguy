@@ -30,7 +30,10 @@ scene.background = new THREE.Color(0xcfe6f5)
 scene.fog = new THREE.FogExp2(0xcfe6f5, 0.005)
 
 export const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 800)
-camera.position.set(GRID * 0.9, GRID * 0.7, GRID * 0.9)
+// Zoom initial proche (~5x plus pres que la valeur historique GRID*0.9 / 0.7
+// / 0.9). Evite environ 17 crans de molette pour cadrer le hameau de depart.
+// L angle de vue (offset normalise) est conserve.
+camera.position.set(GRID * 0.58, GRID * 0.15, GRID * 0.58)
 camera.lookAt(GRID / 2, 0, GRID / 2)
 
 export const controls = new OrbitControls(camera, renderer.domElement)
