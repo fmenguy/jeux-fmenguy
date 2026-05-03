@@ -1132,10 +1132,11 @@ export function assignResearcherToBuilding(building) {
   if (building.isUnderConstruction) return false
   let best = null, bestD = Infinity
   for (const c of state.colonists) {
-    // Lot B : seuls les colons explicitement profession === 'chercheur'
-    // peuvent etre assignes a la Hutte du sage. Plus de fallback sur le chef
-    // ou un colon IDLE quelconque.
+    // Gate universel : profession === 'chercheur' ET assignedJob === 'researcher'.
+    // Aucun fallback (ni chef, ni colon IDLE quelconque). Le joueur doit
+    // explicitement assigner le role depuis le panneau Population.
     if (c.profession !== 'chercheur') continue
+    if (c.assignedJob !== 'researcher') continue
     if (c.researchBuildingId != null) continue
     if (c.state !== 'IDLE') continue
     const d = Math.abs(c.x - building.x) + Math.abs(c.z - building.z)
