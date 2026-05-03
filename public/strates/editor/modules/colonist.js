@@ -3,7 +3,8 @@ import {
   GRID, MIN_STRATES, MAX_STRATES, WATER_LEVEL, SHALLOW_WATER_LEVEL,
   COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
   GENDER_SYMBOLS, GENDER_COLORS,
-  CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK
+  CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK,
+  RAW_MEAT_SATIETY, COOKED_MEAT_SATIETY
 } from './constants.js'
 import {
   MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
@@ -63,6 +64,41 @@ export function topY(x, z) {
   return t
 }
 
+// Lot B : satiete par unite consommee, lue dans needs.json (satisfied_by).
+// Fallback sur les constantes RAW_MEAT_SATIETY / COOKED_MEAT_SATIETY si la
+// donnee est absente. La logique des baies (amount/20) reste a part car les
+// baies sont prelevees en pile sur un buisson.
+function hungerReductionFor(resourceId) {
+  const need = (NEEDS_DATA && NEEDS_DATA.needs)
+    ? NEEDS_DATA.needs.find(n => n.id === 'hunger')
+    : null
+  if (need && Array.isArray(need.satisfied_by)) {
+    const entry = need.satisfied_by.find(s => s.resource === resourceId)
+    if (entry && typeof entry.amount === 'number') return entry.amount
+  }
+  if (resourceId === 'cooked-meat') return COOKED_MEAT_SATIETY
+  if (resourceId === 'raw-meat')    return RAW_MEAT_SATIETY
+  return 0
+}
+
+// Lot B : consomme 1 unite de viande (cuite si dispo, sinon crue) pour
+// satisfaire la faim. Retourne true si une consommation a eu lieu. Action
+// instantanee (pas de deplacement) car la viande est portee depuis les stocks
+// communs. La cuite est preferee : meilleure satiete et pas de risque.
+function tryEatMeatFromStocks(colonist) {
+  if (!colonist || !colonist.needs) return false
+  const have = (id) => (state.resources[id] || 0) > 0
+  let consumed = null
+  if (have('cooked-meat')) consumed = 'cooked-meat'
+  else if (have('raw-meat')) consumed = 'raw-meat'
+  if (!consumed) return false
+  state.resources[consumed] -= 1
+  const reduction = hungerReductionFor(consumed)
+  const cur = colonist.needs.get('hunger') || 0
+  colonist.needs.set('hunger', Math.max(0, cur - reduction))
+  return true
+}
+
 export function scheduleFlash(x, z) {
   state.flashes.push({ x, z, t: 0 })
   const i = topVoxelIndex(x, z)
@@ -85,6 +121,8 @@ export class Colonist {
     this.pathStep = 0
     this.targetJob = null
     this.targetBush = null
+    // Lot B : foyer cible pour aller cuire de la viande (LEISURE).
+    this.targetFoyer = null
     this.targetBuildJob = null
     this.workTimer = 0
     this.huntTimer = 0
@@ -478,6 +516,32 @@ export class Colonist {
     return true
   }
 
+  // Lot B : LEISURE - cuisson de viande au foyer. Si du raw-meat est dispo,
+  // le foyer existe et n est pas deja occupe a cuire, le colon va le rejoindre
+  // pour lancer une cuisson. Au contact, il consomme 1 raw-meat et lance le
+  // timer du foyer (cf placements.tickFoyers). La production d 1 cooked-meat
+  // se fait dans le tick foyer, pas ici.
+  pickCookMeat() {
+    if (!state.foyers || !state.foyers.length) return false
+    if ((state.resources['raw-meat'] || 0) <= 0) return false
+    let best = null, bestD = Infinity
+    for (const f of state.foyers) {
+      if (f.isCooking) continue
+      const d = Math.abs(f.x - this.x) + Math.abs(f.z - this.z)
+      if (d < bestD) { bestD = d; best = f }
+    }
+    if (!best) return false
+    const approach = findApproach(this.x, this.z, best.x, best.z)
+    if (!approach) return false
+    this.targetFoyer = best
+    this.path = approach.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = false
+    this.updateTrail()
+    return true
+  }
+
   // Feu de camp social : la nuit, les colons IDLE sont attires vers le foyer
   // (maison ou manoir) le plus proche. Boost moral tant qu'ils y sont.
   pickCampfire() {
@@ -638,6 +702,13 @@ export class Colonist {
             this.currentTask = { kind: TASK_KIND.EAT_SEEK_FOOD, priority: PRIORITY.SURVIVAL, reason: 'hunger_critical' }
             return
           }
+          // Lot B : aucun buisson accessible, repli sur la viande disponible
+          // dans les stocks communs (cuite > crue). Action instantanee, le
+          // colon ne bouge pas, mais la faim est ramenee sous le seuil.
+          if (tryEatMeatFromStocks(this)) {
+            this.currentTask = { kind: TASK_KIND.EAT_SEEK_FOOD, priority: PRIORITY.SURVIVAL, reason: 'hunger_critical_stocks' }
+            return
+          }
         }
         if (state.jobs.size > 0) { if (this.pickJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK }; return } }
         if (state.buildJobs.size > 0) { if (this.pickBuildJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_BUILD_JOB, priority: PRIORITY.WORK }; return } }
@@ -684,6 +755,14 @@ export class Colonist {
               return
             }
           }
+        }
+        // Lot B LEISURE : si de la viande crue traine dans les stocks et
+        // qu un foyer libre est dispo, n importe quel colon peut prendre
+        // l initiative d aller la cuire. Action collective non specifique
+        // a une profession.
+        if (this.pickCookMeat()) {
+          this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE, reason: 'cook_meat' }
+          return
         }
       }
       // Lot B, B10 : auto-collecte de base au repos (rochers, arbres si hache).
@@ -762,7 +841,7 @@ export class Colonist {
           this.wanderPause = 2 + Math.random() * 4
           return
         }
-        if (this.researchBuildingId != null && !this.targetJob && !this.targetBush) {
+        if (this.researchBuildingId != null && !this.targetJob && !this.targetBush && !this.targetFoyer) {
           this.state = 'RESEARCHING'
           this.path = null
           this.lineGeo.setFromPoints([])
@@ -811,7 +890,7 @@ export class Colonist {
 
     if (this.state === 'WORKING') {
       this.workTimer += dt
-      const focusTarget = this.targetJob || this.targetBush || this.targetBuildJob
+      const focusTarget = this.targetJob || this.targetBush || this.targetBuildJob || this.targetFoyer
       if (focusTarget) {
         const dx = (focusTarget.x + 0.5) - this.tx
         const dz = (focusTarget.z + 0.5) - this.tz
@@ -872,7 +951,10 @@ export class Colonist {
         return
       }
 
-      const duration = this.targetBush ? HARVEST_DURATION : (this.targetBuildJob ? 1.5 : WORK_DURATION)
+      const duration = this.targetBush ? HARVEST_DURATION
+        : (this.targetBuildJob ? 1.5
+        : (this.targetFoyer ? 0.6
+        : WORK_DURATION))
       if (this.workTimer >= duration) {
         if (this.targetJob) {
           const { x, z } = this.targetJob
@@ -1015,6 +1097,19 @@ export class Colonist {
           }
           bush.claimedBy = null
           this.targetBush = null
+        }
+        if (this.targetFoyer) {
+          // Lot B : arrivee au foyer pour lancer une cuisson. On verifie a
+          // nouveau les conditions (la viande peut avoir ete consommee, le
+          // foyer peut etre occupe par un autre colon entre temps).
+          const foyer = this.targetFoyer
+          if (!foyer.isCooking && (state.resources['raw-meat'] || 0) > 0) {
+            state.resources['raw-meat'] -= 1
+            foyer.isCooking = true
+            foyer.cookTimer = 0
+            this.skills.gathering = (this.skills.gathering || 0) + 1
+          }
+          this.targetFoyer = null
         }
         // Purge la tache courante a la fin du WORKING.
         this.currentTask = null
