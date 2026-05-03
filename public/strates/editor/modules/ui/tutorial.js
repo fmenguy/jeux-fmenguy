@@ -235,6 +235,27 @@ function injectStyles() {
   flex-shrink: 0;
 }
 .tuto-invite-dismiss:hover { color: #c8a84b; }
+.tuto-info-next {
+  align-self: flex-end;
+  margin-top: 4px;
+  background: transparent;
+  border: 1px solid #c8a84b;
+  border-radius: 4px;
+  color: #c8a84b;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  padding: 4px 11px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.tuto-info-next:hover { background: rgba(200,168,75,.14); }
+.tuto-info-bubble.centered {
+  max-width: 320px;
+  text-align: center;
+  align-items: center;
+}
+.tuto-info-bubble.centered::before { display: none; }
 `
   document.head.appendChild(s)
 }
@@ -456,6 +477,174 @@ window.addEventListener('strates:techComplete', e => {
   }
 })
 
+// ─── Tour de l interface (déclenché à la fin du tuto principal) ───────────────
+//
+// Pure information : chaque étape avance via un bouton "Suivant" dans la bulle
+// (pas d action gameplay attendue). Highlight le DOM ciblé via le ring habituel.
+// La dernière étape n a pas de cible : bulle centrée + bouton "Terminer".
+
+const INTERFACE_TOUR_STEPS = [
+  {
+    label: 'Interface · 1/6',
+    sel:   '#btn-cell-info',
+    text:  'Cliquez sur la loupe pour consulter les données de la carte : ressources, biomes, météo.',
+  },
+  {
+    label: 'Interface · 2/6',
+    sel:   '#daynight-pill',
+    text:  'Bascule jour ↔ nuit (touche N). La nuit, vos astronomes au promontoire génèrent des points nocturnes 🌙 pour débloquer des techs spéciales.',
+  },
+  {
+    label: 'Interface · 3/6',
+    sel:   '.actionbar .ab-tabs',
+    fallback: '.ab-tabs',
+    text:  'Trois modes d interaction : Naviguer pour observer, Récoltes pour assigner des tâches, Construire pour poser des bâtiments.',
+  },
+  {
+    label: 'Interface · 4/6',
+    sel:   '.topbar .center',
+    fallback: '.topbar',
+    text:  'Vos ressources collectées en temps réel : 🪵 Bois, 🪨 Pierre, 🫐 Baies et toutes les autres.',
+  },
+  {
+    label: 'Interface · 5/6',
+    sel:   '#btn-help',
+    text:  'Sauvegardez votre progression à tout moment avec 💾. Le bouton ? contient la description complète du jeu.',
+  },
+  {
+    label: 'Interface · 6/6',
+    sel:   null,
+    text:  'Tout est décrit dans le menu d aide. Bonne aventure !',
+  },
+]
+
+function runInfoTour(steps, storageKey, onComplete) {
+  try { if (localStorage.getItem(storageKey)) { onComplete && onComplete(); return } } catch (e) {}
+  sweepOrphanTutoElements()
+
+  let currentIdx = 0
+  let torndown = false
+
+  const ring = document.createElement('div')
+  ring.className = 'tuto-ring'
+  document.body.appendChild(ring)
+
+  const bubble = document.createElement('div')
+  bubble.className = 'tuto-bubble tuto-info-bubble'
+  document.body.appendChild(bubble)
+
+  function reposition() {
+    if (torndown) return
+    const step = steps[currentIdx]
+    if (!step) return
+
+    if (!step.sel) {
+      // Bulle centrée, pas de ring
+      ring.style.display = 'none'
+      bubble.className = 'tuto-bubble tuto-info-bubble centered'
+      bubble.style.left = '50%'
+      bubble.style.top = '50%'
+      bubble.style.right = ''
+      bubble.style.bottom = ''
+      bubble.style.transform = 'translate(-50%, -50%)'
+      bubble.style.display = 'flex'
+      return
+    }
+
+    const el = document.querySelector(step.sel) || (step.fallback && document.querySelector(step.fallback))
+    if (!el) { ring.style.display = 'none'; return }
+    const r = el.getBoundingClientRect()
+    const PAD = 6
+    ring.style.cssText = [
+      'top:'    + (r.top  - PAD) + 'px',
+      'left:'   + (r.left - PAD) + 'px',
+      'width:'  + (r.width  + PAD * 2) + 'px',
+      'height:' + (r.height + PAD * 2) + 'px',
+      'display:block',
+    ].join(';')
+
+    const above = r.top - PAD >= 200
+    bubble.className = 'tuto-bubble tuto-info-bubble ' + (above ? 'arrow-bottom' : 'arrow-top')
+    bubble.style.transform = ''
+    bubble.style.left = Math.max(8, r.left - PAD) + 'px'
+    bubble.style.right = ''
+    bubble.style.display = 'flex'
+    if (above) {
+      bubble.style.top = ''
+      bubble.style.bottom = (window.innerHeight - r.top + PAD + 10) + 'px'
+    } else {
+      bubble.style.bottom = ''
+      bubble.style.top = (r.bottom + PAD + 10) + 'px'
+    }
+  }
+
+  function teardown(completed) {
+    if (torndown) return
+    torndown = true
+    clearInterval(posTimer)
+    window.removeEventListener('resize', reposition)
+    ring.style.display = 'none'
+    bubble.style.display = 'none'
+    ring.remove()
+    bubble.remove()
+    sweepOrphanTutoElements()
+    if (completed) {
+      try { localStorage.setItem(storageKey, '1') } catch (e) {}
+      onComplete && onComplete()
+    }
+  }
+
+  function advance() {
+    if (torndown) return
+    currentIdx++
+    if (currentIdx >= steps.length) { teardown(true); return }
+    showStep(currentIdx)
+  }
+
+  function showStep(idx) {
+    const step = steps[idx]
+    const isLast = idx === steps.length - 1
+    const btnLabel = isLast ? 'Terminer' : 'Suivant ▶'
+    bubble.innerHTML =
+      '<span class="tuto-step-label">' + step.label + '</span>' +
+      '<span>' + step.text + '</span>' +
+      '<button class="tuto-info-next">' + btnLabel + '</button>'
+    bubble.querySelector('.tuto-info-next').addEventListener('click', advance)
+    ring.style.display = 'none'
+    reposition()
+    requestAnimationFrame(() => requestAnimationFrame(reposition))
+  }
+
+  const posTimer = setInterval(reposition, 400)
+  window.addEventListener('resize', reposition)
+
+  showStep(0)
+  return { teardown }
+}
+
+let interfaceTourActive = false
+
+function maybeRunInterfaceTour() {
+  if (interfaceTourActive) return
+  try {
+    if (localStorage.getItem('strates.interfaceTutoDone')) return
+    if (localStorage.getItem('strates.tutoSkipped')) return
+  } catch (e) {}
+  injectStyles()
+  interfaceTourActive = true
+  isTutoActive = true
+  try {
+    runInfoTour(INTERFACE_TOUR_STEPS, 'strates.interfaceTutoDone', () => {
+      interfaceTourActive = false
+      isTutoActive = false
+      showFlash('Bienvenue sur Strates')
+    })
+  } catch (e) {
+    interfaceTourActive = false
+    isTutoActive = false
+  }
+}
+
 // ─── Flash de fin ─────────────────────────────────────────────────────────────
 
 function showFlash(text) {
@@ -477,6 +666,8 @@ function runTutorials() {
   function onTutoDone() {
     isTutoActive = false
     showFlash("C'est parti !")
+    // Enchaîne la visite guidée de l interface après un court délai
+    setTimeout(maybeRunInterfaceTour, 1300)
   }
 
   try {
