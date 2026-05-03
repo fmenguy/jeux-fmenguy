@@ -4,7 +4,8 @@ import {
   COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
   GENDER_SYMBOLS, GENDER_COLORS,
   CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK,
-  RAW_MEAT_SATIETY, COOKED_MEAT_SATIETY
+  RAW_MEAT_SATIETY, COOKED_MEAT_SATIETY,
+  MAX_BUILDER_DISTANCE
 } from './constants.js'
 import {
   MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
@@ -625,17 +626,28 @@ export class Colonist {
     pushAll(state.cairns)
     pushAll(state.wheatFields)
     if (sites.length === 0) return false
-    // Filtrer les chantiers deja claim par un autre constructeur.
-    let best = null, bestD = Infinity
+    // Plusieurs constructeurs peuvent travailler sur le meme chantier. On
+    // filtre les sites par proximite (MAX_BUILDER_DISTANCE) puis on privilegie
+    // ceux qui ont deja des constructeurs actifs (pour terminer un chantier
+    // commence avant d en ouvrir un nouveau). A egalite, le plus proche gagne.
+    let best = null
+    let bestScore = Infinity
     for (const b of sites) {
-      if (b.builderId != null && b.builderId !== this.id) continue
       const d = Math.abs(b.x - this.x) + Math.abs(b.z - this.z)
-      if (d < bestD) { bestD = d; best = b }
+      if (d > MAX_BUILDER_DISTANCE) continue
+      const activeCount = (b.builders && typeof b.builders.size === 'number') ? b.builders.size : 0
+      // Score : on soustrait un gros bonus si le chantier est deja actif
+      // (priorite secondaire), puis distance. Un chantier deja travaille
+      // bat tout chantier vide hors de portee directe.
+      const score = (activeCount > 0 ? -100000 : 0) + d
+      if (score < bestScore) { bestScore = score; best = b }
     }
     if (!best) return false
     const approach = findApproach(this.x, this.z, best.x, best.z)
     if (!approach) return false
-    best.builderId = this.id
+    if (!best.builders) best.builders = new Set()
+    best.builders.add(this.id)
+    best.activeBuildersCount = best.builders.size
     this.targetConstructionSite = best
     this.path = approach.path
     this.pathStep = 0
@@ -1010,7 +1022,10 @@ export class Colonist {
       const site = this.targetConstructionSite
       if (!site || !site.isUnderConstruction) {
         // Chantier disparu (annule, supprime) ou termine entre temps.
-        if (site && site.builderId === this.id) site.builderId = null
+        if (site && site.builders) {
+          site.builders.delete(this.id)
+          site.activeBuildersCount = site.builders.size
+        }
         this.targetConstructionSite = null
         this.state = 'IDLE'
         this.path = null
@@ -1037,7 +1052,10 @@ export class Colonist {
       if (site.constructionProgress >= 1) {
         site.constructionProgress = 1
         site.isUnderConstruction = false
-        site.builderId = null
+        if (site.builders) {
+          site.builders.clear()
+          site.activeBuildersCount = 0
+        }
         onBuildingComplete(site)
         this.targetConstructionSite = null
         this.currentTask = null
@@ -1282,6 +1300,13 @@ export class Colonist {
   skillLevel(name) { return Math.min(10, Math.floor((this.skills[name] || 0) / 20)) }
 
   dispose() {
+    // Liberation du chantier en cas de destruction du colon (mort, retrait,
+    // reset). Sans cela, l ID resterait dans builders et fausserait le
+    // compteur d activite.
+    if (this.targetConstructionSite && this.targetConstructionSite.builders) {
+      this.targetConstructionSite.builders.delete(this.id)
+      this.targetConstructionSite.activeBuildersCount = this.targetConstructionSite.builders.size
+    }
     scene.remove(this.group)
     scene.remove(this.line)
     this.group.traverse(o => { if (o.material) o.material.dispose?.(); if (o.geometry) o.geometry.dispose?.() })
