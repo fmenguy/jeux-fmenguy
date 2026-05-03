@@ -31,6 +31,15 @@ const JOB_SKILL = {
   chercheur: 'research',
 }
 
+// Mapping profession (ID français) vers assignedJob (ID anglais attendu par le moteur Lot B)
+const PROFESSION_TO_ASSIGNED_JOB = {
+  cueilleur: 'gatherer',
+  bucheron:  'woodcutter',
+  mineur:    'miner',
+  chercheur: 'researcher',
+  chasseur:  'hunter',
+}
+
 // Helpers de niveau / xp de compétences (lecture seule sur le raw colonist)
 function skillLevelOf(rawC, name) {
   if (!rawC) return 0
@@ -79,8 +88,9 @@ function colonistView(raw) {
     age:     raw.age != null ? raw.age : 0,
     chief:   !!raw.isChief,
     village: raw.village || 'souche',
-    job:        raw.job || null,
-    profession: raw.profession || null,
+    job:         raw.job || null,
+    profession:  raw.profession || null,
+    assignedJob: raw.assignedJob || null,
     state:      stateActivity(raw),
     hp:         raw.hp   != null ? raw.hp   : 80,
     mor:        raw.mor  != null ? raw.mor  : 70,
@@ -240,8 +250,10 @@ export class PopulationModal {
     if (!raw) return
     if (action === 'remove') {
       raw.profession = null
+      raw.assignedJob = null
     } else {
       raw.profession = jobId
+      raw.assignedJob = PROFESSION_TO_ASSIGNED_JOB[jobId] || jobId
     }
     // Garder le sous-panneau ouvert pour permettre d'assigner plusieurs colons a la suite
     this._renderBody()
@@ -430,10 +442,11 @@ export class PopulationModal {
       const action = isCurrent ? 'remove' : 'assign'
       const btnLabel = isCurrent ? 'Retirer' : 'Assigner'
       const btnCls = 'pv2-job-action' + (isCurrent ? ' remove' : '')
+      const assignedBadge = isCurrent ? '<span class="pv2-assigned-badge">&#10003; Assigné</span>' : ''
       return '<div class="pv2-assign-row' + (isCurrent ? ' current' : '') + '">' +
         '<span class="pv2-assign-name">' +
           (c.chief ? '<span class="pv2-chief-star">★</span> ' : '') +
-          escH(c.name) + ' ' + lvlTxt +
+          escH(c.name) + ' ' + lvlTxt + assignedBadge +
         '</span>' +
         '<button class="' + btnCls + '" data-action="' + action + '" data-job-id="' + escH(jd.id) + '" data-cid="' + escH(c.id) + '">' +
           escH(btnLabel) +
