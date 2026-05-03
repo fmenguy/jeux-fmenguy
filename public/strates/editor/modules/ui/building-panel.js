@@ -13,6 +13,7 @@ import {
   removeResearchHousesIn, removeObservatoriesIn
 } from '../placements.js'
 import { refreshHUD } from '../hud.js'
+import { techUnlocked } from '../tech.js'
 
 const CSS = `
 #bp-panel {
@@ -115,9 +116,16 @@ const CSS = `
   letter-spacing: 0.04em;
   transition: background 0.15s, color 0.15s;
 }
-.bp-destroy-btn:hover {
+.bp-destroy-btn:hover:not(.locked):not([disabled]) {
   background: rgba(200,50,50,0.35);
   color: #ffaaaa;
+}
+.bp-destroy-btn.locked,
+.bp-destroy-btn[disabled] {
+  background: rgba(80,80,80,0.18);
+  border-color: rgba(140,140,140,0.35);
+  color: rgba(220,200,200,0.45);
+  cursor: not-allowed;
 }
 `
 
@@ -179,6 +187,10 @@ function ensureDom() {
   document.body.appendChild(panelEl)
   document.getElementById('bp-close-btn').addEventListener('click', closeBuildingPanel)
   document.getElementById('bp-destroy-btn').addEventListener('click', () => {
+    if (!techUnlocked('demolition')) {
+      showHudToast('Recherche Démolition requise pour démanteler les bâtiments.', 2800)
+      return
+    }
     if (_currentType && _currentBuilding) destroyBuilding(_currentType, _currentBuilding)
   })
   bodyEl = document.getElementById('bp-body')
@@ -346,7 +358,17 @@ export function openBuildingPanel(type, building) {
   document.getElementById('bp-title').textContent = meta.name
   bodyEl.innerHTML = buildContent(type, building)
   const footerEl = document.getElementById('bp-footer')
-  if (footerEl) footerEl.style.display = NON_DESTRUCTIBLE.has(type) ? 'none' : 'block'
+  const destroyBtn = document.getElementById('bp-destroy-btn')
+  const hideFooter = NON_DESTRUCTIBLE.has(type)
+  if (footerEl) footerEl.style.display = hideFooter ? 'none' : 'block'
+  if (destroyBtn && !hideFooter) {
+    const canDemolish = techUnlocked('demolition')
+    destroyBtn.disabled = !canDemolish
+    destroyBtn.classList.toggle('locked', !canDemolish)
+    destroyBtn.title = canDemolish
+      ? 'Détruit le bâtiment et rembourse 50% du coût'
+      : 'Recherche Démolition requise'
+  }
   panelEl.classList.remove('hidden')
   // Forcer un redémarrage de l'animation slide-in
   panelEl.style.animation = 'none'
