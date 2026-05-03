@@ -6,6 +6,7 @@ import {
 import { state } from './state.js'
 import { fbm, prng } from './rng.js'
 import { scene, tmpObj, tmpColor, HIDDEN_MATRIX } from './scene.js'
+import { dlog } from './debug.js'
 
 // ============================================================================
 // Terrain : heightmap, voxels instancies, eau, helpers.
@@ -278,7 +279,7 @@ export function buildTerrain() {
       repaintCellSurface(x, z)
     }
   }
-  console.log('[fertile] cells marked:', Array.from(state.cellFertile).filter(v => v).length)
+  dlog('[fertile] cells marked:', Array.from(state.cellFertile).filter(v => v).length)
 }
 
 // Reconstruit l'InstancedMesh a partir de state.cellTop et state.cellBiome deja

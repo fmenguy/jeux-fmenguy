@@ -5,6 +5,8 @@
 // SPEC v1 -- ne pas modifier le schema sans ouvrir un ticket.
 // ============================================================================
 
+import { dinfo } from './debug.js'
+
 export let SPEECH_LINES              = []
 export let SPEECH_LINES_BY_NAME      = {}
 export let SPEECH_LINES_INSISTENT    = []
@@ -267,7 +269,7 @@ function _runLinter() {
     errors.forEach(e => console.error(e))
     console.error(`[gamedata linter] ${errors.length} erreur(s) de reference croisee detectee(s). Verifiez les JSON.`)
   } else {
-    console.info('[gamedata linter] OK -- toutes les references croisees sont valides.')
+    dinfo('[gamedata linter] OK -- toutes les references croisees sont valides.')
   }
 }
 

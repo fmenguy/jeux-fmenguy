@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">
+  <!-- Strates voxel empilées (rock / stone / sand / grass) en isométrique -->
+  <polygon points="5,24 16,29.5 27,24 16,18.5" fill="#6a6256"/>
+  <polygon points="6,21 16,26 26,21 16,16" fill="#a69e8a"/>
+  <polygon points="7,17.5 16,22 25,17.5 16,13" fill="#e8cf8e"/>
+  <polygon points="8,14 16,18 24,14 16,10" fill="#7cc06a"/>
+  <!-- Petit arbre -->
+  <rect x="14.6" y="7" width="1.2" height="3.2" fill="#7a5a36"/>
+  <ellipse cx="15.2" cy="7" rx="2.6" ry="3" fill="#4e8a3c"/>
+</svg>

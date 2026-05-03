@@ -4,6 +4,7 @@ import {
 import { state } from './state.js'
 import { prng, mulberry32, rebuildPerm } from './rng.js'
 import { buildTerrain, revealAround } from './terrain.js'
+import { dlog } from './debug.js'
 import {
   addHouse, addTree, addRock, addOre, addBush,
   isCellOccupied, clearAllPlacements, addDeer, applyFogToAllVegetation
@@ -122,7 +123,7 @@ export function populateDefaultScene() {
     addOre(x, z, type)
     oresPlaced++
   }
-  console.log('[ores] placed:', state.ores.length)
+  dlog('[ores] placed:', state.ores.length)
 
   // Buissons a baies - minimum 25 en herbe et foret
   let bushPlaced = 0
@@ -164,10 +165,10 @@ export function populateDefaultScene() {
     if (isCellOccupied(x, z)) continue
     const dist = Math.abs(x - spawn.x) + Math.abs(z - spawn.z)
     if (dist < 4) continue  // eviter le spawn du joueur
-    console.log('[deer] spawn pos vs GRID:', x, z, GRID)
+    dlog('[deer] spawn pos vs GRID:', x, z, GRID)
     if (addDeer(x, z)) deersPlaced++
   }
-  console.log('[deer] count in scene:', state.deers.length)
+  dlog('[deer] count in scene:', state.deers.length)
 
   // Applique le fog a toute la vegetation avant la revelation initiale.
   // Tout ce qui est hors zone revelee part en noir (group.visible = false
