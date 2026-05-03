@@ -1604,9 +1604,15 @@ export function removeObservatoriesIn(cells) {
 
 export function isObservatoryOn(x, z) {
   if (!state.observatories) return false
+  // Tolerance de voisinage : on considere "sur le promontoire" la cellule
+  // meme et les 4 cellules adjacentes (Manhattan <= 1). Le pathfinding peut
+  // deposer un colon a cote si la cellule du promontoire n est pas atteignable
+  // (palier trop haut). Coherent avec isColonistOnObservatory dans daynight.js.
   for (const o of state.observatories) {
     if (o.isUnderConstruction) continue
-    if (o.x === x && o.z === z) return true
+    const dx = Math.abs(o.x - x)
+    const dz = Math.abs(o.z - z)
+    if (dx + dz <= 1) return true
   }
   return false
 }

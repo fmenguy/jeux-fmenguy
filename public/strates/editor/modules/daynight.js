@@ -230,9 +230,16 @@ function updateHudIcon() {
 
 export function isColonistOnObservatory(c) {
   if (!state.observatories || !state.observatories.length) return false
+  // Tolerance de voisinage : le pathfinding peut deposer le colon sur la
+  // cellule meme du promontoire OU sur une cellule adjacente (4-voisinage)
+  // si la cellule du promontoire n est pas atteignable directement (palier
+  // trop haut). Le visuel rend le colon "au pied du promontoire" dans les
+  // deux cas, et on considere donc qu il observe.
   for (const obs of state.observatories) {
     if (obs.isUnderConstruction) continue
-    if (c.x === obs.x && c.z === obs.z) return true
+    const dx = Math.abs(c.x - obs.x)
+    const dz = Math.abs(c.z - obs.z)
+    if (dx + dz <= 1) return true
   }
   return false
 }
