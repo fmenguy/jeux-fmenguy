@@ -99,6 +99,16 @@
       "produces": ["bronze-tools"],
       "activity": "day",
       "description": "Travaille a la forge. Produit des outils en bronze. Necessite la Forge."
+    },
+    {
+      "id": "constructeur",
+      "name": "Constructeur",
+      "icon": "🔨",
+      "age": 1,
+      "requires": {},
+      "produces": [],
+      "activity": "day",
+      "description": "Construit les batiments du village."
     }
   ]
 }
