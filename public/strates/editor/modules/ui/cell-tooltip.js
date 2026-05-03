@@ -47,14 +47,21 @@ const CSS = `
 }
 `
 
+// Note : les biomes 'rock' et 'snow' correspondent en réalité à de la roche
+// (drop : pierre). 'snow' = roche couverte de neige (haute altitude). On les
+// libelle "Roche de montagne" / "Roche enneigée" pour éviter la confusion
+// avec une vraie ressource neige (qui n existe pas).
 const BIOME_INFO = {
   grass:  { icon: '🌿', name: 'Prairie' },
   forest: { icon: '🌲', name: 'Forêt' },
   sand:   { icon: '🏖', name: 'Plage' },
-  rock:   { icon: '⛰', name: 'Roche' },
-  snow:   { icon: '❄', name: 'Neige' },
+  rock:   { icon: '🏔', name: 'Roche de montagne' },
+  snow:   { icon: '🏔', name: 'Roche enneigée' },
   water:  { icon: '💧', name: 'Eau' }
 }
+
+// Biomes assimilés à de la roche (drop pierre, exigeront un Mineur Niv.5+)
+const ROCK_BIOMES = new Set(['rock', 'snow'])
 
 const BUILDING_NAMES = {
   house:       'Cabane',
@@ -153,6 +160,13 @@ export function showCellTooltip(gx, gz, screenX, screenY) {
   )
   if (content) {
     rows.push('<span class="cell-tooltip-row">' + content + '</span>')
+  }
+  if (ROCK_BIOMES.has(biomeKey)) {
+    rows.push(
+      '<span class="cell-tooltip-row" style="opacity:.75;font-style:italic">' +
+        '⛏ Nécessite un Mineur Niv.5 minimum' +
+      '</span>'
+    )
   }
   tipEl.innerHTML = rows.join('')
 
