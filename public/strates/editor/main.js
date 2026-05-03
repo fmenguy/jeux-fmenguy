@@ -38,6 +38,7 @@ import { initCellTooltip } from './modules/ui/cell-tooltip.js'
 import { initTutoInvite, showTutoInvite } from './modules/ui/tutorial.js'
 import { buildFog, tickFog } from './modules/fog.js'
 import { tickConstructionFX } from './modules/construction-fx.js'
+import { initModalState } from './modules/ui/modal-state.js'
 import { initSeasonBar, tickSeasonBar } from './modules/ui/season-bar.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
@@ -103,6 +104,7 @@ initCellTooltip()
 initHelpOverlay()
 initDayNight()
 initPopulationModal()
+initModalState()
 bindDayNightUI()
 refreshNightPointsHUD()
 initAgeTransitions()
