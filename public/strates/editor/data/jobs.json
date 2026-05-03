@@ -78,21 +78,6 @@
       ]
     },
     {
-      "id": "astronome",
-      "name": "Astronome",
-      "age": 1,
-      "color": "#2d3a6a",
-      "requires": { "buildings": ["promontoire"] },
-      "produces": ["night-points"],
-      "activity": "night",
-      "description": "Observe les étoiles depuis le Promontoire. Génère des points nocturnes par tick.",
-      "idleSpeech": [
-        "Le ciel est trop lumineux.",
-        "Vivement la nuit.",
-        "Les étoiles dorment."
-      ]
-    },
-    {
       "id": "terrassier",
       "name": "Terrassier",
       "age": 1,
