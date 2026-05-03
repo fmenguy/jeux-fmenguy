@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import {
   GRID, SHALLOW_WATER_LEVEL, MAX_TREES, MAX_ROCKS, MAX_ORES, MAX_CRYSTALS,
-  MAX_BUSHES, MAX_BUSH_LEAVES, MAX_BUSH_BERRIES, BERRIES_PER_BUSH, ORE_TYPES
+  MAX_BUSHES, MAX_BUSH_LEAVES, MAX_BUSH_BERRIES, BERRIES_PER_BUSH, ORE_TYPES,
+  COOK_DURATION
 } from './constants.js'
 import { state } from './state.js'
 import { prng } from './rng.js'
@@ -862,7 +863,9 @@ export function addFoyer(gx, gz) {
   light.position.set(0, 1.5, 0)
   g.add(light)
   scene.add(g)
-  const entry = { x: gx, z: gz, group: g, light }
+  // Lot B : cuisson de viande. cookTimer monte tant que isCooking est vrai,
+  // jusqu a COOK_DURATION secondes, puis produit 1 cooked-meat.
+  const entry = { x: gx, z: gz, group: g, light, cookTimer: 0, isCooking: false }
   state.foyers.push(entry)
   revealAround(gx, gz, 8)
   return true
@@ -1814,8 +1817,9 @@ setOnCellRevealed(repaintVegetationAt)
 // ============================================================================
 // Animation flamme (foyer fallback procedural uniquement)
 // ============================================================================
-export function tickFoyers() {
+export function tickFoyers(dt) {
   const t = Date.now()
+  const step = (typeof dt === 'number' && isFinite(dt)) ? dt : 0
   for (const f of state.foyers) {
     // Fallback procedural : mesh stocke dans userData.flame
     let flame = f.group.userData.flame
@@ -1827,8 +1831,22 @@ export function tickFoyers() {
         if (n.includes('fire') || n.includes('flame') || n.includes('embers')) flame = o
       })
     }
-    if (!flame) continue
-    flame.scale.y = 1 + 0.15 * Math.sin(t * 0.006)
-    flame.scale.x = 1 + 0.08 * Math.sin(t * 0.009)
+    if (flame) {
+      // Cuisson active : flamme plus haute pour signaler visuellement.
+      const cookBoost = f.isCooking ? 0.4 : 0
+      flame.scale.y = 1 + cookBoost + 0.15 * Math.sin(t * 0.006)
+      flame.scale.x = 1 + 0.08 * Math.sin(t * 0.009)
+    }
+    // Lot B : avancement de la cuisson. La viande crue a deja ete consommee
+    // au moment ou la cuisson a ete lancee. A l echeance, on produit 1
+    // cooked-meat dans state.resources et on libere le foyer.
+    if (f.isCooking) {
+      f.cookTimer = (f.cookTimer || 0) + step
+      if (f.cookTimer >= COOK_DURATION) {
+        state.resources['cooked-meat'] = (state.resources['cooked-meat'] || 0) + 1
+        f.isCooking = false
+        f.cookTimer = 0
+      }
+    }
   }
 }

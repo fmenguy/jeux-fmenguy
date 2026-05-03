@@ -309,7 +309,7 @@ function tick(nowMs) {
   tickSeasons(dt)
   tickVegetationSeasons(dt)
   tickTreeGrowth(dt)
-  tickFoyers()
+  tickFoyers(dt)
   tickWeather(dt)
   tickAudio()
   // HUD saison

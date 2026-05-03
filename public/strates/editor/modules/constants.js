@@ -29,6 +29,17 @@ export const HARVEST_DURATION = 1.5
 export const HARVEST_RADIUS = 8
 export const BERRY_REGEN_INTERVAL = 20
 
+// Satiete attribuee par unite consommee. Valeurs de reference pour la chaine
+// alimentaire (Lot B). Ces constantes sont utilisees comme valeurs cibles ;
+// les vraies valeurs gameplay viennent de needs.json (satisfied_by[].amount)
+// quand le besoin "hunger" y est defini, sinon ces constantes servent de
+// fallback. Reference : 1 baie consommee = 1 point de faim, donc viande crue
+// = 40 points, viande cuite = 80 points (4x la baie).
+export const RAW_MEAT_SATIETY    = 40
+export const COOKED_MEAT_SATIETY = 80
+// Duree de cuisson au foyer (secondes reelles).
+export const COOK_DURATION       = 8
+
 // ============================================================================
 // Identite des colons
 // ============================================================================
