@@ -222,6 +222,30 @@
     .ab-body.grid .sep{width:100%;height:1px;margin:2px 0;flex-shrink:0}
     .ab-body.grid .group-label{width:100%;padding:4px 2px 0;font-size:8px;border-top:1px solid var(--rule);margin-top:2px}
 
+    /* Boutons d action universels (annulation + démolition) */
+    .actionbar-right{
+      display:flex;align-items:stretch;border-left:1px solid var(--rule);
+      background:rgba(0,0,0,.18);
+    }
+    .ab-act{
+      padding:0 10px;min-width:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+      cursor:pointer;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+      background:transparent;border:none;border-right:1px solid var(--rule);transition:background .12s,color .12s;
+    }
+    .ab-act:last-child{border-right:none}
+    .ab-act .ic{font-size:14px;line-height:1}
+    .ab-act .nm{opacity:.85}
+    .ab-act-cancel{color:#e88a8a}
+    .ab-act-cancel:hover{background:rgba(220,80,80,.18);color:#ffaaaa}
+    .ab-act-destroy{color:#ff8a5a}
+    .ab-act-destroy:hover{background:rgba(220,90,50,.22);color:#ffb088}
+    .ab-act.active{
+      background:rgba(220,80,80,.32);color:#ffd6c8;
+      box-shadow:inset 0 -2px 0 #d44;
+    }
+    body.destroy-mode-cursor,
+    body.destroy-mode-cursor canvas{cursor:crosshair}
+
     .nav-zone{display:flex;align-items:center;justify-content:center;padding:8px 10px;border-right:1px solid var(--rule);background:rgba(0,0,0,.18)}
     .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;min-width:64px;background:linear-gradient(180deg,rgba(212,184,112,.14),rgba(212,184,112,.04));border:1px solid var(--gold);border-radius:3px;cursor:pointer;color:var(--gold);font-family:inherit;transition:all .12s}
     .nav-btn .ic{font-size:20px;line-height:1}
@@ -995,7 +1019,6 @@
         <span class="ic">&#127993;</span>
         <span class="nm">Chasser</span>
       </button>
-      <button class="tool cancel-zone-btn" data-tool="cancel-zone" title="Annuler une zone de récolte">&#10005;</button>
     </div>
 
     <!-- Onglet Construire -->
@@ -1021,6 +1044,18 @@
         <span class="nm">Grosse maison</span>
       </button>
       <div class="sep" style="width:100%;height:1px;margin:2px 0;flex-shrink:0"></div>
+    </div>
+
+    <!-- Boutons d action universels (annulation + démolition), à droite de l actionbar -->
+    <div class="actionbar-right">
+      <button class="ab-act ab-act-cancel" id="ab-cancel" title="Annuler l action en cours (Échap)">
+        <span class="ic">&#10005;</span>
+        <span class="nm">Annuler</span>
+      </button>
+      <button class="ab-act ab-act-destroy" id="ab-destroy" title="Démolir un bâtiment" style="display:none">
+        <span class="ic">&#128165;</span>
+        <span class="nm">Démolir</span>
+      </button>
     </div>
 
   </div>

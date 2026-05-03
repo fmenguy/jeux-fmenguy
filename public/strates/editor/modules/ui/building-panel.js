@@ -13,7 +13,6 @@ import {
   removeResearchHousesIn, removeObservatoriesIn
 } from '../placements.js'
 import { refreshHUD } from '../hud.js'
-import { techUnlocked } from '../tech.js'
 
 const CSS = `
 #bp-panel {
@@ -174,29 +173,22 @@ function ensureDom() {
   panelEl.className = 'hidden'
   panelEl.setAttribute('role', 'dialog')
   panelEl.setAttribute('aria-label', 'Infos bâtiment')
+  // Le bouton Détruire dans la fiche est désormais remplacé par le bouton
+  // global Démolir dans l actionbar (mode destroy). Le footer reste pour
+  // d éventuelles infos futures (production, occupants synthétiques, etc.).
   panelEl.innerHTML =
     '<div class="bp-header">' +
       '<div class="bp-icon" id="bp-icon">🏠</div>' +
       '<h3 class="bp-title" id="bp-title">Bâtiment</h3>' +
       '<button class="bp-close-btn" id="bp-close-btn" title="Fermer (Échap)">✕</button>' +
     '</div>' +
-    '<div class="bp-body" id="bp-body"></div>' +
-    '<div class="bp-footer" id="bp-footer">' +
-      '<button class="bp-destroy-btn" id="bp-destroy-btn">🔨 Détruire</button>' +
-    '</div>'
+    '<div class="bp-body" id="bp-body"></div>'
   document.body.appendChild(panelEl)
   document.getElementById('bp-close-btn').addEventListener('click', closeBuildingPanel)
-  document.getElementById('bp-destroy-btn').addEventListener('click', () => {
-    if (!techUnlocked('demolition')) {
-      showHudToast('Recherche Démolition requise pour démanteler les bâtiments.', 2800)
-      return
-    }
-    if (_currentType && _currentBuilding) destroyBuilding(_currentType, _currentBuilding)
-  })
   bodyEl = document.getElementById('bp-body')
 }
 
-function destroyBuilding(type, building) {
+export function destroyBuilding(type, building) {
   // Rembourser 50% du coût
   const cost = BUILDING_COSTS[type] || {}
   for (const [res, qty] of Object.entries(cost)) {
@@ -344,22 +336,10 @@ function buildContent(type, building) {
 // Recalcule l état du bouton démolir d après l état courant (type bâtiment +
 // tech 'demolition'). Idempotent, sans effet si le footer est déjà masqué
 // ou si le panneau n est pas monté. Appelé depuis openBuildingPanel ET en
-// réaction à strates:techComplete pour que le déblocage de demolition se
-// répercute en live sur une fiche déjà ouverte.
-function _refreshDestroyButton() {
-  if (!panelEl || !_currentType) return
-  const footerEl = document.getElementById('bp-footer')
-  const destroyBtn = document.getElementById('bp-destroy-btn')
-  const hideFooter = NON_DESTRUCTIBLE.has(_currentType)
-  if (footerEl) footerEl.style.display = hideFooter ? 'none' : 'block'
-  if (destroyBtn && !hideFooter) {
-    const canDemolish = techUnlocked('demolition')
-    destroyBtn.disabled = !canDemolish
-    destroyBtn.classList.toggle('locked', !canDemolish)
-    destroyBtn.title = canDemolish
-      ? 'Détruit le bâtiment et rembourse 50% du coût'
-      : 'Recherche Démolition requise'
-  }
+// Helper exposé : un type de bâtiment est-il destructible ? Utilisé par le
+// mode destroy global de l actionbar pour bloquer le ciblage des Cairn / Champ.
+export function isBuildingDestructible(type) {
+  return !NON_DESTRUCTIBLE.has(type)
 }
 
 export function initBuildingPanel() {
@@ -367,14 +347,6 @@ export function initBuildingPanel() {
     const d = e && e.detail
     if (!d) return
     openBuildingPanel(d.type, d.building)
-  })
-  // Si la tech 'demolition' est débloquée pendant que la fiche est ouverte,
-  // rafraîchir le bouton sans attendre une réouverture.
-  window.addEventListener('strates:techComplete', function(e) {
-    const id = e && e.detail && e.detail.id
-    if (id !== 'demolition') return
-    if (!panelEl || panelEl.classList.contains('hidden')) return
-    _refreshDestroyButton()
   })
 }
 
@@ -386,7 +358,6 @@ export function openBuildingPanel(type, building) {
   document.getElementById('bp-icon').textContent  = meta.icon
   document.getElementById('bp-title').textContent = meta.name
   bodyEl.innerHTML = buildContent(type, building)
-  _refreshDestroyButton()
   panelEl.classList.remove('hidden')
   // Forcer un redémarrage de l'animation slide-in
   panelEl.style.animation = 'none'
