@@ -125,14 +125,16 @@ let fromMode = 'day'
 let toMode   = 'day'
 
 // Production de points nocturnes (flux continu).
-// Tant que state.isNight === true ET qu au moins un astronome est actif sur un
-// promontoire, on accumule des points a un rythme proportionnel a la
-// productivite agregee du metier 'astronome' (cf. productivity.js).
-// Formule : delta = computeJobProductivity(state, 'astronome') * NIGHT_POINT_BASE_RATE * dt
+// Tant que state.isNight === true ET qu au moins un chercheur est positionne
+// sur un promontoire, on accumule des points a un rythme proportionnel a la
+// somme des skillLevel('research') / 10 des chercheurs presents sur un
+// promontoire actif. Le chercheur est bivalent : la journee il produit des
+// research points a la Hutte du sage, la nuit il bascule sur un promontoire
+// (s il en existe un actif) pour produire des night points.
 // Pas de plafond. Les points sont conserves d une nuit a l autre et
 // peuvent etre depenses de jour comme de nuit pour debloquer des techs
 // avec cost.night > 0 (cf. tech.js et main.js).
-const NIGHT_POINT_BASE_RATE = 1.0 // points par seconde par "unite de productivite" (1 astronome skill 10 = 1.0/s)
+const NIGHT_POINT_BASE_RATE = 1.0 // points par seconde par "unite de productivite" (1 chercheur skill 10 = 1.0/s)
 let nightPointFloat = 0
 
 // Duree de base de la nuit (en secondes). astronomy-1 la reduit de 20 s.
@@ -256,14 +258,16 @@ export function tickDayNight(dt) {
   }
 
   if (state.isNight) {
-    // Productivite restreinte aux astronomes effectivement positionnes sur un
+    // Productivite restreinte aux chercheurs effectivement positionnes sur un
     // promontoire. On reproduit la formule de computeJobProductivity en
     // filtrant explicitement sur isColonistOnObservatory (les promontoires ne
     // sont pas un etat colonist, donc onlyState ne suffirait pas).
+    // Le chercheur est bivalent : Hutte du sage le jour (research points),
+    // promontoire la nuit (night points). Un seul role actif a la fois.
     let total = 0
     let count = 0
     for (const c of state.colonists) {
-      if (c.profession !== 'astronome') continue
+      if (c.profession !== 'chercheur') continue
       if (!isColonistOnObservatory(c)) continue
       const lvl = (typeof c.skillLevel === 'function') ? c.skillLevel('research') : 0
       total += lvl / 10
