@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import {
   GRID, MIN_STRATES, MAX_STRATES, WATER_LEVEL, SHALLOW_WATER_LEVEL,
   COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
+  UNASSIGNED_PRODUCTIVITY_MUL,
   GENDER_SYMBOLS, GENDER_COLORS,
   CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK,
   RAW_MEAT_SATIETY, COOKED_MEAT_SATIETY,
@@ -19,7 +20,7 @@ import { jobKey, removeJob } from './jobs.js'
 import { dlog } from './debug.js'
 import {
   findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn,
-  isRockOn, collectRockAt, isBushOn, grabBushAt
+  isRockOn, collectRockAt, isBushOn, grabBushAt, isOreOn
 } from './placements.js'
 import { findNearestBush, refreshBushBerries, isObservatoryOn } from './placements.js'
 import { techUnlocked, classifyMineableBlock, canMineResource } from './tech.js'
@@ -180,6 +181,10 @@ export class Colonist {
     this.currentTask = null              // Task en cours d execution
     this.assignedBuildingId = null       // Cabane pour dormir, Hutte du sage pour bosser
     this.productivityMul = 1.0           // expose en lecture pour le cablage par placements.js et tech.js (post-Lot-B)
+    // Lot B (mode mixte) : flag mis par pickJob/pickHarvest quand le colon
+    // prend une tache basique (cueillette, minage pierre) sans avoir la
+    // profession adequate. Applique UNASSIGNED_PRODUCTIVITY_MUL en WORKING.
+    this._unassignedTask = false
     this.wasAttacked = false             // flag pour le besoin Blesse
     // Champs vus par la vue Population (population-modal.js)
     this.hp    = 80
@@ -519,6 +524,43 @@ export class Colonist {
       if (!blockType) return true
       return canMineResource(this, blockType, state.cellTop[j.z * GRID + j.x]).ok
     }
+    // Lot B (mode mixte) : gating metier strict pour les jobs metier, ouvert
+    // pour les jobs basiques. Retourne :
+    //   { ok: true, unassigned: false }  professionnel match (pleine vitesse)
+    //   { ok: true, unassigned: true }   prend la tache mais a vitesse reduite
+    //   { ok: false }                    interdit (job metier strict)
+    const professionGate = (j) => {
+      // Abattage : reserve aux bucherons
+      if (j.kind === 'hache') {
+        return { ok: this.profession === 'bucheron', unassigned: false }
+      }
+      // Chasse : reservee aux chasseurs
+      if (j.kind === 'hunt') {
+        return { ok: this.profession === 'chasseur', unassigned: false }
+      }
+      // Pioche : pierre basique ouverte a tous, mais filons et roche de
+      // montagne reserves aux mineurs (le gating skill bloque deja la roche
+      // de montagne sous niveau requis ; on ajoute le gate strict metier sur
+      // filons et roche de montagne pour empecher un cueilleur d aller miner
+      // un filon).
+      if (j.kind === 'pick') {
+        const blockType = classifyMineableBlock(j.x, j.z)
+        const ore = isOreOn(j.x, j.z)
+        const isMetierOnly = (blockType === 'mountain-rock') || ore
+        if (isMetierOnly) {
+          return { ok: this.profession === 'mineur', unassigned: false }
+        }
+        // Pierre basique : ouvert a tous
+        return { ok: true, unassigned: this.profession !== 'mineur' }
+      }
+      // Cueillette via job (kind 'mine') : ouvert a tous, malus si non-cueilleur
+      if (j.kind === 'mine') {
+        return { ok: true, unassigned: this.profession !== 'cueilleur' }
+      }
+      // Job sans kind explicite : comportement par defaut, ouvert a tous,
+      // malus si pas de profession adequate (rare en pratique).
+      return { ok: true, unassigned: !this.profession }
+    }
     // Premiere passe : preferencer les jobs du type correspondant a la profession
     if (this.profession && PROFESSION_TO_KIND[this.profession]) {
       const prefKind = PROFESSION_TO_KIND[this.profession]
@@ -527,6 +569,8 @@ export class Colonist {
         if (j.claimedBy) continue
         if (j.kind !== prefKind) continue
         if (!skillGateOk(j)) continue
+        const gate = professionGate(j)
+        if (!gate.ok) continue
         const d = Math.abs(j.x - this.x) + Math.abs(j.z - this.z)
         if (d < bestD) { bestD = d; best = j }
       }
@@ -539,18 +583,22 @@ export class Colonist {
           this.pathStep = 0
           this.state = 'MOVING'
           this.isWandering = false
+          this._unassignedTask = false
           this.updateTrail()
           return true
         }
       }
     }
-    // Passe normale : tout job disponible
+    // Passe normale : tout job disponible (filtre par professionGate)
     let best = null, bestD = Infinity
+    let bestUnassigned = false
     for (const [, j] of state.jobs) {
       if (j.claimedBy) continue
       if (!skillGateOk(j)) continue
+      const gate = professionGate(j)
+      if (!gate.ok) continue
       const d = Math.abs(j.x - this.x) + Math.abs(j.z - this.z)
-      if (d < bestD) { bestD = d; best = j }
+      if (d < bestD) { bestD = d; best = j; bestUnassigned = gate.unassigned }
     }
     if (!best) return false
     const approach = findApproach(this.x, this.z, best.x, best.z)
@@ -561,6 +609,7 @@ export class Colonist {
     this.pathStep = 0
     this.state = 'MOVING'
     this.isWandering = false
+    this._unassignedTask = bestUnassigned
     this.updateTrail()
     return true
   }
@@ -648,6 +697,9 @@ export class Colonist {
     this.pathStep = 0
     this.state = 'MOVING'
     this.isWandering = false
+    // Lot B (mode mixte) : la cueillette est ouverte a tous. Un colon non
+    // cueilleur la prend a vitesse reduite (UNASSIGNED_PRODUCTIVITY_MUL).
+    this._unassignedTask = (this.profession !== 'cueilleur')
     this.updateTrail()
     return true
   }
@@ -973,9 +1025,11 @@ export class Colonist {
         // constructeur s y rend en priorite WORK (avant les LEISURE par
         // profession plus bas). Les autres professions n initient pas de
         // chantier d elles-memes : le constructeur est dedie.
-        // Lot B (gate strict) : aucun travail proactif sans assignedJob explicite.
-        // Le joueur doit assigner le role depuis le panneau Population. Sans
-        // assignation, le colon reste IDLE (errance, besoins, vision).
+        // Lot B (mode mixte) : les metiers "specialises" (constructeur,
+        // bucheron, chasseur, astronome) restent gates par assignedJob. Pour
+        // les taches "basiques" (cueillette baies, minage pierre), un colon
+        // sans profession peut quand meme agir, voir le bloc plus bas.
+        // Vitesse reduite via UNASSIGNED_PRODUCTIVITY_MUL.
         if (this.profession === 'constructeur' && this.assignedJob === 'builder') {
           if (this.pickConstructionSite()) {
             this.currentTask = { kind: TASK_KIND.BUILD_SITE, priority: PRIORITY.WORK, reason: 'builder' }
@@ -1005,6 +1059,16 @@ export class Colonist {
         if (this.profession === 'cueilleur' && this.assignedJob === 'gatherer') {
           if (this.pickHarvest()) {
             this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
+            return
+          }
+        }
+        // Lot B (mode mixte) : cueillette spontanee pour TOUT colon non
+        // assigne a un metier specifique. Action LEISURE, vitesse reduite
+        // (UNASSIGNED_PRODUCTIVITY_MUL applique en WORKING). Les cueilleurs
+        // assignes sont deja servis ci-dessus a pleine vitesse.
+        if (!this.profession && !this.assignedJob) {
+          if (this.pickHarvest()) {
+            this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE, reason: 'auto_gather_unassigned' }
             return
           }
         }
@@ -1385,10 +1449,17 @@ export class Colonist {
         return
       }
 
-      const duration = this.targetBush ? HARVEST_DURATION
+      let duration = this.targetBush ? HARVEST_DURATION
         : (this.targetBuildJob ? 1.5
         : (this.targetFoyer ? 0.6
         : WORK_DURATION))
+      // Lot B (mode mixte) : malus de duree pour les colons non assignes au
+      // metier de la tache. Ne s applique qu aux taches basiques (cueillette
+      // baies, minage pierre basique) ; les taches metier strict (abattage,
+      // chasse, filon, roche montagne) sont deja gatees en amont.
+      if (this._unassignedTask && UNASSIGNED_PRODUCTIVITY_MUL > 0) {
+        duration = duration / UNASSIGNED_PRODUCTIVITY_MUL
+      }
       if (this.workTimer >= duration) {
         if (this.targetJob) {
           const { x, z } = this.targetJob
@@ -1547,6 +1618,7 @@ export class Colonist {
         }
         // Purge la tache courante a la fin du WORKING.
         this.currentTask = null
+        this._unassignedTask = false
         this.state = 'IDLE'
         this.path = null
         this.group.position.set(this.tx, this.ty, this.tz)
