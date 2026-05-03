@@ -1052,6 +1052,12 @@ export class Colonist {
         const deerEntry = state.deers ? state.deers.find(d => d.x === this.targetJob.x && d.z === this.targetJob.z && !d.dead) : null
         if (!deerEntry) {
           // Cible disparue ou morte avant l arrivee : on abandonne sans drop.
+          // On libere aussi tout claim residuel sur l ancien cerf de la cellule.
+          if (state.deers) {
+            for (const d of state.deers) {
+              if (d.claimedBy === this) d.claimedBy = null
+            }
+          }
           if (state.jobs.has(jobKey(this.targetJob.x, this.targetJob.z))) {
             removeJob(this.targetJob.x, this.targetJob.z, true)
           }
