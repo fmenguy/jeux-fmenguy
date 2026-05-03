@@ -181,15 +181,13 @@ export function queueTech(id) {
     ? TECH_TREE_DATA.techs.find(x => x.id === id)
     : null
   const costObj = techEntry && techEntry.cost && typeof techEntry.cost === 'object' ? techEntry.cost : {}
-  // Tech a coût night > 0 : interdit en mode jour. Le joueur doit basculer
-  // en nuit (touche N) avant de la mettre en file.
-  const nightCost = costObj.night || 0
-  if (nightCost > 0 && !state.isNight) {
-    try {
-      window.dispatchEvent(new CustomEvent('strates:nightTechBlocked', { detail: { id } }))
-    } catch (e) { /* ignore */ }
-    return
-  }
+  // Refonte: les techs nocturnes peuvent etre mises en file de jour comme
+  // de nuit. Les points nocturnes (cost.night) sont accumules separement
+  // (cf. daynight.js) et consommes a la completion (cf. unlockTech). Si les
+  // stocks sont insuffisants au moment de la completion, la recherche reste
+  // bloquee en attente jusqu a ce que le joueur en accumule (mode nuit +
+  // astronome sur un promontoire).
+  // TODO: tutoriel premier deblocage tech nocturne (Lot E ?)
   const totalCost = Object.values(costObj).reduce((s, v) => s + v, 0)
   if (totalCost === 0) {
     unlockTech(id, null, { alreadyPaid: true })

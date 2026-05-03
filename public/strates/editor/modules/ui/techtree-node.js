@@ -21,6 +21,7 @@ export function buildTechNode(tech, status, opts) {
   opts = opts || {}
   const isTeased = status === 'teased'
   const cost = typeof opts.cost === 'number' ? opts.cost : costOf(tech)
+  const nightCost = (tech && tech.cost && typeof tech.cost === 'object') ? (tech.cost.night || 0) : 0
   const activeProgress = typeof opts.activeProgress === 'number' ? opts.activeProgress : 0
   const queueIndex = typeof opts.queueIndex === 'number' ? opts.queueIndex : 0
 
@@ -63,7 +64,8 @@ export function buildTechNode(tech, status, opts) {
     costHtml = '<span><b>' + cost + '</b> pts</span>' +
                '<button class="ttp-tech-unlock" disabled>En file (' + queueIndex + ')</button>'
   } else if (status === 'ready' || status === 'available') {
-    costHtml = '<span><b>' + cost + '</b> pts</span>' +
+    const nightSuffix = nightCost > 0 ? ' + ' + nightCost + '&#127769;' : ''
+    costHtml = '<span><b>' + cost + '</b> pts' + nightSuffix + '</span>' +
                '<button class="ttp-tech-unlock">Mettre en file &rarr;</button>'
   } else if (status === 'done') {
     costHtml = '<span class="ttp-tech-acquis">&#x2713; Acquis</span>'
