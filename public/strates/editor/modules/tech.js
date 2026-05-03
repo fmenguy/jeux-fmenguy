@@ -1,4 +1,4 @@
-import { GRID, ORE_TECH, TECH_BUBBLE_COOLDOWN } from './constants.js'
+import { GRID, ORE_TECH, TECH_BUBBLE_COOLDOWN, MOUNTAIN_Y_THRESHOLD, RESOURCE_MIN_LEVELS } from './constants.js'
 import { TECH_BUBBLE_LINES, TECH_TREE_DATA } from './gamedata.js'
 import { state } from './state.js'
 
@@ -53,6 +53,45 @@ export function canMineCell(x, z) {
     if (!techUnlocked('pick-stone')) return { ok: false, reason: 'tech', requiredTech: 'pick-stone' }
   }
   return { ok: true, reason: null, requiredTech: null }
+}
+
+// ============================================================================
+// Gating skill par ressource (Lot B, pattern reutilisable)
+// ============================================================================
+// Determine le type "ressource" d une cellule pour le gating skill. Pour
+// l instant, seule la roche de montagne (biome 'snow' ou cellule au dessus
+// du seuil d altitude) est traitee. Aux ages suivants, on enrichira ce
+// classement (cuivre, fer, or) en se basant sur cellOre + biome.
+export function classifyMineableBlock(x, z) {
+  if (x < 0 || z < 0 || x >= GRID || z >= GRID) return null
+  const k = z * GRID + x
+  const biome = state.cellBiome[k]
+  const top = state.cellTop[k]
+  if (biome === 'snow' || top >= MOUNTAIN_Y_THRESHOLD) {
+    if (biome === 'rock' || biome === 'snow') return 'mountain-rock'
+  }
+  return null
+}
+
+// Verifie qu un colon a le niveau de competence requis pour miner un bloc
+// donne. Retourne { ok, requiredLevel, message }. Si le bloc n a pas de
+// gating skill (ressource non listee ou niveau null), ok = true et
+// requiredLevel = 0. Le message est en francais, sans tiret long.
+export function canMineResource(colonist, blockType, blockAltitude) {
+  const out = { ok: true, requiredLevel: 0, message: '' }
+  if (!blockType) return out
+  const required = RESOURCE_MIN_LEVELS[blockType]
+  if (required == null) return out
+  out.requiredLevel = required
+  const lvl = colonist && typeof colonist.skillLevel === 'function'
+    ? colonist.skillLevel('mining')
+    : 0
+  if (lvl < required) {
+    out.ok = false
+    out.message = 'Cette roche est trop dure pour moi.'
+    return out
+  }
+  return out
 }
 
 // refreshTechsPanel sera rattache par hud.js (DOM), laisse ici pour cohesion

@@ -20,7 +20,7 @@ import {
   isRockOn, collectRockAt, isBushOn, grabBushAt
 } from './placements.js'
 import { findNearestBush, refreshBushBerries, isObservatoryOn } from './placements.js'
-import { techUnlocked } from './tech.js'
+import { techUnlocked, classifyMineableBlock, canMineResource } from './tech.js'
 import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
 import { activeSpeakers } from './speech.js'
@@ -390,6 +390,13 @@ export class Colonist {
   }
 
   pickJob() {
+    // Lot B : helper local pour verifier le gating skill (roche de montagne
+    // pour l instant, etendu aux ressources futures via RESOURCE_MIN_LEVELS).
+    const skillGateOk = (j) => {
+      const blockType = classifyMineableBlock(j.x, j.z)
+      if (!blockType) return true
+      return canMineResource(this, blockType, state.cellTop[j.z * GRID + j.x]).ok
+    }
     // Premiere passe : preferencer les jobs du type correspondant a la profession
     if (this.profession && PROFESSION_TO_KIND[this.profession]) {
       const prefKind = PROFESSION_TO_KIND[this.profession]
@@ -397,6 +404,7 @@ export class Colonist {
       for (const [, j] of state.jobs) {
         if (j.claimedBy) continue
         if (j.kind !== prefKind) continue
+        if (!skillGateOk(j)) continue
         const d = Math.abs(j.x - this.x) + Math.abs(j.z - this.z)
         if (d < bestD) { bestD = d; best = j }
       }
@@ -418,6 +426,7 @@ export class Colonist {
     let best = null, bestD = Infinity
     for (const [, j] of state.jobs) {
       if (j.claimedBy) continue
+      if (!skillGateOk(j)) continue
       const d = Math.abs(j.x - this.x) + Math.abs(j.z - this.z)
       if (d < bestD) { bestD = d; best = j }
     }
