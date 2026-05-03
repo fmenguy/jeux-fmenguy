@@ -74,6 +74,9 @@
     .res .v{font-family:var(--serif);font-size:15px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
     .res .v small{color:var(--ink-3);font-family:var(--mono);font-size:9px;letter-spacing:.1em;margin-left:2px;font-weight:400;text-transform:uppercase}
     .res-sep{width:1px;height:18px;background:var(--rule);margin:0 2px}
+    @keyframes np-pulse{0%{transform:scale(1);text-shadow:0 0 0 rgba(180,200,255,0)}50%{transform:scale(1.35);text-shadow:0 0 8px rgba(180,200,255,.85)}100%{transform:scale(1);text-shadow:0 0 0 rgba(180,200,255,0)}}
+    #ic-nightpoints{display:inline-block}
+    #ic-nightpoints.np-pulse{animation:np-pulse .55s ease-out}
 
     .season{display:flex;align-items:center;gap:8px;padding:4px 10px;border:1px solid var(--rule);border-radius:3px;background:rgba(0,0,0,.2)}
     .season .ic{font-size:14px}
@@ -807,6 +810,13 @@
           <svg width="16" height="16" viewBox="0 0 16 16"><line x1="8" y1="14" x2="8" y2="5" stroke="#9a7a3a" stroke-width="1.2"/><ellipse cx="8" cy="5" rx="1.8" ry="3" fill="#d4a843"/><ellipse cx="5" cy="7" rx="1.4" ry="2.4" fill="#c9a03a" transform="rotate(-20 5 7)"/><ellipse cx="11" cy="7" rx="1.4" ry="2.4" fill="#c9a03a" transform="rotate(20 11 7)"/></svg>
         </span>
         <span class="v"><span id="r-grain">0</span> <small>grain</small></span>
+      </div>
+
+      <div class="res-sep"></div>
+
+      <div class="res" id="res-nightpoints" title="Points nocturnes (astronome sur promontoire de nuit)">
+        <span class="ic" id="ic-nightpoints">🌙</span>
+        <span class="v"><span id="r-nightpoints">0</span> <small>pts nuit</small></span>
       </div>
 
       <div class="res-sep" id="sep-meat-raw" style="display:none"></div>

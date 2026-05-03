@@ -280,6 +280,15 @@ export function tickDayNight(dt) {
         state.nightPoints = after
         const np = document.getElementById('r-nightpoints')
         if (np) np.textContent = state.nightPoints
+        // Pulse de l icone 🌙 a chaque incrementation pour signaler au joueur
+        // que la production fonctionne. Animation .55s definie dans index.html.
+        const ic = document.getElementById('ic-nightpoints')
+        if (ic) {
+          ic.classList.remove('np-pulse')
+          // Force reflow pour pouvoir relancer l animation
+          void ic.offsetWidth
+          ic.classList.add('np-pulse')
+        }
       }
     }
   }
