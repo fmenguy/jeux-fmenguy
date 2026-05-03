@@ -700,6 +700,15 @@ export class Colonist {
 
     if (this.state === 'RESEARCHING') {
       this.lineGeo.setFromPoints([])
+      // Lot B : la profession peut changer pendant que le colon recherche.
+      // Si ce n est plus un 'chercheur', on libere la hutte et on quitte.
+      if (this.profession !== 'chercheur') {
+        const b = findResearchBuildingById(this.researchBuildingId)
+        if (b && b.assignedColonistId === this.id) b.assignedColonistId = null
+        this.researchBuildingId = null
+        this.state = 'IDLE'
+        return
+      }
       const building = findResearchBuildingById(this.researchBuildingId)
       if (!building) {
         this.researchBuildingId = null
@@ -726,6 +735,16 @@ export class Colonist {
     if (this.state === 'IDLE') {
       this.lineGeo.setFromPoints([])
       if (this.researchBuildingId != null) {
+        // Lot B : si la profession du colon n est plus 'chercheur' (le joueur
+        // a change son metier), on libere immediatement la hutte et le colon
+        // redevient IDLE normal.
+        if (this.profession !== 'chercheur') {
+          const b = findResearchBuildingById(this.researchBuildingId)
+          if (b && b.assignedColonistId === this.id) b.assignedColonistId = null
+          this.researchBuildingId = null
+        }
+      }
+      if (this.researchBuildingId != null) {
         const building = findResearchBuildingById(this.researchBuildingId)
         if (!building) {
           this.researchBuildingId = null
@@ -744,33 +763,10 @@ export class Colonist {
           this.researchBuildingId = null
         }
       }
-      // Lot B (file de recherche) : le chef s auto-assigne a la hutte du sage
-      // des qu une tech est active dans la file. C est indispensable au tout
-      // debut de partie, ou le chef est le seul colon dispo et ou l UI doit
-      // montrer une progression immediate apres que le joueur a enfile une tech.
-      if (
-        state.activeResearch != null
-        && this.isChief
-        && this.researchBuildingId == null
-        && Array.isArray(state.researchHouses)
-        && state.researchHouses.length > 0
-      ) {
-        this.researchBuildingId = state.researchHouses[0].id
-        const building = findResearchBuildingById(this.researchBuildingId)
-        if (building) {
-          const approach = findApproach(this.x, this.z, building.x, building.z)
-          if (approach) {
-            this.path = approach.path
-            this.pathStep = 0
-            this.state = 'MOVING'
-            this.isWandering = false
-            this.updateTrail()
-            return
-          }
-        }
-        // Chemin introuvable vers la hutte : annuler l auto-assignation du chef
-        this.researchBuildingId = null
-      }
+      // Lot B : la recherche ne tourne QUE si le colon est explicitement
+      // assigne profession === 'chercheur'. Plus d auto-assignation du chef
+      // ni d aucun autre colon IDLE vers la Hutte du sage. Sans chercheur
+      // explicite, la file de recherche stagne : c est voulu.
       // Lot B perf : la prise de decision (pickHarvest, pickJob, pickBuildJob)
       // appelle du pathfinding A* couteux. On throttle a ~3 Hz par colon pour
       // eviter les micro-freezes en foule IDLE. La rotation tete et la flanerie
@@ -961,7 +957,7 @@ export class Colonist {
           this.wanderPause = 2 + Math.random() * 4
           return
         }
-        if (this.researchBuildingId != null && !this.targetJob && !this.targetBush && !this.targetFoyer) {
+        if (this.researchBuildingId != null && this.profession === 'chercheur' && !this.targetJob && !this.targetBush && !this.targetFoyer) {
           this.state = 'RESEARCHING'
           this.path = null
           this.lineGeo.setFromPoints([])

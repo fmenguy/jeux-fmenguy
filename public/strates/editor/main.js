@@ -6,7 +6,7 @@ import { state } from './modules/state.js'
 import { camera, controls, composer, loader } from './modules/scene.js'
 import { buildTerrain, waterMat, shallowMat, topVoxelIndex } from './modules/terrain.js'
 import { populateDefaultScene } from './modules/worldgen.js'
-import { refreshBushBerries, countActiveResearchers, tickTreeGrowth, tickFoyers, checkUniqueBuildingButtons, bushLeafMesh, tickDeer } from './modules/placements.js'
+import { refreshBushBerries, tickTreeGrowth, tickFoyers, checkUniqueBuildingButtons, bushLeafMesh, tickDeer } from './modules/placements.js'
 import { tryBlockedTechBubble, hasPendingResearchableTech, unlockTech, queueTech } from './modules/tech.js'
 import { tryTriggerContextBubble } from './modules/speech.js'
 import { startNextQuest, updateQuests, renderQuests, initQuestDefs } from './modules/quests.js'
@@ -211,15 +211,10 @@ function tick(nowMs) {
   if (state.researchTickAccum >= RESEARCH_TICK) {
     state.researchTickAccum -= RESEARCH_TICK
     // Lot B : productivite de recherche scaled par nb de chercheurs RESEARCHING
-    // ET par leur skillLevel('research'). Si aucun chercheur actif, prod = 0.
-    // Le total minimum (countActiveResearchers, plancher) garantit qu un chef
-    // novice qui bosse dans la hutte fait au moins 1 pt/tick comme avant.
-    const nActive = countActiveResearchers()
+    // ET par leur skillLevel('research'). Si aucun colon n a la profession
+    // 'chercheur', la prod est strictement 0 (plus de plancher pour le chef).
     const prod = computeJobProductivity(state, 'chercheur', 'RESEARCHING')
-    // computeJobProductivity ne compte que les profession === 'chercheur',
-    // mais le chef sans profession peut aussi etre dans la hutte. On garde
-    // donc nActive comme plancher : 1 chercheur = au moins 1 pt/tick.
-    const n = Math.max(nActive, Math.round(prod * 10))
+    const n = Math.round(prod * 10)
     if (n > 0 && state.activeResearch) {
       state.activeResearch.progress += n
       const techEntry = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
