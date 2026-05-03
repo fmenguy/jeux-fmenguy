@@ -146,3 +146,30 @@ export const CAMERA_KEY_ROTATE_RIGHT = new Set(['e', 'E'])
 export const MAX_BUILDER_DISTANCE = 50
 
 // Quetes definies dans data/quests.json, importées via gamedata.js
+
+// ============================================================================
+// Gating de minage par niveau de competence (Lot B)
+// ============================================================================
+// Les ressources situees en haute altitude ou de nature plus dure exigent un
+// mineur d un certain niveau. Pattern reutilisable pour les ages futurs :
+// cuivre, fer, or auront leur propre seuil dans RESOURCE_MIN_LEVELS.
+//
+// Seuil d altitude au dela duquel un bloc de roche est considere comme
+// "roche de montagne" (biome 'snow' dans terrain.js). Doit rester aligne avec
+// la generation de terrain : terrain.js attribue 'snow' quand topY >= 5.
+export const MOUNTAIN_Y_THRESHOLD = 5
+
+// Niveau minimum de la competence "mining" requis pour extraire la roche de
+// montagne. Sera complete pour cuivre (6), fer (7), or (8) aux ages suivants.
+export const MOUNTAIN_ROCK_MIN_LEVEL = 5
+
+// Table des seuils minimums de niveau "mining" par type de bloc. Une valeur
+// null signifie aucun gating skill (le gating tech reste actif via
+// canMineCell). Les entrees a remplir aux ages suivants (cuivre, fer, or)
+// sont laissees a null pour l instant.
+export const RESOURCE_MIN_LEVELS = {
+  'mountain-rock': MOUNTAIN_ROCK_MIN_LEVEL,
+  'copper': null,
+  'iron': null,
+  'gold': null
+}

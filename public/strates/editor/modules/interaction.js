@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import {
-  GRID, MAX_STRATES, SHALLOW_WATER_LEVEL, STRATA_MAX
+  GRID, MAX_STRATES, SHALLOW_WATER_LEVEL, STRATA_MAX, RESOURCE_MIN_LEVELS
 } from './constants.js'
 import { state } from './state.js'
 import { prng } from './rng.js'
@@ -15,7 +15,7 @@ import {
   addBigHouse
 } from './placements.js'
 import { addJob, removeJob, removeBuildJob, jobKey } from './jobs.js'
-import { canMineCell, techUnlocked, hasTreeAt } from './tech.js'
+import { canMineCell, techUnlocked, hasTreeAt, classifyMineableBlock } from './tech.js'
 import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
 import { resetWorld } from './worldgen.js'
@@ -115,6 +115,33 @@ function applyToolToZone(cells, tool) {
   if (tool === 'mine' && currentSeason().id === 'winter') {
     if (!toastShown) { toastShown = true; showHudToast('Les buissons sont gelés en hiver, pas de baies.', 3000) }
     return
+  }
+  // Lot B : si la zone pioche contient au moins une cellule de roche de
+  // montagne et qu aucun mineur de niveau requis n est disponible, on
+  // affiche un toast pedagogique (les jobs sont quand meme crees, ils
+  // attendront qu un mineur monte en niveau).
+  let mountainAssignedToast = false
+  if (tool === 'pick') {
+    let hasMountain = false
+    for (const c of cells) {
+      const bt = classifyMineableBlock(c.x, c.z)
+      if (bt === 'mountain-rock') { hasMountain = true; break }
+    }
+    if (hasMountain) {
+      const required = RESOURCE_MIN_LEVELS['mountain-rock']
+      let qualified = false
+      for (const col of state.colonists) {
+        if (typeof col.skillLevel === 'function' && col.skillLevel('mining') >= required) {
+          qualified = true
+          break
+        }
+      }
+      if (!qualified) {
+        mountainAssignedToast = true
+        showHudToast('Aucun mineur de niveau ' + required + ' ou plus disponible. Entrainez vos mineurs sur de la roche standard pour leur faire monter le niveau.', 5000)
+        toastShown = true
+      }
+    }
   }
   for (const c of cells) {
     if (tool === 'mine') {
