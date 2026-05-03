@@ -120,7 +120,7 @@
       "requires": { "tech": ["promontory"], "buildings": ["hutte-du-sage"] },
       "provides": { "night_points_per_tick": 1 },
       "activity": "night",
-      "description": "Tour d'observation nocturne. Genere des points nocturnes quand un Astronome y stationne la nuit."
+      "description": "Tour d'observation nocturne. Permet aux chercheurs assignes de produire des points nocturnes la nuit."
     },
     {
       "id": "champ-ble",

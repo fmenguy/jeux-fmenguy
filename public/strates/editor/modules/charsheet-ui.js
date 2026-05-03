@@ -52,7 +52,6 @@ const ASSIGNED_JOB_LABELS = {
   miner:      { icon: '⛏', label: 'Mineur' },
   gatherer:   { icon: '🫐', label: 'Cueilleur' },
   researcher: { icon: '🔬', label: 'Chercheur' },
-  astronomer: { icon: '🌙', label: 'Astronome' },
 }
 
 // skills[name] est du XP brut (entier). Niveau = floor(xp / 20), plafonné à 10.
