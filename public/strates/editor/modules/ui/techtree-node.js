@@ -65,8 +65,16 @@ export function buildTechNode(tech, status, opts) {
                '<button class="ttp-tech-unlock" disabled>En file (' + queueIndex + ')</button>'
   } else if (status === 'ready' || status === 'available') {
     const nightSuffix = nightCost > 0 ? ' + ' + nightCost + '&#127769;' : ''
-    costHtml = '<span><b>' + cost + '</b> pts' + nightSuffix + '</span>' +
-               '<button class="ttp-tech-unlock">Mettre en file &rarr;</button>'
+    // Si stocks nocturnes insuffisants, le bouton est desactive avec un
+    // tooltip explicatif (cf. queueTech dans tech.js).
+    if (opts.disabled) {
+      const tip = opts.disabledTitle || ''
+      costHtml = '<span><b>' + cost + '</b> pts' + nightSuffix + '</span>' +
+                 '<button class="ttp-tech-unlock" disabled title="' + escape(tip) + '">Mettre en file &rarr;</button>'
+    } else {
+      costHtml = '<span><b>' + cost + '</b> pts' + nightSuffix + '</span>' +
+                 '<button class="ttp-tech-unlock">Mettre en file &rarr;</button>'
+    }
   } else if (status === 'done') {
     costHtml = '<span class="ttp-tech-acquis">&#x2713; Acquis</span>'
   } else if (status === 'locked') {
