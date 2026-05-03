@@ -124,6 +124,9 @@ export class Colonist {
     // Lot B : foyer cible pour aller cuire de la viande (LEISURE).
     this.targetFoyer = null
     this.targetBuildJob = null
+    // Lot B : chantier cible quand le colon est constructeur. Mis a null
+    // quand le batiment est termine ou inaccessible.
+    this.targetConstructionSite = null
     this.workTimer = 0
     this.huntTimer = 0
     this.bounce = 0
@@ -527,6 +530,7 @@ export class Colonist {
     let best = null, bestD = Infinity
     for (const f of state.foyers) {
       if (f.isCooking) continue
+      if (f.isUnderConstruction) continue
       const d = Math.abs(f.x - this.x) + Math.abs(f.z - this.z)
       if (d < bestD) { bestD = d; best = f }
     }
@@ -583,6 +587,7 @@ export class Colonist {
     if (isObservatoryOn(this.x, this.z)) return false
     let best = null, bestD = Infinity
     for (const o of state.observatories) {
+      if (o.isUnderConstruction) continue
       const d = Math.abs(o.x - this.x) + Math.abs(o.z - this.z)
       if (d < bestD) { bestD = d; best = o }
     }
@@ -596,6 +601,45 @@ export class Colonist {
     // (et non en WORKING). Une fois sur la cellule du promontoire, les
     // prochaines decisions IDLE retourneront false ici donc le colon reste.
     this.isWandering = true
+    this.updateTrail()
+    return true
+  }
+
+  // Lot B : BUILDER. Cherche un chantier (isUnderConstruction === true) le
+  // plus proche, parmi tous les types de batiments enregistres dans state.
+  // S il en trouve un et qu un chemin existe, place le colon en MOVING vers
+  // ce chantier et stocke la cible dans this.targetConstructionSite. La
+  // progression sera ensuite avancee dans l etat BUILDING.
+  pickConstructionSite() {
+    const sites = []
+    const pushAll = (arr) => {
+      if (!arr) return
+      for (const b of arr) if (b && b.isUnderConstruction) sites.push(b)
+    }
+    pushAll(state.foyers)
+    pushAll(state.houses)
+    pushAll(state.bigHouses)
+    pushAll(state.researchHouses)
+    pushAll(state.observatories)
+    pushAll(state.cairns)
+    pushAll(state.wheatFields)
+    if (sites.length === 0) return false
+    // Filtrer les chantiers deja claim par un autre constructeur.
+    let best = null, bestD = Infinity
+    for (const b of sites) {
+      if (b.builderId != null && b.builderId !== this.id) continue
+      const d = Math.abs(b.x - this.x) + Math.abs(b.z - this.z)
+      if (d < bestD) { bestD = d; best = b }
+    }
+    if (!best) return false
+    const approach = findApproach(this.x, this.z, best.x, best.z)
+    if (!approach) return false
+    best.builderId = this.id
+    this.targetConstructionSite = best
+    this.path = approach.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = false
     this.updateTrail()
     return true
   }
@@ -739,6 +783,16 @@ export class Colonist {
         }
         if (state.jobs.size > 0) { if (this.pickJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK }; return } }
         if (state.buildJobs.size > 0) { if (this.pickBuildJob()) { this.currentTask = { kind: TASK_KIND.PLAYER_BUILD_JOB, priority: PRIORITY.WORK }; return } }
+        // Lot B : profession constructeur. S il y a un chantier ouvert, le
+        // constructeur s y rend en priorite WORK (avant les LEISURE par
+        // profession plus bas). Les autres professions n initient pas de
+        // chantier d elles-memes : le constructeur est dedie.
+        if (this.profession === 'constructeur') {
+          if (this.pickConstructionSite()) {
+            this.currentTask = { kind: TASK_KIND.BUILD_SITE, priority: PRIORITY.WORK, reason: 'builder' }
+            return
+          }
+        }
         // Comportement proactif selon profession (priorite LEISURE, derriere les ordres joueur)
         if (this.profession === 'bucheron' && techUnlocked('axe-stone')) {
           let best = null, bestD = Infinity
@@ -901,6 +955,16 @@ export class Colonist {
           this.group.position.set(this.tx, this.ty, this.tz)
           return
         }
+        if (this.targetConstructionSite) {
+          // Arrive au chantier : on passe en etat BUILDING. Le tick BUILDING
+          // fait avancer constructionProgress et XP building tant que le site
+          // est isUnderConstruction.
+          this.state = 'BUILDING'
+          this.path = null
+          this.lineGeo.setFromPoints([])
+          this.group.position.set(this.tx, this.ty, this.tz)
+          return
+        }
         this.state = 'WORKING'
         this.workTimer = 0
         this.lineGeo.setFromPoints([])
@@ -938,6 +1002,46 @@ export class Colonist {
       if (this.legR) this.legR.rotation.x = -swing
       if (this.armL) this.armL.rotation.x = -swing
       if (this.armR) this.armR.rotation.x = swing
+      return
+    }
+
+    if (this.state === 'BUILDING') {
+      const site = this.targetConstructionSite
+      if (!site || !site.isUnderConstruction) {
+        // Chantier disparu (annule, supprime) ou termine entre temps.
+        if (site && site.builderId === this.id) site.builderId = null
+        this.targetConstructionSite = null
+        this.state = 'IDLE'
+        this.path = null
+        this.currentTask = null
+        this.group.position.set(this.tx, this.ty, this.tz)
+        return
+      }
+      // Orientation vers le batiment et leger bob.
+      const dx = (site.x + 0.5) - this.tx
+      const dz = (site.z + 0.5) - this.tz
+      this.group.rotation.y = Math.atan2(dx, dz)
+      const bob = Math.sin(performance.now() * 0.012) * 0.05
+      this.group.position.set(this.tx, this.ty + Math.abs(bob), this.tz)
+      // Productivite : skillLevel/10, multiplie par productivityMul (penalite
+      // faim/sans-abri appliquee par needs.js). Plancher 0.1 pour qu un
+      // novice puisse quand meme batir, lentement.
+      const lvl = this.skillLevel('building')
+      const skillFactor = Math.max(0.1, lvl / 10)
+      const prodMul = (typeof this.productivityMul === 'number') ? this.productivityMul : 1
+      const bt = (typeof site.buildTime === 'number' && site.buildTime > 0) ? site.buildTime : 1
+      site.constructionProgress = Math.min(1, (site.constructionProgress || 0) + skillFactor * prodMul * dt / bt)
+      // XP building accumule dans this.skills.building (paliers via skillLevel).
+      this.skills.building = (this.skills.building || 0) + dt
+      if (site.constructionProgress >= 1) {
+        site.constructionProgress = 1
+        site.isUnderConstruction = false
+        site.builderId = null
+        this.targetConstructionSite = null
+        this.currentTask = null
+        this.state = 'IDLE'
+        this.path = null
+      }
       return
     }
 

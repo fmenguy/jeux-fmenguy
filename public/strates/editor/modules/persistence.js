@@ -246,6 +246,16 @@ function applySnapshot(data) {
   }
   state.researchBuildingNextId = data.researchBuildingNextId || (state.researchHouses.length + 1)
 
+  // Lot B : tout batiment restaure depuis une sauvegarde est suppose deja
+  // construit. On reset les flags de chantier ajoutes par addX() au cas ou
+  // buildings.json declarerait un buildTime > 0.
+  const _markBuilt = (arr) => { if (arr) for (const b of arr) { b.isUnderConstruction = false; b.constructionProgress = 1 } }
+  _markBuilt(state.houses)
+  _markBuilt(state.foyers)
+  _markBuilt(state.bigHouses)
+  _markBuilt(state.researchHouses)
+  _markBuilt(state.wheatFields)
+
   // colons
   for (const csav of (data.colonists || [])) {
     const c = spawnColonist(csav.x, csav.z, { restore: csav })
@@ -282,6 +292,7 @@ function applySnapshot(data) {
     for (const o of data.observatories) {
       if (!isCellOccupied(o.x, o.z)) addObservatory(o.x, o.z)
     }
+    for (const o of state.observatories) { o.isUnderConstruction = false; o.constructionProgress = 1 }
   }
   if (data.resources) Object.assign(state.resources, data.resources)
   if (data.gameStats) Object.assign(state.gameStats, data.gameStats)
@@ -319,6 +330,7 @@ function applySnapshot(data) {
     for (const c of data.cairns) {
       addCairn(c.x, c.z)
     }
+    for (const c of state.cairns) { c.isUnderConstruction = false; c.constructionProgress = 1 }
   }
   if (Array.isArray(data.deers)) {
     for (const d of data.deers) {

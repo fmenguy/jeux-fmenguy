@@ -39,6 +39,7 @@ export const TASK_KIND = Object.freeze({
   GO_TO_RESEARCH:    'go_to_research',    // labo assigne (Hutte du sage)
   HARVEST_BERRIES:   'harvest_berries',   // cueillette loisir
   CAMPFIRE:          'campfire',          // attraction feu de camp nuit
+  BUILD_SITE:        'build_site',        // batiment en chantier (constructeur)
   WANDER:            'wander'             // errance
 })
 
