@@ -25,7 +25,7 @@ import { closeHelpOverlay, isHelpOverlayOpen } from './help-overlay.js'
 import { closeTechTreePanel, closeBranch } from './ui/techtree-panel.js'
 import { totalBuildStock, consumeBuildStock } from './stocks.js'
 import { showHudToast } from './ui/research-popup.js'
-import { closeBuildingPanel, isBuildingPanelOpen } from './ui/building-panel.js'
+import { closeBuildingPanel, isBuildingPanelOpen, destroyBuilding, isBuildingDestructible } from './ui/building-panel.js'
 import { showCellTooltip, hideCellTooltip, isCellTooltipEnabled } from './ui/cell-tooltip.js'
 import { currentSeason } from './seasons.js'
 import { confirmCairnPlacement, cancelCairnPlacement } from './age-transitions.js'
@@ -452,6 +452,69 @@ if (btnLoad) btnLoad.addEventListener('click', openSaveMenu)
 const btnSaveClose = document.getElementById('save-menu-close')
 if (btnSaveClose) btnSaveClose.addEventListener('click', closeSaveMenu)
 
+// ---------------------------------------------------------------------------
+// Boutons d action universels (Annuler + Démolir) dans l actionbar
+// ---------------------------------------------------------------------------
+
+// Annule TOUTE action en cours : outil → nav, sortie placement champ, sortie
+// mode destroy, vidage du stroke courant. Idempotent.
+function cancelAllSelections() {
+  cancelFieldPlacement()
+  exitDestroyMode()
+  if (state.toolState && state.toolState.tool !== 'nav') setTool('nav')
+  if (state.toolState && state.toolState.paintedThisStroke) {
+    state.toolState.paintedThisStroke.clear()
+  }
+  if (selectionRect) selectionRect.active = false
+  if (typeof clearSelPoly === 'function') clearSelPoly()
+}
+
+function enterDestroyMode() {
+  if (!techUnlocked('demolition')) {
+    showHudToast('Recherche Démolition requise pour démanteler les bâtiments.', 2800)
+    return
+  }
+  // Sort des autres modes avant d entrer
+  cancelFieldPlacement()
+  if (state.toolState && state.toolState.tool !== 'nav') setTool('nav')
+  state.destroyMode = true
+  document.body.classList.add('destroy-mode-cursor')
+  const btn = document.getElementById('ab-destroy')
+  if (btn) btn.classList.add('active')
+  showHudToast('Cliquez sur un bâtiment à démolir. Échap pour annuler.', 3200)
+}
+
+function exitDestroyMode() {
+  if (!state.destroyMode) return
+  state.destroyMode = false
+  document.body.classList.remove('destroy-mode-cursor')
+  const btn = document.getElementById('ab-destroy')
+  if (btn) btn.classList.remove('active')
+}
+
+function refreshDestroyBtnVisibility() {
+  const btn = document.getElementById('ab-destroy')
+  if (!btn) return
+  btn.style.display = techUnlocked('demolition') ? '' : 'none'
+}
+
+const btnAbCancel = document.getElementById('ab-cancel')
+if (btnAbCancel) btnAbCancel.addEventListener('click', cancelAllSelections)
+
+const btnAbDestroy = document.getElementById('ab-destroy')
+if (btnAbDestroy) btnAbDestroy.addEventListener('click', () => {
+  if (state.destroyMode) exitDestroyMode()
+  else enterDestroyMode()
+})
+
+// Bootstrap : si la save indique demolition déjà débloquée, montrer d emblée.
+refreshDestroyBtnVisibility()
+window.addEventListener('strates:techComplete', e => {
+  const id = e && e.detail && e.detail.id
+  if (id !== 'demolition') return
+  refreshDestroyBtnVisibility()
+})
+
 // Menu pause
 function openPauseMenu() {
   const pm = document.getElementById('pause-menu')
@@ -483,6 +546,10 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return
 
+  if (state.destroyMode) {
+    exitDestroyMode()
+    e.stopPropagation(); e.preventDefault(); return
+  }
   if (state.cairnPlacementMode) {
     cancelCairnPlacement()
     e.stopPropagation(); e.preventDefault(); return
@@ -1140,6 +1207,18 @@ dom.addEventListener('pointerup', (e) => {
     if (cell) {
       const found = findBuildingAtCell(cell.x, cell.z)
       if (found) {
+        // Mode destroy global : démolir directement au lieu d ouvrir le panneau.
+        if (state.destroyMode) {
+          if (!isBuildingDestructible(found.type)) {
+            showHudToast('Ce bâtiment ne peut pas être démoli.', 2200)
+            return
+          }
+          try { destroyBuilding(found.type, found.building) } catch (err) {
+            console.error('[strates] destroyBuilding failed', err)
+          }
+          exitDestroyMode()
+          return
+        }
         try { window.dispatchEvent(new CustomEvent('strates:buildingClicked', { detail: found })) } catch (_) {}
       }
     }
