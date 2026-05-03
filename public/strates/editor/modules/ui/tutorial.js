@@ -508,7 +508,8 @@ const INTERFACE_TOUR_STEPS = [
   },
   {
     label: 'Interface · 5/6',
-    sel:   '#btn-help',
+    sels:  ['#btn-help', '#btn-save'],
+    fallback: '#btn-help',
     text:  'Sauvegardez votre progression à tout moment avec 💾. Le bouton ? contient la description complète du jeu.',
   },
   {
@@ -546,7 +547,7 @@ function runInfoTour(steps, storageKey, onComplete) {
 
     if (step.autoWhen && step.autoWhen()) { advance(); return }
 
-    if (!step.sel) {
+    if (!step.sel && !step.sels) {
       // Bulle centrée, pas de ring
       ring.style.display = 'none'
       bubble.className = 'tuto-bubble tuto-info-bubble centered'
@@ -559,9 +560,24 @@ function runInfoTour(steps, storageKey, onComplete) {
       return
     }
 
-    const el = document.querySelector(step.sel) || (step.fallback && document.querySelector(step.fallback))
-    if (!el) { ring.style.display = 'none'; return }
-    const r = el.getBoundingClientRect()
+    // Cible(s) : sels (multi) prioritaire, sinon sel + fallback. Pour sels,
+    // on calcule le bounding rect englobant tous les éléments présents.
+    let r = null
+    if (Array.isArray(step.sels)) {
+      const els = step.sels.map(s => document.querySelector(s)).filter(Boolean)
+      if (els.length === 0) { ring.style.display = 'none'; return }
+      const rects = els.map(e => e.getBoundingClientRect())
+      const minLeft = Math.min(...rects.map(rc => rc.left))
+      const minTop  = Math.min(...rects.map(rc => rc.top))
+      const maxRight  = Math.max(...rects.map(rc => rc.right))
+      const maxBottom = Math.max(...rects.map(rc => rc.bottom))
+      r = { left: minLeft, top: minTop, right: maxRight, bottom: maxBottom,
+            width: maxRight - minLeft, height: maxBottom - minTop }
+    } else {
+      const el = document.querySelector(step.sel) || (step.fallback && document.querySelector(step.fallback))
+      if (!el) { ring.style.display = 'none'; return }
+      r = el.getBoundingClientRect()
+    }
     const PAD = 6
     ring.style.cssText = [
       'top:'    + (r.top  - PAD) + 'px',
