@@ -136,4 +136,13 @@ export const CAMERA_KEY_RIGHT = new Set(['d', 'D'])
 export const CAMERA_KEY_ROTATE_LEFT  = new Set(['a', 'A'])
 export const CAMERA_KEY_ROTATE_RIGHT = new Set(['e', 'E'])
 
+// ============================================================================
+// Construction collaborative (Lot B)
+// ============================================================================
+// Distance maximale (Manhattan, en cases world) au-dela de laquelle un
+// constructeur ignore un chantier lors de pickConstructionSite. Permet a
+// plusieurs constructeurs de converger sur le meme chantier proche au lieu
+// de partir vers un site lointain isole.
+export const MAX_BUILDER_DISTANCE = 50
+
 // Quetes definies dans data/quests.json, importées via gamedata.js
