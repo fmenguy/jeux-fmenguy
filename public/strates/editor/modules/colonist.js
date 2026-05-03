@@ -841,14 +841,17 @@ export class Colonist {
         // constructeur s y rend en priorite WORK (avant les LEISURE par
         // profession plus bas). Les autres professions n initient pas de
         // chantier d elles-memes : le constructeur est dedie.
-        if (this.profession === 'constructeur') {
+        // Lot B (gate strict) : aucun travail proactif sans assignedJob explicite.
+        // Le joueur doit assigner le role depuis le panneau Population. Sans
+        // assignation, le colon reste IDLE (errance, besoins, vision).
+        if (this.profession === 'constructeur' && this.assignedJob === 'builder') {
           if (this.pickConstructionSite()) {
             this.currentTask = { kind: TASK_KIND.BUILD_SITE, priority: PRIORITY.WORK, reason: 'builder' }
             return
           }
         }
         // Comportement proactif selon profession (priorite LEISURE, derriere les ordres joueur)
-        if (this.profession === 'bucheron' && techUnlocked('axe-stone')) {
+        if (this.profession === 'bucheron' && this.assignedJob === 'woodcutter' && techUnlocked('axe-stone')) {
           let best = null, bestD = Infinity
           for (const t of state.trees) {
             if (t.growth < 0.66) continue
@@ -867,13 +870,13 @@ export class Colonist {
             }
           }
         }
-        if (this.profession === 'cueilleur') {
+        if (this.profession === 'cueilleur' && this.assignedJob === 'gatherer') {
           if (this.pickHarvest()) {
             this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE }
             return
           }
         }
-        if (this.profession === 'chasseur') {
+        if (this.profession === 'chasseur' && this.assignedJob === 'hunter') {
           let best = null, bestD = Infinity
           for (const d of (state.deers || [])) {
             if (state.jobs.has(jobKey(d.x, d.z))) continue
