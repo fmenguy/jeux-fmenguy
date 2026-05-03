@@ -126,7 +126,7 @@ function serializeSnapshot() {
     wheatFields: (state.wheatFields || []).map(f => ({ x: f.x, z: f.z, grain: f.grain || 0 })),
     researchHouses: state.researchHouses.map(r => ({
       x: r.x, z: r.z, id: r.id,
-      assignedColonistId: r.assignedColonistId
+      assignedColonistIds: Array.isArray(r.assignedColonistIds) ? r.assignedColonistIds.slice() : []
     })),
     researchBuildingNextId: state.researchBuildingNextId,
     colonists: state.colonists.map(c => ({
@@ -259,7 +259,14 @@ function applySnapshot(data) {
     const entry = addResearchHouse(rh.x, rh.z)
     if (entry && rh.id) {
       entry.id = rh.id
-      entry.assignedColonistId = rh.assignedColonistId || null
+      // Compatibilite : ancien format singulier -> nouveau tableau
+      if (Array.isArray(rh.assignedColonistIds)) {
+        entry.assignedColonistIds = rh.assignedColonistIds.slice()
+      } else if (rh.assignedColonistId != null) {
+        entry.assignedColonistIds = [rh.assignedColonistId]
+      } else {
+        entry.assignedColonistIds = []
+      }
     }
   }
   state.researchBuildingNextId = data.researchBuildingNextId || (state.researchHouses.length + 1)

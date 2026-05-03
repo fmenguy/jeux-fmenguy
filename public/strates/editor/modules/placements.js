@@ -1110,7 +1110,7 @@ export function addResearchHouse(gx, gz) {
   const g = makeResearchHouse()
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
-  const entry = { id: state.researchBuildingNextId++, x: gx, z: gz, group: g, assignedColonistId: null }
+  const entry = { id: state.researchBuildingNextId++, x: gx, z: gz, group: g, assignedColonistIds: [] }
   _markUnderConstruction(entry, 'hutte-du-sage')
   state.researchHouses.push(entry)
   revealAround(gx, gz, 8)
@@ -1129,8 +1129,9 @@ export function findResearchBuildingById(id) {
 }
 
 export function assignResearcherToBuilding(building) {
-  if (!building || building.assignedColonistId != null) return false
+  if (!building) return false
   if (building.isUnderConstruction) return false
+  if (!Array.isArray(building.assignedColonistIds)) building.assignedColonistIds = []
   let best = null, bestD = Infinity
   for (const c of state.colonists) {
     // Gate universel : profession === 'chercheur' ET assignedJob === 'researcher'.
@@ -1146,7 +1147,7 @@ export function assignResearcherToBuilding(building) {
   if (!best) return false
   const approach = findApproach(best.x, best.z, building.x, building.z)
   if (!approach) return false
-  building.assignedColonistId = best.id
+  if (!building.assignedColonistIds.includes(best.id)) building.assignedColonistIds.push(best.id)
   best.researchBuildingId = building.id
   best.path = approach.path
   best.pathStep = 0

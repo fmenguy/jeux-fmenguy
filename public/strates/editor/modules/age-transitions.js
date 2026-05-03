@@ -89,7 +89,7 @@ export function canBuildCairn(st) {
   }
 
   // Condition : chercheur assigne
-  const hasResearcher = st.researchHouses && st.researchHouses.some(r => r.assignedColonistId)
+  const hasResearcher = st.researchHouses && st.researchHouses.some(r => Array.isArray(r.assignedColonistIds) && r.assignedColonistIds.length > 0)
   if (!hasResearcher) {
     missing.push('1 Chercheur assigne')
   }
@@ -143,7 +143,7 @@ export function getCairnProgress(st) {
   const hasLab = (st.researchHouses && st.researchHouses.length > 0) ? 1 : 0
   checks.push(hasLab)
 
-  const hasResearcher = (st.researchHouses && st.researchHouses.some(r => r.assignedColonistId)) ? 1 : 0
+  const hasResearcher = (st.researchHouses && st.researchHouses.some(r => Array.isArray(r.assignedColonistIds) && r.assignedColonistIds.length > 0)) ? 1 : 0
   checks.push(hasResearcher)
 
   const pts = totalResearchSpentComputed()
@@ -378,7 +378,7 @@ function _showCondTooltip() {
   const pierre = (state.resources && state.resources.stone) || 0
   const nourr  = getTotalFood(state)
   const hasLab = !!(state.researchHouses && state.researchHouses.length > 0)
-  const hasRes = !!(state.researchHouses && state.researchHouses.some(r => r.assignedColonistId))
+  const hasRes = !!(state.researchHouses && state.researchHouses.some(r => Array.isArray(r.assignedColonistIds) && r.assignedColonistIds.length > 0))
   const pts    = totalResearchSpentComputed()
 
   const condDefs = [
