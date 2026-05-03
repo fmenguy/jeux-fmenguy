@@ -24,6 +24,7 @@ let elLastLine = null
 let elGender = null
 let elChief = null
 let elSkillsSection = null
+let elAssignedJobRow = null
 let elProfessionRow = null
 let elSkillsList = null
 
@@ -43,6 +44,15 @@ const PROFESSION_LABELS = {
   mineur:    { icon: '⛏',       label: 'Mineur' },
   chercheur: { icon: '📜', label: 'Chercheur' },
   chasseur:  { icon: '🏹', label: 'Chasseur' },
+}
+
+const ASSIGNED_JOB_LABELS = {
+  hunter:     { icon: '🏹', label: 'Chasseur' },
+  woodcutter: { icon: '🪓', label: 'Bûcheron' },
+  miner:      { icon: '⛏', label: 'Mineur' },
+  gatherer:   { icon: '🫐', label: 'Cueilleur' },
+  researcher: { icon: '🔬', label: 'Chercheur' },
+  astronomer: { icon: '🌙', label: 'Astronome' },
 }
 
 // skills[name] est du XP brut (entier). Niveau = floor(xp / 20), plafonné à 10.
@@ -137,11 +147,13 @@ function injectSkillsSection() {
   section.id = 'cs-skills-section'
   section.innerHTML =
     '<h4>Competences</h4>' +
+    '<div id="cs-assigned-job-row" class="cs-assigned-job-row"></div>' +
     '<div id="cs-profession-row" class="cs-profession-row" style="display:none"></div>' +
     '<div id="cs-skills-list" class="cs-skills-list"></div>'
   body.appendChild(section)
 
   elSkillsSection = section
+  elAssignedJobRow = section.querySelector('#cs-assigned-job-row')
   elProfessionRow = section.querySelector('#cs-profession-row')
   elSkillsList = section.querySelector('#cs-skills-list')
 
@@ -153,6 +165,25 @@ function injectSkillsStyles() {
   const style = document.createElement('style')
   style.id = 'cs-skills-style'
   style.textContent =
+    '#char-panel .cs-assigned-job-row {' +
+    '  display: flex; align-items: center; gap: 8px;' +
+    '  padding: 6px 10px; margin-bottom: 6px;' +
+    '  background: rgba(100,180,255,0.07);' +
+    '  border: 1px solid rgba(100,180,255,0.28);' +
+    '  border-radius: 6px;' +
+    '  font-size: 12px; color: #f3ecdd;' +
+    '}' +
+    '#char-panel .cs-assigned-job-row .cs-role-key {' +
+    '  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;' +
+    '  color: #c7b98c; margin-right: 2px;' +
+    '}' +
+    '#char-panel .cs-assigned-job-row .cs-role-icon { font-size: 16px; }' +
+    '#char-panel .cs-assigned-job-row .cs-role-label {' +
+    '  font-weight: 600; color: #a8d4f5;' +
+    '}' +
+    '#char-panel .cs-assigned-job-row .cs-role-libre {' +
+    '  color: rgba(243,236,221,0.38); font-style: italic;' +
+    '}' +
     '#char-panel .cs-profession-row {' +
     '  display: flex; align-items: center; gap: 8px;' +
     '  padding: 6px 10px; margin-bottom: 8px;' +
@@ -272,6 +303,21 @@ function refreshDynamic() {
 
 function refreshSkills(c) {
   if (!elSkillsList) return
+
+  // Ligne rôle assigné (assignedJob, ID anglais écrit par le modal Population)
+  if (elAssignedJobRow) {
+    var aj = c.assignedJob ? ASSIGNED_JOB_LABELS[c.assignedJob] : null
+    if (aj) {
+      elAssignedJobRow.innerHTML =
+        '<span class="cs-role-key">Rôle</span>' +
+        '<span class="cs-role-icon">' + aj.icon + '</span>' +
+        '<span class="cs-role-label">' + escHtml(aj.label) + '</span>'
+    } else {
+      elAssignedJobRow.innerHTML =
+        '<span class="cs-role-key">Rôle</span>' +
+        '<span class="cs-role-libre">Libre</span>'
+    }
+  }
 
   // Ligne profession
   if (elProfessionRow) {
