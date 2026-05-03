@@ -127,11 +127,15 @@ function injectStyles() {
   color: #e8dfc8;
   border: 1px solid #c8a84b;
   border-radius: 6px;
-  padding: 10px 14px 10px 12px;
+  padding: 14px 18px;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 11.5px;
-  line-height: 1.45;
-  max-width: 240px;
+  line-height: 1.5;
+  min-width: 280px;
+  max-width: 340px;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   box-shadow: 0 4px 18px rgba(0,0,0,.55);
   display: flex;
   flex-direction: column;
@@ -152,6 +156,12 @@ function injectStyles() {
 .tuto-bubble.arrow-bottom::before {
   bottom: -5px; left: 18px;
   border-top: none; border-left: none;
+}
+.tuto-bubble.arrow-top.right-aligned::before {
+  left: auto; right: 18px;
+}
+.tuto-bubble.arrow-bottom.right-aligned::before {
+  left: auto; right: 18px;
 }
 .tuto-step-label {
   font-size: 9px;
@@ -266,6 +276,41 @@ function sweepOrphanTutoElements() {
   document.querySelectorAll('.tuto-ring, .tuto-bubble').forEach(el => el.remove())
 }
 
+// Place une bulle .tuto-bubble par rapport au rect d ancrage. Bascule à droite
+// si la bulle déborderait du viewport, et choisit dessus/dessous selon la
+// hauteur disponible. Ajoute/retire les classes arrow-top/arrow-bottom et
+// right-aligned pour que la flèche pointe au bon endroit.
+function placeBubbleNearRect(bubble, r, baseClass, PAD) {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const bw = bubble.offsetWidth || 320
+  const bh = bubble.offsetHeight || 120
+  const above = (r.top - PAD - bh - 14) >= 8 && r.top - PAD >= 200
+  const arrowCls = above ? 'arrow-bottom' : 'arrow-top'
+  // Décide alignement gauche/droite selon dépassement du viewport
+  const wantLeft = r.left - PAD
+  const overflowsRight = wantLeft + bw > vw - 8
+  let alignCls = ''
+  bubble.style.transform = ''
+  if (overflowsRight) {
+    bubble.style.left = ''
+    bubble.style.right = Math.max(8, vw - r.right - PAD) + 'px'
+    alignCls = ' right-aligned'
+  } else {
+    bubble.style.right = ''
+    bubble.style.left = Math.max(8, wantLeft) + 'px'
+  }
+  bubble.className = baseClass + ' ' + arrowCls + alignCls
+  bubble.style.display = 'flex'
+  if (above) {
+    bubble.style.top = ''
+    bubble.style.bottom = (vh - r.top + PAD + 10) + 'px'
+  } else {
+    bubble.style.bottom = ''
+    bubble.style.top = (r.bottom + PAD + 10) + 'px'
+  }
+}
+
 function runTutorial(steps, storageKey, onComplete, skipBtn) {
   try { if (localStorage.getItem(storageKey)) { onComplete && onComplete(); return } } catch (e) {}
 
@@ -316,18 +361,7 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
       ring.style.display = 'none'
     }
 
-    const above = r.top - PAD >= 100
-    bubble.className = 'tuto-bubble ' + (above ? 'arrow-bottom' : 'arrow-top')
-    bubble.style.left    = Math.max(8, r.left - PAD) + 'px'
-    bubble.style.display = 'flex'
-
-    if (above) {
-      bubble.style.top    = ''
-      bubble.style.bottom = (window.innerHeight - r.top + PAD + 10) + 'px'
-    } else {
-      bubble.style.bottom = ''
-      bubble.style.top    = (r.bottom + PAD + 10) + 'px'
-    }
+    placeBubbleNearRect(bubble, r, 'tuto-bubble', PAD)
   }
 
   function advance() {
@@ -587,19 +621,7 @@ function runInfoTour(steps, storageKey, onComplete) {
       'display:block',
     ].join(';')
 
-    const above = r.top - PAD >= 200
-    bubble.className = 'tuto-bubble tuto-info-bubble ' + (above ? 'arrow-bottom' : 'arrow-top')
-    bubble.style.transform = ''
-    bubble.style.left = Math.max(8, r.left - PAD) + 'px'
-    bubble.style.right = ''
-    bubble.style.display = 'flex'
-    if (above) {
-      bubble.style.top = ''
-      bubble.style.bottom = (window.innerHeight - r.top + PAD + 10) + 'px'
-    } else {
-      bubble.style.bottom = ''
-      bubble.style.top = (r.bottom + PAD + 10) + 'px'
-    }
+    placeBubbleNearRect(bubble, r, 'tuto-bubble tuto-info-bubble', PAD)
   }
 
   function teardown(completed) {
