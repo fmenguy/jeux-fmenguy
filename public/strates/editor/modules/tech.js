@@ -176,18 +176,22 @@ function _advanceQueue() {
 // deja en file ou deja actives.
 export function queueTech(id) {
   const t = state.techs[id]
-  if (!t || t.unlocked) return
+  if (!t || t.unlocked) return false
   const techEntry = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
     ? TECH_TREE_DATA.techs.find(x => x.id === id)
     : null
   const costObj = techEntry && techEntry.cost && typeof techEntry.cost === 'object' ? techEntry.cost : {}
-  // Refonte: les techs nocturnes peuvent etre mises en file de jour comme
-  // de nuit. Les points nocturnes (cost.night) sont accumules separement
-  // (cf. daynight.js) et consommes a la completion (cf. unlockTech). Si les
-  // stocks sont insuffisants au moment de la completion, la recherche reste
-  // bloquee en attente jusqu a ce que le joueur en accumule (mode nuit +
-  // astronome sur un promontoire).
-  // TODO: tutoriel premier deblocage tech nocturne (Lot E ?)
+  // Verification des stocks AVANT mise en file. Sans ce garde-fou, une tech
+  // a cout night > 0 pouvait etre enfilee meme avec stock insuffisant : la
+  // recherche progressait jusqu a 100 % puis se bloquait silencieusement,
+  // car unlockTech refusait de consommer les points nocturnes manquants.
+  // Note: cost.research n est pas un stock, c est la progression cible de la
+  // tech (state.researchPoints reflete la progression de activeResearch). Il
+  // ne faut donc pas le comparer a un stock au moment de l enfilage. Seul
+  // cost.night est un vrai stock accumule (cf. daynight.js + nightPoints).
+  const nightCost = costObj.night || 0
+  const n = state.nightPoints || 0
+  if (nightCost > n) return false
   const totalCost = Object.values(costObj).reduce((s, v) => s + v, 0)
   if (totalCost === 0) {
     unlockTech(id, null, { alreadyPaid: true })
@@ -195,14 +199,15 @@ export function queueTech(id) {
       window.dispatchEvent(new CustomEvent('strates:techComplete', { detail: { id, tech: techEntry } }))
       window.dispatchEvent(new CustomEvent('strates:queueChanged'))
     } catch (e) { /* ignore */ }
-    return
+    return true
   }
   if (!state.researchQueue) state.researchQueue = []
-  if (state.researchQueue.includes(id)) return
-  if (state.activeResearch && state.activeResearch.id === id) return
+  if (state.researchQueue.includes(id)) return false
+  if (state.activeResearch && state.activeResearch.id === id) return false
   state.researchQueue.push(id)
   try { window.dispatchEvent(new CustomEvent('strates:queueChanged')) } catch (e) { /* ignore */ }
   _advanceQueue()
+  return true
 }
 
 // Annule une tech en file (la retire) ou la tech active (remise en tete de

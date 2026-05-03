@@ -750,12 +750,21 @@ function renderBranchDetail(brId) {
       const cx = PAD_X + (ageIdx * 5 + col + 1) * CELL_W + CELL_W / 2 - CELL_W
       const cy = PAD_Y + 40 + row * CELL_H + CELL_H / 2
       const status = techStatus(t)
+      // Stocks nocturnes insuffisants : on desactive le bouton "Mettre en file"
+      // pour empecher l enfilage qui se bloquerait silencieusement a 100 %.
+      const nCost = (t && t.cost && typeof t.cost === 'object') ? (t.cost.night || 0) : 0
+      const nStock = state.nightPoints || 0
+      const nightShort = nCost > 0 && nStock < nCost
       const node = buildTechNode(t, status, {
         cost: techCost(t),
         onQueue: queueLocal,
         activeProgress: status === 'researching' ? activeResearchProgress() : 0,
         queueIndex: status === 'queued' ? queuePositionOf(t.id) : 0,
         vc: br.color,
+        disabled: nightShort,
+        disabledTitle: nightShort
+          ? ('Stocks insuffisants, il faut ' + nCost + ' pts nocturnes (vous avez ' + nStock + '). Passez en mode nuit avec un astronome sur un promontoire pour en accumuler.')
+          : '',
       })
       node.style.left = cx + 'px'
       node.style.top = cy + 'px'
@@ -960,20 +969,21 @@ function renderFicheAction(tech, status, cost) {
   if (status === 'ready' || status === 'available') {
     const queueFull = (researchQueue().length + (activeResearchId() ? 1 : 0)) >= QUEUE_MAX
     if (queueFull) return '<button class="ttp-fiche-btn" disabled>File pleine</button>'
-    // Tech a cout night > 0 : autorisee de jour comme de nuit. Si les stocks
-    // de points nocturnes sont insuffisants, on affiche un avertissement non
-    // bloquant (le joueur peut quand meme la mettre en file, la recherche
-    // restera en attente a la completion).
-    // TODO: tutoriel premier deblocage tech nocturne (Lot E ?)
+    // Tech a cout night > 0 : autorisee de jour comme de nuit, MAIS uniquement
+    // si le joueur a deja accumule assez de points nocturnes. Sans ce garde-fou,
+    // la recherche progressait jusqu a 100 % puis se bloquait silencieusement
+    // (cf. queueTech dans tech.js, fix faim de stock nocturne).
     const nightCost = (tech && tech.cost && typeof tech.cost === 'object') ? (tech.cost.night || 0) : 0
     let label = '+ Ajouter a la file &middot; ' + cost + ' &#x2605;'
     if (nightCost > 0) {
       label = '+ Ajouter a la file &middot; ' + cost + ' &#x2605; + ' + nightCost + ' &#127769;'
     }
-    const tipAttr = (nightCost > 0 && (state.nightPoints || 0) < nightCost)
-      ? ' title="Stocks de points nocturnes insuffisants. Passez en mode nuit avec un astronome sur un promontoire pour en accumuler."'
-      : ''
-    return '<button class="ttp-fiche-btn" data-act="queue"' + tipAttr + '>' + label + '</button>'
+    const nightStock = state.nightPoints || 0
+    if (nightCost > 0 && nightStock < nightCost) {
+      const tip = 'Stocks insuffisants, il faut ' + nightCost + ' pts nocturnes (vous avez ' + nightStock + '). Passez en mode nuit avec un astronome sur un promontoire pour en accumuler.'
+      return '<button class="ttp-fiche-btn" disabled title="' + tip + '">' + label + '</button>'
+    }
+    return '<button class="ttp-fiche-btn" data-act="queue">' + label + '</button>'
   }
   // locked
   return '<button class="ttp-fiche-btn" data-act="chain">&#x2933; Mettre le chemin en file</button>' +
