@@ -136,7 +136,11 @@ export function getBuildingsForAge(n) {
  */
 export function getTotalFood(st) {
   if (!st || !st.resources) return 0
-  return (st.resources.berries || 0) + (st.resources.meat || 0)
+  const berries = (st.resources.berries || 0)
+  const raw = (st.resources['raw-meat'] || 0)
+  const cooked = (st.resources['cooked-meat'] || 0)
+  // La viande cuite vaut 2 unites de nourriture (plus rassasiante).
+  return berries + raw + cooked * 2
 }
 
 // ============================================================================
