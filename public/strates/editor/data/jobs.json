@@ -5,55 +5,92 @@
       "id": "cueilleur",
       "name": "Cueilleur",
       "age": 1,
+      "color": "#b061d6",
       "requires": {},
       "produces": ["berries"],
       "activity": "day",
-      "description": "Metier starter par defaut. Aucun outil requis. Priorite aux buissons non epuises."
+      "description": "Metier starter par defaut. Aucun outil requis. Priorite aux buissons non epuises.",
+      "idleSpeech": [
+        "Plus de baies a portee.",
+        "Je n'ai rien a cueillir.",
+        "Faudrait planter des buissons."
+      ]
     },
     {
       "id": "bucheron",
       "name": "Bucheron",
       "age": 1,
+      "color": "#6a8a3d",
       "requires": { "tech": ["axe-stone"] },
       "produces": ["wood"],
       "activity": "day",
-      "description": "Cherche l'arbre le plus proche. Necessite la Hache en pierre."
+      "description": "Cherche l'arbre le plus proche. Necessite la Hache en pierre.",
+      "idleSpeech": [
+        "Plus d'arbres a abattre.",
+        "Ma hache rouille.",
+        "On replante quand ?"
+      ]
     },
     {
       "id": "mineur",
       "name": "Mineur",
       "age": 1,
+      "color": "#8a8a85",
       "requires": {},
       "produces": ["stone", "silex", "dirt"],
       "activity": "day",
-      "description": "Travail a mains nues possible en age I. La Pioche en pierre ameliore le rendement. Produit Pierre et Silex (drop rare)."
+      "description": "Travail a mains nues possible en age I. La Pioche en pierre ameliore le rendement. Produit Pierre et Silex (drop rare).",
+      "idleSpeech": [
+        "Plus de filons accessibles.",
+        "Ma pioche s'ennuie.",
+        "Trouvons un caillou."
+      ]
     },
     {
       "id": "chasseur",
       "name": "Chasseur",
       "age": 1,
+      "color": "#c47a3a",
       "requires": { "tech": ["bow-wood"] },
       "produces": ["raw-meat", "bone", "hide"],
       "activity": "day",
-      "description": "Patrouille la zone, attaque les animaux. Risque d'etat Blesse. Necessite la Lance en bois."
+      "description": "Patrouille la zone, attaque les animaux. Risque d'etat Blesse. Necessite la Lance en bois.",
+      "idleSpeech": [
+        "Plus de gibier en vue.",
+        "Le calme avant la traque.",
+        "Ou sont les cerfs ?"
+      ]
     },
     {
       "id": "chercheur",
       "name": "Chercheur",
       "age": 1,
+      "color": "#4d7ec8",
       "requires": { "buildings": ["hutte-du-sage"] },
       "produces": ["research-points"],
       "activity": "day",
-      "description": "Reste dans la Hutte du sage, produit des points de recherche par tick."
+      "description": "Reste dans la Hutte du sage, produit des points de recherche par tick.",
+      "idleSpeech": [
+        "Je m'ennuie.",
+        "J'ai rien a faire.",
+        "On a un truc a chercher ?",
+        "Aucune idee a explorer."
+      ]
     },
     {
       "id": "astronome",
       "name": "Astronome",
       "age": 1,
+      "color": "#2d3a6a",
       "requires": { "buildings": ["promontoire"] },
       "produces": ["night-points"],
       "activity": "night",
-      "description": "Observe les etoiles depuis le Promontoire. Genere des points nocturnes par tick."
+      "description": "Observe les etoiles depuis le Promontoire. Genere des points nocturnes par tick.",
+      "idleSpeech": [
+        "Le ciel est trop lumineux.",
+        "Vivement la nuit.",
+        "Les etoiles dorment."
+      ]
     },
     {
       "id": "terrassier",
@@ -105,10 +142,16 @@
       "name": "Constructeur",
       "icon": "🔨",
       "age": 1,
+      "color": "#d4a84c",
       "requires": {},
       "produces": [],
       "activity": "day",
-      "description": "Construit les batiments du village."
+      "description": "Construit les batiments du village.",
+      "idleSpeech": [
+        "Plus de chantier.",
+        "Mes outils s'ennuient.",
+        "Que poser ?"
+      ]
     }
   ]
 }
