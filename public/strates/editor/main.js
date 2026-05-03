@@ -27,6 +27,7 @@ import { initCharSheet } from './modules/charsheet-ui.js'
 import { initHelpOverlay, isHelpOverlayOpen } from './modules/help-overlay.js'
 import { initDayNight, bindDayNightUI, tickDayNight, refreshNightPointsHUD } from './modules/daynight.js'
 import { tickAllNeeds } from './modules/needs.js'
+import { computeJobProductivity } from './modules/productivity.js'
 import { TECH_TREE_DATA } from './modules/gamedata.js'
 import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions.js'
 import { loadModels } from './modules/glb-cache.js'
@@ -209,7 +210,16 @@ function tick(nowMs) {
   state.researchTickAccum += dt
   if (state.researchTickAccum >= RESEARCH_TICK) {
     state.researchTickAccum -= RESEARCH_TICK
-    const n = countActiveResearchers()
+    // Lot B : productivite de recherche scaled par nb de chercheurs RESEARCHING
+    // ET par leur skillLevel('research'). Si aucun chercheur actif, prod = 0.
+    // Le total minimum (countActiveResearchers, plancher) garantit qu un chef
+    // novice qui bosse dans la hutte fait au moins 1 pt/tick comme avant.
+    const nActive = countActiveResearchers()
+    const prod = computeJobProductivity(state, 'chercheur', 'RESEARCHING')
+    // computeJobProductivity ne compte que les profession === 'chercheur',
+    // mais le chef sans profession peut aussi etre dans la hutte. On garde
+    // donc nActive comme plancher : 1 chercheur = au moins 1 pt/tick.
+    const n = Math.max(nActive, Math.round(prod * 10))
     if (n > 0 && state.activeResearch) {
       state.activeResearch.progress += n
       const techEntry = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
