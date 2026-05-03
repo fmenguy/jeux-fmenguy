@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Strates · Pilotage Âge de Pierre · v0.8</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --paper: #f4efe4; --paper-2: #ece4d1; --paper-3: #e3d9c2;
+    --ink: #1f1a14; --ink-soft: #3a3026; --ink-faint: #7a6d5c;
+    --rule: #c9bfa6; --hl: #d94a2c;
+    --tech: #2f6b5a; --build: #b05a2c; --comm: #3d5a99;
+    --done: #4a7d4a; --todo: #b0874a; --blocked: #a63d3d; --wip: #6a4a8a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Kalam', system-ui, sans-serif; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(139,90,43,.06), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(61,90,153,.05), transparent 40%),
+      repeating-linear-gradient(0deg, transparent 0 28px, rgba(31,26,20,.02) 28px 29px),
+      repeating-linear-gradient(90deg, transparent 0 28px, rgba(31,26,20,.015) 28px 29px);
+    pointer-events: none; z-index: 0;
+  }
+  #root { position: relative; z-index: 1; }
+  .h-hand { font-family: 'Caveat', cursive; font-weight: 700; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  header.top {
+    position: sticky; top: 0; z-index: 10;
+    background: linear-gradient(180deg, var(--paper) 70%, rgba(244,239,228,.85));
+    backdrop-filter: blur(4px);
+    border-bottom: 1.5px solid var(--ink);
+    padding: 14px 28px 10px;
+  }
+  .brandrow { display:flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .brand { font-family: 'Caveat', cursive; font-size: 40px; font-weight: 700; letter-spacing: .5px; line-height: 1; }
+  .sub { font-family: 'Kalam'; font-size: 14px; color: var(--ink-faint); }
+  .breadcrumb { font-family:'JetBrains Mono'; font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1.5px; }
+  .breadcrumb a { color: var(--comm); text-decoration: none; border-bottom: 1px dashed var(--comm); }
+  .breadcrumb a:hover { color: var(--hl); border-color: var(--hl); }
+
+  .tabs { display: flex; gap: 4px; margin-top: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .tab {
+    font-family: 'Caveat', cursive; font-weight: 600; font-size: 22px;
+    padding: 6px 14px 4px; cursor: pointer;
+    border: 1.5px solid var(--ink); border-bottom: none;
+    background: var(--paper-2); color: var(--ink-soft);
+    border-radius: 10px 14px 0 0 / 14px 10px 0 0;
+    transform: translateY(1.5px); user-select: none;
+  }
+  .tab:hover { background: var(--paper-3); }
+  .tab.active { background: var(--paper); color: var(--ink); border-bottom: 1.5px solid var(--paper); font-weight: 700; }
+  .tab .num { font-family: 'JetBrains Mono'; font-size: 12px; color: var(--ink-faint); margin-right: 6px; }
+
+  main { padding: 22px 28px 80px; max-width: 1400px; margin: 0 auto; }
+
+  h2.sec { font-family:'Caveat'; font-weight:700; font-size: 36px; margin: 0 0 4px; line-height: 1; }
+  h2.sec .n { font-family:'JetBrains Mono'; font-size: 14px; color: var(--ink-faint); margin-right: 8px; vertical-align: middle; }
+  h3.hh { font-family:'Caveat'; font-weight:700; font-size: 26px; margin: 18px 0 6px; }
+  h4.hh { font-family:'Caveat'; font-weight:700; font-size: 22px; margin: 14px 0 4px; }
+  .sec-desc { font-family:'Kalam'; color: var(--ink-soft); font-size: 14px; margin: 0 0 16px; max-width: 900px; }
+
+  .sketch-box {
+    border: 1.5px solid var(--ink);
+    border-radius: 6px 10px 8px 12px / 10px 6px 12px 8px;
+    background: var(--paper);
+    box-shadow: 2px 3px 0 rgba(31,26,20,.06);
+    padding: 14px 16px;
+    position: relative;
+  }
+  .sketch-box.dashed { border-style: dashed; }
+  .sketch-box.tight { padding: 10px 12px; border-radius: 5px 8px 6px 9px / 8px 5px 9px 6px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  .pill {
+    display: inline-block; padding: 1px 8px; border: 1.5px solid var(--ink);
+    border-radius: 999px; font-family:'JetBrains Mono'; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 1px; background: var(--paper);
+  }
+  .pill.tech  { border-color: var(--tech); color: var(--tech); }
+  .pill.build { border-color: var(--build); color: var(--build); }
+  .pill.comm  { border-color: var(--comm); color: var(--comm); }
+  .pill.done  { background: var(--done); color: var(--paper); border-color: var(--done); }
+  .pill.todo  { background: var(--todo); color: var(--paper); border-color: var(--todo); }
+  .pill.wip   { background: var(--wip); color: var(--paper); border-color: var(--wip); }
+  .pill.blocked { background: var(--blocked); color: var(--paper); border-color: var(--blocked); }
+  .pill.lotA { background: #d9ebe3; color: var(--tech); border-color: var(--tech); }
+  .pill.lotB { background: #f1dcc9; color: var(--build); border-color: var(--build); }
+  .pill.lotC { background: #d9e0f1; color: var(--comm); border-color: var(--comm); }
+  .pill.lotD { background: #f1e7cf; color: #8a5a2b; border-color: #8a5a2b; }
+
+  hr.wavy {
+    border: none; height: 8px;
+    background-image: radial-gradient(circle at 4px 4px, var(--ink) 1px, transparent 2px);
+    background-size: 8px 8px; background-repeat: repeat-x; opacity: .3;
+    margin: 22px 0;
+  }
+
+  .chk { display:flex; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--rule); align-items: flex-start; }
+  .chk:last-child { border-bottom: none; }
+  .chk .box {
+    width: 20px; height: 20px; border: 1.5px solid var(--ink); border-radius: 4px;
+    display:grid; place-items:center; font-family:'Caveat'; font-weight:700; font-size: 20px; flex-shrink: 0;
+    background: var(--paper); margin-top: 1px;
+  }
+  .chk.done .box { background: var(--done); color: var(--paper); border-color: var(--done); }
+  .chk.done .lbl { text-decoration: line-through; color: var(--ink-faint); }
+  .chk.wip .box { background: var(--wip); color: var(--paper); border-color: var(--wip); }
+  .chk.todo .box { background: var(--paper); }
+  .chk.blocked .box { background: var(--blocked); color: var(--paper); border-color: var(--blocked); }
+  .chk .lbl { flex: 1; font-size: 14px; line-height: 1.3; }
+  .chk .lbl small { display: block; color: var(--ink-faint); font-size: 12px; margin-top: 2px; }
+
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 4px 10px; font-size: 13px; }
+  .kv dt { font-family:'JetBrains Mono'; font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1px; padding-top: 2px; }
+  .kv dd { margin: 0; }
+
+  .ticket {
+    padding: 14px 16px; margin-bottom: 14px;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px 10px 8px 12px / 10px 6px 12px 8px;
+    background: var(--paper);
+    box-shadow: 2px 3px 0 rgba(31,26,20,.06);
+    position: relative;
+  }
+  .ticket.lotA { border-left: 6px solid var(--tech); }
+  .ticket.lotB { border-left: 6px solid var(--build); }
+  .ticket.lotC { border-left: 6px solid var(--comm); }
+  .ticket.lotD { border-left: 6px solid #8a5a2b; }
+  .ticket h4 { margin: 0 0 4px; font-family:'Caveat'; font-size: 28px; }
+  .ticket .meta { font-size: 12px; color: var(--ink-faint); margin-bottom: 8px; }
+
+  .code {
+    font-family:'JetBrains Mono'; font-size: 12px; background: var(--paper-2);
+    padding: 2px 6px; border: 1px solid var(--rule); border-radius: 4px;
+    color: var(--ink);
+  }
+  pre.code-block {
+    font-family:'JetBrains Mono'; font-size: 12px; line-height: 1.5;
+    background: #1f1a14; color: #e3d9c2; padding: 14px 16px;
+    border-radius: 6px; overflow-x: auto; margin: 8px 0;
+    border: 1.5px solid var(--ink);
+  }
+  pre.code-block .k { color: #8ac4a4; }
+  pre.code-block .s { color: #d9a441; }
+  pre.code-block .c { color: #7a6d5c; font-style: italic; }
+  pre.code-block .n { color: #c48aa4; }
+
+  .flow {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px; align-items: stretch;
+  }
+  .flow .step {
+    padding: 10px 12px; border: 1.5px solid var(--ink);
+    border-radius: 6px 10px 8px 12px / 10px 6px 12px 8px;
+    background: var(--paper); position: relative;
+    font-size: 13px;
+  }
+  .flow .step .idx { font-family:'Caveat'; font-size: 28px; font-weight:700; line-height: 1; color: var(--ink-faint); }
+  .flow .step .t { font-family:'Caveat'; font-size: 20px; font-weight:700; margin: 2px 0; }
+
+  table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.t th, table.t td { text-align: left; padding: 6px 10px; border-bottom: 1px dashed var(--rule); vertical-align: top; }
+  table.t th { font-family:'JetBrains Mono'; font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5px solid var(--ink); }
+  table.t tr:last-child td { border-bottom: none; }
+
+  .legend-inline { display:inline-flex; gap:10px; flex-wrap:wrap; font-size: 12px; color: var(--ink-soft); margin: 4px 0 12px; }
+  .legend-inline .it { display:inline-flex; align-items:center; gap: 5px; }
+
+  .callout {
+    background: #fff6c9; border: 1.5px dashed var(--hl);
+    padding: 12px 14px; border-radius: 6px;
+    font-size: 14px; margin: 10px 0;
+  }
+  .callout .lbl { font-family:'Caveat'; font-weight: 700; font-size: 20px; color: var(--hl); display: block; margin-bottom: 4px; }
+
+  .ul-hand {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10'><path d='M2 6 C 20 2, 40 9, 60 5 S 95 3, 98 7' stroke='%231f1a14' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat; background-position: 0 100%; background-size: 100% 6px;
+    padding-bottom: 6px;
+  }
+
+  .arrow { font-family:'Caveat'; font-size: 22px; color: var(--ink-faint); margin: 0 6px; }
+
+  .bar {
+    height: 10px; background: var(--paper-2); border: 1.5px solid var(--ink);
+    border-radius: 999px; overflow: hidden; margin: 4px 0;
+  }
+  .bar > div { height: 100%; background: var(--done); transition: width .3s; }
+
+  .strate-card { padding: 14px; }
+  .strate-card .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 6px; }
+  .strate-card .head .t { font-family:'Caveat'; font-size: 24px; font-weight:700; }
+
+  details.faq { padding: 10px 14px; border: 1.5px dashed var(--ink); border-radius: 6px; background: var(--paper); margin: 8px 0; }
+  details.faq summary { font-family:'Caveat'; font-size: 20px; font-weight: 700; cursor: pointer; }
+  details.faq[open] summary { margin-bottom: 8px; }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo } = React;
+const cls = (...xs) => xs.filter(Boolean).join(' ');
+
+const TABS = [
+  ["overview",    "Vue d'ensemble"],
+  ["definition",  "Definition of Done"],
+  ["strates",     "Checklist par strate"],
+  ["quests",      "Quêtes 1-7"],
+  ["contract",    "Contrat techtree.json"],
+  ["bronze",      "Passage au Bronze"],
+  ["order",       "Ordre de livraison"],
+  ["later",       "Nice-to-have"],
+  ["advice",      "Conseils & garde-fous"]
+];
+
+// ---------- Data ---------- //
+const STATUS_FROM_REPO = {
+  done:    ['Grille voxel, chunks, A*', 'Pioche pierre (tech)', 'Hache pierre (tech)', 'Recherche (hutte + pts)', 'Cueillette baies', 'Placement maison + spawn 2 colons', 'Bulles contextuelles', 'Noms + genre + François chef', 'Quêtes initiales (3)', 'Sauvegarde localStorage', 'Saisons (palette, neige, pluie)', 'Cycle jour/nuit (toggle N)', 'Promontoire → points nocturnes (daynight.js + isColonistOnObservatory)', 'Feu de camp social (MVP)', 'Filon extraction (pioche gate)', 'Verticalité (strates 10)', 'Foyer posable (gate fire-mastery, unique, GLB + fallback flamme)', 'Fiche personnage cliquable (charsheet-ui : renommer, favoris, gatée oral-tradition)', 'Tutoriel onboarding unique 6 étapes + bulle invitation différée (tutorial.js — labels 1/6..6/6 confirmés)', 'Cinématique passage bronze (fade + fanfare Web Audio + titre)', 'Cairn de pierre : canBuildCairn + bouton actionbar + pose physique addCairn + overlay badge', 'Moteur besoins data-driven (needs.js) câblé main.js — faim + sans-abri', 'Panneau info bâtiment (building-panel.js)', 'Grosse maison (big-house) 4x4 cellules, gatée par tech big-house (âge 1)', 'Arc en bois (bow-wood) dans techtree.json (cost research:12, débloque chasseur)', 'Astronomie I dans techtree.json (cost research:12, night:20, req promontory)', 'Mode sandbox (?mode=sandbox — sandbox.js : techs débloquées, ressources max)', 'Compteur Année dans le HUD (seasons.js : state.year, affiché à la place de J./heure)'],
+  partial: ['Besoins vitaux (faim + sans-abri câblés)', 'Tech tree (arbre XXL livré, contenu âge 1 complet)', 'Métiers (pas d\'attribution de rôles côté UI)', 'Fog of war (module fog.js présent, non activé dans main.js)', 'Système de quêtes (moteur disponible/active/complétées livré, catalogue 9 quêtes)', 'Astronome (isColonistOnObservatory câblé dans daynight.js, pas de state ASTRONOME dans colonist.js)', 'Terraformation/Pelle pierre (tech shovel-stone dans techtree.json, outil Niveler/Placer livré dans interaction.js)', 'Chasse (outil hunt livré : sélection rectangulaire cerfs, gate bow-wood, addJob dans interaction.js — comportement colon absent dans colonist.js, pas de drop viande/os)'],
+  missing: ['Silex (défini dans resources.json, non droppé par le minage en jeu)', 'Cueillette améliorée — effet +1 baie non câblé dans colonist.js malgré tech gathering-improved dans techtree.json'],
+  newlyDone: ['UI Tech tree XXL — vue globale constellation (7 branches en orbite) + vue détaillée Humankind (angles droits, pan/zoom bornés)', 'File de recherche en bulles (bas de page, 5 max, drag contraint)', 'Cross-branch badges (↗ Savoir, ↗ Outils, etc.) sur techs avec prérequis hors branche', 'Cadenas chiffré sur techs locked (🔒 + nb de prérequis manquants)', 'Bouton « Mettre le chemin en file » (chaîne topologique auto)', 'Popup unlock façon Endless Space (2 suggestions cliquables)', 'Actionbar finale : nav-zone permanente + 3 onglets Récoltes/Construire/Terraformer', 'Outil Niveler : retrait direct de voxel terrain sans colon (minerais protégés)', 'Outil Placer : pose directe de voxel depuis les stocks sans colon', 'Pinceau carré pour tous les outils terraformation (1x1, 3x3, 5x5, 7x7)', 'Colonist : ne terraformant plus le terrain nu, mining limité aux ressources', 'Tech tree : fiche droite 340px (coût/description/murmure/prérequis/débloque/actions)', 'Tech tree : hover req-highlight (liens SVG pulsés or, techs irrélevantes estompées)', 'Tech tree : file de recherche en bulles (vue globale uniquement, 5 slots max)', 'Tech tree : constellation globale avec spokes, filtres branches, rail des âges', 'Sélection rectangulaire par drag (mine/hache/pick) alignée grille voxel perspective', 'Outil cancel-zone par drag pour annuler jobs de récolte', 'Quêtes : système disponibles/active/complétées avec catalogue 9 quêtes et rewards', 'Worldgen : GRID 128, biomes, rivières, falloff cubique sans îles de bord', 'Navigation tech tree unifiée (Retour/✕ dans vues globale et détaillée)', 'Constellation : masquage des branches sans tech âge courant', 'Aide en jeu : rubrique Récolte, mise à jour Caméra, raccourci N jour/nuit', 'Fiche personnage (charsheet) ouverture gatée par tech oral-tradition', 'Tutoriel refactorisé : tuto unique 6 étapes (labels 1/6..6/6 confirmés dans tutorial.js), suppression du Tuto 2', 'Mode sandbox (?mode=sandbox — sandbox.js)', 'Compteur Année dans HUD (seasons.js), sélection rectangulaire Chasse (interaction.js)', 'Outil Chasse : sélection rectangulaire cerfs, gate bow-wood (interaction.js — colon non câblé)']
+};
+
+const STRATES = {
+  tech: {
+    title: 'Technologie',
+    color: 'tech',
+    branches: {
+      'Outils': [
+        { n: 'Pioche pierre',   s: 'done', c: 12, req: [], notes: 'tech pick-stone (cost research:12), débloque jobs mineur + ressources stone/copper/coal' },
+        { n: 'Hache pierre',    s: 'done', c: 12, req: [], notes: 'tech axe-stone (cost research:12), débloque jobs bucheron + ressource wood' },
+        { n: 'Arc en bois',     s: 'partial', c: 12, req: [], notes: 'dans techtree.json (id: bow-wood, cost research:12, icône 🏹). Outil hunt livré dans interaction.js : sélection rectangulaire cerfs, gate bow-wood, addJob. Comportement colon absent (pas de state HUNT dans colonist.js, pas de drop viande/os).' },
+        { n: 'Pelle pierre',    s: 'partial', c: 15, req: ['Pioche pierre'], notes: 'tech shovel-stone dans techtree.json (cost research:15, "Terraformation"), outil Niveler/Placer câblé dans interaction.js. Métier Terrassier déclaré, pas de colon assigné.' },
+        { n: 'Faucille pierre', s: 'todo', c: 10, req: ['Hache pierre'], notes: '[transition Bronze] récolte blé sauvage' }
+      ],
+      'Agriculture': [
+        { n: 'Cueillette améliorée', s: 'todo', c: 10, req: [], notes: 'tech gathering-improved (cost research:10) dans techtree.json. Effet +1 baie non câblé dans colonist.js.' },
+        { n: 'Premier champ',        s: 'partial', c: 15, req: [], notes: 'tech first-field (cost research:15), débloque building "champ". Champ posable câblé dans interaction.js via outil "field". Récolte du champ non câblée.' }
+      ],
+      'Construction': [
+        { n: 'Maîtrise du feu', s: 'done', c: 0, req: [], notes: 'starter, gratuit' }
+      ],
+      'Savoir': [
+        { n: 'Tradition orale', s: 'done', c: 0, req: ['Maîtrise du feu'], notes: 'starter' },
+        { n: 'Recherche de base', s: 'done', c: 0, req: [], notes: 'hutte du sage' }
+      ],
+      'Exploration': [
+        { n: 'Éclaireur', s: 'later', c: 8, req: [], notes: 'déplacé âge 2 dans techtree.json (commit lot-A: scouting passe age 2)' }
+      ],
+      'Nocturne': [
+        { n: 'Promontoire', s: 'done', c: 0, req: [], notes: 'génère points nocturnes via daynight.js (isColonistOnObservatory), câblé' },
+        { n: 'Astronomie I', s: 'partial', c: 12, req: ['Promontoire'], notes: 'tech astronomy-1 dans techtree.json (cost: research 12 + night 20). Effet gameplay (-20s nuit) pas câblé dans daynight.js.' }
+      ]
+    }
+  },
+  build: {
+    title: 'Bâtiments',
+    color: 'build',
+    branches: {
+      'Habitation': [
+        { n: 'Cabane',          s: 'done', c: '10 Bois + 5 Pierre', req: ['Foyer'], notes: 'pop +2' },
+        { n: 'Grosse maison',   s: 'done', c: '4x4 cellules', req: ['tech big-house'], notes: 'posable via actionbar (place-big-house), capacité 8, gatée tech big-house âge 1' },
+        { n: 'Longhouse',       s: 'partial', c: 'fusion 4x Cabane', req: ['4x Cabane'], notes: 'fusion, existe dans code' }
+      ],
+      'Recherche': [
+        { n: 'Hutte du sage', s: 'done', c: '12 Bois + 8 Pierre', req: ['Cabane'], notes: 'active Chercheur, +pts recherche/tick' }
+      ],
+      'Alimentation': [
+        { n: 'Champ / Buisson', s: 'partial', c: '2 Bois (délimiter zone)', req: [], notes: 'zone de cueillette gérée, repousse baies' },
+        { n: 'Potager (2x2)',   s: 'todo', c: 'fusion 4x Champ', req: ['4x Champ'], notes: 'fusion' }
+      ],
+      'Production': [
+        { n: 'Foyer', s: 'done', c: '8 Pierre + 3 Bois', req: [], notes: '★ posable via actionbar (gate fire-mastery), unique, GLB Bonfire + fallback flamme animée' }
+      ],
+      'Nocturne': [
+        { n: 'Promontoire', s: 'done', c: '15 Pierre + 5 Bois', req: ['Hutte du sage'], notes: 'génère pts nocturnes (nuit), débloque Astronome' }
+      ],
+      'Monument': [
+        { n: 'Cairn de pierre', s: 'partial', c: '50 Pierre + 20 Bois + 10 Os', req: ['checklist Bronze 100%'], notes: 'age-transitions.js : canBuildCairn + getCairnProgress + bouton actionbar + tooltip conditions + addCairn (pose physique voxels) + cinématique fade+fanfare. Partiel car chasse en cours de finalisation (drop viande/os).' }
+      ]
+    }
+  },
+  comm: {
+    title: 'Communauté',
+    color: 'comm',
+    branches: {
+      'Métiers jour': [
+        { n: 'Cueilleur',   s: 'partial', c: null, req: [], notes: '★ métier starter, récolte manuelle buissons uniquement (auto-récolte supprimée commit 2b6403d), EAT_SEEK_FOOD câblé. Tech gathering-improved dans techtree.json mais effet +1 baie non câblé dans colonist.js.' },
+        { n: 'Bûcheron',    s: 'partial', c: null, req: ['Hache pierre'], notes: 'cherche l\'arbre le plus proche (chopTreeAt), gate axe-stone. Attribution de rôle non câblée via UI.' },
+        { n: 'Mineur',      s: 'partial', c: null, req: [], notes: 'mains nues en âge I (tech pick-stone améliore rendement via gate). Drop Pierre confirmé (extractOreAt/colonist.js). Silex non droppé en jeu malgré sa définition dans resources.json.' },
+        { n: 'Chasseur',    s: 'partial', c: null, req: ['Arc'], notes: 'déclaré dans population-modal.js et jobs.json. Outil hunt livré (interaction.js) : sélection rect cerfs, gate bow-wood. Comportement colon absent (colonist.js : pas de state HUNT, pas de killDeer, pas de drop viande/os). DEV_SKIP_BONES=true dans age-transitions.js.' },
+        { n: 'Chercheur',   s: 'done', c: null, req: ['Hutte du sage'], notes: 'reste dans le bâtiment, +pts recherche/tick' }
+      ],
+      'Métiers nuit': [
+        { n: 'Astronome', s: 'partial', c: null, req: ['Promontoire'], notes: 'daynight.js : isColonistOnObservatory() génère pts nocturnes si colon IDLE sur le promontoire. Pas de state ASTRONOME dédié dans colonist.js, ni d\'attribution de rôle UI.' }
+      ],
+      'Besoins': [
+        { n: 'Faim',       s: 'partial', c: null, req: [], notes: 'needs.js data-driven câblé : jauge monte de need.rate/s, seuils LOW 50% et CRITIQUE 80%, malus prod parseProductivityEffect(). EAT_SEEK_FOOD câblé dans colonist.js (cherche un buisson). Mort par famine non activée. Viande non câblée comme source de nourriture.' },
+        { n: 'Sans-abri',  s: 'partial', c: null, req: [], notes: 'needs.js : règle colonist_has_assigned_cabane évaluée via evalRuleNeed(), malus prod -30% câblé via computeProductivityMul(). Besoin SHELTER dans needs.json.' },
+        { n: 'Maladie',    s: 'later', c: null, req: [], notes: 'repoussé Bronze' },
+        { n: 'Froid',      s: 'later', c: null, req: [], notes: 'repoussé Bronze (vêtements Peau)' }
+      ],
+      'Job System': [
+        { n: 'File de tâches',  s: 'partial', c: null, req: [], notes: 'tasks.js livré : PRIORITY (SURVIVAL=100, WORK=60, LEISURE=30, IDLE=10) + TASK_KIND + enqueueTask/peekTask/popTask. Exécution dans colonist.js.' },
+        { n: 'Priorités S>W>L>F', s: 'partial', c: null, req: ['Faim'], notes: 'tasks.js définit les constantes PRIORITY. colonist.js intègre EAT_SEEK_FOOD en priorité SURVIVAL et CAMPFIRE/WANDER en LEISURE. PLAYER_JOB=WORK câblé.' },
+        { n: 'Attribution rôle', s: 'todo', c: null, req: [], notes: 'population-modal.js affiche les métiers mais ne permet pas l\'assignation côté gameplay' }
+      ],
+      'Animations vie': [
+        { n: 'Bulles contextuelles', s: 'done', c: null, req: [], notes: 'OK, à enrichir pool' },
+        { n: 'Errance idle',         s: 'done', c: null, req: [], notes: 'OK' }
+      ]
+    }
+  }
+};
+
+const RESOURCES_AGE1 = [
+  { k: '🪵 Bois',         src: 'Arbres (Bûcheron + Hache pierre)',  use: 'Construction cabane, foyer',                    s: 'partial', note: 'Hache pierre câblée (tech axe-stone, Bûcheron).' },
+  { k: '🪨 Pierre',       src: 'Affleurements (Mineur, mains nues OK)', use: 'Construction, outils, Cairn',              s: 'done' },
+  { k: '🪨 Silex',        src: 'Sous-type Pierre (minage affleurement)', use: 'Craft Hache pierre + Pioche pierre au Foyer', s: 'todo', note: 'défini dans resources.json (subtype:pierre), testé dans gamedata.js — mais non droppé dans le minage en jeu (placements.js/colonist.js)' },
+  { k: '🫐 Baies',        src: 'Buissons (Cueilleur, aucun outil)',  use: 'Nourriture basique (Faim faible)',              s: 'partial', note: 'buissons épuisables + repousse câblés (refreshBushBerries), récolte manuelle + EAT_SEEK_FOOD. Tech gathering-improved non câblée en jeu (+1 baie absent).' },
+  { k: '🥩 Viande crue',  src: 'Chasse (Chasseur + lance)',          use: 'Cuisson Foyer → Viande cuite',                  s: 'todo' },
+  { k: '🍖 Viande cuite', src: 'Cuisson Foyer',                      use: 'Nourriture haute valeur (Faim élevée)',         s: 'todo' },
+  { k: '🦴 Os',           src: 'Chasse',                             use: 'Craft outils basiques, Cairn (10 os)',          s: 'todo' },
+  { k: '🧶 Peau',         src: 'Chasse',                             use: '[Nice-to-have] Vêtements contre Froid',          s: 'todo' },
+  { k: '🌾 Terre',        src: 'Minage herbe/sable',                 use: 'Nivellement terrain',                           s: 'done' },
+  { k: '🧠 Points recherche', src: 'Hutte du sage (jour, Chercheur)', use: 'Débloquer techs',                              s: 'done' },
+  { k: '🌙 Points nocturnes', src: 'Promontoire (nuit, Astronome)',   use: 'Débloquer techs Nocturne',                     s: 'done' },
+  { k: '🔩 [Réservé] Cuivre', src: 'Filons visibles, non exploitables âge I', use: 'Âge Bronze uniquement',                 s: 'later' },
+  { k: '🔩 [Réservé] Charbon', src: 'Idem',                          use: 'Âge Bronze uniquement',                         s: 'later' }
+];
+
+
+// Nice-to-have documentés mais repoussés
+const NICE_TO_HAVE = [
+  { title: '❄️ Hiver + Vêtements', desc: 'Saison hiver → Faim accélérée. Sans vêtement → Froid → mortalité. Peau (chasse) + Foyer → Vêtements.', status: 'Saisons câblées, vêtements à activer' },
+  { title: '👶 Reproduction naturelle', desc: '2 colons logés ensemble → bébé avec délai long. Croissance pop organique vs arrivées scriptées.', status: 'Complexe, post-MVP' },
+  { title: '📋 Fiches personnages', desc: 'Nom + traits + historique "né à l\'âge X" + spécialisation métier avec XP.', status: 'Enrichissement narratif, post-MVP' }
+];
+
+// ---------- UI bits ---------- //
+function StatusPill({ s }) {
+  const map = { done: 'LIVRÉ', partial: 'PARTIEL', todo: 'À FAIRE', later: 'REPOUSSÉ', blocked: 'BLOQUÉ', wip: 'EN COURS' };
+  const cls2 = s === 'done' ? 'done' : s === 'partial' ? 'wip' : s === 'todo' ? 'todo' : s === 'later' ? '' : s === 'blocked' ? 'blocked' : 'wip';
+  return <span className={cls('pill', cls2)}>{map[s] || s}</span>;
+}
+
+function Header({ tab, setTab }) {
+  return (
+    <header className="top">
+      <div className="breadcrumb">
+        <a href="strates-mindmap.html">◄ Mindmap générale</a>
+        <span style={{ margin: '0 8px' }}>/</span>
+        Pilotage · Âge de Pierre (1/7)
+      </div>
+      <div className="brandrow" style={{ marginTop: 4 }}>
+        <div className="brand">STRATES · Âge I</div>
+        <div className="sub">plan de bataille pour livrer l'âge de pierre de bout en bout · v0.8 · statuts vérifiés sur code réel · Outil Chasse livré (UI), comportement colon absent · Tuto 6 étapes · Cueillette améliorée + Silex + Attribution rôles : priorité suivante</div>
+      </div>
+      <div className="tabs">
+        {TABS.map(([id, name], i) => (
+          <div key={id} className={cls('tab', tab===id && 'active')} onClick={()=>setTab(id)}>
+            <span className="num">{String(i+1).padStart(2,'0')}</span>{name}
+          </div>
+        ))}
+      </div>
+    </header>
+  );
+}
+
+// ---------- Overview ---------- //
+function OverviewTab() {
+  const done = STATUS_FROM_REPO.done.length;
+  const partial = STATUS_FROM_REPO.partial.length;
+  const missing = STATUS_FROM_REPO.missing.length;
+  const total = done + partial + missing;
+  const pct = Math.round(((done + partial*0.5) / total) * 100);
+
+  return (
+    <>
+      <h2 className="sec"><span className="n">01</span>Vue d'ensemble</h2>
+      <p className="sec-desc">
+        Ce doc pilote la livraison complète de l'<b>Âge de pierre</b> (âge 1/7) de Strates. Objectif : livrer une <b>tranche verticale jouable</b>
+        qui se termine quand le joueur pose un <b>Cairn de pierre</b> et bascule au Bronze. C'est la <i>definition of done</i>.
+      </p>
+
+      <div className="callout">
+        <span className="lbl">★ Principe directeur</span>
+        On avance <b>âge par âge, verticalement</b>. Pas "tout l'arbre techno puis tout l'arbre bâtiments". On finit l'âge I <b>complètement</b>
+        (techs + bâtiments + métiers + besoins + UI + feedback) avant de lancer l'âge II. Le tech tree XXL doit être <i>structurellement</i>
+        XXL-ready dès le départ, mais ne contenir que l'âge I en contenu réel.
+      </div>
+
+      <div className="grid-3" style={{ marginTop: 14 }}>
+        <div className="sketch-box">
+          <h4 className="hh" style={{ margin: 0 }}>Progression âge I</h4>
+          <div className="bar"><div style={{ width: pct + '%' }}></div></div>
+          <div style={{ fontSize: 13 }}>
+            <b>{pct}%</b> estimé · <span className="pill done">{done} livrés</span> <span className="pill wip" style={{ marginLeft: 4 }}>{partial} partiels</span> <span className="pill todo" style={{ marginLeft: 4 }}>{missing} à faire</span>
+          </div>
+          <div className="sub" style={{ marginTop: 6 }}>basé sur ton repo strate + changelog</div>
+        </div>
+        <div className="sketch-box">
+          <h4 className="hh" style={{ margin: 0 }}>Boucle cible (fin âge I)</h4>
+          <div style={{ fontSize: 13 }}>
+            Un·e joueur·se démarre, désigne zones de travail, voit ses colons cueillir/abattre/miner/chasser,
+            construit un foyer, une cabane, une hutte du sage, débloque 3-4 techs, pose un Totem,
+            remplit les conditions, <b>pose un Cairn</b>, bascule au Bronze en cinématique courte.
+          </div>
+        </div>
+        <div className="sketch-box">
+          <h4 className="hh" style={{ margin: 0 }}>Ordre des 4 lots</h4>
+          <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+            <li><span className="pill lotA">Lot A</span> Data-driven (JSON techtree/buildings/jobs)</li>
+            <li><span className="pill lotB">Lot B</span> Moteur (Job System, besoins, états)</li>
+            <li><span className="pill lotC">Lot C</span> UI Tech tree XXL</li>
+            <li><span className="pill lotD">Lot D</span> Passage au Bronze</li>
+          </ol>
+        </div>
+      </div>
+
+      <hr className="wavy"/>
+
+      <div className="callout" style={{ borderColor: 'var(--done)', background: '#e8f2e1' }}>
+        <span className="lbl" style={{ color: 'var(--done)' }}>✅ Livraisons récentes · v0.7</span>
+        <ul style={{ margin: '4px 0 0', paddingLeft: 18, fontSize: 13 }}>
+          {STATUS_FROM_REPO.newlyDone.map((x,i)=><li key={i}>{x}</li>)}
+        </ul>
+      </div>
+
+      <h3 className="hh">État du repo <span className="sub">(branche <span className="code">strate</span>, lecture docs + changelog)</span></h3>
+      <div className="grid-3">
+        <div className="sketch-box">
+          <div style={{ marginBottom: 6 }}><span className="pill done">LIVRÉ</span></div>
+          <ul style={{ paddingLeft: 18, margin: 0, fontSize: 13 }}>
+            {STATUS_FROM_REPO.done.map((x,i) => <li key={i}>{x}</li>)}
+          </ul>
+        </div>
+        <div className="sketch-box">
+          <div style={{ marginBottom: 6 }}><span className="pill wip">PARTIEL</span></div>
+          <ul style={{ paddingLeft: 18, margin: 0, fontSize: 13 }}>
+            {STATUS_FROM_REPO.partial.map((x,i) => <li key={i}>{x}</li>)}
+          </ul>
+        </div>
+        <div className="sketch-box">
+          <div style={{ marginBottom: 6 }}><span className="pill todo">À FAIRE</span></div>
+          <ul style={{ paddingLeft: 18, margin: 0, fontSize: 13 }}>
+            {STATUS_FROM_REPO.missing.map((x,i) => <li key={i}>{x}</li>)}
+          </ul>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ---------- Definition of Done ---------- //
+function DefinitionTab() {
+  const CRITERIA = [
+    { c: 'Le joueur démarre avec 2 colons, un chef (François), une carte procédurale insulaire.', s: 'done' },
+    { c: 'Les colons ont un état FAIM qui monte dans le temps, une bulle se déclenche s\'il n\'y a plus de nourriture.', s: 'partial', note: 'needs.js câblé : jauge faim monte via tickColonistNeeds, malus prod LOW/CRITIQUE via computeProductivityMul. EAT_SEEK_FOOD câblé dans colonist.js (cherche buisson, mange sur place). Bulle faim déclenchée par speech contextuelles. Mort par famine non activée. Viande absente comme source de satiété.' },
+    { c: 'Le joueur peut cliquer un colon et voir sa fiche (nom, état, métier actif). Optionnel pour âge I : juste la bulle.', s: 'done' },
+    { c: 'Les ressources de base (Bois / Pierre / Silex / Baies / Viande crue+cuite / Os / Peau) se récoltent via les 5 métiers (Bûcheron / Mineur / Cueilleur / Chasseur / Chercheur).', s: 'partial', note: 'OK : Bois (Bûcheron), Pierre (Mineur), Baies (Cueilleur), Points recherche (Chercheur). Manquants : Silex (resources.json défini, non droppé), Viande/Os/Peau (Chasseur outil UI livré mais colon non câblé), cuisson Foyer absente.' },
+    { c: 'Le tech tree XXL est visible (panneau arbre scrollable/zoomable), affiche les 7 âges, seul l\'âge I est actif, le reste est teased en flou.', s: 'done', note: 'livré v0.3 — vue globale constellation + vue détaillée Humankind, pan/zoom bornés, teaser Bronze en colonne de droite' },
+    { c: 'Au moins 4 techs âge I débloquables : Pioche pierre, Hache pierre, Pelle pierre, Cueillette améliorée.', s: 'partial', note: 'Pioche (pick-stone r:12), Hache (axe-stone r:12), Pelle (shovel-stone r:15) débloquables en jeu. Cueillette améliorée (gathering-improved r:10) dans techtree.json mais effet +1 baie non câblé dans colonist.js.' },
+    { c: 'Les bâtiments âge I sont posables via désignation (mode jeu) : Cabane (req Foyer), Foyer (pivot), Hutte du sage (req Cabane), Promontoire (req Hutte), Champ.', s: 'partial', note: 'Posables confirmés : Foyer (gate fire-mastery), Cabane, Grosse Maison (gate big-house, 4x4), Hutte du Sage (gate basic-research), Promontoire (gate promontory), Champ (gate first-field), Cairn (gate Bronze).' },
+    { c: 'Le Cairn de pierre est posable quand les conditions cumulatives sont remplies (voir onglet Passage au Bronze).', s: 'partial', note: 'age-transitions.js : bouton Cairn + canBuildCairn (6 conditions vérifiées) + addCairn (pose physique). Conditions bloquantes : Chasse absente (DEV_SKIP_BONES=true), population et stocks atteignables.' },
+    { c: 'Poser le Cairn déclenche une cinématique courte (fade + titre "Âge du Bronze" + son) et bascule state.currentAge = 2.', s: 'partial', note: 'cinematics.js + age-transitions.js livrés : addCairn pose le mesh, triggerAgeTransitionBronze déclenche le fade + fanfare Web Audio + titre "AGE DU BRONZE", _applyBronzeAge bascule state.currentAge=2. Reste : tester passage bout-en-bout.' },
+    { c: 'Le tech tree se "déverrouille" : les techs Bronze deviennent recherchables, tease des âges 3+ reste actif.', s: 'partial', note: '_applyBronzeAge() dans age-transitions.js marque _bronzeAvailable sur les techs âge 2 et rafraîchit via refreshTechTreeAfterAgeChange. À tester en jeu.' },
+    { c: 'Une sauvegarde faite âge I charge correctement après bascule Bronze (persistance).', s: 'partial', note: 'persistence.js sauvegarde currentAge + achievements + ageUnlockedAt. saveGame("auto") appelé dans _applyBronzeAge. Passage bout-en-bout non testé.' },
+    { c: 'Les sons clé sont en place : construction (pose maison), récolte (cueillette/abattage/minage), passage d\'âge (fanfare).', s: 'partial', note: 'musique saisons OK, SFX à ajouter' }
+  ];
+
+  return (
+    <>
+      <h2 className="sec"><span className="n">02</span>Definition of Done — âge I</h2>
+      <p className="sec-desc">
+        Checklist claire. Tant qu'une case rouge subsiste, l'âge de pierre n'est pas livré.
+        Ce sont les critères d'acceptation à montrer à un testeur externe.
+      </p>
+
+      <div className="sketch-box">
+        {CRITERIA.map((x, i) => (
+          <div key={i} className={cls('chk', x.s)}>
+            <div className="box">{x.s === 'done' ? '✓' : x.s === 'wip' ? '~' : x.s === 'partial' ? '~' : ''}</div>
+            <div className="lbl">
+              {x.c}
+              {x.note && <small>↳ {x.note}</small>}
+            </div>
+            <StatusPill s={x.s} />
+          </div>
+        ))}
+      </div>
+
+      <div className="callout">
+        <span className="lbl">⚠ Règle de glissement</span>
+        Si une case menace de bloquer plus de 2 sessions, <b>coupe le scope</b>, ne dérive pas. Exemples de coupes saines :
+        fiche colon → repoussée Bronze ; maladie → repoussée Bronze ; reproduction naturelle → repoussée Fer.
+        La chasse en revanche est critique pour la diversité alimentaire âge I, ne la coupe pas.
+      </div>
+    </>
+  );
+}
+
+// ---------- Strates tab ---------- //
+function StratesTab() {
+  return (
+    <>
+      <h2 className="sec"><span className="n">03</span>Checklist par strate</h2>
+      <p className="sec-desc">
+        Vue détaillée par arbre. Chaque nœud a un statut, un coût éventuel (points de recherche), ses prérequis,
+        et une note de design. C'est le contenu cible du JSON <span className="code">techtree.json / buildings.json / jobs.json</span> pour l'âge I.
+      </p>
+
+      <div className="legend-inline">
+        <span className="it"><StatusPill s="done"/></span>
+        <span className="it"><StatusPill s="partial"/></span>
+        <span className="it"><StatusPill s="todo"/></span>
+        <span className="it"><StatusPill s="later"/></span>
+      </div>
+
+      {Object.entries(STRATES).map(([k, strate]) => (
+        <div key={k} style={{ marginBottom: 22 }}>
+          <h3 className="hh">
+            <span className={cls('pill', strate.color)} style={{ marginRight: 8 }}>{k}</span>
+            Arbre {strate.title.toUpperCase()}
+          </h3>
+          <div className="grid-2">
+            {Object.entries(strate.branches).map(([branch, nodes]) => (
+              <div className="sketch-box" key={branch}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom: 6 }}>
+                  <span className="h-hand" style={{ fontSize: 22 }}>{branch}</span>
+                  <span className="sub">{nodes.length} nœud{nodes.length>1?'s':''}</span>
+                </div>
+                {nodes.map((n, i) => (
+                  <div key={i} className={cls('chk', n.s)} style={{ padding: '4px 0' }}>
+                    <div className="box">{n.s === 'done' ? '✓' : n.s === 'partial' ? '~' : n.s === 'later' ? '•' : ''}</div>
+                    <div className="lbl">
+                      <b>{n.n}</b>
+                      {n.c !== null && n.c !== undefined && n.c > 0 && <span className="code" style={{ marginLeft: 6 }}>{n.c} pts</span>}
+                      {n.req && n.req.length > 0 && <small>req : {n.req.join(', ')}</small>}
+                      {n.notes && <small>{n.notes}</small>}
+                    </div>
+                    <StatusPill s={n.s}/>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <hr className="wavy"/>
+
+      <h3 className="hh">📦 Ressources actives âge I</h3>
+      <div className="sketch-box">
+        <table className="t">
+          <thead><tr><th>Ressource</th><th>Source</th><th>Usage</th><th>Statut</th></tr></thead>
+          <tbody>
+            {RESOURCES_AGE1.map((r,i)=>(
+              <tr key={i}>
+                <td><b>{r.k}</b></td>
+                <td>{r.src}</td>
+                <td>{r.use}</td>
+                <td><StatusPill s={r.s}/></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+// ---------- Contract tab ---------- //
+function ContractTab() {
+  return (
+    <>
+      <h2 className="sec"><span className="n">05</span>Contrat partagé · <span className="code">techtree.json</span></h2>
+      <p className="sec-desc">
+        <b>Critique.</b> Ce format doit être gelé AVANT que qui que ce soit écrive la moindre ligne de code UI ou moteur.
+        Tous les modules s'appuient dessus. Si tu changes le format en cours de route, tu casses 3 lots en parallèle.
+      </p>
+
+      <div className="callout">
+        <span className="lbl">🔒 SPEC v1 — NE PAS MODIFIER SANS VOTE</span>
+        Mets littéralement ce bandeau en commentaire au début de chaque JSON. Si un agent veut modifier le schéma,
+        il doit ouvrir un ticket séparé, pas éditer en douce.
+      </div>
+
+      <h3 className="hh"><span className="code">data/techtree.json</span></h3>
+      <pre className="code-block">{`{
+  "_spec": "v1 — ne pas modifier sans vote",
+  "ages": [
+    { "id": 1, "name": "Pierre",  "unlocked": true  },
+    { "id": 2, "name": "Bronze",  "unlocked": false },
+    { "id": 3, "name": "Fer",     "unlocked": false },
+    { "id": 4, "name": "Industriel" },
+    { "id": 5, "name": "Moderne" },
+    { "id": 6, "name": "Atomique" },
+    { "id": 7, "name": "Espace" }
+  ],
+  "branches": [
+    { "id": "outils",       "name": "Outils",       "color": "#6b6b68" },
+    { "id": "agriculture",  "name": "Agriculture",  "color": "#9b7a2c" },
+    { "id": "construction", "name": "Construction", "color": "#8b5a2b" },
+    { "id": "savoir",       "name": "Savoir",       "color": "#3d5a99" },
+    { "id": "exploration",  "name": "Exploration",  "color": "#2f6b5a" },
+    { "id": "nocturne",     "name": "Nocturne",     "color": "#1b2540" }
+  ],
+  "techs": [
+    {
+      "id": "pick-stone",
+      "name": "Pioche en pierre",
+      "age": 1,
+      "branch": "outils",
+      "icon": "⛏",
+      "cost": { "research": 5, "night": 0 },
+      "requires": [],
+      "unlocks": {
+        "buildings": [],
+        "tools":     ["pick-stone"],
+        "jobs":      ["mineur"],
+        "resources": ["stone", "copper", "coal"]
+      },
+      "description": "Permet le minage de la roche basique.",
+      "speech": ["Il faut une pioche pour casser ça."]
+    },
+    {
+      "id": "axe-stone",
+      "name": "Hache en pierre",
+      "age": 1,
+      "branch": "outils",
+      "icon": "🪓",
+      "cost": { "research": 5 },
+      "requires": [],
+      "unlocks": {
+        "jobs":      ["bucheron"],
+        "resources": ["wood"]
+      }
+    }
+    // ...autres techs âge 1
+  ]
+}`}</pre>
+
+      <h3 className="hh"><span className="code">data/buildings.json</span></h3>
+      <pre className="code-block">{`{
+  "_spec": "v1",
+  "buildings": [
+    {
+      "id": "cabane",
+      "name": "Cabane",
+      "age": 1,
+      "category": "habitation",
+      "size": "1x1",
+      "cost":     { "wood": 5, "stone": 2 },
+      "requires": { "tech": [] },
+      "provides": { "pop": 2 },
+      "fusion":   { "count": 4, "into": "longhouse" },
+      "activity": "both"
+    },
+    {
+      "id": "cairn-pierre",
+      "name": "Cairn de pierre",
+      "age": 1,
+      "category": "monument",
+      "size": "1x1",
+      "cost":     { "stone": 30 },
+      "requires": {
+        "tech":        ["pick-stone", "axe-stone"],
+        "buildings":   ["cabane", "hutte-du-sage", "foyer"],
+        "population":  6,
+        "custom":      "cairn-bronze-gate"
+      },
+      "unique": true,
+      "onBuild": "trigger_age_transition_bronze"
+    }
+  ]
+}`}</pre>
+
+      <h3 className="hh"><span className="code">data/jobs.json</span></h3>
+      <pre className="code-block">{`{
+  "_spec": "v1",
+  "jobs": [
+    {
+      "id": "bucheron",
+      "name": "Bûcheron",
+      "age": 1,
+      "requires": { "tech": ["axe-stone"] },
+      "produces": ["wood"],
+      "activity": "day"
+    },
+    {
+      "id": "chasseur",
+      "name": "Chasseur",
+      "age": 1,
+      "requires": {},
+      "produces": ["meat", "bone", "hide"],
+      "activity": "day"
+    },
+    {
+      "id": "astronome",
+      "name": "Astronome",
+      "age": 1,
+      "requires": { "buildings": ["promontoire"] },
+      "produces": ["night_points"],
+      "activity": "night"
+    }
+  ]
+}`}</pre>
+
+      <h3 className="hh"><span className="code">data/needs.json</span></h3>
+      <pre className="code-block">{`{
+  "_spec": "v1",
+  "needs": [
+    {
+      "id": "hunger",
+      "name": "Faim",
+      "age_introduced": 1,
+      "rate": 0.01,
+      "max":  100,
+      "satisfied_by": [
+        { "resource": "berries", "amount": 20 },
+        { "resource": "meat",    "amount": 40 }
+      ],
+      "effects": {
+        "low":      "bulle_faim",
+        "critical": "productivity_-50%"
+      }
+    },
+    {
+      "id": "shelter",
+      "name": "Sans-abri",
+      "age_introduced": 1,
+      "rule": "colonist_has_assigned_cabane",
+      "effects": {
+        "missing": "productivity_-30%"
+      }
+    }
+  ]
+}`}</pre>
+
+      <h4 className="hh">Règle sémantique forte</h4>
+      <ul style={{ fontSize: 14, lineHeight: 1.5 }}>
+        <li>Les <span className="code">id</span> sont en <b>kebab-case ASCII</b>, jamais accentués, jamais modifiés après merge.</li>
+        <li>Les <span className="code">requires</span> n'acceptent que des <b>id</b>, pas des noms affichables.</li>
+        <li>Chaque ressource produite/consommée est un <span className="code">id</span> défini dans un <span className="code">data/resources.json</span> à part.</li>
+        <li>Les champs <span className="code">icon</span> sont des <b>emoji Unicode</b> (facile à changer plus tard par sprite).</li>
+        <li>Chaque fichier commence par <span className="code">"_spec": "v1"</span> — version bumpée si breaking change.</li>
+      </ul>
+    </>
+  );
+}
+
+
+// ---------- Bronze passage ---------- //
+function BronzeTab() {
+  const CONDITIONS = [
+    { c: '6 villageois logés (Abri + Cabane)', s: 'partial', why: 'masse critique — condition câblée dans canBuildCairn (SEUILS.population=6). Atteignable sans Abri (Cabane x3 suffit).' },
+    { c: 'Stock : 50 Bois + 30 Pierre + 20 Nourriture', s: 'partial', why: 'câblé dans canBuildCairn (bois 50, pierre 30, getTotalFood 20). Atteignable par Bûcheron + Mineur + Cueilleur.' },
+    { c: 'Foyer construit et actif', s: 'partial', why: 'foyer posable via actionbar (gate fire-mastery). Condition Cairn vérifie researchHouses, pas le foyer directement.' },
+    { c: 'Hutte du Sage construite', s: 'done', why: 'savoir actif — condition câblée : hasLab = researchHouses.length > 0' },
+    { c: '1 Chercheur assigné', s: 'partial', why: 'condition câblée dans canBuildCairn (hasResearcher). Attribution de rôle via labo, pas via UI métier.' },
+    { c: '100 Points de Recherche accumulés', s: 'partial', why: 'totalResearchSpentComputed() vérifie les techs débloquées. Atteignable si toutes les techs âge 1 sont recherchées (pick-stone 5 + axe-stone 5 + bow-wood 5 + shovel-stone 8 + gathering-improved 8 + first-field 10 + big-house 5 + astronomy-1 10 + promontory 0 + fire-mastery 0 + basic-research 0 + oral-tradition 0 = 56pts max âge I visible).' },
+    { c: 'Stock 10 Os (pour construction Cairn)', s: 'todo', why: 'bypassé via DEV_SKIP_BONES=true dans age-transitions.js (Chasseur pas livré). Condition réelle : chasse obligatoire.' }
+  ];
+  const CAIRN_COST = '50 Pierre + 20 Bois + 10 Os';
+  return (
+    <>
+      <h2 className="sec"><span className="n">07</span>Passage au Bronze</h2>
+      <p className="sec-desc">
+        Le passage d'âge est le <b>moment récompense</b> de l'âge I. Il doit se mériter (conditions cumulatives) et donner un vrai
+        choc émotionnel (cinématique courte + bascule de l'UI). C'est la seule condition pour déclarer l'âge I "livré".
+      </p>
+
+      <h3 className="hh">🪨 Conditions cumulatives (checklist visible joueur)</h3>
+      <div className="sketch-box">
+        {CONDITIONS.map((x,i)=>(
+          <div key={i} className={cls('chk', x.s)}>
+            <div className="box">{x.s==='done'?'✓':''}</div>
+            <div className="lbl"><b>{x.c}</b><small>{x.why}</small></div>
+            <StatusPill s={x.s}/>
+          </div>
+        ))}
+      </div>
+
+      <div className="callout">
+        <span className="lbl">🗿 Coût du Cairn de pierre</span>
+        <b>{CAIRN_COST}</b> — devient posable QUAND la checklist ci-dessus est à 100%. Construction volontairement LONGUE
+        (rituel, progression visible). Objectif durée âge I : <b>30-60 min</b> découverte / <b>15-20 min</b> expérimenté.
+      </div>
+
+      <hr className="wavy"/>
+
+      <h3 className="hh">🎬 Cinématique de passage</h3>
+      <div className="grid-4">
+        {[
+          ['00:00', 'Clic Cairn', 'Le joueur pose le dernier bloc du Cairn, conditions validées'],
+          ['00:00.5', 'Fade noir', 'Fondu ambiance → noir, musique s\'estompe'],
+          ['00:01.5', 'Titre', '"ÂGE DU BRONZE" typographie épique, 2s à l\'écran'],
+          ['00:02.5', 'Son fanfare', 'Cor/percussions, 1.5s overlap avec fin titre'],
+          ['00:03.5', 'Fade retour', 'Retour au jeu, ambiance Bronze (palette, lumière)'],
+          ['00:04.5', 'Bulle chef', 'François : "Le bronze change tout."'],
+          ['00:05', 'Tech tree MAJ', 'Tous les colons ont une bulle de célébration, techs Bronze deviennent bleutées'],
+          ['perma', 'Achievement', 'Enregistré dans state.achievements["bronze_age"] = timestamp']
+        ].map((s,i)=>(
+          <div className="sketch-box tight" key={i}>
+            <div className="mono" style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{s[0]}</div>
+            <div className="h-hand" style={{ fontSize: 20 }}>{s[1]}</div>
+            <div style={{ fontSize: 12 }}>{s[2]}</div>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="hh">🔄 Effets côté state</h3>
+      <pre className="code-block">{`// modules/age-transitions.js
+export function transitionToBronze(state) {
+  state.currentAge = 2;
+  state.ageUnlockedAt[2] = Date.now();
+  state.achievements.push({ id: 'bronze_age', at: Date.now() });
+
+  // débloquer techs Bronze
+  gamedata.getTechsForAge(2).forEach(t => {
+    if (t.requires.length === 0) t.status = 'available';
+  });
+
+  // débloquer recettes/bâtiments Bronze
+  gamedata.getBuildingsForAge(2).forEach(b => {
+    b.available = true;
+  });
+
+  // ambiance
+  scene.setAmbiance('bronze');
+  audio.playOneShot('age_transition_bronze');
+
+  // bulles célébration
+  colonists.forEach(c => c.triggerSpeech('age_transition'));
+
+  saveGame(); // checkpoint automatique
+}`}</pre>
+    </>
+  );
+}
+
+// ---------- Order tab ---------- //
+function OrderTab() {
+  const SESSIONS = [
+    { n: 1, title: 'Contrat gelé', what: 'Lot A démarre seul. Tous les JSON âge I écrits. gamedata.js charge et valide. Aucune UI, aucun moteur touché.', deps: [], unlocks: 'Lots B, C, D peuvent démarrer' },
+    { n: 2, title: 'Moteur + UI en parallèle', what: 'Lot B (Job System + besoins). Lot C (UI tech tree XXL). Les deux consomment Lot A.', deps: ['Lot A'], unlocks: 'joueur peut voir tech tree complet + les colons ont faim' },
+    { n: 3, title: 'Métiers actifs', what: 'Formaliser Bûcheron / Cueilleur / Mineur / Chercheur en rôles assignables, UI panneau colon. Ajouter Chasseur (gibier → viande/os/peau).', deps: ['Lot A', 'Lot B'], unlocks: 'toutes les ressources âge I récoltables' },
+    { n: 4, title: 'Bâtiments âge I complets', what: 'Câbler Champ (récolte). Vérifier fusion 4x→Longhouse.', deps: ['Lot A'], unlocks: 'toutes les conditions Cairn atteignables' },
+    { n: 5, title: 'Cairn + cinématique', what: 'Lot D : bâtiment Cairn, conditions, cinématique, bascule. Premier test bout-en-bout.', deps: ['Lots A,B,C', 'Session 3+4'], unlocks: 'Definition of Done atteignable' },
+    { n: 6, title: 'Polish + SFX', what: 'SFX manquants. Bulles enrichies. Attribution de rôles UI.', deps: ['toutes'], unlocks: 'âge I livrable publiquement' },
+    { n: 7, title: 'Playtest + équilibrage', what: 'Tester 3x de bout en bout. Ajuster seuils (pop, ressources, coûts de recherche). Fixer bugs.', deps: ['Session 6'], unlocks: 'LIVRAISON ÂGE I' }
+  ];
+  return (
+    <>
+      <h2 className="sec"><span className="n">08</span>Ordre de livraison</h2>
+      <p className="sec-desc">
+        Estimation : <b>6 à 8 sessions</b> pour livrer l'âge I complet (une session = un créneau de travail focus).
+        Chaque session apporte une valeur visible. Aucune session ne dépend d'une session future.
+      </p>
+
+      <div className="flow">
+        {SESSIONS.map(s => (
+          <div key={s.n} className="step">
+            <div className="idx">Session {s.n}</div>
+            <div className="t">{s.title}</div>
+            <div style={{ fontSize: 13 }}>{s.what}</div>
+            {s.deps.length > 0 && <div style={{ fontSize: 11, color: 'var(--ink-faint)', marginTop: 6 }}>dépend : {s.deps.join(', ')}</div>}
+            <div style={{ fontSize: 11, color: 'var(--tech)', marginTop: 3 }}>→ {s.unlocks}</div>
+          </div>
+        ))}
+      </div>
+
+      <hr className="wavy"/>
+
+      <h3 className="hh">🗓 Checkpoints visibles en jeu</h3>
+      <p className="sec-desc">À chaque session, le joueur doit pouvoir voir un vrai changement. C'est le principe "chaque session = valeur visible" de ta roadmap.</p>
+      <div className="grid-3">
+        {[
+          ['S1', 'Rien visible (infrastructure)', 'Mais tout le monde peut bosser après.'],
+          ['S2', 'Ouvrir T → arbre XXL', 'Les colons ont une jauge de faim.'],
+          ['S3', 'Cliquer colon → choisir métier', 'Chasseur rapporte viande.'],
+          ['S4', 'Nouveaux bâtiments posables', 'Champ câblé, Longhouse.'],
+          ['S5', 'Poser le Cairn → Bronze', 'Cinématique, nouvelle ambiance.'],
+          ['S6', 'Polish SFX + rôles', 'Attribution de rôle UI, sons.'],
+          ['S7', 'Équilibré', 'Rythme 30-60 min, pas de deadlock.']
+        ].map((s,i)=>(
+          <div key={i} className="sketch-box tight">
+            <span className="pill">{s[0]}</span>
+            <div className="h-hand" style={{ fontSize: 20, marginTop: 4 }}>{s[1]}</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-faint)' }}>{s[2]}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// ---------- Advice tab ---------- //
+function AdviceTab() {
+  const PITFALLS = [
+    { t: 'Construire "en largeur"', d: 'Faire tout l\'arbre techno (60 techs) d\'un coup → 50 techs dormantes sans bâtiments/métiers associés. Symptôme : rien ne change à l\'écran après 2 sessions.', fix: 'Toujours livrer vertical : 1 tech + son bâtiment + son métier + son usage visible dans la même session.' },
+    { t: 'Schéma JSON qui glisse', d: 'Un développeur trouve un champ manquant, l\'ajoute sans prévenir. Les 3 autres lots cassent.', fix: 'Bumper _spec à v2 sur breaking change. Tout changement de schéma passe par un ticket "spec bump" avant de coder.' },
+    { t: 'Modifications en parallèle', d: 'Deux développeurs éditent modules/state.js en même temps.', fix: 'Liste "fichiers interdits" explicite dans chaque lot. Un seul propriétaire par fichier critique.' },
+    { t: 'Repousser le moment récompense', d: 'Tout livrer sauf la cinématique et la bascule au Bronze. L\'âge I n\'est jamais "fini" émotionnellement.', fix: 'La cinématique (même ultra-simple : un fade + un titre) fait partie du MVP âge I, pas du polish.' },
+    { t: 'Contenu âge 2+ visible par erreur', d: 'Un agent remplit le JSON Bronze pour "gagner du temps" → teasing cassé.', fix: 'Le JSON ne contient que l\'âge I. Les âges 2+ sont des stubs vides : {id: 2, name: "Bronze", unlocked: false} sans aucune tech.' },
+    { t: 'Perfectionnisme visuel avant gameplay', d: 'Tu as un axe 4 (visuel) qui est prio. Mais repousser Cairn/Bronze pour peaufiner shaders = piège.', fix: 'Visuel de polish après DoD atteinte. Tu peux toujours ajouter cel-shading après avoir livré l\'âge I jouable.' }
+  ];
+  const FAQ = [
+    { q: 'Combien de temps pour livrer l\'âge I complet ?', a: 'Estimation : 6-8 sessions de 2-3h. Plus court si tu as déjà l\'infra (c\'est ton cas), plus long si tu itères beaucoup sur le visuel.' },
+    { q: 'Je fais quoi quand je ne sais plus où j\'en suis ?', a: 'Re-ouvre cet onglet, regarde la Definition of Done, trouve la première case rouge, c\'est ton prochain chantier.' },
+    { q: 'Le Cairn c\'est ringard, je veux un monolithe obsidien/un feu sacré.', a: 'Renomme-le. Le nom n\'est qu\'un placeholder. Ce qui compte c\'est la mécanique : un bâtiment unique, conditions cumulatives, déclenche le passage.' },
+    { q: 'Je dois vraiment faire le tech tree XXL maintenant ?', a: 'Oui. Pas le CONTENU XXL (seul âge I est rempli), mais la STRUCTURE XXL. Ajouter plus tard un panneau fondamentalement différent = refonte + bugs. Commencer dès le début avec le vrai panneau = zéro dette technique.' }
+  ];
+
+  return (
+    <>
+      <h2 className="sec"><span className="n">10</span>Conseils & garde-fous</h2>
+
+      <h3 className="hh">🪤 Pièges à éviter</h3>
+      <div className="grid-2">
+        {PITFALLS.map((p,i)=>(
+          <div key={i} className="sketch-box">
+            <div className="h-hand" style={{ fontSize: 22, color: 'var(--blocked)' }}>⚠ {p.t}</div>
+            <div style={{ fontSize: 13, margin: '4px 0' }}><b>Problème :</b> {p.d}</div>
+            <div style={{ fontSize: 13, color: 'var(--done)' }}><b>Parade :</b> {p.fix}</div>
+          </div>
+        ))}
+      </div>
+
+      <hr className="wavy"/>
+
+      <h3 className="hh">❓ FAQ rapide</h3>
+      {FAQ.map((f,i)=>(
+        <details key={i} className="faq">
+          <summary>{f.q}</summary>
+          <div style={{ fontSize: 14, lineHeight: 1.5, paddingLeft: 6 }}>{f.a}</div>
+        </details>
+      ))}
+
+      <hr className="wavy"/>
+
+      <div className="callout">
+        <span className="lbl">🎯 Résumé en 1 phrase</span>
+        Livre l'âge de pierre <b>de bout en bout</b> (tech tree XXL-ready + Job System + besoins + chasse + Cairn + cinématique)
+        avant de toucher à l'âge du Bronze, en utilisant le contrat JSON SPEC v1 comme pivot entre 4 lots étanches.
+      </div>
+    </>
+  );
+}
+
+// ---------- Quests tab ---------- //
+function QuestsTab() {
+  return (
+    <>
+      <h2 className="sec"><span className="n">04</span>Système de quêtes</h2>
+      <div className="callout">
+        <span className="lbl">✅ Moteur livré</span>
+        Le moteur de quêtes est présent dans le code (quests.js) : états disponible/active/complétée, catalogue de 9 quêtes génériques, rewards câblés.
+        Les quêtes scénarisées enchaînées ont été retirées du scope âge I.
+      </div>
+    </>
+  );
+}
+
+// ---------- Later / Nice-to-have tab ---------- //
+function LaterTab() {
+  return (
+    <>
+      <h2 className="sec"><span className="n">09</span>Nice-to-have (repoussés mais documentés)</h2>
+      <p className="sec-desc">
+        Ces items sont <b>volontairement hors scope</b> âge I pour éviter le glissement. Documentés ici pour ne pas les réimplémenter
+        "au cas où" en cours de route. Si tu veux les activer plus tard, reviens à ce doc.
+      </p>
+
+      <div className="grid-2">
+        {NICE_TO_HAVE.map((n, i) => (
+          <div key={i} className="sketch-box">
+            <div className="h-hand" style={{ fontSize: 24 }}>{n.title}</div>
+            <div style={{ fontSize: 14, margin: '6px 0' }}>{n.desc}</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-faint)' }}><b>Statut :</b> {n.status}</div>
+          </div>
+        ))}
+      </div>
+
+      <hr className="wavy"/>
+
+      <h3 className="hh">🚫 Anti-scope explicite</h3>
+      <div className="sketch-box">
+        <ul style={{ fontSize: 14, lineHeight: 1.6, paddingLeft: 20, margin: 0 }}>
+          <li><b>Maladie</b> — décalée au Bronze (système médecine cohérent avec herboristerie).</li>
+          <li><b>Froid + vêtements</b> — décalés au Bronze (boucle Peau → Vêtements trop longue pour âge I).</li>
+          <li><b>Reproduction naturelle</b> — décalée post-MVP (croissance pop par événements scriptés en âge I).</li>
+          <li><b>Fiches personnages détaillées</b> — bulles + nom suffisent âge I.</li>
+          <li><b>XP métiers / spécialisation</b> — un colon est simplement assigné à un rôle, pas de progression individuelle.</li>
+          <li><b>Filons Cuivre/Charbon exploitables</b> — visibles sur la map, mais <span className="code">locked âge I</span>. Le passage au Bronze les active.</li>
+          <li><b>Pelle / Faucille pierre</b> — existent comme techs mais optionnelles âge I, pas dans le tutoriel.</li>
+        </ul>
+      </div>
+
+      <div className="callout" style={{ marginTop: 12 }}>
+        <span className="lbl">🎯 Principe</span>
+        Si un de ces items est tentant, reporte-le à la fin de l'âge I ou à l'âge suivant.
+        L'ajouter maintenant casse la focalisation verticale.
+      </div>
+    </>
+  );
+}
+
+// ---------- App ---------- //
+function App() {
+  const stored = (() => { try { return JSON.parse(localStorage.getItem('pilotage-age1-state')||'{}'); } catch { return {}; } })();
+  const [tab, setTab] = useState(stored.tab || 'overview');
+  useEffect(()=>{ localStorage.setItem('pilotage-age1-state', JSON.stringify({ tab })); }, [tab]);
+
+  return (
+    <>
+      <Header tab={tab} setTab={setTab}/>
+      <main>
+        {tab==='overview'   && <OverviewTab/>}
+        {tab==='definition' && <DefinitionTab/>}
+        {tab==='strates'    && <StratesTab/>}
+        {tab==='quests'     && <QuestsTab/>}
+        {tab==='contract'   && <ContractTab/>}
+        {tab==='bronze'     && <BronzeTab/>}
+        {tab==='order'      && <OrderTab/>}
+        {tab==='later'      && <LaterTab/>}
+        {tab==='advice'     && <AdviceTab/>}
+      </main>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
