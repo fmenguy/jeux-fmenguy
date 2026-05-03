@@ -22,6 +22,26 @@ const overlayContainer = ensureOverlayContainer()
 const barCache = new Map() // group.uuid -> { wrap, fill }
 const matCache = new WeakMap() // material -> { transparent, opacity }
 
+// Sélecteurs des panneaux/modales qui bloquent l interaction. Tant qu un
+// d entre eux est visible, les barres de chantier (et autre HUD world-to-screen)
+// doivent être masquées pour ne pas pénétrer la modale.
+const BLOCKING_MODAL_SELECTORS = [
+  '#popPanel.open',                       // Population
+  '#ttp-root.open',                       // Tech tree
+  '#help-overlay.open',                   // Aide (Clair Obscur)
+  '#agri-overlay.open',                   // Agriculture
+  '#char-panel:not(.hidden)',             // Fiche colon
+  '#bp-panel:not(.hidden)',               // Info bâtiment
+  '#pause-menu:not(.hidden)',             // Menu pause
+]
+
+function isAnyBlockingModalOpen() {
+  for (const sel of BLOCKING_MODAL_SELECTORS) {
+    if (document.querySelector(sel)) return true
+  }
+  return false
+}
+
 function ensureOverlayContainer() {
   let el = document.getElementById('construction-fx-overlay')
   if (el) return el
@@ -146,6 +166,14 @@ function* iterateBuildings() {
 const seenThisTick = new Set()
 
 export function tickConstructionFX() {
+  // Masque tout l overlay si une modale bloquante est ouverte. La transparence
+  // sur les meshes 3D reste appliquée (cohérent avec l état du chantier),
+  // seule la barre DOM est cachée pour ne pas pénétrer la modale.
+  if (isAnyBlockingModalOpen()) {
+    overlayContainer.style.display = 'none'
+    return
+  }
+  overlayContainer.style.display = ''
   seenThisTick.clear()
   const container = overlayContainer
   for (const b of iterateBuildings()) {
