@@ -45,8 +45,17 @@ const cCountEl = document.getElementById('c-count')
 const colonsListEl = document.getElementById('colons-list')
 const colonsHeaderEl = document.getElementById('colons-header')
 const stocksLineEl = document.getElementById('stocks-line')
-const rViandeEl = document.getElementById('r-viande')
-const rGrainEl  = document.getElementById('r-grain')
+const rViandeEl    = document.getElementById('r-viande')
+const rGrainEl     = document.getElementById('r-grain')
+const rMeatRawEl   = document.getElementById('r-meat-raw')
+const rMeatCookedEl= document.getElementById('r-meat-cooked')
+const rBoneEl      = document.getElementById('r-bone')
+const resMeatRawEl    = document.getElementById('res-meat-raw')
+const resMeatCookedEl = document.getElementById('res-meat-cooked')
+const resBoneEl       = document.getElementById('res-bone')
+const sepMeatRawEl    = document.getElementById('sep-meat-raw')
+const sepMeatCookedEl = document.getElementById('sep-meat-cooked')
+const sepBoneEl       = document.getElementById('sep-bone')
 const techsBodyEl = document.getElementById('techs-body')
 
 if (colonsHeaderEl) {
@@ -180,6 +189,20 @@ export function tickResourceAnim() {
   if (cBushesEl)  cBushesEl.textContent  = state.bushes.length
   if (rViandeEl)  rViandeEl.textContent  = formatNum(_disp.viande)
   if (rGrainEl)   rGrainEl.textContent   = formatNum(_disp.grain)
+
+  const meatRaw    = Math.floor(state.resources['raw-meat']    || 0)
+  const meatCooked = Math.floor(state.resources['cooked-meat'] || 0)
+  const boneCount  = Math.floor(state.resources['bone']        || 0)
+  function setHuntRes(valEl, rowEl, sepEl, val) {
+    if (!valEl) return
+    const show = val > 0 ? '' : 'none'
+    valEl.textContent = val
+    if (rowEl) rowEl.style.display = show
+    if (sepEl) sepEl.style.display = show
+  }
+  setHuntRes(rMeatRawEl,    resMeatRawEl,    sepMeatRawEl,    meatRaw)
+  setHuntRes(rMeatCookedEl, resMeatCookedEl, sepMeatCookedEl, meatCooked)
+  setHuntRes(rBoneEl,       resBoneEl,       sepBoneEl,       boneCount)
 }
 
 // ----------------------------------------------------------------------------
@@ -304,7 +327,8 @@ export function tickFps() {
 
 // referentiels pour tick()
 export const hudRefs = {
-  rBerriesEl, rWoodEl, rStoneEl, cBushesEl, rViandeEl, rGrainEl
+  rBerriesEl, rWoodEl, rStoneEl, cBushesEl, rViandeEl, rGrainEl,
+  rMeatRawEl, rMeatCookedEl, rBoneEl
 }
 
 // ============================================================================
