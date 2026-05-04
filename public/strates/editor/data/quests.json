@@ -1,9 +1,70 @@
 {
+  "_spec": "v1",
+  "_rewardsSchema": {
+    "doc": "Chaque quête expose un tableau rewards. Types supportés :",
+    "types": [
+      { "type": "research",   "fields": { "amount": "int, points de recherche ajoutés" } },
+      { "type": "resource",   "fields": { "id": "id de resources.json (berries, wood, stone, raw-meat, ...)", "amount": "int" } },
+      { "type": "speedBoost", "fields": { "durationSec": "int, durée en secondes", "factor": "float, multiplicateur de vitesse de travail (ex: 1.20 pour +20%)" } },
+      { "type": "colonist",   "fields": { "count": "int, nombre de colons spawnés près du Cairn ou de la première Maison" } }
+    ]
+  },
   "quests": [
-    { "id": "q-berries-75", "title": "Récolter 75 baies",          "target": 75, "color": "#8c5cc4", "checkKey": "berries" },
-    { "id": "q-mine-10",    "title": "Miner 10 blocs de pierre",   "target": 10, "color": "#a8a196", "checkKey": "minesCompleted" },
-    { "id": "q-house-2",    "title": "Poser une deuxième maison",  "target": 2,  "color": "#c97a4a", "checkKey": "housesPlaced" },
-    { "id": "q-colons-8",   "title": "Avoir 8 colons en vie",      "target": 8,  "color": "#ffb070", "checkKey": "colonistsCount" },
-    { "id": "q-berries-20", "title": "Récolter 20 baies au total", "target": 20, "color": "#6b2d8c", "checkKey": "totalBerriesHarvested" }
+    {
+      "id": "q-berries-75",
+      "title": "Récolter 75 baies",
+      "target": 75,
+      "color": "#8c5cc4",
+      "checkKey": "berries",
+      "rewards": [
+        { "type": "research", "amount": 20 },
+        { "type": "resource", "id": "berries", "amount": 30 },
+        { "type": "speedBoost", "durationSec": 60, "factor": 1.20 }
+      ]
+    },
+    {
+      "id": "q-mine-10",
+      "title": "Miner 10 blocs de pierre",
+      "target": 10,
+      "color": "#a8a196",
+      "checkKey": "minesCompleted",
+      "rewards": [
+        { "type": "research", "amount": 10 },
+        { "type": "resource", "id": "stone", "amount": 15 }
+      ]
+    },
+    {
+      "id": "q-house-2",
+      "title": "Poser une deuxième maison",
+      "target": 2,
+      "color": "#c97a4a",
+      "checkKey": "housesPlaced",
+      "rewards": [
+        { "type": "research", "amount": 15 },
+        { "type": "resource", "id": "wood", "amount": 10 }
+      ]
+    },
+    {
+      "id": "q-colons-8",
+      "title": "Avoir 8 colons en vie",
+      "target": 8,
+      "color": "#ffb070",
+      "checkKey": "colonistsCount",
+      "rewards": [
+        { "type": "research", "amount": 10 },
+        { "type": "colonist", "count": 1 }
+      ]
+    },
+    {
+      "id": "q-berries-20",
+      "title": "Récolter 20 baies au total",
+      "target": 20,
+      "color": "#6b2d8c",
+      "checkKey": "totalBerriesHarvested",
+      "rewards": [
+        { "type": "research", "amount": 5 },
+        { "type": "resource", "id": "berries", "amount": 10 }
+      ]
+    }
   ]
 }
