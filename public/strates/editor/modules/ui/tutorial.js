@@ -82,7 +82,7 @@ const TUTO_STEPS = [
   {
     label:    'Tuto · 6/6',
     sel:      '[data-tool="place-research"]',
-    fallback: '.ab-body#ab-build',
+    fallback: '.ab-tools#ab-build',
     text:     'Place la Hutte du Sage pour générer des points de recherche !',
     kind:     'event',
     event:    'strates:buildingPlaced',
