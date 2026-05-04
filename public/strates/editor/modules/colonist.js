@@ -22,7 +22,7 @@ import {
   findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn,
   isRockOn, collectRockAt, isBushOn, grabBushAt, isOreOn
 } from './placements.js'
-import { findNearestBush, refreshBushBerries, isObservatoryOn } from './placements.js'
+import { findNearestBush, refreshBushBerries, isObservatoryOn, enterObservatory, releaseFromObservatory, OBSERVATORY_CAPACITY } from './placements.js'
 import { techUnlocked, classifyMineableBlock, canMineResource } from './tech.js'
 import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.js'
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
@@ -159,6 +159,12 @@ export class Colonist {
     // chemin a la moindre apparition de job (cf. branche MOVING) et de basculer
     // proprement en IDLE en fin de path sans repasser par WORKING.
     this.observatoryTarget = false
+    // Lot B : reference vers l entry promontoire ciblee (cf. pickObservatory).
+    // Sert a l arrivee pour declencher enterObservatory et masquer le mesh.
+    this.observatoryTargetEntry = null
+    // Lot B : true tant que le mesh du colon est cache (caché dans un
+    // promontoire la nuit). Restaure a false par releaseFromObservatory.
+    this.isHidden = false
     this.workTimer = 0
     this.huntTimer = 0
     this.bounce = 0
@@ -769,9 +775,15 @@ export class Colonist {
     if (!state.observatories || !state.observatories.length) return false
     // Deja sur un promontoire : rester IDLE, les points sont generes auto.
     if (isObservatoryOn(this.x, this.z)) return false
+    // Lot B : capacite 2 par promontoire. On ne cible qu un promontoire avec
+    // une place dispo (en comptant ce colon s il y est deja). Sinon le colon
+    // surnumeraire reste IDLE/wander hors promontoire.
     let best = null, bestD = Infinity
     for (const o of state.observatories) {
       if (o.isUnderConstruction) continue
+      const occ = Array.isArray(o.occupants) ? o.occupants : []
+      const alreadyIn = occ.includes(this.id)
+      if (!alreadyIn && occ.length >= OBSERVATORY_CAPACITY) continue
       const d = Math.abs(o.x - this.x) + Math.abs(o.z - this.z)
       if (d < bestD) { bestD = d; best = o }
     }
@@ -796,6 +808,8 @@ export class Colonist {
     // permet de basculer en IDLE en fin de path sans repasser par WORKING.
     this.isWandering = false
     this.observatoryTarget = true
+    // Lot B : memorise l entry visee pour l ajouter aux occupants a l arrivee.
+    this.observatoryTargetEntry = best
     this.updateTrail()
     return true
   }
@@ -1179,6 +1193,19 @@ export class Colonist {
       // Nuit : attirance vers le foyer le plus proche (feu de camp social).
       if (state.isNight && !stayingOnObservatory && this.pickCampfire()) return
       if (stayingOnObservatory) {
+        // Lot B : si le colon est sur la cellule d un promontoire avec place
+        // dispo et n y figure pas encore (cas reload mi-nuit ou bascule N),
+        // l ajouter aux occupants pour masquer le mesh et allumer la lumiere.
+        if (!this.isHidden && state.observatories) {
+          for (const o of state.observatories) {
+            if (o.isUnderConstruction) continue
+            const dx = Math.abs(o.x - this.x)
+            const dz = Math.abs(o.z - this.z)
+            if (dx + dz <= 1) {
+              if (enterObservatory(this, o)) break
+            }
+          }
+        }
         // Petite rotation lente de la tete pour montrer qu il scrute le ciel.
         this.lookTimer -= dt
         if (this.lookTimer <= 0) {
@@ -1311,6 +1338,12 @@ export class Colonist {
         // isObservatoryOn pour le maintenir sur place (stayingOnObservatory).
         if (this.observatoryTarget) {
           this.observatoryTarget = false
+          // Lot B : tente d entrer dans le promontoire (capacite 2). Si OK,
+          // mesh masque + lumiere allumee. Sinon le colon reste IDLE en
+          // surface (pas de night points pour lui, contribution = 0).
+          const entry = this.observatoryTargetEntry
+          this.observatoryTargetEntry = null
+          if (entry) enterObservatory(this, entry)
           this.state = 'IDLE'
           this.path = null
           this.lineGeo.setFromPoints([])

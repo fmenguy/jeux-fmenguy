@@ -1676,6 +1676,10 @@ export function isCellOccupied(x, z) {
 // Simple tour : socle en pierre + plateforme, pour qu'un colon monte dessus la
 // nuit et genere des points nocturnes.
 // ============================================================================
+// Lot B : capacite max d occupants caches dans le promontoire la nuit. Au-dela
+// les chercheurs surnumeraires restent dehors (IDLE wander, pas de night points).
+export const OBSERVATORY_CAPACITY = 2
+
 function makeObservatory() {
   const g = new THREE.Group()
   const stoneMat = new THREE.MeshStandardMaterial({ color: 0x8d8377, roughness: 0.92, flatShading: true })
@@ -1713,7 +1717,12 @@ export function addObservatory(gx, gz) {
   const g = makeObservatory()
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
-  const entry = { x: gx, z: gz, group: g }
+  // Lot B : lumiere chaude allumee la nuit quand au moins un chercheur observe
+  // depuis l interieur du promontoire. Attachee au group pour suivre la position.
+  const light = new THREE.PointLight(0xffd070, 0, 5)
+  light.position.set(0, 1.6, 0)
+  g.add(light)
+  const entry = { x: gx, z: gz, group: g, occupants: [], light }
   _markUnderConstruction(entry, 'promontoire')
   state.observatories.push(entry)
   const alt = top ?? 3
@@ -1737,11 +1746,83 @@ export function removeObservatoriesIn(cells) {
   for (let i = state.observatories.length - 1; i >= 0; i--) {
     const o = state.observatories[i]
     if (cellSet.has(o.z * GRID + o.x)) {
+      // Lot B : libere les occupants caches avant destruction du group, sinon
+      // le mesh du colon resterait invisible.
+      _releaseObservatoryOccupants(o)
       scene.remove(o.group)
       o.group.traverse(node => { if (node.material) node.material.dispose(); if (node.geometry) node.geometry.dispose() })
       state.observatories.splice(i, 1)
     }
   }
+}
+
+// Lot B : promontoire = abri nocturne pour chercheurs. Helpers d entree/sortie.
+function _findColonistById(id) {
+  if (!state.colonists) return null
+  for (const c of state.colonists) if (c.id === id) return c
+  return null
+}
+
+function _updateObservatoryLight(entry) {
+  if (!entry || !entry.light) return
+  entry.light.intensity = (entry.occupants && entry.occupants.length > 0) ? 1.5 : 0
+}
+
+// Tente d ajouter le colon c dans le promontoire entry. Retourne true si
+// l ajout a reussi (place dispo, mesh masque, lumiere allumee).
+export function enterObservatory(c, entry) {
+  if (!c || !entry) return false
+  if (entry.isUnderConstruction) return false
+  if (!Array.isArray(entry.occupants)) entry.occupants = []
+  if (entry.occupants.includes(c.id)) {
+    // Deja a l interieur : invariant a respecter (mesh masque, lumiere ON).
+    if (c.group) c.group.visible = false
+    c.isHidden = true
+    _updateObservatoryLight(entry)
+    return true
+  }
+  if (entry.occupants.length >= OBSERVATORY_CAPACITY) return false
+  entry.occupants.push(c.id)
+  if (c.group) c.group.visible = false
+  c.isHidden = true
+  _updateObservatoryLight(entry)
+  return true
+}
+
+// Retire le colon c de TOUT promontoire ou son id apparait. Restaure la
+// visibilite du mesh et eteint la lumiere si plus personne.
+export function releaseFromObservatory(c) {
+  if (!c || !state.observatories) return
+  for (const entry of state.observatories) {
+    if (!Array.isArray(entry.occupants)) continue
+    const idx = entry.occupants.indexOf(c.id)
+    if (idx >= 0) {
+      entry.occupants.splice(idx, 1)
+      _updateObservatoryLight(entry)
+    }
+  }
+  if (c.group) c.group.visible = true
+  c.isHidden = false
+}
+
+function _releaseObservatoryOccupants(entry) {
+  if (!entry || !Array.isArray(entry.occupants)) return
+  for (const id of entry.occupants) {
+    const c = _findColonistById(id)
+    if (c) {
+      if (c.group) c.group.visible = true
+      c.isHidden = false
+    }
+  }
+  entry.occupants.length = 0
+  _updateObservatoryLight(entry)
+}
+
+// Appele au lever du jour pour vider tous les promontoires : les chercheurs
+// reapparaissent et la lumiere s eteint.
+export function releaseAllObservatoryOccupants() {
+  if (!state.observatories) return
+  for (const entry of state.observatories) _releaseObservatoryOccupants(entry)
 }
 
 export function isObservatoryOn(x, z) {
