@@ -249,15 +249,12 @@ export function initAgeTransitions() {
 }
 
 function _injectCairnButton() {
-  const actionbar = document.getElementById('actionbar')
-  if (!actionbar) return
-
-  let monumentGroup = actionbar.querySelector('.group.monument')
-  if (!monumentGroup) {
-    monumentGroup = document.createElement('div')
-    monumentGroup.className = 'group monument'
-    actionbar.appendChild(monumentGroup)
-  }
+  // Lot E : le bouton Cairn s integre desormais dans le pane Construire
+  // (#ab-build), aux cotes des autres outils de construction. Auparavant il
+  // etait pousse dans une zone .group.monument appendee a #actionbar, ce qui
+  // le faisait deborder sous la zone Naviguer (grid 3 colonnes).
+  const buildPane = document.getElementById('ab-build')
+  if (!buildPane) return
 
   _cairnBtn = document.createElement('button')
   // On utilise 'tool' sans 'locked' pour que pointer-events reste actif
@@ -266,13 +263,13 @@ function _injectCairnButton() {
   _cairnBtn.className = 'tool'
   _cairnBtn.dataset.tool = 'cairn'
   _cairnBtn.title = 'Poser le Cairn (passage à l\'âge du Bronze)'
-  _cairnBtn.innerHTML = '<span class="nm">Cairn</span><span class="key">C</span>'
+  _cairnBtn.innerHTML = '<span class="ic">&#127961;</span><span class="nm">Cairn</span><span class="kb">C</span>'
   _cairnBtn.style.border        = '1px solid rgba(212,184,112,0.7)'
   _cairnBtn.style.boxShadow     = '0 0 8px rgba(212,184,112,0.45)'
   _cairnBtn.style.opacity       = '0.5'
   _cairnBtn.style.cursor        = 'not-allowed'
   _cairnBtn.style.pointerEvents = 'auto'
-  monumentGroup.appendChild(_cairnBtn)
+  buildPane.appendChild(_cairnBtn)
 
   _cairnBtn.addEventListener('click', _onCairnClick)
   _cairnBtn.addEventListener('mouseenter', _showCondTooltip)
