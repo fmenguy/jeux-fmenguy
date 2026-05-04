@@ -181,14 +181,31 @@ function serializeSnapshot() {
       maxBerries: b.maxBerries,
       regenTimer: b.regenTimer
     })),
-    houses: state.houses.map(h => ({ x: h.x, z: h.z })),
-    manors: state.manors.map(m => ({ x: m.x, z: m.z })),
-    bigHouses: (state.bigHouses || []).map(b => ({ x: b.x, z: b.z })),
-    wheatFields: (state.wheatFields || []).map(f => ({
-      x: f.x, z: f.z, grain: f.grain || 0,
-      growthStage: f.growthStage || 'dirt',
-      growthProgress: typeof f.growthProgress === 'number' ? f.growthProgress : 0
+    houses: state.houses.map(h => ({
+      x: h.x, z: h.z, id: h.id,
+      residents: Array.isArray(h.residents) ? h.residents.slice() : [],
+      isUnderUpgrade: !!h.isUnderUpgrade,
+      upgradeProgress: typeof h.upgradeProgress === 'number' ? h.upgradeProgress : 0,
+      upgradeTargetType: h.upgradeTargetType || null,
+      upgradeBuildTime: typeof h.upgradeBuildTime === 'number' ? h.upgradeBuildTime : 0
     })),
+    manors: state.manors.map(m => ({
+      x: m.x, z: m.z, id: m.id,
+      residents: Array.isArray(m.residents) ? m.residents.slice() : []
+    })),
+    bigHouses: (state.bigHouses || []).map(b => ({
+      x: b.x, z: b.z, id: b.id,
+      residents: Array.isArray(b.residents) ? b.residents.slice() : []
+    })),
+    bigHouseNextId: state.bigHouseNextId || 1,
+    manorNextId: state.manorNextId || 1,
+    wheatFields: (state.wheatFields || []).map(f => ({
+      x: f.x, z: f.z, id: f.id, grain: f.grain || 0,
+      growthStage: f.growthStage || 'dirt',
+      growthProgress: typeof f.growthProgress === 'number' ? f.growthProgress : 0,
+      assignedColonistIds: Array.isArray(f.assignedColonistIds) ? f.assignedColonistIds.slice() : []
+    })),
+    wheatFieldNextId: state.wheatFieldNextId || 1,
     researchHouses: state.researchHouses.map(r => ({
       x: r.x, z: r.z, id: r.id,
       assignedColonistIds: Array.isArray(r.assignedColonistIds) ? r.assignedColonistIds.slice() : []
@@ -207,7 +224,11 @@ function serializeSnapshot() {
       isStar: !!c.isStar,
       hp: c.hp, mor: c.mor, faim: c.faim,
       age: c.age, skills: c.skills || {},
-      profession: c.profession ?? null
+      profession: c.profession ?? null,
+      assignedJob: c.assignedJob ?? null,
+      assignedFieldId: c.assignedFieldId ?? null,
+      homeBuildingId: c.homeBuildingId ?? null,
+      partnerId: c.partnerId ?? null
     })),
     spawn: state.spawn ? { x: state.spawn.x, z: state.spawn.z } : null,
     jobs: Array.from(state.jobs.keys()),
@@ -276,6 +297,7 @@ function clearEverything() {
   state.achievements = []
   state.cairns = []
   state.wheatFields = []
+  state.wheatFieldNextId = 1
 }
 
 function applySnapshot(data) {
@@ -324,18 +346,56 @@ function applySnapshot(data) {
       bush.regenTimer = b.regenTimer || 0
     }
   }
-  for (const h of data.houses) if (!isCellOccupied(h.x, h.z)) addHouse(h.x, h.z)
-  for (const m of (data.manors || [])) addManorFromSave(m.x, m.z)
-  for (const b of (data.bigHouses || [])) addBigHouseFromSave(b.x, b.z)
+  for (const h of data.houses) {
+    if (isCellOccupied(h.x, h.z)) continue
+    const entry = addHouse(h.x, h.z)
+    if (!entry) continue
+    // Lot B residents : restaure id stable et liste de residents.
+    if (typeof h.id === 'number') entry.id = h.id
+    if (Array.isArray(h.residents)) entry.residents = h.residents.slice()
+  }
+  for (const m of (data.manors || [])) {
+    const entry = addManorFromSave(m.x, m.z)
+    if (!entry) continue
+    if (typeof m.id === 'number') entry.id = m.id
+    if (Array.isArray(m.residents)) entry.residents = m.residents.slice()
+  }
+  for (const b of (data.bigHouses || [])) {
+    const entry = addBigHouseFromSave(b.x, b.z)
+    if (!entry) continue
+    if (typeof b.id === 'number') entry.id = b.id
+    if (Array.isArray(b.residents)) entry.residents = b.residents.slice()
+  }
+  // Lot B residents : restaure les compteurs d ids stables (sinon recalcul).
+  if (typeof data.bigHouseNextId === 'number') {
+    state.bigHouseNextId = data.bigHouseNextId
+  } else {
+    state.bigHouseNextId = (state.bigHouses || []).reduce((m, b) => Math.max(m, (b.id || 0) + 1), 1)
+  }
+  if (typeof data.manorNextId === 'number') {
+    state.manorNextId = data.manorNextId
+  } else {
+    state.manorNextId = (state.manors || []).reduce((m, x) => Math.max(m, (x.id || 0) + 1), 1)
+  }
   if (Array.isArray(data.wheatFields)) {
     for (const f of data.wheatFields) {
       const entry = addWheatField(f.x, f.z)
       if (!entry) continue
+      // Lot B fermier : restore l id stable et la liste de fermiers assignes.
+      if (typeof f.id === 'number') entry.id = f.id
+      if (Array.isArray(f.assignedColonistIds)) {
+        entry.assignedColonistIds = f.assignedColonistIds.slice()
+      }
       if (typeof f.grain === 'number') entry.grain = f.grain
       if (typeof f.growthProgress === 'number') entry.growthProgress = f.growthProgress
       // Si la save indique stage 'sprouting', swap immédiatement le mesh.
       if (f.growthStage === 'sprouting') updateFieldMesh(entry, 'sprouting')
     }
+  }
+  if (typeof data.wheatFieldNextId === 'number') {
+    state.wheatFieldNextId = data.wheatFieldNextId
+  } else {
+    state.wheatFieldNextId = (state.wheatFields || []).reduce((m, f) => Math.max(m, (f.id || 0) + 1), 1)
   }
   for (const rh of data.researchHouses) {
     if (isCellOccupied(rh.x, rh.z)) continue

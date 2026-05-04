@@ -20,7 +20,8 @@ import { jobKey, removeJob } from './jobs.js'
 import { dlog } from './debug.js'
 import {
   findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn,
-  isRockOn, collectRockAt, isBushOn, grabBushAt, isOreOn
+  isRockOn, collectRockAt, isBushOn, grabBushAt, isOreOn,
+  findWheatFieldById, releaseFromWheatFields, completeUpgrade
 } from './placements.js'
 import { findNearestBush, refreshBushBerries, isObservatoryOn, enterObservatory, releaseFromObservatory, OBSERVATORY_CAPACITY } from './placements.js'
 import { techUnlocked, classifyMineableBlock, canMineResource } from './tech.js'
@@ -182,6 +183,9 @@ export class Colonist {
     // throttler a IDLE_SPEECH_COOLDOWN. Runtime only, pas persiste.
     this._lastIdleSpeechAt = 0
     this.researchBuildingId = null
+    // Lot B fermier : id du champ de ble auquel ce colon est attache (1 max).
+    // null tant qu il n est pas agriculteur ou qu aucun champ libre n existe.
+    this.assignedFieldId = null
     this.lastContextLine = null
     this.favorite = false
     // Lot B : flag "etoile" (5% au spawn par maison construite). Affecte
@@ -192,6 +196,14 @@ export class Colonist {
     this.jobQueue = []                   // tableau de Task, priorite decroissante
     this.currentTask = null              // Task en cours d execution
     this.assignedBuildingId = null       // Cabane pour dormir, Hutte du sage pour bosser
+    // Lot B residents : reference vers l instance d habitation precise (cabane,
+    // grosse cabane, manoir) du colon. Forme "kind:id" via makeHomeRef.
+    // Distinct de assignedBuildingId qui est un id de buildings.json (string).
+    // null si SANS-ABRI (apres demolition de la maison ou colon orphelin).
+    this.homeBuildingId = null
+    // Lot B residents : id du colon partenaire (couple). Symetrique. null par
+    // defaut. Casse a la mort d un des deux ou a la demolition.
+    this.partnerId = null
     this.productivityMul = 1.0           // expose en lecture pour le cablage par placements.js et tech.js (post-Lot-B)
     // Lot B (mode mixte) : flag mis par pickJob/pickHarvest quand le colon
     // prend une tache basique (cueillette, minage pierre) sans avoir la
@@ -231,11 +243,16 @@ export class Colonist {
       if (typeof r.age   === 'number') this.age   = r.age
       if (r.skills && typeof r.skills === 'object') Object.assign(this.skills, r.skills)
       if (r.profession !== undefined) this.profession = r.profession
+      if (r.assignedJob !== undefined) this.assignedJob = r.assignedJob
+      if (typeof r.assignedFieldId === 'number') this.assignedFieldId = r.assignedFieldId
       // Lot B : restaure l assignation de bati si presente dans la save,
       // sinon suppose qu il y avait au moins une maison (la save implique
       // que le hameau initial a ete cree).
       if (r.assignedBuildingId) this.assignedBuildingId = r.assignedBuildingId
       else if (state.houses && state.houses.length > 0) this.assignedBuildingId = 'cabane'
+      // Lot B residents : reference d habitation precise et lien social couple.
+      if (typeof r.homeBuildingId === 'string') this.homeBuildingId = r.homeBuildingId
+      if (typeof r.partnerId === 'number') this.partnerId = r.partnerId
     } else if (opts && opts.forceName) {
       this.gender = opts.forceGender || 'M'
       this.name = opts.forceName
@@ -422,7 +439,19 @@ export class Colonist {
         ]
         for (const arr of lists) {
           if (!arr) continue
-          for (const b of arr) if (b && b.isUnderConstruction) return false
+          for (const b of arr) if (b && (b.isUnderConstruction || b.isUnderUpgrade)) return false
+        }
+        return true
+      }
+      case 'agriculteur': {
+        if (!techUnlocked('wheat-field')) return true
+        const fields = state.wheatFields || []
+        if (fields.length === 0) return true
+        for (const f of fields) {
+          if (!f || f.isUnderConstruction) continue
+          const ids = Array.isArray(f.assignedColonistIds) ? f.assignedColonistIds : []
+          if (ids.length === 0) return false
+          if (ids.indexOf(this.id) !== -1) return false
         }
         return true
       }
@@ -823,7 +852,7 @@ export class Colonist {
     const sites = []
     const pushAll = (arr) => {
       if (!arr) return
-      for (const b of arr) if (b && b.isUnderConstruction) sites.push(b)
+      for (const b of arr) if (b && (b.isUnderConstruction || b.isUnderUpgrade)) sites.push(b)
     }
     pushAll(state.foyers)
     pushAll(state.houses)
@@ -1050,6 +1079,16 @@ export class Colonist {
       // assigne profession === 'chercheur'. Plus d auto-assignation du chef
       // ni d aucun autre colon IDLE vers la Hutte du sage. Sans chercheur
       // explicite, la file de recherche stagne : c est voulu.
+      // Lot B fermier : si le colon n est plus agriculteur (changement de
+      // metier ou desassignation), liberer immediatement le champ qu il avait
+      // reserve. Evite qu un champ reste verrouille apres un changement de role.
+      if (
+        this.assignedFieldId != null &&
+        (this.profession !== 'agriculteur' || this.assignedJob !== 'farmer')
+      ) {
+        releaseFromWheatFields(this.id)
+        this.assignedFieldId = null
+      }
       // Lot B perf : la prise de decision (pickHarvest, pickJob, pickBuildJob)
       // appelle du pathfinding A* couteux. On throttle a ~3 Hz par colon pour
       // eviter les micro-freezes en foule IDLE. La rotation tete et la flanerie
@@ -1167,6 +1206,60 @@ export class Colonist {
             if (this.pickObservatory()) {
               this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE, reason: 'astronome' }
               return
+            }
+          }
+        }
+        // Lot B fermier : agriculteur. Le jour, si la tech wheat-field est
+        // debloquee et qu un champ libre existe (assignedColonistIds vide),
+        // le colon s y assigne et part bosser. Capacite stricte 1 par champ.
+        // La nuit, comme les autres metiers, il rentre au campfire.
+        if (
+          this.profession === 'agriculteur' &&
+          this.assignedJob === 'farmer' &&
+          !state.isNight &&
+          techUnlocked('wheat-field')
+        ) {
+          // Si un champ etait deja attribue mais qu il a disparu ou est en
+          // chantier, on libere proprement.
+          if (this.assignedFieldId != null) {
+            const cur = findWheatFieldById(this.assignedFieldId)
+            if (!cur || cur.isUnderConstruction) {
+              releaseFromWheatFields(this.id)
+              this.assignedFieldId = null
+            }
+          }
+          // Trouver un champ libre si pas encore assigne.
+          if (this.assignedFieldId == null && state.wheatFields && state.wheatFields.length) {
+            let bestF = null, bestFD = Infinity
+            for (const f of state.wheatFields) {
+              if (!f) continue
+              if (f.isUnderConstruction) continue
+              if (!Array.isArray(f.assignedColonistIds)) f.assignedColonistIds = []
+              if (f.assignedColonistIds.length >= 1) continue
+              const d = Math.abs(f.x - this.x) + Math.abs(f.z - this.z)
+              if (d < bestFD) { bestFD = d; bestF = f }
+            }
+            if (bestF) {
+              bestF.assignedColonistIds.push(this.id)
+              this.assignedFieldId = bestF.id
+            }
+          }
+          if (this.assignedFieldId != null) {
+            const field = findWheatFieldById(this.assignedFieldId)
+            if (field) {
+              const approach = findApproach(this.x, this.z, field.x, field.z)
+              if (approach) {
+                this.path = approach.path
+                this.pathStep = 0
+                this.state = 'MOVING'
+                this.isWandering = false
+                this.updateTrail()
+                this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK, reason: 'farmer' }
+                return
+              }
+              // Champ inaccessible : on libere pour permettre une autre cible.
+              releaseFromWheatFields(this.id)
+              this.assignedFieldId = null
             }
           }
         }
@@ -1364,6 +1457,19 @@ export class Colonist {
           this.group.position.set(this.tx, this.ty, this.tz)
           return
         }
+        // Lot B fermier : arrivee au champ. On bascule en FARMING tant qu il
+        // fait jour et que le champ est encore valide.
+        if (
+          this.assignedFieldId != null &&
+          this.profession === 'agriculteur' && this.assignedJob === 'farmer' &&
+          !this.targetJob && !this.targetBush && !this.targetFoyer
+        ) {
+          this.state = 'FARMING'
+          this.path = null
+          this.lineGeo.setFromPoints([])
+          this.group.position.set(this.tx, this.ty, this.tz)
+          return
+        }
         if (this.targetConstructionSite) {
           // Arrive au chantier : on passe en etat BUILDING. Le tick BUILDING
           // fait avancer constructionProgress et XP building tant que le site
@@ -1414,9 +1520,50 @@ export class Colonist {
       return
     }
 
+    if (this.state === 'FARMING') {
+      this.lineGeo.setFromPoints([])
+      // Gate universel : profession === 'agriculteur' ET assignedJob === 'farmer'.
+      // La nuit, le fermier rentre se reposer comme les autres metiers (rebascule
+      // en IDLE pour laisser le campfire le prendre en charge). Le champ reste
+      // assigne (assignedFieldId) pour qu il y revienne le lendemain.
+      const stillFarmer = (this.profession === 'agriculteur' && this.assignedJob === 'farmer')
+      if (!stillFarmer || state.isNight) {
+        if (!stillFarmer) {
+          // Changement de metier : on libere completement le champ.
+          releaseFromWheatFields(this.id)
+          this.assignedFieldId = null
+        }
+        this.state = 'IDLE'
+        return
+      }
+      const field = findWheatFieldById(this.assignedFieldId)
+      if (!field || field.isUnderConstruction) {
+        releaseFromWheatFields(this.id)
+        this.assignedFieldId = null
+        this.state = 'IDLE'
+        return
+      }
+      // Animation : oriente vers le centre du champ 2x2, leger bob.
+      const centerX = field.x + 1
+      const centerZ = field.z + 1
+      const dx = centerX - this.tx
+      const dz = centerZ - this.tz
+      this.group.rotation.y = Math.atan2(dx, dz)
+      const bob = Math.sin(performance.now() * 0.0035) * 0.06
+      this.group.position.set(this.tx, this.ty + Math.abs(bob), this.tz)
+      // XP recolte par tick (similaire au researcher avec research).
+      this.researchXpTimer = (this.researchXpTimer || 0) + dt
+      if (this.researchXpTimer >= RESEARCH_TICK) {
+        this.researchXpTimer -= RESEARCH_TICK
+        this.skills.gathering = (this.skills.gathering || 0) + 1
+      }
+      return
+    }
+
     if (this.state === 'BUILDING') {
       const site = this.targetConstructionSite
-      if (!site || !site.isUnderConstruction) {
+      const isUpgrade = !!(site && site.isUnderUpgrade)
+      if (!site || (!site.isUnderConstruction && !site.isUnderUpgrade)) {
         // Chantier disparu (annule, supprime) ou termine entre temps.
         if (site && site.builders) {
           site.builders.delete(this.id)
@@ -1444,10 +1591,44 @@ export class Colonist {
       const skillFactor = Math.max(0.1, lvl / 10)
       const prodMul = (typeof this.productivityMul === 'number') ? this.productivityMul : 1
       const speedMul = getGlobalSpeedFactor(state)
-      const bt = (typeof site.buildTime === 'number' && site.buildTime > 0) ? site.buildTime : 1
-      site.constructionProgress = Math.min(1, (site.constructionProgress || 0) + skillFactor * prodMul * speedMul * dt / bt)
       // XP building accumule dans this.skills.building (paliers via skillLevel).
       this.skills.building = (this.skills.building || 0) + dt
+
+      if (isUpgrade) {
+        // Upgrade explicite Cabane -> Grosse maison : meme moteur de progression
+        // que la construction, mais on incremente upgradeProgress et on swap le
+        // batiment a l achevement via completeUpgrade.
+        const ubt = (typeof site.upgradeBuildTime === 'number' && site.upgradeBuildTime > 0) ? site.upgradeBuildTime : 1
+        site.upgradeProgress = Math.min(1, (site.upgradeProgress || 0) + skillFactor * prodMul * speedMul * dt / ubt)
+        if (site.upgradeProgress >= 1) {
+          const builders = site.builders ? Array.from(site.builders) : []
+          if (site.builders) { site.builders.clear(); site.activeBuildersCount = 0 }
+          if (site.builderSlots) site.builderSlots.clear()
+          site.isUnderUpgrade = false
+          site.upgradeProgress = 1
+          completeUpgrade(site)
+          for (const cid of builders) {
+            const c = state.colonists.find(cc => cc.id === cid)
+            if (!c) continue
+            if (c.targetConstructionSite === site) {
+              c.targetConstructionSite = null
+              c.builderSlot = null
+              c.currentTask = null
+              c.path = null
+              if (c.state === 'BUILDING' || c.state === 'MOVING') c.state = 'IDLE'
+            }
+          }
+          this.builderSlot = null
+          this.targetConstructionSite = null
+          this.currentTask = null
+          this.state = 'IDLE'
+          this.path = null
+        }
+        return
+      }
+
+      const bt = (typeof site.buildTime === 'number' && site.buildTime > 0) ? site.buildTime : 1
+      site.constructionProgress = Math.min(1, (site.constructionProgress || 0) + skillFactor * prodMul * speedMul * dt / bt)
       if (site.constructionProgress >= 1) {
         site.constructionProgress = 1
         site.isUnderConstruction = false
@@ -1746,6 +1927,11 @@ export class Colonist {
       }
       this.targetConstructionSite.activeBuildersCount = this.targetConstructionSite.builders.size
     }
+    // Lot B fermier : liberer le champ assigne en cas de destruction du colon.
+    if (this.assignedFieldId != null) {
+      releaseFromWheatFields(this.id)
+      this.assignedFieldId = null
+    }
     scene.remove(this.group)
     scene.remove(this.line)
     this.group.traverse(o => { if (o.material) o.material.dispose?.(); if (o.geometry) o.geometry.dispose?.() })
@@ -1816,20 +2002,17 @@ export function spawnColonist(x, z, opts) {
   const id = state.colonists.length
   const c = new Colonist(id, x, z, opts)
   state.colonists.push(c)
-  // Assigner la maison la plus proche
+  // Assigner la maison la plus proche pour homeId legacy. Le lien residents
+  // explicite (Lot B residents) est pose par spawnColonsAroundHouse via
+  // homeBuildingId + building.residents, pas ici, pour eviter une
+  // double affectation incoherente sur les big-house / manoirs.
   let nearestHouse = null
   let nearestDist = Infinity
   for (const h of (state.houses || [])) {
     const d = Math.abs(h.x - x) + Math.abs(h.z - z)
     if (d < nearestDist) { nearestDist = d; nearestHouse = h }
   }
-  if (nearestHouse) {
-    c.homeId = nearestHouse.id
-    if (!nearestHouse.residents) nearestHouse.residents = []
-    nearestHouse.residents.push(c.id)
-  } else {
-    c.homeId = null
-  }
+  c.homeId = nearestHouse ? nearestHouse.id : null
   return c
 }
 
