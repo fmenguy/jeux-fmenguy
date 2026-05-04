@@ -12,7 +12,8 @@ import {
   checkManorMerge, isCellOccupied, isMineBlocked,
   addObservatory,
   isBuildingUniqueAndPlaced, isBushOn,
-  addBigHouse
+  addBigHouse,
+  removeConstructionSite, findConstructionSitesInCells
 } from './placements.js'
 import { addJob, removeJob, removeBuildJob, jobKey } from './jobs.js'
 import { canMineCell, techUnlocked, hasTreeAt, classifyMineableBlock } from './tech.js'
@@ -181,7 +182,21 @@ function applyToolToZone(cells, tool) {
 function cancelJobsInRect(cells) {
   let cancelled = 0
   for (const c of cells) if (cancelJobAt(c.x, c.z, true)) cancelled++
-  if (cancelled > 0) refreshHUD()
+  // Annule aussi les chantiers (batiments en cours de construction) dont le
+  // footprint intersecte la zone. Libere les colons (BUILDING ou MOVING vers
+  // ce chantier) et les remet en IDLE.
+  const sites = findConstructionSitesInCells(cells)
+  let sitesRemoved = 0
+  for (const s of sites) {
+    if (removeConstructionSite(s.building, s.type)) sitesRemoved++
+  }
+  if (cancelled > 0 || sitesRemoved > 0) refreshHUD()
+  if (sitesRemoved > 0) {
+    showHudToast(
+      sitesRemoved === 1 ? 'Chantier annulé' : (sitesRemoved + ' chantiers annulés'),
+      2200
+    )
+  }
 }
 
 function setCursorAt(cell) {
@@ -324,12 +339,26 @@ export function labelOfTool(t) {
   })[t] || t
 }
 
+// Outils de pose de batiments. Pour ces outils, le clic sur la carte pose un
+// batiment et l outil reste actif (multi-placement). On peut quitter via Echap,
+// le bouton Annuler de l actionbar, ou en re-cliquant sur le meme bouton.
+const BUILDING_PLACEMENT_TOOLS = new Set([
+  'house', 'place-foyer', 'place-research', 'observatory', 'place-big-house'
+])
+
+export function isBuildingPlacementTool(t) {
+  return BUILDING_PLACEMENT_TOOLS.has(t)
+}
+
 export function setTool(t) {
   state.toolState.tool = t
   toolBtns.forEach(b => b.classList.toggle('active', b.dataset.tool === t))
   if (hudToolEl) hudToolEl.textContent = labelOfTool(t)
   controls.mouseButtons.LEFT = (t === 'nav') ? THREE.MOUSE.ROTATE : null
   if (t === 'nav') cursorMesh.visible = false
+  // Sync visuel du bouton Annuler de l actionbar (hors toolBtns sidebar).
+  const abc = document.getElementById('ab-cancel')
+  if (abc) abc.classList.toggle('active', t === 'cancel-zone')
 }
 
 export function setBrush(b) {
@@ -343,7 +372,19 @@ toolBtns.forEach(b => b.addEventListener('click', () => {
     openAgriculturePanel()
     return
   }
-  if (b.dataset.tool) setTool(b.dataset.tool)
+  if (b.dataset.tool) {
+    // Re-clic sur un outil de pose de batiment deja actif : on quitte le mode
+    // placement et on revient en navigation. Permet de fermer le multi-placement
+    // proprement sans passer par Echap ni le bouton Annuler.
+    if (
+      BUILDING_PLACEMENT_TOOLS.has(b.dataset.tool) &&
+      state.toolState.tool === b.dataset.tool
+    ) {
+      cancelAllSelections()
+      return
+    }
+    setTool(b.dataset.tool)
+  }
 }))
 brushBtns.forEach(b => b.addEventListener('click', () => setBrush(parseInt(b.dataset.brush, 10))))
 window.addEventListener('strates:brushSize', e => setBrush(e.detail.size))
@@ -456,9 +497,9 @@ if (btnSaveClose) btnSaveClose.addEventListener('click', closeSaveMenu)
 // Boutons d action universels (Annuler + Démolir) dans l actionbar
 // ---------------------------------------------------------------------------
 
-// Annule TOUTE action en cours : outil → nav, sortie placement champ, sortie
-// mode destroy, vidage du stroke courant. Idempotent.
-function cancelAllSelections() {
+// Reset doux : sort des modes spéciaux et de tout outil non-nav, vide le
+// stroke courant et le rectangle de sélection. Ne (re)entre dans aucun mode.
+function resetAllToNav() {
   cancelFieldPlacement()
   exitDestroyMode()
   if (state.toolState && state.toolState.tool !== 'nav') setTool('nav')
@@ -467,6 +508,40 @@ function cancelAllSelections() {
   }
   if (selectionRect) selectionRect.active = false
   if (typeof clearSelPoly === 'function') clearSelPoly()
+  refreshAbCancelActive()
+}
+
+// Synchronise la classe .active du bouton #ab-cancel avec l etat outil.
+function refreshAbCancelActive() {
+  const btn = document.getElementById('ab-cancel')
+  if (!btn) return
+  const on = state.toolState && state.toolState.tool === 'cancel-zone'
+  btn.classList.toggle('active', !!on)
+}
+
+// Bouton Annuler universel.
+// Priorite 1 : si un mode special est actif (placement champ/cairn, destroy,
+//   ou un outil different de nav/cancel-zone), on sort proprement.
+// Priorite 2 : si on est deja en cancel-zone, on en sort.
+// Priorite 3 : sinon (au repos), on entre en mode cancel-zone (drag rouge
+//   sur la carte annule tous les jobs de la zone au mouseup).
+function cancelAllSelections() {
+  const t = state.toolState && state.toolState.tool
+  const inSpecialMode = state.fieldPlacementMode || state.cairnPlacementMode || state.destroyMode
+  const inOtherTool = t && t !== 'nav' && t !== 'cancel-zone'
+  if (inSpecialMode || inOtherTool) {
+    resetAllToNav()
+    return
+  }
+  if (t === 'cancel-zone') {
+    resetAllToNav()
+    return
+  }
+  // Au repos : on entre en cancel-zone.
+  setTool('cancel-zone')
+  if (selectionRect) selectionRect.active = false
+  if (typeof clearSelPoly === 'function') clearSelPoly()
+  refreshAbCancelActive()
 }
 
 function enterDestroyMode() {
@@ -548,6 +623,10 @@ document.addEventListener('keydown', (e) => {
 
   if (state.destroyMode) {
     exitDestroyMode()
+    e.stopPropagation(); e.preventDefault(); return
+  }
+  if (state.toolState && state.toolState.tool === 'cancel-zone') {
+    resetAllToNav()
     e.stopPropagation(); e.preventDefault(); return
   }
   if (state.cairnPlacementMode) {
@@ -1209,6 +1288,12 @@ dom.addEventListener('pointerup', (e) => {
       if (found) {
         // Mode destroy global : démolir directement au lieu d ouvrir le panneau.
         if (state.destroyMode) {
+          // Un chantier en cours n est pas demolissable : c est l outil
+          // Annuler (drag rouge) qui doit l annuler.
+          if (found.building && found.building.isUnderConstruction) {
+            showHudToast('Utilisez Annuler pour un chantier en cours', 2500)
+            return
+          }
           if (!isBuildingDestructible(found.type)) {
             showHudToast('Ce bâtiment ne peut pas être démoli.', 2200)
             return
