@@ -4,6 +4,18 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-04 : Lot B, fix trajet chercheur vers le promontoire la nuit
+
+Suite aux fix precedents, le compteur `nightPoints` ne progressait toujours pas en pratique : le chercheur, libere de la Hutte du sage a la tombee de la nuit, ne se deplacait pas visiblement vers le Promontoire. Cause racine : `pickObservatory` posait `isWandering = true`, ce qui declenchait l annulation immediate du trajet dans la branche MOVING des qu un job apparaissait (`state.jobs.size > 0`). En presence quasi-permanente de jobs joueurs, le chercheur n atteignait jamais le promontoire.
+
+### Comportement
+
+- `colonist.js` : nouveau flag `observatoryTarget` (par colon). Pose par `pickObservatory` quand le path est valide, coupe par MOVING en fin de path (passage propre en IDLE) ou si le jour se leve en cours de trajet (rebascule IDLE pour aller a la Hutte du sage).
+- `colonist.js` : `pickObservatory` n active plus `isWandering`. Le path n est donc plus vulnerable a la cancellation par `state.jobs.size > 0`.
+- `colonist.js` : `pickObservatory` retombe sur `findApproach` si `aStar` echoue (palier trop haut sur la cellule du promontoire), pour deposer le chercheur sur une cellule voisine atteignable, coherent avec la tolerance Manhattan <= 1 de `isObservatoryOn` et `isColonistOnObservatory`.
+
+---
+
 ## 2026-05-04 : Lot B, fix production night points au promontoire
 
 Apres la migration astronome -> chercheur (commit f73b67d), le compteur `nightPoints` ne progressait plus la nuit meme avec un chercheur visiblement present au promontoire. Cause : le pathfinding deposait souvent le colon sur une cellule adjacente au promontoire (palier de hauteur trop important pour atteindre la cellule exacte), or `isColonistOnObservatory` exigeait une egalite stricte sur (x, z).
