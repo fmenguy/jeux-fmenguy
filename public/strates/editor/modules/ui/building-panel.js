@@ -17,6 +17,19 @@ import { refreshHUD } from '../hud.js'
 import { getBuildingById } from '../gamedata.js'
 import { techUnlocked } from '../tech.js'
 import { GRID, SHALLOW_WATER_LEVEL } from '../constants.js'
+import { openCharSheet } from '../charsheet-ui.js'
+
+// Métiers (libellé court + icône) pour le badge dans la liste des résidents.
+const PROFESSION_BADGE = {
+  cueilleur:    { ic: '🫐', lbl: 'Cueilleur' },
+  bucheron:     { ic: '🪓', lbl: 'Bûcheron' },
+  mineur:       { ic: '⛏',  lbl: 'Mineur' },
+  chercheur:    { ic: '📜', lbl: 'Chercheur' },
+  chasseur:     { ic: '🏹', lbl: 'Chasseur' },
+  constructeur: { ic: '🔨', lbl: 'Constructeur' },
+}
+
+const BIG_HOUSE_CAPACITY = 8
 
 const CSS = `
 #bp-panel {
@@ -92,7 +105,32 @@ const CSS = `
   padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.06);
 }
 .bp-resident:last-child { border-bottom: none; }
+.bp-resident-clickable { cursor: pointer; transition: background 0.12s; border-radius: 4px; padding-left: 4px; padding-right: 4px; }
+.bp-resident-clickable:hover { background: rgba(255,217,138,0.10); }
+.bp-resident-empty { opacity: 0.6; }
 .bp-resident-name { flex: 1; font-size: 12px; color: #f3ecdd; }
+.bp-resident-prof {
+  font-size: 13px; line-height: 1;
+  padding: 1px 4px;
+  background: rgba(255,217,138,0.10);
+  border: 1px solid rgba(255,217,138,0.30);
+  border-radius: 3px;
+}
+.bp-resident-row-meta {
+  flex-basis: 100%; padding-left: 26px;
+  font-family: var(--mono, monospace);
+  font-size: 9.5px; color: rgba(243,236,221,0.65);
+  margin-top: 2px;
+}
+.bp-resident-partner {
+  display: inline-block;
+  padding: 1px 6px;
+  background: rgba(220,90,140,0.16);
+  border: 1px solid rgba(230,130,170,0.50);
+  border-radius: 3px;
+  color: #f0bcd4;
+  letter-spacing: 0.04em;
+}
 .bp-resident-chief {
   font-size: 9px; color: #ffd98a; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
@@ -244,6 +282,15 @@ function ensureDom() {
   document.body.appendChild(panelEl)
   document.getElementById('bp-close-btn').addEventListener('click', closeBuildingPanel)
   bodyEl = document.getElementById('bp-body')
+  // Délégation : clic sur un résident ouvre la fiche du colon (charsheet).
+  bodyEl.addEventListener('click', (e) => {
+    const row = e.target.closest('.bp-resident-clickable')
+    if (!row) return
+    const cid = row.dataset.cid
+    if (cid == null) return
+    const c = (state.colonists || []).find(x => String(x.id) === String(cid))
+    if (c) openCharSheet(c)
+  })
 }
 
 export function destroyBuilding(type, building) {
@@ -316,16 +363,39 @@ function colonistById(id) {
   return (state.colonists || []).find(c => c.id === id) || null
 }
 
+function _escH(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 function residentRow(colonistId) {
   const c = colonistById(colonistId)
   if (!c) return ''
   const genClass = c.gender === 'F' ? 'F' : 'M'
   const sym = c.gender === 'F' ? '♀' : '♂'
-  return '<div class="bp-resident">' +
+  const profMeta = c.profession ? PROFESSION_BADGE[c.profession] : null
+  const profBadge = profMeta
+    ? '<span class="bp-resident-prof" title="' + _escH(profMeta.lbl) + '">' + profMeta.ic + '</span>'
+    : ''
+  // Lot B : partnerId quand câblé. Avant câblage, simplement aucun badge.
+  const partner = (c.partnerId != null) ? colonistById(c.partnerId) : null
+  const partnerBadge = partner
+    ? '<span class="bp-resident-partner" title="Couple avec ' + _escH(partner.name) + '">💞 ' + _escH(partner.name) + '</span>'
+    : ''
+  return '<div class="bp-resident bp-resident-clickable" data-cid="' + _escH(c.id) + '">' +
     '<span style="font-size:14px">👤</span>' +
-    '<span class="bp-resident-name">' + c.name + '</span>' +
+    '<span class="bp-resident-name">' + _escH(c.name) + '</span>' +
     (c.isChief ? '<span class="bp-resident-chief">Chef</span>' : '') +
+    profBadge +
     '<span class="bp-resident-gender ' + genClass + '">' + sym + '</span>' +
+    (partnerBadge ? '<span class="bp-resident-row-meta">' + partnerBadge + '</span>' : '') +
+  '</div>'
+}
+
+function emptySlotRow() {
+  return '<div class="bp-resident bp-resident-empty">' +
+    '<span style="font-size:14px;opacity:.5">🪶</span>' +
+    '<span class="bp-resident-name" style="font-style:italic;color:rgba(243,236,221,0.4)">Place libre</span>' +
   '</div>'
 }
 
@@ -412,8 +482,11 @@ function buildContent(type, building) {
     '</div>'
   )
 
-  if (type === 'house' || type === 'manor') {
-    const capacity = type === 'manor' ? MANOR_CAPACITY : HOUSE_CAPACITY
+  if (type === 'house' || type === 'manor' || type === 'big-house') {
+    let capacity
+    if (type === 'manor') capacity = MANOR_CAPACITY
+    else if (type === 'big-house') capacity = BIG_HOUSE_CAPACITY
+    else capacity = HOUSE_CAPACITY
     const residents = building.residents || []
 
     sections.push(
@@ -425,18 +498,19 @@ function buildContent(type, building) {
       '</div>'
     )
 
-    const resHtml = residents.length
-      ? residents.map(id => residentRow(id)).join('')
-      : '<div class="bp-empty">Aucun résident</div>'
+    // Liste : résidents puis slots libres, jusqu à atteindre la capacité.
+    const rows = residents.map(id => residentRow(id))
+    const free = Math.max(0, capacity - residents.length)
+    for (let i = 0; i < free; i++) rows.push(emptySlotRow())
 
     sections.push(
       '<div class="bp-section">' +
         '<h4>Résidents</h4>' +
-        resHtml +
+        rows.join('') +
       '</div>'
     )
 
-    // Section Améliorer (cabane uniquement, pas le manoir)
+    // Section Améliorer (cabane uniquement, pas le manoir ni la grosse maison)
     if (type === 'house') {
       const upgradeHtml = _renderUpgradeSection(building)
       if (upgradeHtml) sections.push(upgradeHtml)
