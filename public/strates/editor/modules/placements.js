@@ -943,7 +943,7 @@ export function addBigHouse(gx, gz) {
   const g = makeBigHouse()
   g.position.set(gx + 2, top, gz + 2)
   scene.add(g)
-  const entry = { x: gx, z: gz, group: g }
+  const entry = { x: gx, z: gz, group: g, id: state.bigHouseNextId++, residents: [] }
   _markUnderConstruction(entry, 'big-house')
   state.bigHouses.push(entry)
   revealAround(gx + 2, gz + 2, 8)
@@ -981,8 +981,148 @@ export function addBigHouseFromSave(ox, oz) {
   g.position.set(ox + 2, top, oz + 2)
   scene.add(g)
   // Restauration depuis save : batiment deja construit dans la sauvegarde.
-  const entry = { x: ox, z: oz, group: g, buildingId: 'big-house', isUnderConstruction: false, constructionProgress: 1, buildTime: 0 }
+  const entry = {
+    x: ox, z: oz, group: g, buildingId: 'big-house',
+    isUnderConstruction: false, constructionProgress: 1, buildTime: 0,
+    id: state.bigHouseNextId++, residents: []
+  }
   state.bigHouses.push(entry)
+  return entry
+}
+
+// ============================================================================
+// Upgrade explicite d un batiment vers un autre type. Remplace l ancienne
+// fusion automatique de 4 maisons. Appele par le bouton du panneau bâtiment
+// (UI : building-panel.js -> placementsApi.upgradeBuilding).
+// ============================================================================
+
+// Fallback si la def JSON ne declare pas upgradeFrom.
+const _HARDCODED_UPGRADES = {
+  'big-house': ['cabane']
+}
+
+export function canUpgradeTo(fromType, toType) {
+  const def = getBuildingById(toType)
+  if (def && def.upgradeFrom) {
+    const f = def.upgradeFrom.from
+    if (Array.isArray(f)) return f.includes(fromType)
+    return f === fromType
+  }
+  const list = _HARDCODED_UPGRADES[toType]
+  return Array.isArray(list) && list.includes(fromType)
+}
+
+function _checkUpgradeFootprint(gx, gz, footprint, sourceX, sourceZ) {
+  for (let dz = 0; dz < footprint; dz++) {
+    for (let dx = 0; dx < footprint; dx++) {
+      const cx = gx + dx, cz = gz + dz
+      if (cx < 0 || cz < 0 || cx >= GRID || cz >= GRID) return false
+      const top = state.cellTop[cz * GRID + cx]
+      if (top <= SHALLOW_WATER_LEVEL) return false
+      if (cx === sourceX && cz === sourceZ) continue
+      if (isCellOccupied(cx, cz)) return false
+    }
+  }
+  return true
+}
+
+function _hasUpgradeResources(cost) {
+  if (!cost) return true
+  if (!state.resources) return false
+  for (const k in cost) {
+    if ((state.resources[k] || 0) < cost[k]) return false
+  }
+  return true
+}
+
+function _consumeUpgradeResources(cost) {
+  if (!cost) return
+  for (const k in cost) {
+    state.resources[k] = Math.max(0, (state.resources[k] || 0) - cost[k])
+  }
+}
+
+export function upgradeBuilding(building, targetType) {
+  if (!building) return { ok: false, reason: 'no-building' }
+  if (building.isUnderConstruction) return { ok: false, reason: 'still-building' }
+  if (building.isUnderUpgrade) return { ok: false, reason: 'already-upgrading' }
+  const targetDef = getBuildingById(targetType)
+  if (!targetDef) return { ok: false, reason: 'unknown-target' }
+  const fromType = building.buildingId
+  if (!canUpgradeTo(fromType, targetType)) return { ok: false, reason: 'invalid-upgrade' }
+
+  const footprint = targetDef.footprint || 1
+  if (footprint > 1) {
+    if (!_checkUpgradeFootprint(building.x, building.z, footprint, building.x, building.z)) {
+      try { showHudToast("Pas assez de place autour de la cabane (4x4 nécessaire).", 2500) } catch (_) {}
+      return { ok: false, reason: 'no-room' }
+    }
+  }
+
+  const upgradeCost = (targetDef.upgradeFrom && targetDef.upgradeFrom.cost) || targetDef.cost || {}
+  if (!_hasUpgradeResources(upgradeCost)) {
+    try { showHudToast("Ressources insuffisantes pour l'amélioration.", 2500) } catch (_) {}
+    return { ok: false, reason: 'no-resources' }
+  }
+  _consumeUpgradeResources(upgradeCost)
+
+  const upgradeBuildTime = (targetDef.upgradeFrom && typeof targetDef.upgradeFrom.buildTime === 'number')
+    ? targetDef.upgradeFrom.buildTime
+    : (typeof targetDef.buildTime === 'number' ? targetDef.buildTime : 30)
+
+  building.isUnderUpgrade = true
+  building.upgradeProgress = 0
+  building.upgradeTargetType = targetType
+  building.upgradeBuildTime = upgradeBuildTime > 0 ? upgradeBuildTime : 1
+  if (!building.builders) building.builders = new Set()
+  if (!building.builderSlots) building.builderSlots = new Map()
+  building.activeBuildersCount = building.builders.size
+
+  return { ok: true }
+}
+
+// Termine l upgrade : retire la cabane source et place la grosse maison deja
+// construite a l emplacement, en transferant les residents.
+export function completeUpgrade(sourceBuilding) {
+  if (!sourceBuilding) return null
+  const targetType = sourceBuilding.upgradeTargetType
+  const fromType = sourceBuilding.buildingId
+  const ox = sourceBuilding.x
+  const oz = sourceBuilding.z
+  const residents = Array.isArray(sourceBuilding.residents) ? sourceBuilding.residents.slice() : []
+
+  if (fromType === 'cabane' && targetType === 'big-house') {
+    const idx = state.houses.indexOf(sourceBuilding)
+    if (idx !== -1) {
+      const h = state.houses[idx]
+      if (h.group) {
+        scene.remove(h.group)
+        h.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+      }
+      state.houses.splice(idx, 1)
+    }
+    const tops = []
+    for (let dz = 0; dz < 4; dz++) {
+      for (let dx = 0; dx < 4; dx++) {
+        tops.push(state.cellTop[(oz + dz) * GRID + (ox + dx)])
+      }
+    }
+    const top = Math.max(...tops)
+    const g = makeBigHouse()
+    g.position.set(ox + 2, top, oz + 2)
+    scene.add(g)
+    const entry = {
+      x: ox, z: oz, group: g, buildingId: 'big-house',
+      isUnderConstruction: false, constructionProgress: 1, buildTime: 0,
+      id: state.bigHouseNextId++, residents: residents
+    }
+    state.bigHouses.push(entry)
+    revealAround(ox + 2, oz + 2, 8)
+    try { showHudToast('Grosse maison achevée.', 2500) } catch (_) {}
+    return entry
+  }
+
+  return null
 }
 
 // ============================================================================
@@ -1028,33 +1168,19 @@ function _placeManorGroup(ox, oz) {
   const g = makeManor()
   g.position.set(ox + 1, top, oz + 1)
   scene.add(g)
-  const entry = { x: ox, z: oz, group: g, buildingId: 'manor', isUnderConstruction: false, constructionProgress: 1, buildTime: 0 }
+  const entry = {
+    x: ox, z: oz, group: g, buildingId: 'manor',
+    isUnderConstruction: false, constructionProgress: 1, buildTime: 0,
+    id: state.manorNextId++, residents: []
+  }
   state.manors.push(entry)
   return entry
 }
 
-function isPlainHouseOn(x, z) {
-  for (const h of state.houses) if (h.x === x && h.z === z) return true
-  return false
-}
-
-export function checkManorMerge(gx, gz) {
-  for (let ox = gx - 1; ox <= gx; ox++) {
-    for (let oz = gz - 1; oz <= gz; oz++) {
-      if (ox < 0 || oz < 0 || ox + 1 >= GRID || oz + 1 >= GRID) continue
-      if (
-        isPlainHouseOn(ox,   oz  ) &&
-        isPlainHouseOn(ox+1, oz  ) &&
-        isPlainHouseOn(ox,   oz+1) &&
-        isPlainHouseOn(ox+1, oz+1)
-      ) {
-        removeHousesIn([{x:ox,z:oz},{x:ox+1,z:oz},{x:ox,z:oz+1},{x:ox+1,z:oz+1}])
-        return _placeManorGroup(ox, oz)
-      }
-    }
-  }
-  return null
-}
+// La fusion automatique de 4 cabanes en manoir 2x2 a ete retiree (bug : la
+// fusion se declenchait des le placement, sans attendre la construction).
+// Elle est remplacee par un upgrade explicite Cabane -> Grosse maison
+// declenche depuis le panneau bâtiment (voir upgradeBuilding ci-dessous).
 
 export function addManorFromSave(ox, oz) {
   return _placeManorGroup(ox, oz)
@@ -1542,12 +1668,15 @@ export function addWheatField(gx, gz) {
     }
   }
   if (!state.wheatFields) state.wheatFields = []
+  if (!state.wheatFieldNextId) state.wheatFieldNextId = 1
   // Lot E : evolution visuelle desactivee. On demarre directement au stage
   // 'sprouting' (Farm.glb de base) et on n animera plus la transition.
   const initialStage = FIELD_VISUAL_EVOLUTION_ENABLED ? 'dirt' : 'sprouting'
   const initialProgress = FIELD_VISUAL_EVOLUTION_ENABLED ? 0.0 : 1.0
-  const entry = { x: gx, z: gz, group: null, grain: 0.0,
-                  growthStage: initialStage, growthProgress: initialProgress }
+  // Lot B fermier : id stable + capacite 1 fermier max via assignedColonistIds.
+  const entry = { id: state.wheatFieldNextId++, x: gx, z: gz, group: null, grain: 0.0,
+                  growthStage: initialStage, growthProgress: initialProgress,
+                  assignedColonistIds: [] }
   updateFieldMesh(entry, initialStage)
   // Pas de buildTime sur champ-ble dans buildings.json (Lot A age 2). On
   // marque pour homogeneiser le contrat, mais l absence de buildTime laisse
@@ -1555,6 +1684,24 @@ export function addWheatField(gx, gz) {
   _markUnderConstruction(entry, 'champ-ble')
   state.wheatFields.push(entry)
   return entry
+}
+
+// Lot B fermier : retrouve un champ de ble par son id stable.
+export function findWheatFieldById(id) {
+  if (!state.wheatFields || id == null) return null
+  for (const f of state.wheatFields) if (f.id === id) return f
+  return null
+}
+
+// Lot B fermier : retire le colon des assignedColonistIds de tous les champs.
+// Sert quand un colon change de metier ou est detruit.
+export function releaseFromWheatFields(colonistId) {
+  if (!state.wheatFields) return
+  for (const f of state.wheatFields) {
+    if (!Array.isArray(f.assignedColonistIds)) continue
+    const i = f.assignedColonistIds.indexOf(colonistId)
+    if (i >= 0) f.assignedColonistIds.splice(i, 1)
+  }
 }
 
 // Tick des champs : avance growthProgress de 0 à 1 sur FIELD_GROWTH_DURATION
@@ -2228,4 +2375,48 @@ export function tickFoyers(dt) {
       }
     }
   }
+}
+
+// ============================================================================
+// Lot B residents : helpers de resolution d habitations.
+// homeBuildingId est encode "kind:id" (ex: "house:0", "big-house:1", "manor:2")
+// pour pointer une instance d habitation precise et survivre aux saves.
+// ============================================================================
+
+export function makeHomeRef(kind, building) {
+  if (!kind || !building) return null
+  return kind + ':' + building.id
+}
+
+export function resolveHomeBuilding(homeRef) {
+  if (!homeRef || typeof homeRef !== 'string') return null
+  const sep = homeRef.indexOf(':')
+  if (sep < 0) return null
+  const kind = homeRef.slice(0, sep)
+  const id = parseInt(homeRef.slice(sep + 1), 10)
+  if (!Number.isFinite(id)) return null
+  let arr = null
+  if (kind === 'house')         arr = state.houses
+  else if (kind === 'big-house') arr = state.bigHouses
+  else if (kind === 'manor')     arr = state.manors
+  if (!arr) return null
+  for (const b of arr) if (b && b.id === id) return { kind, building: b }
+  return null
+}
+
+// Casse le lien residents / homeBuildingId d un colon (a appeler avant
+// destruction du colon ou de son habitation). Symetrique : retire l id du
+// tableau residents du batiment et nettoie c.homeBuildingId / assignedBuildingId.
+export function unlinkColonistFromHome(colonist) {
+  if (!colonist) return
+  const ref = colonist.homeBuildingId
+  if (ref) {
+    const r = resolveHomeBuilding(ref)
+    if (r && r.building && Array.isArray(r.building.residents)) {
+      const idx = r.building.residents.indexOf(colonist.id)
+      if (idx !== -1) r.building.residents.splice(idx, 1)
+    }
+  }
+  colonist.homeBuildingId = null
+  colonist.assignedBuildingId = null
 }
