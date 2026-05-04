@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { state } from '../state.js'
+import { showHudToast } from './research-popup.js'
 
 // ---- Constantes ----
 
@@ -251,6 +252,7 @@ export class PopulationModal {
   _toggleAssign(jobId, colonistId, action) {
     const raw = state.colonists.find(c => String(c.id) === String(colonistId))
     if (!raw) return
+    const previousProfession = raw.profession
     if (action === 'remove') {
       raw.profession = null
       raw.assignedJob = null
@@ -260,6 +262,13 @@ export class PopulationModal {
     }
     // Lot E : chapeau de metier 3D (couleur job.color) sur le mesh du colon.
     if (typeof raw.updateHat === 'function') raw.updateHat()
+    // Si l action vient du bouton "Changer de métier" (remove sur un colon
+    // déjà assigné au métier courant), guider le joueur vers le choix suivant.
+    if (action === 'remove' && previousProfession === jobId) {
+      try {
+        showHudToast('Colon retiré. Cliquez sur un autre métier pour le réassigner.', 3500)
+      } catch (e) { /* ignore */ }
+    }
     // Garder le sous-panneau ouvert pour permettre d'assigner plusieurs colons a la suite
     this._renderBody()
   }
@@ -439,9 +448,20 @@ export class PopulationModal {
 
   _htmlJobAssignPanel(jd, colonists) {
     const skillName = JOB_SKILL[jd.id]
-    const disponibles = colonists.filter(c => !c.profession || c.profession === jd.id)
-    // Tri : chef en premier, puis par niveau du métier DESC, puis nom asc
-    disponibles.sort((a, b) => {
+    // On affiche TOUS les colons compatibles (pas de filtrage par profession).
+    // Tri en 3 groupes :
+    //   1. libres (sans profession)
+    //   2. assignés à un autre métier
+    //   3. déjà assignés au métier courant (grisés en bas)
+    // Au sein de chaque groupe : chef en tête, puis niveau métier desc, puis nom.
+    const groupOf = (c) => {
+      if (c.profession === jd.id) return 2
+      if (!c.profession)          return 0
+      return 1
+    }
+    const rowsArr = colonists.slice().sort((a, b) => {
+      const ga = groupOf(a), gb = groupOf(b)
+      if (ga !== gb) return ga - gb
       if (a.chief && !b.chief) return -1
       if (b.chief && !a.chief) return 1
       const la = skillName ? skillLevelOf(a._raw, skillName) : 0
@@ -449,18 +469,33 @@ export class PopulationModal {
       if (la !== lb) return lb - la
       return String(a.name).localeCompare(String(b.name))
     })
-    const rows = disponibles.map(c => {
+
+    const otherJobLabel = (profId) => {
+      const j = JOB_DEFS.find(x => x.id === profId)
+      return j ? j.label : profId
+    }
+
+    const rows = rowsArr.map(c => {
       const isCurrent = c.profession === jd.id
+      const isOther = !!c.profession && !isCurrent
       const lvl = skillName ? skillLevelOf(c._raw, skillName) : 0
-      const lvlTxt = lvl > 0 ? '<span class="pv2-assign-lvl">Niv.' + lvl + '</span>' : ''
+      // Toujours afficher le niveau, même 0, pour permettre la décision.
+      const lvlTxt = '<span class="pv2-assign-lvl">Lv ' + lvl + '</span>'
       const action = isCurrent ? 'remove' : 'assign'
-      const btnLabel = isCurrent ? 'Retirer' : 'Assigner'
+      const btnLabel = isCurrent ? 'Changer de métier' : 'Assigner'
       const btnCls = 'pv2-job-action' + (isCurrent ? ' remove' : '')
-      const assignedBadge = isCurrent ? '<span class="pv2-assigned-badge">&#10003; Assigné</span>' : ''
-      return '<div class="pv2-assign-row' + (isCurrent ? ' current' : '') + '">' +
+      const assignedBadge = isCurrent
+        ? '<span class="pv2-assigned-badge">&#10003; Assigné</span>'
+        : ''
+      const otherMeta = isOther
+        ? '<span class="pv2-assign-other">actuellement ' + escH(otherJobLabel(c.profession)) + '</span>'
+        : ''
+      const rowCls = 'pv2-assign-row'
+        + (isCurrent ? ' current assigned-here' : '')
+      return '<div class="' + rowCls + '">' +
         '<span class="pv2-assign-name">' +
           (c.chief ? '<span class="pv2-chief-star">★</span> ' : '') +
-          escH(c.name) + ' ' + lvlTxt + assignedBadge +
+          escH(c.name) + ' ' + lvlTxt + assignedBadge + otherMeta +
         '</span>' +
         '<button class="' + btnCls + '" data-action="' + action + '" data-job-id="' + escH(jd.id) + '" data-cid="' + escH(c.id) + '">' +
           escH(btnLabel) +
@@ -468,9 +503,9 @@ export class PopulationModal {
         '</div>'
     }).join('')
 
-    const body = disponibles.length
+    const body = rowsArr.length
       ? rows
-      : '<div class="pv2-assign-empty">Aucun colon disponible.</div>'
+      : '<div class="pv2-assign-empty">Aucun colon dans la colonie.</div>'
 
     return '<div class="pv2-job-assign">' +
       '<div class="pv2-assign-title">Assigner à ' + escH(jd.label) + '</div>' +

@@ -390,6 +390,35 @@
   background: var(--panel-3);
 }
 .pv2-assign-row.current { background: rgba(212,184,112,.08); }
+/* Colon déjà assigné au métier courant : grisé en bas de liste avec
+   bouton "Changer de métier" plus discret. */
+.pv2-assign-row.assigned-here {
+  opacity: 0.55;
+  background: rgba(140,130,110,.10);
+  border-left: 2px solid rgba(212,184,112,.45);
+}
+.pv2-assign-row.assigned-here:hover { opacity: 0.85; }
+.pv2-assign-other {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  font-style: italic;
+  margin-left: 4px;
+}
+.pv2-assigned-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 2px;
+  background: rgba(120,200,140,.18);
+  border: 1px solid rgba(120,200,140,.55);
+  color: #a6e0b8;
+  margin-left: 4px;
+}
 .pv2-assign-name {
   font-family: var(--serif);
   font-size: 12px;
