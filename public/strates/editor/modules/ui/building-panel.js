@@ -12,7 +12,11 @@ import {
   removeHousesIn, removeManorsIn, removeBigHousesIn,
   removeResearchHousesIn, removeObservatoriesIn
 } from '../placements.js'
+import * as placementsApi from '../placements.js'
 import { refreshHUD } from '../hud.js'
+import { getBuildingById } from '../gamedata.js'
+import { techUnlocked } from '../tech.js'
+import { GRID, SHALLOW_WATER_LEVEL } from '../constants.js'
 
 const CSS = `
 #bp-panel {
@@ -125,6 +129,60 @@ const CSS = `
   border-color: rgba(140,140,140,0.35);
   color: rgba(220,200,200,0.45);
   cursor: not-allowed;
+}
+.bp-upgrade-btn {
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 8px;
+  background: rgba(80,140,200,0.15);
+  border: 1px solid rgba(120,180,230,0.45);
+  border-radius: 7px;
+  color: #b0d4f5;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.bp-upgrade-btn:hover:not([disabled]) {
+  background: rgba(110,170,225,0.28);
+  border-color: rgba(180,220,250,0.65);
+  color: #d8ecff;
+}
+.bp-upgrade-btn[disabled] {
+  background: rgba(80,80,80,0.16);
+  border-color: rgba(140,140,140,0.32);
+  color: rgba(200,210,225,0.45);
+  cursor: not-allowed;
+}
+.bp-upgrade-label { font-size: 12.5px; font-weight: 700; }
+.bp-upgrade-cost {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: rgba(243,236,221,0.7);
+}
+.bp-upgrade-btn[disabled] .bp-upgrade-cost { color: rgba(220,200,200,0.45); }
+.bp-upgrade-progress {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.bp-upgrade-progress .bp-upgrade-track {
+  width: 100%; height: 8px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(120,180,230,0.45);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bp-upgrade-progress .bp-upgrade-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6ea0d8, #b0d4f5);
+  transition: width 0.25s linear;
+}
+.bp-upgrade-progress .bp-upgrade-pct {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #b0d4f5;
+  align-self: flex-end;
 }
 `
 
@@ -271,6 +329,79 @@ function residentRow(colonistId) {
   '</div>'
 }
 
+// ============================================================================
+// Upgrade : helpers et rendu
+// ============================================================================
+
+const RES_LABELS = {
+  wood: 'bois', stone: 'pierre', berries: 'baies', silex: 'silex',
+  grain: 'grain', viande: 'viande', 'raw-meat': 'viande crue',
+  'cooked-meat': 'viande cuite', bone: 'os', hide: 'peau'
+}
+function _resLabel(k) { return RES_LABELS[k] || k }
+
+// Vérifie qu un footprint 4x4 ancré en (x, z) tient sur la carte. La cellule
+// (sourceHouse.x, sourceHouse.z) est ignorée (on remplace la cabane source).
+function _canFitBigHouseAt(x, z, sourceHouse) {
+  for (let dz = 0; dz < 4; dz++) {
+    for (let dx = 0; dx < 4; dx++) {
+      const cx = x + dx, cz = z + dz
+      if (cx < 0 || cz < 0 || cx >= GRID || cz >= GRID) return false
+      const k = cz * GRID + cx
+      if (state.cellTop[k] <= SHALLOW_WATER_LEVEL) return false
+      if (sourceHouse && cx === sourceHouse.x && cz === sourceHouse.z) continue
+      if (typeof placementsApi.isCellOccupied === 'function'
+          && placementsApi.isCellOccupied(cx, cz)) return false
+    }
+  }
+  return true
+}
+
+function _renderUpgradeSection(building) {
+  const targetDef = getBuildingById('big-house')
+  if (!targetDef || !targetDef.upgradeFrom || targetDef.upgradeFrom.from !== 'cabane') return ''
+  const cost = targetDef.upgradeFrom.cost || {}
+  const buildTime = targetDef.upgradeFrom.buildTime || 0
+
+  // Upgrade en cours : barre de progression
+  if (building.isUnderUpgrade) {
+    const pct = Math.max(0, Math.min(1, building.upgradeProgress || 0))
+    const pctTxt = Math.round(pct * 100) + '%'
+    return '<div class="bp-section">' +
+      '<h4>Amélioration en cours</h4>' +
+      '<div class="bp-upgrade-progress">' +
+        '<div class="bp-upgrade-track"><div class="bp-upgrade-fill" style="width:' + (pct * 100).toFixed(1) + '%"></div></div>' +
+        '<span class="bp-upgrade-pct">' + pctTxt + '</span>' +
+      '</div>' +
+    '</div>'
+  }
+
+  const hasTech = techUnlocked('big-house')
+  const enoughRes = Object.entries(cost).every(([k, v]) => (state.resources[k] || 0) >= v)
+  const fits = _canFitBigHouseAt(building.x, building.z, building)
+  const disabled = !hasTech || !enoughRes || !fits
+
+  let title = 'Amélioration en grosse maison (' + buildTime + 's)'
+  if (!hasTech) title = 'Recherche Grosse maison requise.'
+  else if (!enoughRes) {
+    const lacks = Object.entries(cost)
+      .filter(([k, v]) => (state.resources[k] || 0) < v)
+      .map(([k, v]) => v + ' ' + _resLabel(k))
+      .join(', ')
+    title = 'Ressources insuffisantes : ' + lacks + '.'
+  } else if (!fits) title = 'Pas assez de place autour de la cabane (4x4 nécessaire).'
+
+  const costStr = Object.entries(cost).map(([k, v]) => v + ' ' + _resLabel(k)).join(', ') || 'gratuit'
+  return '<div class="bp-section">' +
+    '<h4>Améliorer</h4>' +
+    '<button class="bp-upgrade-btn" id="bp-upgrade-btn"' +
+      (disabled ? ' disabled' : '') + ' title="' + title + '">' +
+      '<span class="bp-upgrade-label">&#11014; Améliorer en grosse maison</span>' +
+      '<span class="bp-upgrade-cost">' + costStr + ' &middot; ' + buildTime + 's</span>' +
+    '</button>' +
+  '</div>'
+}
+
 function buildContent(type, building) {
   const meta = BUILDING_META[type] || { icon: '🏗', name: type, desc: '' }
   const sections = []
@@ -304,6 +435,12 @@ function buildContent(type, building) {
         resHtml +
       '</div>'
     )
+
+    // Section Améliorer (cabane uniquement, pas le manoir)
+    if (type === 'house') {
+      const upgradeHtml = _renderUpgradeSection(building)
+      if (upgradeHtml) sections.push(upgradeHtml)
+    }
   }
 
   if (type === 'research') {
@@ -342,12 +479,90 @@ export function isBuildingDestructible(type) {
   return !NON_DESTRUCTIBLE.has(type)
 }
 
+// Câble le bouton Améliorer présent dans le DOM injecté.
+function _wireUpgradeButton() {
+  const btn = document.getElementById('bp-upgrade-btn')
+  if (!btn || btn.disabled) return
+  btn.addEventListener('click', () => {
+    if (_currentType !== 'house' || !_currentBuilding) return
+    const target = getBuildingById('big-house')
+    if (!target || !target.upgradeFrom) return
+    const cost = target.upgradeFrom.cost || {}
+
+    // Re-checks runtime : l état peut avoir changé pendant que la fiche était ouverte.
+    if (!techUnlocked('big-house')) {
+      showHudToast('Recherche Grosse maison requise.', 2500); return
+    }
+    if (!Object.entries(cost).every(([k, v]) => (state.resources[k] || 0) >= v)) {
+      showHudToast('Ressources insuffisantes pour l amélioration.', 2500); return
+    }
+    if (!_canFitBigHouseAt(_currentBuilding.x, _currentBuilding.z, _currentBuilding)) {
+      showHudToast('Emplacement impossible : la grosse maison nécessite 4x4 cellules libres.', 3500); return
+    }
+
+    // Lot B : appel direct si exporté par placements.js.
+    // En attendant : événement de fallback pour ne pas bloquer le flow UI.
+    if (typeof placementsApi.upgradeBuilding === 'function') {
+      try { placementsApi.upgradeBuilding(_currentBuilding, 'big-house') }
+      catch (e) { console.error('[strates] upgradeBuilding threw', e) }
+    } else {
+      try {
+        window.dispatchEvent(new CustomEvent('strates:upgradeRequested', {
+          detail: { building: _currentBuilding, targetType: 'big-house' }
+        }))
+      } catch (e) { /* ignore */ }
+      showHudToast('Amélioration demandée (en attente du moteur).', 2500)
+    }
+
+    refreshHUD()
+    // Re-render immédiat pour basculer en mode barre de progression
+    if (_currentType && _currentBuilding) {
+      bodyEl.innerHTML = buildContent(_currentType, _currentBuilding)
+    }
+  })
+}
+
+// Tick de rafraîchissement : barre de progression upgrade + bascule auto sur
+// la big-house quand l upgrade est terminé. Démarré à initBuildingPanel.
+let _refreshTimer = null
+function _startRefreshLoop() {
+  if (_refreshTimer != null) return
+  _refreshTimer = setInterval(() => {
+    if (!panelEl || panelEl.classList.contains('hidden')) return
+    if (_currentType !== 'house' || !_currentBuilding) return
+    const b = _currentBuilding
+    // Upgrade terminée : la cabane est retirée de state.houses, et la big-house
+    // existe désormais à la même position. On bascule automatiquement la fiche.
+    const stillInHouses = (state.houses || []).indexOf(b) !== -1
+    if (!b.isUnderUpgrade && (b.upgradedTo || !stillInHouses)) {
+      const big = (state.bigHouses || []).find(x => x.x === b.x && x.z === b.z)
+      if (big) { openBuildingPanel('big-house', big); return }
+      closeBuildingPanel(); return
+    }
+    if (b.isUnderUpgrade) {
+      const sec = bodyEl.querySelector('.bp-upgrade-progress')
+      if (sec) {
+        // Update fin (juste fill + label) pour éviter de tout re-render à 4 Hz
+        const pct = Math.max(0, Math.min(1, b.upgradeProgress || 0))
+        const fill = sec.querySelector('.bp-upgrade-fill')
+        const lbl  = sec.querySelector('.bp-upgrade-pct')
+        if (fill) fill.style.width = (pct * 100).toFixed(1) + '%'
+        if (lbl)  lbl.textContent = Math.round(pct * 100) + '%'
+      } else {
+        // Pas encore en mode progress (premier tick post-clic) : re-render
+        bodyEl.innerHTML = buildContent(_currentType, _currentBuilding)
+      }
+    }
+  }, 250)
+}
+
 export function initBuildingPanel() {
   window.addEventListener('strates:buildingClicked', function(e) {
     const d = e && e.detail
     if (!d) return
     openBuildingPanel(d.type, d.building)
   })
+  _startRefreshLoop()
 }
 
 export function openBuildingPanel(type, building) {
@@ -358,6 +573,7 @@ export function openBuildingPanel(type, building) {
   document.getElementById('bp-icon').textContent  = meta.icon
   document.getElementById('bp-title').textContent = meta.name
   bodyEl.innerHTML = buildContent(type, building)
+  _wireUpgradeButton()
   panelEl.classList.remove('hidden')
   // Forcer un redémarrage de l'animation slide-in
   panelEl.style.animation = 'none'
