@@ -193,80 +193,172 @@
     .word::before{content:"« ";color:var(--gold-2)}
     .word::after{content:" »";color:var(--gold-2)}
 
-    /* ====== Actionbar 3 zones ancrées (POC A) ======
-       Grid 3 colonnes : Naviguer (auto) | Onglets+outils (auto) | Annuler+Démolir (auto).
-       Le centre a une largeur min fixe pour que la zone droite ne bouge pas
-       d un pixel quand on switch d onglet (Récoltes vs Construire). */
-    .actionbar{
-      position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
-      background:linear-gradient(180deg,rgba(27,25,20,.96),rgba(20,18,14,.96));
-      border:1px solid var(--rule);border-radius:4px;z-index:20;
-      box-shadow:0 14px 40px rgba(0,0,0,.6),0 2px 4px rgba(0,0,0,.3);
-      display:grid;grid-template-columns:auto auto auto;
-      align-items:stretch;overflow:hidden;
-      backdrop-filter:blur(6px);
+    /* ====== Actionbar 3 zones ancrées (POC A : trois zones independantes) ======
+       Trois panneaux flottants en bas : Naviguer (gauche), tabs+outils (centre,
+       transparent), Annuler/Démolir (droite). Aucun cadre commun, chaque zone
+       a son propre fond / bordure / shadow / blur. Annuler/Démolir restent
+       visuellement ancres a l identique quand on switch d onglet. */
+    #actionbar{
+      position:fixed;left:0;right:0;bottom:0;
+      padding:0 22px 18px;
+      display:grid;
+      grid-template-columns: minmax(140px,1fr) auto minmax(140px,1fr);
+      align-items:end;
+      gap:18px;
+      pointer-events:none;
+      z-index:20;
     }
-    .ab-zone{display:flex;align-items:stretch}
-    .actionbar-nav{
-      display:flex;align-items:center;justify-content:center;
-      padding:8px 10px;border-right:1px solid var(--rule);background:rgba(0,0,0,.18);
+    #actionbar > *{pointer-events:auto}
+
+    .ab-zone{
+      background:linear-gradient(180deg,rgba(43,38,30,.96),rgba(34,30,24,.96));
+      border:1px solid var(--rule);
+      border-radius:6px;
+      box-shadow:0 12px 32px rgba(0,0,0,.55), 0 1px 0 rgba(212,184,112,.08) inset;
+      backdrop-filter:blur(8px);
+      padding:10px;
+      display:flex;align-items:center;gap:8px;
+      position:relative;
     }
-    .actionbar-center{display:flex;flex-direction:column}
-    .actionbar-right{
-      display:flex;align-items:stretch;border-left:1px solid var(--rule);
-      background:rgba(0,0,0,.18);
+    .ab-zone-label{
+      font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--ink-3);
+      position:absolute;top:-16px;left:6px;
+    }
+    .stable-hint{
+      position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+      font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--gold-2);white-space:nowrap;opacity:.7;
     }
 
-    .ab-tabs{display:flex;border-bottom:1px solid var(--rule);background:rgba(0,0,0,.25)}
+    .actionbar-nav{justify-self:start}
+    .actionbar-right{justify-self:end;gap:8px}
+
+    /* Zone centre : panneaux tabs + outils empiles, fond transparent (chaque
+       sous-panneau porte le sien). */
+    .actionbar-center{
+      display:flex;flex-direction:column;align-items:center;gap:8px;
+      background:transparent;border:none;box-shadow:none;backdrop-filter:none;
+      padding:0;
+    }
+    .ab-tabs{
+      display:flex;gap:4px;
+      padding:4px;
+      background:linear-gradient(180deg,rgba(43,38,30,.96),rgba(34,30,24,.96));
+      border:1px solid var(--rule);
+      border-radius:4px;
+      backdrop-filter:blur(8px);
+    }
     .ab-tab{
-      padding:0 18px;flex:1;min-width:110px;
-      display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;
-      height:30px;
-      cursor:pointer;color:var(--ink-3);font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
-      background:transparent;border:none;border-right:1px solid var(--rule);transition:all .15s;position:relative;
+      appearance:none;background:transparent;border:none;
+      font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+      color:var(--ink-3);
+      padding:6px 14px;border-radius:3px;cursor:pointer;
+      transition:color .12s, background .12s;
+      display:flex;align-items:center;gap:6px;
     }
-    .ab-tab:last-child{border-right:none}
-    .ab-tab .ico{font-size:14px;color:var(--ink-2)}
-    .ab-tab:hover{color:var(--ink);background:rgba(212,184,112,.04)}
-    .ab-tab:hover .ico{color:var(--gold-2)}
-    .ab-tab.active{color:var(--gold);background:linear-gradient(180deg,rgba(212,184,112,.14),rgba(212,184,112,.04))}
-    .ab-tab.active .ico{color:var(--gold)}
-    .ab-tab.active::after{content:"";position:absolute;bottom:0;left:10%;right:10%;height:2px;background:var(--gold)}
+    .ab-tab .ico{font-size:13px;line-height:1}
+    .ab-tab:hover{color:var(--ink-2);background:rgba(212,184,112,.06)}
+    .ab-tab.active{color:#1a1510;background:var(--gold);font-weight:700}
+    .ab-tab.active .ico{color:#1a1510}
 
-    /* Conteneur d outils. Largeur min fixe pour que la zone droite (Annuler /
-       Démolir) ne bouge pas d un pixel quand on switch d onglet. */
+    /* Conteneur outils contextuels. min-width fixe pour stabiliser la zone
+       droite quand on switch Récoltes / Construire. */
     .ab-tools{
-      display:flex;align-items:center;flex-wrap:wrap;align-content:center;
-      padding:10px 14px;gap:4px;
-      min-width:460px;min-height:88px;max-width:560px;
+      display:flex;gap:6px;padding:8px;
+      background:linear-gradient(180deg,rgba(43,38,30,.96),rgba(34,30,24,.96));
+      border:1px solid var(--rule);
+      border-radius:6px;
+      box-shadow:0 12px 32px rgba(0,0,0,.55), 0 1px 0 rgba(212,184,112,.08) inset;
+      backdrop-filter:blur(8px);
+      min-height:78px;
+      align-items:center;
     }
     .ab-tools[hidden]{display:none}
-    .ab-tools .sep{width:1px;background:var(--rule);margin:4px 6px;align-self:stretch;flex-shrink:0}
+    .ab-tools .sep{width:1px;background:var(--rule);margin:4px 4px;align-self:stretch;flex-shrink:0}
 
-    /* Boutons d action universels (annulation + démolition) */
-    .ab-act{
-      padding:0 10px;min-width:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-      cursor:pointer;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
-      background:transparent;border:none;border-right:1px solid var(--rule);transition:background .12s,color .12s;
+    /* Boutons outils : carre 62x62, colonne icone+label, key en haut a droite */
+    .tool{
+      width:62px;height:62px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+      background:linear-gradient(180deg,var(--panel-2),var(--panel));
+      border:1px solid var(--rule);border-radius:4px;
+      color:var(--ink-2);cursor:pointer;
+      transition:border-color .12s,color .12s,transform .12s;
+      position:relative;
+      font-family:inherit;
+      padding:0;
     }
-    .ab-act:last-child{border-right:none}
-    .ab-act .ic{font-size:14px;line-height:1}
-    .ab-act .nm{opacity:.85}
-    .ab-act-cancel{color:#e88a8a}
-    .ab-act-cancel:hover{background:rgba(220,80,80,.18);color:#ffaaaa}
-    .ab-act-destroy{color:#ff8a5a}
-    .ab-act-destroy:hover{background:rgba(220,90,50,.22);color:#ffb088}
-    .ab-act.active{
-      background:rgba(220,80,80,.32);color:#ffd6c8;
-      box-shadow:inset 0 -2px 0 #d44;
+    .tool:hover{border-color:var(--gold-2);color:var(--ink);transform:translateY(-1px)}
+    .tool.active, .tool.on{
+      border-color:var(--gold);color:var(--gold);
+      background:linear-gradient(180deg,#2e281e,#241f18);
+      box-shadow:0 0 0 1px var(--gold) inset, 0 0 18px rgba(212,184,112,.15);
+    }
+    .tool .ic{font-size:22px;line-height:1}
+    .tool .nm,.tool .lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;font-weight:400}
+    .tool .kb,.tool .key{position:absolute;top:3px;right:4px;font-family:var(--mono);font-size:8px;color:var(--ink-3);opacity:.7;letter-spacing:.05em}
+    .tool .cond{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:7px;color:var(--ink-3);letter-spacing:.03em}
+    .tool.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
+    .tool.disabled-unique{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
+    .tool.disabled-unique:hover{transform:none}
+    .cancel-zone-btn{color:#e74c3c;border-color:#e74c3c;font-weight:bold}
+    .cancel-zone-btn.active,.cancel-zone-btn:hover{background:#e74c3c;color:#fff}
+
+    /* Zone droite : Annuler / Démolir. Boutons larges (78px min) hauteur 62. */
+    .ab-act{
+      height:62px;min-width:78px;padding:0 14px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+      background:linear-gradient(180deg,var(--panel-2),var(--panel));
+      border:1px solid var(--rule);border-radius:4px;
+      color:var(--ink-2);cursor:pointer;
+      transition:all .12s;
+      font-family:inherit;
+    }
+    .ab-act .ic{font-size:18px;line-height:1}
+    .ab-act .nm,.ab-act .lab{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+    .ab-act .kb,.ab-act .key{font-family:var(--mono);font-size:8px;color:var(--ink-3);margin-top:2px}
+    .ab-act-cancel:hover,.ab-cancel:hover{border-color:var(--ink-2);color:var(--ink)}
+    .ab-act-destroy,.ab-destroy{color:#d49a82}
+    .ab-act-destroy:hover,.ab-destroy:hover{
+      border-color:var(--danger);color:#fff;
+      background:linear-gradient(180deg,#3a1c14,#26120c);
+    }
+    .ab-act.active,.ab-act-destroy.armed,.ab-destroy.armed{
+      border-color:var(--danger);color:#fff;
+      background:linear-gradient(180deg,#5a261a,#3a1810);
+      animation:ab-destroy-pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes ab-destroy-pulse{
+      0%,100%{box-shadow:0 0 0 0 rgba(200,116,86,.5)}
+      50%{box-shadow:0 0 0 6px rgba(200,116,86,0)}
     }
     body.destroy-mode-cursor,
     body.destroy-mode-cursor canvas{cursor:crosshair}
-    .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;min-width:64px;background:linear-gradient(180deg,rgba(212,184,112,.14),rgba(212,184,112,.04));border:1px solid var(--gold);border-radius:3px;cursor:pointer;color:var(--gold);font-family:inherit;transition:all .12s}
-    .nav-btn .ic{font-size:20px;line-height:1}
-    .nav-btn .nm{font-family:var(--sans);font-size:11px;font-weight:500}
-    .nav-btn .kb{font-family:var(--mono);font-size:8px;color:rgba(212,184,112,.5);letter-spacing:.05em;margin-top:1px}
-    .nav-btn:hover{background:linear-gradient(180deg,rgba(212,184,112,.24),rgba(212,184,112,.08))}
+
+    /* Compatibilite : ancien .nav-btn = bouton Naviguer en zone gauche.
+       Aligne sur le style .tool POC A (carre 62x62), garde la classe pour
+       que la logique JS (active/inactif sur navigate) ne casse pas. */
+    .nav-btn{
+      width:62px;height:62px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+      background:linear-gradient(180deg,var(--panel-2),var(--panel));
+      border:1px solid var(--rule);border-radius:4px;
+      color:var(--ink-2);cursor:pointer;
+      font-family:inherit;
+      transition:border-color .12s,color .12s,transform .12s;
+      padding:0;
+      position:relative;
+    }
+    .nav-btn:hover{border-color:var(--gold-2);color:var(--ink);transform:translateY(-1px)}
+    .nav-btn.active, .nav-btn.tool.active{
+      border-color:var(--gold);color:var(--gold);
+      background:linear-gradient(180deg,#2e281e,#241f18);
+      box-shadow:0 0 0 1px var(--gold) inset, 0 0 18px rgba(212,184,112,.15);
+    }
+    .nav-btn .ic{font-size:22px;line-height:1}
+    .nav-btn .nm{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:400}
+    .nav-btn .kb{position:absolute;top:3px;right:4px;font-family:var(--mono);font-size:8px;color:var(--ink-3);opacity:.7}
 
     .brush-zone{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 10px;border-left:1px solid var(--rule);margin-left:4px}
     .brush-zone .brush-label{font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
@@ -349,10 +441,6 @@
       z-index: 100;
     }
     #loader.hidden { display: none; }
-
-    /* Monument : visible uniquement quand l'onglet Construire est actif */
-    #actionbar .group.monument { display: none; }
-    #actionbar[data-active-tab="build"] .group.monument { display: flex; }
 
     /* Anciens styles #actionbar/.group/.tool/.brush retires : remplaces par .actionbar + .ab-tabs + .tool (maquette U5). */
     .btn-ctrl {
@@ -994,6 +1082,7 @@
 
     <!-- Zone gauche : Naviguer ancré -->
     <div class="ab-zone actionbar-nav">
+      <span class="ab-zone-label">Camera</span>
       <button class="nav-btn tool active" data-tool="nav" title="Naviguer dans le monde (Échap / 1)">
         <span class="ic">&#128400;</span>
         <span class="nm">Naviguer</span>
@@ -1063,8 +1152,10 @@
       </div>
     </div>
 
-    <!-- Zone droite : Annuler + Démolir ancrés -->
+    <!-- Zone droite : Annuler + Démolir ancrés (toujours au meme pixel) -->
     <div class="ab-zone actionbar-right">
+      <span class="ab-zone-label">Stable</span>
+      <span class="stable-hint">toujours ici</span>
       <button class="ab-act ab-act-cancel" id="ab-cancel" title="Annuler l action en cours (Échap)">
         <span class="ic">&#10005;</span>
         <span class="nm">Annuler</span>
