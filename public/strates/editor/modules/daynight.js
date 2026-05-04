@@ -4,6 +4,7 @@ import { scene, sun, hemi, sky, sunDir } from './scene.js'
 import { refreshHUD, formatNum } from './hud.js'
 import { techUnlocked } from './tech.js'
 import { computeJobProductivity } from './productivity.js'
+import { releaseAllObservatoryOccupants } from './placements.js'
 
 // ============================================================================
 // Cycle jour/nuit (MVP C).
@@ -204,6 +205,10 @@ export function toggleDayNight() {
   transitionT = 0
   fireflies.visible = nowNight
   updateHudIcon()
+  // Lot B : au lever du jour, vider tous les promontoires (chercheurs caches
+  // ressortent, lumieres s eteignent). La logique IDLE renverra ensuite les
+  // chercheurs vers la Hutte du sage.
+  if (!nowNight) releaseAllObservatoryOccupants()
   if (onModeChange) onModeChange(nowNight)
 }
 
