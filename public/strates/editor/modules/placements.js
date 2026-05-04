@@ -856,7 +856,7 @@ export function addHouse(gx, gz) {
   const g = makeHouse()
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
-  const entry = { x: gx, z: gz, group: g, id: state.houses.length, residents: [] }
+  const entry = { x: gx, z: gz, group: g, id: state.houseNextId++, residents: [] }
   _markUnderConstruction(entry, 'cabane')
   state.houses.push(entry)
   revealAround(gx, gz, 8)
