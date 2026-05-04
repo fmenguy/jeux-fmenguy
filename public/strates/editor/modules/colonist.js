@@ -28,6 +28,7 @@ import { totalBuildStock, consumeBuildStock, incrStockForBiome } from './stocks.
 import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubbles.js'
 import { activeSpeakers } from './speech.js'
 import { initColonistNeeds, isNeedCritical } from './needs.js'
+import { getGlobalSpeedFactor } from './productivity.js'
 import { NEEDS_DATA, JOBS_DATA } from './gamedata.js'
 import { showHudToast } from './ui/research-popup.js'
 // tasks.js : file de taches, utilisee ici pour marquer la tache courante.
@@ -1409,8 +1410,9 @@ export class Colonist {
       const lvl = this.skillLevel('building')
       const skillFactor = Math.max(0.1, lvl / 10)
       const prodMul = (typeof this.productivityMul === 'number') ? this.productivityMul : 1
+      const speedMul = getGlobalSpeedFactor(state)
       const bt = (typeof site.buildTime === 'number' && site.buildTime > 0) ? site.buildTime : 1
-      site.constructionProgress = Math.min(1, (site.constructionProgress || 0) + skillFactor * prodMul * dt / bt)
+      site.constructionProgress = Math.min(1, (site.constructionProgress || 0) + skillFactor * prodMul * speedMul * dt / bt)
       // XP building accumule dans this.skills.building (paliers via skillLevel).
       this.skills.building = (this.skills.building || 0) + dt
       if (site.constructionProgress >= 1) {
