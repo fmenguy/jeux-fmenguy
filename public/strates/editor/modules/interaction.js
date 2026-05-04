@@ -519,44 +519,55 @@ function refreshAbCancelActive() {
   btn.classList.toggle('active', !!on)
 }
 
-// Bouton Annuler universel.
-// Priorite 1 : si un mode special est actif (placement champ/cairn, destroy,
-//   ou un outil different de nav/cancel-zone), on sort proprement.
-// Priorite 2 : si on est deja en cancel-zone, on en sort.
-// Priorite 3 : sinon (au repos), on entre en mode cancel-zone (drag rouge
-//   sur la carte annule tous les jobs de la zone au mouseup).
+// Helper unique : sort proprement de tous les modes (outil courant non-nav,
+// placement champ, placement cairn, destroy) puis active le mode demandé en
+// un seul appel. Si modeName vaut 'nav' ou null, on reste au repos.
+// Cas particulier : un placement champ en cours est annulé silencieusement
+// si l utilisateur active cancel-zone ou destroy (sortie + activation atomique).
+function exitAllModesAndEnter(modeName) {
+  cancelFieldPlacement()
+  if (typeof cancelCairnPlacement === 'function' && state.cairnPlacementMode) {
+    cancelCairnPlacement()
+  }
+  exitDestroyMode()
+  if (state.toolState && state.toolState.tool !== 'nav') setTool('nav')
+  if (state.toolState && state.toolState.paintedThisStroke) {
+    state.toolState.paintedThisStroke.clear()
+  }
+  if (selectionRect) selectionRect.active = false
+  if (typeof clearSelPoly === 'function') clearSelPoly()
+
+  if (modeName === 'cancel-zone') {
+    setTool('cancel-zone')
+  } else if (modeName === 'destroy') {
+    if (!techUnlocked('demolition')) {
+      showHudToast('Recherche Démolition requise pour démanteler les bâtiments.', 2800)
+      refreshAbCancelActive()
+      return
+    }
+    state.destroyMode = true
+    document.body.classList.add('destroy-mode-cursor')
+    const btnD = document.getElementById('ab-destroy')
+    if (btnD) btnD.classList.add('active')
+    showHudToast('Cliquez sur un bâtiment à démolir. Échap pour annuler.', 3200)
+  }
+  refreshAbCancelActive()
+}
+
+// Bouton Annuler universel : un clic unique active toujours cancel-zone, peu
+// importe l etat courant (outil actif, placement champ, destroy mode).
+// Si on est deja en cancel-zone, on en sort vers nav (toggle).
 function cancelAllSelections() {
   const t = state.toolState && state.toolState.tool
-  const inSpecialMode = state.fieldPlacementMode || state.cairnPlacementMode || state.destroyMode
-  const inOtherTool = t && t !== 'nav' && t !== 'cancel-zone'
-  if (inSpecialMode || inOtherTool) {
-    resetAllToNav()
-    return
-  }
   if (t === 'cancel-zone') {
     resetAllToNav()
     return
   }
-  // Au repos : on entre en cancel-zone.
-  setTool('cancel-zone')
-  if (selectionRect) selectionRect.active = false
-  if (typeof clearSelPoly === 'function') clearSelPoly()
-  refreshAbCancelActive()
+  exitAllModesAndEnter('cancel-zone')
 }
 
 function enterDestroyMode() {
-  if (!techUnlocked('demolition')) {
-    showHudToast('Recherche Démolition requise pour démanteler les bâtiments.', 2800)
-    return
-  }
-  // Sort des autres modes avant d entrer
-  cancelFieldPlacement()
-  if (state.toolState && state.toolState.tool !== 'nav') setTool('nav')
-  state.destroyMode = true
-  document.body.classList.add('destroy-mode-cursor')
-  const btn = document.getElementById('ab-destroy')
-  if (btn) btn.classList.add('active')
-  showHudToast('Cliquez sur un bâtiment à démolir. Échap pour annuler.', 3200)
+  exitAllModesAndEnter('destroy')
 }
 
 function exitDestroyMode() {
