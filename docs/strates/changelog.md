@@ -4,6 +4,40 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-04 : Lot B, fusion auto retiree au profit d un upgrade explicite Cabane vers Grosse maison
+
+La fusion automatique de 4 cabanes en manoir 2x2 etait buguee (declenchee des le placement, sans attendre la construction), bloquant les colons en BUILDER. Elle a ete entierement retiree.
+
+Elle est remplacee par un upgrade explicite Cabane -> Grosse maison (4x4) declenche depuis le bouton du panneau bâtiment (UI deja en place). La progression suit le meme moteur que la construction : un constructeur prend le chantier (`isUnderUpgrade === true`) et fait monter `upgradeProgress` jusqu a 1, puis la cabane est swappee en Grosse maison construite.
+
+### Cote moteur (`placements.js`)
+
+- Suppression de `checkManorMerge` et `isPlainHouseOn`.
+- Suppression des appels `checkManorMerge` dans `interaction.js` (apres pose d une cabane).
+- Ajout de `upgradeBuilding(building, targetType)` : verifie le type source, le footprint cible (4x4 libre autour de la cabane), debite les ressources `upgradeFrom.cost` (lecture `buildings.json`), pose les flags `isUnderUpgrade`, `upgradeProgress`, `upgradeTargetType`, `upgradeBuildTime`. Toast d erreur en cas d emplacement insuffisant ou de ressources insuffisantes.
+- Ajout de `completeUpgrade(sourceBuilding)` : retire la cabane source, place une Grosse maison deja construite (4x4) au meme emplacement, transfere les residents.
+- Helper `canUpgradeTo(fromType, toType)` : prefere `upgradeFrom.from` du JSON, fallback sur `HARDCODED_UPGRADES = { 'big-house': ['cabane'] }` au cas ou.
+
+### Cote tick constructeur (`colonist.js`)
+
+- `pickConstructionSite` selectionne aussi les batiments `isUnderUpgrade === true`.
+- L etat `BUILDING` distingue construction et upgrade : si `site.isUnderUpgrade`, on incremente `upgradeProgress` au lieu de `constructionProgress`. A l achevement, appel a `completeUpgrade` puis liberation de tous les constructeurs qui visaient le site (la cabane disparait).
+- `_hasNoTaskForProfession` du constructeur compte aussi les chantiers en upgrade (pas d idle si une cabane upgrade est en cours).
+
+### Persistence
+
+- `serializeSnapshot` sauvegarde `isUnderUpgrade`, `upgradeProgress`, `upgradeTargetType`, `upgradeBuildTime` par cabane.
+- `applySnapshot` restaure ces flags : un upgrade interrompu reprend a la progression sauvegardee.
+
+### Tests mentaux valides
+
+1. Poser 4 cabanes cote a cote, attendre constructions : restent 4 cabanes distinctes (plus aucune fusion auto).
+2. Sur une cabane terminee, cliquer "Améliorer en grosse maison" : ressources debitees, etat upgrade, le constructeur vient travailler, big-house en place apres `upgradeFrom.buildTime` secondes.
+3. Emplacement 4x4 insuffisant : toast d erreur, rien ne se passe.
+4. Save en cours d upgrade puis reload : reprise propre a la progression sauvegardee.
+
+---
+
 ## 2026-05-04 : Lot B, comportement du fermier (1 par champ, production de ble)
 
 Implementation du metier `agriculteur` (Lot A) cote moteur. Un colon assigne fermier va le jour vers le champ de ble libre le plus proche, s y stationne (etat FARMING) et le champ produit du grain au rate `provides.grain_per_tick` lu dans buildings.json. Capacite stricte 1 fermier par champ. Sans fermier en FARMING, un champ ne produit plus rien (la production automatique precedente est retiree).
