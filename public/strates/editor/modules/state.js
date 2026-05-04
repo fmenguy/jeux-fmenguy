@@ -108,5 +108,12 @@ export const state = {
   // Lot D : ages et achievements
   currentAge: 1,
   ageUnlockedAt: { 1: Date.now() },
-  achievements: []
+  achievements: [],
+
+  // Lot B : boost global temporaire de vitesse de travail (recompense de quete
+  // type speedBoost). Quand actif, factor multiplie la prod de chaque metier
+  // (recherche, construction, recolte). Expire automatiquement, decremente
+  // chaque tick. null si aucun boost actif.
+  // Forme : { factor: 1.20, expiresAt: <secondes performance.now() / 1000> }
+  speedBoost: null
 }
