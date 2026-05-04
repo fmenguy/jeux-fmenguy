@@ -8,6 +8,20 @@
       "buildTime": "duree de l'upgrade en secondes, typiquement plus court qu'une construction neuve (reutilisation de la structure existante)"
     }
   },
+  "_residentsCapacitySchema": {
+    "doc": "Capacite max d'habitants du batiment d'habitation (cohorte residente, pas la pop globale). Lu par Lot B/E. Distinct de provides.pop qui represente le bonus de population logeable au niveau colonie.",
+    "fields": {
+      "residentsCapacity": "int, nombre max de colons residents assignes a ce batiment"
+    }
+  },
+  "_socialRelationsSchema": {
+    "doc": "Documentation pour Lot B/E. Chaque colon expose un tableau socialRelations sur son etat. Pas implemente cote moteur, ce schema fige le contrat.",
+    "fields": {
+      "partnerId":    "string, id du colon partenaire",
+      "relationType": "string, parmi 'couple' | 'famille' | 'ami'"
+    }
+  },
+  "_evolutiveNameDoc": "Le champ name peut etre redefini par age via une future map nameByAge: { 1: 'Grosse cabane', 4: 'Manoir', ... }. Pour l'instant nameByAge n'est pas pose, le name fige est valide pour les ages 1 a 3 (prehistoire, neolithique, bronze).",
   "buildings": [
     {
       "id": "foyer",
@@ -24,11 +38,12 @@
     },
     {
       "id": "big-house",
-      "name": "Grosse maison",
+      "name": "Grosse cabane",
       "age": 1,
       "category": "habitation",
       "footprint": 4,
       "capacity": 8,
+      "residentsCapacity": 6,
       "cost": { "wood": 5 },
       "buildTime": 40,
       "upgradeFrom": {
@@ -39,7 +54,7 @@
       "requires": { "tech": ["big-house"] },
       "provides": { "pop": 8 },
       "activity": "both",
-      "description": "Grande demeure pouvant accueillir 8 villageois. Peut aussi etre obtenue en upgradant une Cabane existante."
+      "description": "Cabane spacieuse, abri pour plusieurs familles. Peut etre obtenue en upgradant une Cabane existante."
     },
     {
       "id": "cabane",
@@ -47,6 +62,7 @@
       "age": 1,
       "category": "habitation",
       "size": "1x1",
+      "residentsCapacity": 2,
       "cost": { "wood": 10, "stone": 5 },
       "buildTime": 15,
       "requires": { "tech": [], "buildings": ["foyer"] },
