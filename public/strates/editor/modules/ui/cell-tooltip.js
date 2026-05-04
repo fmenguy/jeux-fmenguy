@@ -5,7 +5,8 @@
 // ============================================================================
 
 import { state } from '../state.js'
-import { GRID, ORE_TYPES } from '../constants.js'
+import { GRID, ORE_TYPES, RESOURCE_MIN_LEVELS } from '../constants.js'
+import { classifyMineableBlock } from '../tech.js'
 
 const CSS = `
 .cell-tooltip {
@@ -47,21 +48,20 @@ const CSS = `
 }
 `
 
-// Note : les biomes 'rock' et 'snow' correspondent en réalité à de la roche
-// (drop : pierre). 'snow' = roche couverte de neige (haute altitude). On les
-// libelle "Roche de montagne" / "Roche enneigée" pour éviter la confusion
-// avec une vraie ressource neige (qui n existe pas).
+// Note : les biomes 'rock' et 'snow' correspondent à de la roche (drop pierre).
+// La distinction roche de base / roche de montagne se fait via
+// classifyMineableBlock(x, z) (tech.js, source de verite) :
+//   - 'rock' en basse altitude  -> roche de base, minable sans contrainte
+//   - 'rock' en haute altitude   -> roche de montagne (Mineur Niv.5+)
+//   - 'snow'                     -> roche de montagne (Mineur Niv.5+)
 const BIOME_INFO = {
   grass:  { icon: '🌿', name: 'Prairie' },
   forest: { icon: '🌲', name: 'Forêt' },
   sand:   { icon: '🏖', name: 'Plage' },
-  rock:   { icon: '🏔', name: 'Roche de montagne' },
+  rock:   { icon: '🪨', name: 'Roche' },
   snow:   { icon: '🏔', name: 'Roche enneigée' },
   water:  { icon: '💧', name: 'Eau' }
 }
-
-// Biomes assimilés à de la roche (drop pierre, exigeront un Mineur Niv.5+)
-const ROCK_BIOMES = new Set(['rock', 'snow'])
 
 const BUILDING_NAMES = {
   house:       'Cabane',
@@ -161,12 +161,26 @@ export function showCellTooltip(gx, gz, screenX, screenY) {
   if (content) {
     rows.push('<span class="cell-tooltip-row">' + content + '</span>')
   }
-  if (ROCK_BIOMES.has(biomeKey)) {
-    rows.push(
-      '<span class="cell-tooltip-row" style="opacity:.75;font-style:italic">' +
-        '⛏ Nécessite un Mineur Niv.5 minimum' +
-      '</span>'
-    )
+  // Distinction roche de base / roche de montagne via classifyMineableBlock
+  // (source de verite : tech.js). Si la cellule est un bloc gating, on
+  // affiche le niveau requis ; sinon, simple mention "Necessite Pioche".
+  if (biomeKey === 'rock' || biomeKey === 'snow') {
+    const blockType = classifyMineableBlock(gx, gz)
+    if (blockType && RESOURCE_MIN_LEVELS[blockType] != null) {
+      const lvl = RESOURCE_MIN_LEVELS[blockType]
+      const label = blockType === 'mountain-rock' ? 'Roche de montagne' : blockType
+      rows.push(
+        '<span class="cell-tooltip-row" style="opacity:.75;font-style:italic">' +
+          '⛏ ' + label + ', Mineur Niv.' + lvl + '+ requis' +
+        '</span>'
+      )
+    } else {
+      rows.push(
+        '<span class="cell-tooltip-row" style="opacity:.75;font-style:italic">' +
+          '⛏ Nécessite une Pioche' +
+        '</span>'
+      )
+    }
   }
   tipEl.innerHTML = rows.join('')
 
