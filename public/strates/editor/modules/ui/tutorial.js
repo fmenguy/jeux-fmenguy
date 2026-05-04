@@ -19,9 +19,6 @@
 
 import { state } from '../state.js'
 
-// IDs des techs bâtiment payantes qui déclenchent le tuto Constructeur.
-const BUILDER_TUTO_TRIGGER_TECHS = new Set(['big-house', 'astronomy-1'])
-
 // ─── Étapes ──────────────────────────────────────────────────────────────────
 
 // kind:
@@ -460,72 +457,6 @@ function runTutorial(steps, storageKey, onComplete, skipBtn) {
 
   return { teardown }
 }
-
-// ─── Tuto Constructeur (déclenché à la 1ère tech bâtiment payante) ────────────
-
-const BUILDER_TUTO_STEPS = [
-  {
-    label:    'Constructeur · 1/3',
-    sel:      '.rail-btn[data-panel="population"]',
-    text:     'Vos bâtiments doivent être construits par un colon. Ouvrez la vue Population.',
-    kind:     'event',
-    event:    'strates:populationOpen',
-    autoWhen: () => {
-      const el = document.getElementById('popPanel')
-      return !!(el && el.classList.contains('open'))
-    },
-  },
-  {
-    label:    'Constructeur · 2/3',
-    sel:      '.pv2-tab[data-tab="metiers"]',
-    fallback: '#popPanel',
-    text:     'Cliquez sur Métiers, puis sur Constructeur pour assigner un colon. Plus son niveau est haut, plus il construit vite.',
-    kind:     'click-or-timeout',
-    clickSel: '.pv2-job-card[data-job-id="constructeur"], .pv2-tab[data-tab="metiers"]',
-    timeout:  60000,
-    autoWhen: () => {
-      const card = document.querySelector('.pv2-job-card[data-job-id="constructeur"]')
-      return !!(card && card.classList.contains('open'))
-    },
-  },
-  {
-    label:    'Constructeur · 3/3',
-    sel:      '.pv2-job-card[data-job-id="constructeur"]',
-    fallback: '#popPanel',
-    text:     'Assignez un colon. Le tuto se ferme dès qu un Constructeur est en poste.',
-    kind:     'click-or-timeout',
-    clickSel: '.pv2-job-action[data-job-id="constructeur"]',
-    timeout:  120000,
-    autoWhen: () => {
-      return !!(state.colonists && state.colonists.some(c => c.assignedJob === 'builder'))
-    },
-  },
-]
-
-let builderTutoActive = false
-
-function builderTutoDone() {
-  try { return !!localStorage.getItem('strates.builderTutoDone') } catch (e) { return false }
-}
-
-function maybeRunBuilderTuto() {
-  if (builderTutoActive || builderTutoDone()) return
-  injectStyles()
-  builderTutoActive = true
-  try {
-    runTutorial(BUILDER_TUTO_STEPS, 'strates.builderTutoDone', () => {
-      builderTutoActive = false
-      showFlash('Constructeur en poste !')
-    })
-  } catch (e) { builderTutoActive = false }
-}
-
-window.addEventListener('strates:techComplete', e => {
-  const id = e && e.detail && e.detail.id
-  if (id && BUILDER_TUTO_TRIGGER_TECHS.has(id)) {
-    setTimeout(maybeRunBuilderTuto, 400)
-  }
-})
 
 // ─── Tour de l interface (déclenché à la fin du tuto principal) ───────────────
 //
