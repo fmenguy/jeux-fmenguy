@@ -146,7 +146,7 @@
   </div>
 
   <div class="scene" id="scene-new">
-    <div class="label">APRÈS (canvas 768×240, font 38px, sprite 3.4×1.1)</div>
+    <div class="label">APRÈS (style ardoise+or, font 700 40px, sprite 3.4×1.1)</div>
     <div class="colonist">
       <img class="col-bubble" id="bubble-new" />
       <div class="col-head"></div>
@@ -207,12 +207,30 @@ function drawBubble(canvas, text, cfg) {
   ctx.font = bodyFont
   const bx = (canvas.width - bw) / 2
   const r = cfg.r
-  ctx.fillStyle = 'rgba(0,0,0,0.22)'
-  ctx.beginPath(); ctx.roundRect(bx + 3, by + 4, bw, bh, r); ctx.fill()
-  ctx.fillStyle = '#ffffff'
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)'
-  ctx.lineWidth = 2
-  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill(); ctx.stroke()
+  // Style "ardoise+or" pour le profil "new" ; classique blanc pour "old".
+  if (cfg.styleArdoise) {
+    // Drop shadow nette
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'
+    ctx.beginPath(); ctx.roundRect(bx + 4, by + 5, bw, bh, r); ctx.fill()
+    // Corps ardoise
+    ctx.fillStyle = '#1c1a14'
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill()
+    // Bordure or
+    ctx.strokeStyle = '#c8a84b'
+    ctx.lineWidth = 3
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.stroke()
+    // Liseré crème intérieur
+    ctx.strokeStyle = 'rgba(243,236,221,0.18)'
+    ctx.lineWidth = 1
+    ctx.beginPath(); ctx.roundRect(bx + 3, by + 3, bw - 6, bh - 6, r - 3); ctx.stroke()
+  } else {
+    ctx.fillStyle = 'rgba(0,0,0,0.22)'
+    ctx.beginPath(); ctx.roundRect(bx + 3, by + 4, bw, bh, r); ctx.fill()
+    ctx.fillStyle = '#ffffff'
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'
+    ctx.lineWidth = 2
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill(); ctx.stroke()
+  }
   const cxp = canvas.width / 2
   const tipY = by + bh + tipH
   const tipBaseHalf = cfg.tipBaseHalf
@@ -221,12 +239,19 @@ function drawBubble(canvas, text, cfg) {
   ctx.lineTo(cxp + tipBaseHalf, by + bh - 1)
   ctx.lineTo(cxp, tipY)
   ctx.closePath()
-  ctx.fillStyle = '#ffffff'; ctx.fill()
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.stroke()
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(cxp - tipBaseHalf + 1, by + bh - 2, tipBaseHalf * 2 - 2, 3)
+  if (cfg.styleArdoise) {
+    ctx.fillStyle = '#1c1a14'; ctx.fill()
+    ctx.strokeStyle = '#c8a84b'; ctx.lineWidth = 3; ctx.stroke()
+    ctx.fillStyle = '#1c1a14'
+    ctx.fillRect(cxp - tipBaseHalf + 1, by + bh - 2, tipBaseHalf * 2 - 2, 4)
+  } else {
+    ctx.fillStyle = '#ffffff'; ctx.fill()
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.stroke()
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(cxp - tipBaseHalf + 1, by + bh - 2, tipBaseHalf * 2 - 2, 3)
+  }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.fillStyle = '#1a1f2a'
+  ctx.fillStyle = cfg.styleArdoise ? '#f3ecdd' : '#1a1f2a'
   ctx.font = bodyFont
   const textX = canvas.width / 2
   const textStartY = by + padY + lineH / 2
@@ -244,15 +269,17 @@ const CFG_OLD = {
   spriteW: 2.4, spriteH: 0.75,
   zoomMin: 0.7, zoomMax: 2.2,
 }
-// APRÈS : zoomMax élevé à 4.5 pour que la bulle grandisse avec la distance
-// caméra (compense la perspective qui rapetisse les sprites éloignés).
+// APRÈS : style "ardoise + or" cohérent avec le HUD du jeu.
+// Fond opaque sombre + bordure dorée + texte crème = contraste 9:1, lisible
+// sur tous les biomes (herbe, neige, eau, sable). Police 700 40px Inter.
 const CFG_NEW = {
-  canvasW: 768, canvasH: 240,
-  padX: 32, padY: 22, lineH: 46,
-  bodyFont: '600 38px system-ui, sans-serif',
-  by: 14, tipH: 32, tipBaseHalf: 14, bottom: 18, r: 22,
+  canvasW: 768, canvasH: 260,
+  padX: 36, padY: 24, lineH: 48,
+  bodyFont: '700 40px "Inter", "Segoe UI", system-ui, sans-serif',
+  by: 18, tipH: 30, tipBaseHalf: 16, bottom: 22, r: 14,
   spriteW: 3.4, spriteH: 1.1,
   zoomMin: 0.95, zoomMax: 4.5,
+  styleArdoise: true,
 }
 
 const LINES = [

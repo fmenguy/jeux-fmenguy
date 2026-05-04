@@ -45,17 +45,37 @@ export function makeBubbleCanvas() {
   return c
 }
 
+// Style "ardoise+or" : fond opaque sombre cohérent avec le HUD Strates,
+// bordure dorée, texte crème net. Contraste 9:1, lisible sur tous biomes.
+//   - Pas de fond translucide qui se mélange à l herbe ou la neige.
+//   - Pas d ombre baveuse autour du texte ; juste une drop-shadow nette derrière.
+//   - Un liseré crème intérieur 1 px donne un aspect "encadré gravé".
+//   - Variantes :
+//       hint  : bordure & accent bleu-or (info pédagogique)
+//       idle  : bordure couleur métier + glow soft
+//       défaut: bordure dorée standard
+const COL = {
+  bg:        '#1c1a14',          // ardoise (cf topbar / modales du jeu)
+  bgHint:    '#1a2436',           // ardoise bleutée pour les hints
+  border:    '#c8a84b',           // gold standard du jeu
+  borderIn:  'rgba(243,236,221,0.18)', // liseré crème intérieur
+  text:      '#f3ecdd',           // crème "papier" du HUD
+  textHint:  '#dfeaff',           // crème bleutée pour les hints
+  hintAcc:   '#ffd98a',           // pastille hint (or chaud)
+  shadow:    'rgba(0,0,0,0.55)',  // ombre portée nette
+}
+
 export function drawBubble(canvas, text, isHint, opts) {
   const ctx = canvas.getContext('2d')
-  const padX = 32
-  const padY = 22
-  const lineH = 46
-  const bodyFont = '600 38px system-ui, sans-serif'
-  const iconW = isHint ? 36 : 0
+  const padX = 36
+  const padY = 24
+  const lineH = 48
+  // Police plus carrée et bien graissée pour la lisibilité à toute distance.
+  const bodyFont = '700 40px "Inter", "Segoe UI", system-ui, sans-serif'
+  const iconW = isHint ? 42 : 0
   const maxTextW = canvas.width - padX * 2 - iconW
 
-  // Variantes de bulle (Lot E + Lot B). Pour kind === 'idle', le metier
-  // colore la bordure et ajoute une lueur soft. opts = { kind, borderColor }.
+  // Variante idle (Lot E + Lot B) : bordure couleur métier.
   const isIdle = !!(opts && opts.kind === 'idle' && opts.borderColor)
   const idleBorderCol = isIdle ? opts.borderColor : null
 
@@ -75,80 +95,95 @@ export function drawBubble(canvas, text, isHint, opts) {
   }
   if (cur) lines.push(cur)
 
-  // Largeur reelle de la bulle
+  // Largeur réelle de la bulle
   let maxLW = 0
   for (const l of lines) { const w = ctx.measureText(l).width; if (w > maxLW) maxLW = w }
-  const bw = Math.min(canvas.width - 8, maxLW + padX * 2 + iconW)
+  const bw = Math.min(canvas.width - 14, maxLW + padX * 2 + iconW)
 
   // Hauteur de la bulle selon le nombre de lignes
   const bh = lines.length * lineH + padY * 2
-  const by = 14
-  const tipH = 32
-  const canvasH = by + bh + tipH + 18
+  const by = 18
+  const tipH = 30
+  const canvasH = by + bh + tipH + 22
 
-  // Redimensionnement dynamique du canvas (remet le contexte a zero)
+  // Redimensionnement dynamique du canvas (remet le contexte à zéro)
   if (canvas.height !== canvasH) canvas.height = canvasH
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.font = bodyFont
 
   const bx = (canvas.width - bw) / 2
-  const r = 22
-  const fillCol = isHint ? '#dff0ff' : '#ffffff'
-  const borderCol = idleBorderCol ? idleBorderCol : (isHint ? '#4a90e2' : 'rgba(0,0,0,0.15)')
-  const textCol = isHint ? '#0d2947' : '#1a1f2a'
-  const borderW = (idleBorderCol || isHint) ? 3 : 2
+  const r = 14
+  const fillCol = isHint ? COL.bgHint : COL.bg
+  const borderCol = idleBorderCol || COL.border
+  const textCol = isHint ? COL.textHint : COL.text
 
-  // Ombre portee + lueur metier (idle)
+  // Glow couleur métier (idle uniquement) sous la bulle
   if (idleBorderCol) {
-    // Soft glow couleur metier (rgba ~0.4) sous la bulle.
     ctx.save()
-    ctx.shadowColor = _hexToRgba(idleBorderCol, 0.4)
-    ctx.shadowBlur = 18
+    ctx.shadowColor = _hexToRgba(idleBorderCol, 0.45)
+    ctx.shadowBlur = 22
     ctx.fillStyle = 'rgba(0,0,0,0)'
     ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill()
     ctx.restore()
   }
-  ctx.fillStyle = 'rgba(0,0,0,0.22)'
-  ctx.beginPath(); ctx.roundRect(bx + 3, by + 4, bw, bh, r); ctx.fill()
 
-  // Corps de la bulle
+  // Ombre portée nette (drop shadow simple, pas de blur baveux)
+  ctx.fillStyle = COL.shadow
+  ctx.beginPath(); ctx.roundRect(bx + 4, by + 5, bw, bh, r); ctx.fill()
+
+  // Corps de la bulle (ardoise opaque)
   ctx.fillStyle = fillCol
-  ctx.strokeStyle = borderCol
-  ctx.lineWidth = borderW
-  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill(); ctx.stroke()
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill()
 
-  // Queue triangulaire
+  // Bordure dorée extérieure
+  ctx.strokeStyle = borderCol
+  ctx.lineWidth = 3
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.stroke()
+
+  // Liseré clair intérieur (effet panneau gravé)
+  ctx.strokeStyle = COL.borderIn
+  ctx.lineWidth = 1
+  ctx.beginPath(); ctx.roundRect(bx + 3, by + 3, bw - 6, bh - 6, r - 3); ctx.stroke()
+
+  // Queue triangulaire alignée sur le corps
   const cxp = canvas.width / 2
   const tipY = by + bh + tipH
   ctx.beginPath()
-  ctx.moveTo(cxp - 14, by + bh - 1)
-  ctx.lineTo(cxp + 14, by + bh - 1)
+  ctx.moveTo(cxp - 16, by + bh - 1)
+  ctx.lineTo(cxp + 16, by + bh - 1)
   ctx.lineTo(cxp, tipY)
   ctx.closePath()
   ctx.fillStyle = fillCol; ctx.fill()
-  ctx.strokeStyle = borderCol; ctx.stroke()
+  ctx.strokeStyle = borderCol; ctx.lineWidth = 3; ctx.stroke()
   // Masque la couture entre le rect et le triangle
   ctx.fillStyle = fillCol
-  ctx.fillRect(cxp - 13, by + bh - 2, 26, 3)
+  ctx.fillRect(cxp - 15, by + bh - 2, 30, 4)
 
   // Pastille indicatrice pour les hints
   if (isHint) {
-    ctx.fillStyle = '#ffd98a'
+    ctx.fillStyle = COL.hintAcc
     ctx.beginPath()
-    ctx.arc(bx + 26, by + bh / 2, 11, 0, Math.PI * 2)
+    ctx.arc(bx + 28, by + bh / 2, 12, 0, Math.PI * 2)
     ctx.fill()
-    ctx.strokeStyle = '#4a90e2'
-    ctx.lineWidth = 2.5
+    ctx.strokeStyle = COL.border
+    ctx.lineWidth = 2
     ctx.stroke()
+    // Petit "i" gravé dedans
+    ctx.fillStyle = COL.bg
+    ctx.font = '800 16px "Inter", system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('i', bx + 28, by + bh / 2 + 1)
+    ctx.font = bodyFont
   }
 
-  // Lignes de texte centrees
+  // Lignes de texte centrées (offset léger droite si pastille hint)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillStyle = textCol
   ctx.font = bodyFont
-  const textX = canvas.width / 2
+  const textX = canvas.width / 2 + (isHint ? 10 : 0)
   const textStartY = by + padY + lineH / 2
   for (let i = 0; i < lines.length; i++) {
     ctx.fillText(lines[i], textX, textStartY + i * lineH)
