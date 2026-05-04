@@ -6,6 +6,7 @@
 
 import { state } from '../state.js'
 import { showHudToast } from './research-popup.js'
+import { techUnlocked } from '../tech.js'
 
 // ---- Constantes ----
 
@@ -22,6 +23,7 @@ const JOB_DEFS = [
   { id: 'chercheur',    label: 'Chercheur',    icon: '📜', desc: 'Génère des points de recherche',             req: 'Hutte du sage' },
   { id: 'chasseur',     label: 'Chasseur',     icon: '🏹', desc: 'Chasse le gibier, rapporte viande et os',    req: 'Arc' },
   { id: 'constructeur', label: 'Constructeur', icon: '🔨', desc: 'Construit les bâtiments du village',         req: null },
+  { id: 'agriculteur',  label: 'Agriculteur',  icon: '🌾', desc: 'Travaille les champs de blé, produit du grain', req: 'Champ de blé', techGate: 'wheat-field' },
 ]
 
 // Mapping métier vers compétence pour afficher le niveau dans les chips
@@ -32,6 +34,7 @@ const JOB_SKILL = {
   chasseur:     'hunting',
   chercheur:    'research',
   constructeur: 'building',
+  agriculteur:  'gathering',
 }
 
 // Mapping profession (ID français) vers assignedJob (ID anglais attendu par le moteur Lot B)
@@ -42,6 +45,7 @@ const PROFESSION_TO_ASSIGNED_JOB = {
   chercheur:    'researcher',
   chasseur:     'hunter',
   constructeur: 'builder',
+  agriculteur:  'farmer',
 }
 
 // Helpers de niveau / xp de compétences (lecture seule sur le raw colonist)
@@ -412,7 +416,10 @@ export class PopulationModal {
   // ---- TAB MÉTIERS ----
 
   _htmlMetiers(colonists) {
-    const cards = JOB_DEFS.map(jd => {
+    // Lot B fermier : un metier dont techGate n est pas debloque reste invisible
+    // dans la modale population. Coherent avec le gating des autres metiers.
+    const visibleJobs = JOB_DEFS.filter(jd => !jd.techGate || techUnlocked(jd.techGate))
+    const cards = visibleJobs.map(jd => {
       // Affectation se base sur la profession (champ piloté par l'UI)
       const assigned = colonists.filter(c => c.profession === jd.id)
       const skillName = JOB_SKILL[jd.id]

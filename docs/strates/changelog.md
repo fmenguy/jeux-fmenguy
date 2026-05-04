@@ -4,6 +4,28 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-04 : Lot B, comportement du fermier (1 par champ, production de ble)
+
+Implementation du metier `agriculteur` (Lot A) cote moteur. Un colon assigne fermier va le jour vers le champ de ble libre le plus proche, s y stationne (etat FARMING) et le champ produit du grain au rate `provides.grain_per_tick` lu dans buildings.json. Capacite stricte 1 fermier par champ. Sans fermier en FARMING, un champ ne produit plus rien (la production automatique precedente est retiree).
+
+### Comportement
+
+- `placements.js` : `addWheatField` attribue desormais un `id` stable et `assignedColonistIds: []` a chaque champ. Helpers `findWheatFieldById(id)` et `releaseFromWheatFields(colonistId)` exposes pour le moteur.
+- `state.js` : ajout de `wheatFieldNextId` (compteur d ids stables, comme researchBuildingNextId).
+- `colonist.js` : nouveau champ `assignedFieldId` par colon, persiste a la save. Etat `FARMING` (similaire a RESEARCHING). En IDLE, si profession `agriculteur` + assignedJob `farmer` + jour + tech `wheat-field` debloquee, le colon trouve un champ libre, s y rend, bascule en FARMING. La nuit ou changement de metier, il libere le champ et revient IDLE. Le champ reste assigne entre deux journees pour qu il y revienne le lendemain. `dispose()` libere aussi le champ. `_hasNoTaskForProfession` etendu a agriculteur (idle bubble si tous champs occupes).
+- `main.js` : production de grain conditionnee a la presence d un fermier reellement en FARMING sur le champ. Rate `0.08/tick` (2s) lu dynamiquement dans `buildings.json` via `BUILDINGS_DATA`.
+- `persistence.js` : serialisation/restauration de `id`, `assignedColonistIds` par champ, `wheatFieldNextId` global, `assignedJob` et `assignedFieldId` par colon. Reset propre dans `clearEverything`.
+- `ui/population-modal.js` : ajout de l entree `agriculteur` dans `JOB_DEFS` avec `techGate: 'wheat-field'`. Le metier reste invisible tant que la tech n est pas debloquee. Mapping `agriculteur` -> `farmer` ajoute dans `PROFESSION_TO_ASSIGNED_JOB`.
+
+### Tests mentaux valides
+
+- Passer en age 2, debloquer `wheat-field`, construire un champ, assigner un fermier : le colon part au champ, du blé est credite.
+- 2e fermier avec un seul champ : reste IDLE (capacite 1 stricte).
+- 2e champ construit : 2e fermier y va.
+- Reload mi-FARMING : la save retient `assignedFieldId` et `assignedColonistIds`. Au boot, le colon redemarre en IDLE et retourne au champ assigne.
+
+---
+
 ## 2026-05-04 : Lot B, recompenses de quete diversifiees (resource, boost, colonist)
 
 Le schema `rewards` (Lot A v1) supporte desormais quatre types de recompenses (`research`, `resource`, `speedBoost`, `colonist`). Le moteur applique ces recompenses a la completion d une quete et notifie le joueur via toast HUD.
