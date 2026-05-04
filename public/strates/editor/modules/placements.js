@@ -1182,6 +1182,148 @@ export function removeResearchHousesIn(cells) {
   }
 }
 
+// ============================================================================
+// Annulation d un chantier en cours (Lot B).
+// Retire un batiment isUnderConstruction de son array d etat, libere tous les
+// colons qui le ciblent (state BUILDING ou MOVING avec targetConstructionSite),
+// et nettoie ses references (builders, builderSlots). Les colons reviennent en
+// IDLE et chercheront un autre chantier au tick suivant.
+// Le helper ne fait rien si le batiment n est pas (ou plus) en construction,
+// ce qui le rend idempotent.
+// ============================================================================
+export function removeConstructionSite(building, type) {
+  if (!building || !building.isUnderConstruction) return false
+  // 1) Liberer tous les colons qui ciblent ce chantier (MOVING ou BUILDING).
+  if (state.colonists && state.colonists.length) {
+    for (const c of state.colonists) {
+      if (c.targetConstructionSite === building) {
+        if (building.builders) building.builders.delete(c.id)
+        if (building.builderSlots) building.builderSlots.delete(c.id)
+        c.targetConstructionSite = null
+        c.builderSlot = null
+        c.currentTask = null
+        c.path = null
+        c.pathStep = 0
+        if (c.lineGeo) c.lineGeo.setFromPoints([])
+        c.state = 'IDLE'
+      }
+    }
+  }
+  if (building.builders) {
+    building.builders.clear()
+    building.activeBuildersCount = 0
+  }
+  if (building.builderSlots) building.builderSlots.clear()
+
+  // 2) Retirer le batiment de son array d etat (selon le type) et nettoyer
+  //    le group three.js (scene + dispose).
+  const cell = [{ x: building.x, z: building.z }]
+  switch (type) {
+    case 'house':
+      removeHousesIn(cell)
+      repaintCellSurface(building.x, building.z)
+      break
+    case 'research':
+      removeResearchHousesIn(cell)
+      repaintCellSurface(building.x, building.z)
+      break
+    case 'observatory':
+      removeObservatoriesIn(cell)
+      repaintCellSurface(building.x, building.z)
+      break
+    case 'big-house':
+      removeBigHousesIn(cell)
+      for (let dz = 0; dz < 4; dz++) {
+        for (let dx = 0; dx < 4; dx++) repaintCellSurface(building.x + dx, building.z + dz)
+      }
+      break
+    case 'foyer': {
+      const idx = state.foyers.findIndex(f => f.x === building.x && f.z === building.z)
+      if (idx !== -1) {
+        const f = state.foyers[idx]
+        if (f.group) {
+          f.group.removeFromParent()
+          f.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+        }
+        state.foyers.splice(idx, 1)
+      }
+      repaintCellSurface(building.x, building.z)
+      break
+    }
+    case 'cairn': {
+      const idx = state.cairns.findIndex(c => c.x === building.x && c.z === building.z)
+      if (idx !== -1) {
+        const cn = state.cairns[idx]
+        if (cn.group) {
+          cn.group.removeFromParent()
+          cn.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+        }
+        state.cairns.splice(idx, 1)
+      }
+      repaintCellSurface(building.x, building.z)
+      break
+    }
+    case 'field': {
+      const idx = state.wheatFields.findIndex(f => f.x === building.x && f.z === building.z)
+      if (idx !== -1) {
+        const f = state.wheatFields[idx]
+        if (f.group) {
+          f.group.removeFromParent()
+          f.group.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose() })
+        }
+        // Footprint 2x2 selon FIELD_PLACEMENT.
+        const fw = (typeof f.w === 'number') ? f.w : 2
+        const fd = (typeof f.d === 'number') ? f.d : 2
+        for (let dz = 0; dz < fd; dz++) {
+          for (let dx = 0; dx < fw; dx++) {
+            const cx = building.x + dx, cz = building.z + dz
+            const k = cz * GRID + cx
+            if (state.cellSurface) state.cellSurface[k] = null
+            repaintCellSurface(cx, cz)
+          }
+        }
+        state.wheatFields.splice(idx, 1)
+      }
+      break
+    }
+    default:
+      return false
+  }
+  return true
+}
+
+// Helper local : detecte tous les chantiers (isUnderConstruction === true)
+// dont le footprint intersecte au moins une cellule de la zone donnee.
+// Retourne une liste {building, type}. Utilise par cancelJobsInRect.
+export function findConstructionSitesInCells(cells) {
+  if (!cells || !cells.length) return []
+  const cellSet = new Set(cells.map(c => c.z * GRID + c.x))
+  const out = []
+  const seen = new Set()
+  const tryPush = (b, type, w, d) => {
+    if (!b || !b.isUnderConstruction) return
+    if (seen.has(b)) return
+    const ww = w || 1, dd = d || 1
+    for (let dz = 0; dz < dd; dz++) {
+      for (let dx = 0; dx < ww; dx++) {
+        if (cellSet.has((b.z + dz) * GRID + (b.x + dx))) {
+          out.push({ building: b, type })
+          seen.add(b)
+          return
+        }
+      }
+    }
+  }
+  for (const h of (state.houses || []))         tryPush(h, 'house', 1, 1)
+  for (const f of (state.foyers || []))         tryPush(f, 'foyer', 1, 1)
+  for (const r of (state.researchHouses || [])) tryPush(r, 'research', 1, 1)
+  for (const b of (state.bigHouses || []))      tryPush(b, 'big-house', 4, 4)
+  for (const o of (state.observatories || []))  tryPush(o, 'observatory', 1, 1)
+  for (const c of (state.cairns || []))         tryPush(c, 'cairn', 1, 1)
+  for (const wf of (state.wheatFields || []))   tryPush(wf, 'field', wf.w || 2, wf.d || 2)
+  return out
+}
+
 export function clearAllResearchHouses() {
   for (const r of state.researchHouses) {
     scene.remove(r.group)
