@@ -455,28 +455,19 @@ export class Colonist {
 
     this.bubble.visible = true
 
-    // Scale proportionnel à la distance, ancrage bas du sprite. Min relevé
-    // à 0.95 pour rester lisible au zoom rapproché ; max conservé à 2.2 pour
-    // ne pas envahir l écran en vue dézoomée.
-    const zoomFactor = Math.max(0.95, Math.min(2.2, dist / 16))
+    // Scale ∝ distance : compense la perspective pour garder la bulle lisible
+    // même quand la caméra est loin. Min 0.95 pour ne pas trop rétrécir au
+    // zoom rapproché, max 4.5 pour permettre vraiment de grandir en vue dézoomée.
+    // Référence dist=16 → zoomFactor=1.
+    const zoomFactor = Math.max(0.95, Math.min(4.5, dist / 16))
     const baseW = this._bubbleBaseW || 3.4
     const baseH = this._bubbleBaseH || 1.1
     this.bubble.scale.set(baseW * zoomFactor, baseH * zoomFactor, 1)
     // Ajuste Y pour que le bas du sprite reste ancré au-dessus de la tête
     this.bubble.position.set(0, 2.5 + (baseH / 2) * zoomFactor, 0)
 
-    // Troncature au-delà de 25 unités : redraw uniquement au changement de seuil
-    const truncate = dist > 25
-    if (truncate !== this._bubbleTruncated && this.lastLine) {
-      this._bubbleTruncated = truncate
-      const text = truncate && this.lastLine.length > 20
-        ? this.lastLine.slice(0, 20) + '…'
-        : this.lastLine
-      const { bw: tw, bh: th } = drawBubble(this.bubbleCanvas, text, !!this.lastLineHint, this._bubbleOpts)
-      this._bubbleBaseW = Math.max(1.8, (tw / 768) * 4.5)
-      this._bubbleBaseH = Math.max(0.6, (th / 240) * 1.05)
-      this.bubbleTex.needsUpdate = true
-    }
+    // Pas de troncature : la bulle grandit avec la distance, le texte complet
+    // doit toujours être lisible. _bubbleTruncated conservé pour compat éventuelle.
 
     if (this.speechTimer <= 0.5) {
       this.bubbleMat.opacity = Math.max(0, this.speechTimer / 0.5)
