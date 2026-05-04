@@ -153,6 +153,11 @@ export class Colonist {
     // Lot B : slot de travail (cellule autour du chantier) attribue a ce
     // colon. Permet plusieurs constructeurs sans superposition (style AoE).
     this.builderSlot = null
+    // Lot B : flag pose par pickObservatory pour indiquer que le path en cours
+    // mene vers un promontoire d observation. Permet de ne pas annuler le
+    // chemin a la moindre apparition de job (cf. branche MOVING) et de basculer
+    // proprement en IDLE en fin de path sans repasser par WORKING.
+    this.observatoryTarget = false
     this.workTimer = 0
     this.huntTimer = 0
     this.bounce = 0
@@ -770,15 +775,26 @@ export class Colonist {
       if (d < bestD) { bestD = d; best = o }
     }
     if (!best) return false
-    const path = aStar(this.x, this.z, best.x, best.z)
+    // Lot B : on tente d abord d aller pile sur la cellule du promontoire.
+    // Si le palier est trop haut (cellTop > MAX_STEP au-dessus du sol voisin)
+    // aStar peut retourner null. Dans ce cas on retombe sur findApproach qui
+    // cherche une cellule adjacente atteignable (Manhattan = 1, coherent avec
+    // isObservatoryOn et isColonistOnObservatory qui tolerent ce voisinage).
+    let path = aStar(this.x, this.z, best.x, best.z)
+    if (!path) {
+      const approach = findApproach(this.x, this.z, best.x, best.z)
+      if (approach) path = approach.path
+    }
     if (!path) return false
     this.path = path
     this.pathStep = 0
     this.state = 'MOVING'
-    // isWandering=true pour qu en fin de path le colon retombe en IDLE
-    // (et non en WORKING). Une fois sur la cellule du promontoire, les
-    // prochaines decisions IDLE retourneront false ici donc le colon reste.
-    this.isWandering = true
+    // Lot B : on NE met PAS isWandering=true ici. Sinon la branche MOVING
+    // annule le chemin des qu un job apparait (state.jobs.size > 0) et le
+    // chercheur n atteint jamais le promontoire. Le flag observatoryTarget
+    // permet de basculer en IDLE en fin de path sans repasser par WORKING.
+    this.isWandering = false
+    this.observatoryTarget = true
     this.updateTrail()
     return true
   }
@@ -1228,6 +1244,16 @@ export class Colonist {
     }
 
     if (this.state === 'MOVING') {
+      // Lot B : si le jour se leve pendant un trajet vers le promontoire,
+      // on annule pour rebasculer en IDLE et laisser la branche IDLE renvoyer
+      // le chercheur a la Hutte du sage.
+      if (this.observatoryTarget && !state.isNight) {
+        this.observatoryTarget = false
+        this.path = null
+        this.state = 'IDLE'
+        this.lineGeo.setFromPoints([])
+        return
+      }
       if (this.isWandering && (state.jobs.size > 0 || state.buildJobs.size > 0 || this.researchBuildingId != null)) {
         this.isWandering = false
         this.path = null
@@ -1277,6 +1303,18 @@ export class Colonist {
         }
       }
       if (!this.path || this.pathStep >= this.path.length) {
+        // Lot B : arrivee au promontoire la nuit. On reste en IDLE (pas WORKING)
+        // pour que isColonistOnObservatory genere les nightPoints, et on coupe
+        // le flag pour que les decisions IDLE suivantes (campfire, wander) ne
+        // perturbent pas la station. La branche IDLE chercheur teste deja
+        // isObservatoryOn pour le maintenir sur place (stayingOnObservatory).
+        if (this.observatoryTarget) {
+          this.observatoryTarget = false
+          this.state = 'IDLE'
+          this.path = null
+          this.lineGeo.setFromPoints([])
+          return
+        }
         if (this.isWandering) {
           this.isWandering = false
           this.state = 'IDLE'
