@@ -35,11 +35,11 @@ export const state = {
   wheatFieldNextId: 1,
   researchHouses: [],
   researchBuildingNextId: 1,
-  // Lot B residents : compteurs d ids stables pour les habitations multi cases
-  // (big-house et manor). state.houses fait deja id = state.houses.length au
-  // push, mais big-house et manor n avaient pas d id. Necessaire pour que
-  // colonist.homeBuildingId puisse pointer une instance precise et survivre
-  // aux saves.
+  // Lot B residents : compteurs d ids stables pour les habitations.
+  // state.houses utilisait id = state.houses.length au push, ce qui fait
+  // collisionner les ids apres une demolition. On migre sur un compteur
+  // monotone pour garantir l unicite et la stabilite des homeBuildingId.
+  houseNextId: 1,
   bigHouseNextId: 1,
   manorNextId: 1,
 

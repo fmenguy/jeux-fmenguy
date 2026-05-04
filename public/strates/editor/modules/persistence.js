@@ -197,6 +197,7 @@ function serializeSnapshot() {
       x: b.x, z: b.z, id: b.id,
       residents: Array.isArray(b.residents) ? b.residents.slice() : []
     })),
+    houseNextId: state.houseNextId || 1,
     bigHouseNextId: state.bigHouseNextId || 1,
     manorNextId: state.manorNextId || 1,
     wheatFields: (state.wheatFields || []).map(f => ({
@@ -298,6 +299,10 @@ function clearEverything() {
   state.cairns = []
   state.wheatFields = []
   state.wheatFieldNextId = 1
+  // Lot B residents : reset des compteurs d ids habitations.
+  state.houseNextId = 1
+  state.bigHouseNextId = 1
+  state.manorNextId = 1
 }
 
 function applySnapshot(data) {
@@ -367,6 +372,11 @@ function applySnapshot(data) {
     if (Array.isArray(b.residents)) entry.residents = b.residents.slice()
   }
   // Lot B residents : restaure les compteurs d ids stables (sinon recalcul).
+  if (typeof data.houseNextId === 'number') {
+    state.houseNextId = data.houseNextId
+  } else {
+    state.houseNextId = (state.houses || []).reduce((m, h) => Math.max(m, (h.id || 0) + 1), 1)
+  }
   if (typeof data.bigHouseNextId === 'number') {
     state.bigHouseNextId = data.bigHouseNextId
   } else {

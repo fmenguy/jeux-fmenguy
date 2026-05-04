@@ -12,6 +12,7 @@ import {
   removeHousesIn, removeManorsIn, removeBigHousesIn,
   removeResearchHousesIn, removeObservatoriesIn
 } from '../placements.js'
+import { unlinkColonistFromHome } from '../placements.js'
 import * as placementsApi from '../placements.js'
 import { refreshHUD } from '../hud.js'
 import { getBuildingById } from '../gamedata.js'
@@ -29,7 +30,10 @@ const PROFESSION_BADGE = {
   constructeur: { ic: '🔨', lbl: 'Constructeur' },
 }
 
-const BIG_HOUSE_CAPACITY = 8
+// Lot B residents : capacite par defaut alignee sur buildings.json
+// (residentsCapacity = 6 pour big-house). Spawn par defaut = 4 (2 couples),
+// laissant 2 places libres pour accueil futur.
+const BIG_HOUSE_CAPACITY = 6
 
 const CSS = `
 #bp-panel {
@@ -301,6 +305,19 @@ export function destroyBuilding(type, building) {
     if (refund > 0) state.resources[res] = (state.resources[res] || 0) + refund
   }
 
+  // Lot B residents : avant la suppression effective, casser les liens des
+  // residents (homeBuildingId, assignedBuildingId, building.residents).
+  // Le moteur fera passer ces colons en SANS-ABRI au prochain tick (needs.js).
+  // Le partnerId reste tant que le partenaire est vivant.
+  if (type === 'house' || type === 'manor' || type === 'big-house') {
+    const ids = Array.isArray(building.residents) ? building.residents.slice() : []
+    for (const cid of ids) {
+      const c = (state.colonists || []).find(cc => cc.id === cid)
+      if (c) unlinkColonistFromHome(c)
+    }
+    if (Array.isArray(building.residents)) building.residents.length = 0
+  }
+
   const cell = [{ x: building.x, z: building.z }]
 
   switch (type) {
@@ -483,10 +500,19 @@ function buildContent(type, building) {
   )
 
   if (type === 'house' || type === 'manor' || type === 'big-house') {
+    // Lot B residents : capacite lue dans buildings.json via residentsCapacity
+    // (cabane = 2, big-house = 6). Fallback constantes locales pour le manor
+    // (pas de residentsCapacity dans data, valeur historique 6).
     let capacity
-    if (type === 'manor') capacity = MANOR_CAPACITY
-    else if (type === 'big-house') capacity = BIG_HOUSE_CAPACITY
-    else capacity = HOUSE_CAPACITY
+    if (type === 'house') {
+      const def = getBuildingById('cabane')
+      capacity = (def && typeof def.residentsCapacity === 'number') ? def.residentsCapacity : HOUSE_CAPACITY
+    } else if (type === 'big-house') {
+      const def = getBuildingById('big-house')
+      capacity = (def && typeof def.residentsCapacity === 'number') ? def.residentsCapacity : BIG_HOUSE_CAPACITY
+    } else {
+      capacity = MANOR_CAPACITY
+    }
     const residents = building.residents || []
 
     sections.push(
