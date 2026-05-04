@@ -796,6 +796,21 @@
             }
             return;
           }
+          // Panneau Social MVP : ouvre la modale via l API exposée par main.js.
+          if (panel === 'social') {
+            railBtns.forEach(b => b.classList.remove('active'));
+            try {
+              if (window.StratesSocial && typeof window.StratesSocial.open === 'function') {
+                if (window.StratesSocial.isOpen && window.StratesSocial.isOpen()) {
+                  window.StratesSocial.close();
+                } else {
+                  window.StratesSocial.open();
+                  btn.classList.add('active');
+                }
+              }
+            } catch (e) { /* ignore */ }
+            return;
+          }
           // Panneau quêtes
           if (panel === 'quests') {
             const qPanel = document.getElementById('quests');
@@ -979,7 +994,7 @@
       <span class="lab">Pop.</span>
       <span class="badge" id="rail-pop-badge">0</span>
     </button>
-    <button class="rail-btn" data-panel="social" title="Social / Relations, a venir">
+    <button class="rail-btn" data-panel="social" title="Liens sociaux du village">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="8" r="2.5"/><circle cx="15" cy="8" r="2.5"/><path d="M4 17 C4 14.5 5.5 13 7 13 M18 17 C18 14.5 16.5 13 15 13 M9 8 H13" stroke-dasharray="2 2"/></svg>
       <span class="lab">Social</span>
     </button>

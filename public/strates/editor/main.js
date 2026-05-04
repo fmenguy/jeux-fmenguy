@@ -28,7 +28,7 @@ import { initHelpOverlay, isHelpOverlayOpen } from './modules/help-overlay.js'
 import { initDayNight, bindDayNightUI, tickDayNight, refreshNightPointsHUD } from './modules/daynight.js'
 import { tickAllNeeds } from './modules/needs.js'
 import { computeJobProductivity } from './modules/productivity.js'
-import { TECH_TREE_DATA } from './modules/gamedata.js'
+import { TECH_TREE_DATA, BUILDINGS_DATA } from './modules/gamedata.js'
 import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions.js'
 import { loadModels } from './modules/glb-cache.js'
 import { initPopulationModal } from './modules/ui/population-modal.js'
@@ -40,6 +40,7 @@ import { buildFog, tickFog } from './modules/fog.js'
 import { tickConstructionFX } from './modules/construction-fx.js'
 import { initModalState } from './modules/ui/modal-state.js'
 import { initSeasonBar, tickSeasonBar } from './modules/ui/season-bar.js'
+import { initSocialPanel, openSocialPanel, closeSocialPanel, isSocialPanelOpen } from './modules/ui/social-panel.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -110,6 +111,16 @@ refreshNightPointsHUD()
 initAgeTransitions()
 initTutoInvite()
 initSeasonBar()
+initSocialPanel()
+// Expose les API du panneau Social pour que le handler rail-btn (inline dans
+// index.html) puisse l ouvrir / fermer sans avoir à toucher à ce script.
+try {
+  window.StratesSocial = {
+    open: openSocialPanel,
+    close: closeSocialPanel,
+    isOpen: isSocialPanelOpen,
+  }
+} catch (e) { /* ignore */ }
 
 const btnPauseTuto = document.getElementById('pause-tuto')
 if (btnPauseTuto) btnPauseTuto.addEventListener('click', () => {
@@ -307,13 +318,34 @@ function tick(nowMs) {
     }
   }
 
-  // Production de grain par les champs de ble (tick toutes les ~2s)
+  // Lot B fermier : production de grain conditionnee a la presence d un fermier
+  // assigne et reellement en FARMING sur le champ. Le rate vient de buildings.json
+  // (provides.grain_per_tick) lu via BUILDINGS_DATA. Tick toutes les 2s.
   tick._grainAccum = (tick._grainAccum || 0) + dt
   if (tick._grainAccum >= 2.0) {
     tick._grainAccum -= 2.0
     if (state.wheatFields && state.wheatFields.length) {
+      // Lecture data-driven du rate par tick (defaut 0.08 si absent du JSON).
+      let ratePerTick = 0.08
+      if (BUILDINGS_DATA && Array.isArray(BUILDINGS_DATA.buildings)) {
+        const b = BUILDINGS_DATA.buildings.find(x => x.id === 'champ-ble')
+        if (b && b.provides && typeof b.provides.grain_per_tick === 'number') {
+          ratePerTick = b.provides.grain_per_tick
+        }
+      }
       for (const f of state.wheatFields) {
-        f.grain = (f.grain || 0) + 0.08
+        if (!f) continue
+        if (f.isUnderConstruction) continue
+        // Verifier qu un fermier assigne est effectivement en FARMING sur ce champ.
+        const ids = Array.isArray(f.assignedColonistIds) ? f.assignedColonistIds : []
+        if (ids.length === 0) continue
+        const hasActiveFarmer = state.colonists.some(c =>
+          c && ids.indexOf(c.id) !== -1 &&
+          c.profession === 'agriculteur' && c.assignedJob === 'farmer' &&
+          c.state === 'FARMING'
+        )
+        if (!hasActiveFarmer) continue
+        f.grain = (f.grain || 0) + ratePerTick
         if (f.grain >= 1.0) {
           const harvested = Math.floor(f.grain)
           state.stocks.grain = (state.stocks.grain || 0) + harvested
