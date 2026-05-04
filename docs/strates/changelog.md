@@ -4,6 +4,32 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-04 : Lot B, recompenses de quete diversifiees (resource, boost, colonist)
+
+Le schema `rewards` (Lot A v1) supporte desormais quatre types de recompenses (`research`, `resource`, `speedBoost`, `colonist`). Le moteur applique ces recompenses a la completion d une quete et notifie le joueur via toast HUD.
+
+### Comportement
+
+- `quests.js` : ajout de `applyRewards` / `applySingleReward` qui parcourent le tableau `rewards[]` et creditent les ressources via `state.resources[id]`, ajoutent les points de recherche, posent un boost de vitesse global temporaire (`state.speedBoost = { factor, expiresAt }`) ou spawnent N colons au Cairn ou pres de la premiere maison via `spawnColonsAroundHouse`.
+- `quests.js` : `normalizeRewards` convertit l ancien objet `reward { researchPoints, wood, ... }` en tableau Lot A v1, retro compatibilite preservee pour les quetes legacy non encore migrees.
+- `quests.js` : toast HUD a la completion listant titres et recompenses (ex : "Quete reussie : Recolte de baies (+30 recherche, +30 baies, +20% vitesse 60s)").
+- `quests.js` : tick `tickSpeedBoost` decrémente le boost et le supprime a expiration. Toast d annonce de fin. Badge HUD vert pendant la duree active (mis a jour chaque frame avec compte a rebours).
+- `state.js` : nouveau champ `state.speedBoost = null`.
+- `productivity.js` : helper `getGlobalSpeedFactor(state)` exporte ; `computeJobProductivity` multiplie le resultat par ce facteur (s applique a la recherche).
+- `colonist.js` : la progression de chantier multiplie aussi par `getGlobalSpeedFactor(state)`, le boost accelere donc construction comme recherche.
+
+### Quetes catalogue migrees
+
+Trois quetes hardcodees passees en `rewards[]` pour exposer les nouveaux types :
+
+- `berries-75` : research 30 + resource berries 30 + speedBoost 60s a +20%.
+- `houses-3` : research 20 + resource wood 10.
+- `colons-8` : research 25 + colonist 1.
+
+Les autres quetes restent en format `reward` legacy, normalisees a la volee.
+
+---
+
 ## 2026-05-04 : Lot B, fix trajet chercheur vers le promontoire la nuit
 
 Suite aux fix precedents, le compteur `nightPoints` ne progressait toujours pas en pratique : le chercheur, libere de la Hutte du sage a la tombee de la nuit, ne se deplacait pas visiblement vers le Promontoire. Cause racine : `pickObservatory` posait `isWandering = true`, ce qui declenchait l annulation immediate du trajet dans la branche MOVING des qu un job apparaissait (`state.jobs.size > 0`). En presence quasi-permanente de jobs joueurs, le chercheur n atteignait jamais le promontoire.
