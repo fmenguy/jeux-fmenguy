@@ -1413,6 +1413,12 @@ const FIELD_STAGES = [
   { id: 'sprouting', glbKey: 'farm-sprouting' },
 ]
 
+// Lot E : evolution visuelle dirt -> sprouting desactivee. On garde uniquement
+// le glb de base (Farm.glb / 'farm-sprouting') a toutes les etapes. Le cycle
+// gameplay (semis, pousse, recolte du blé) reste intact ; seul le swap de mesh
+// est neutralise. Repasser a true pour reactiver l evolution mediavale.
+const FIELD_VISUAL_EVOLUTION_ENABLED = false
+
 const _bbox = new THREE.Box3()
 const _bsize = new THREE.Vector3()
 
@@ -1536,10 +1542,13 @@ export function addWheatField(gx, gz) {
     }
   }
   if (!state.wheatFields) state.wheatFields = []
-  // Le mesh sera créé via updateFieldMesh() en stage initial 'dirt'.
+  // Lot E : evolution visuelle desactivee. On demarre directement au stage
+  // 'sprouting' (Farm.glb de base) et on n animera plus la transition.
+  const initialStage = FIELD_VISUAL_EVOLUTION_ENABLED ? 'dirt' : 'sprouting'
+  const initialProgress = FIELD_VISUAL_EVOLUTION_ENABLED ? 0.0 : 1.0
   const entry = { x: gx, z: gz, group: null, grain: 0.0,
-                  growthStage: 'dirt', growthProgress: 0.0 }
-  updateFieldMesh(entry, 'dirt')
+                  growthStage: initialStage, growthProgress: initialProgress }
+  updateFieldMesh(entry, initialStage)
   // Pas de buildTime sur champ-ble dans buildings.json (Lot A age 2). On
   // marque pour homogeneiser le contrat, mais l absence de buildTime laisse
   // le champ immediatement actif.
@@ -1552,6 +1561,10 @@ export function addWheatField(gx, gz) {
 // secondes pendant la phase 'dirt'. Au franchissement de 1, swap automatique
 // vers la phase 'sprouting'. Phase de transition propre via updateFieldMesh.
 export function tickWheatFields(dt) {
+  // Lot E : evolution visuelle neutralisee. On ne fait plus avancer la phase
+  // dirt vers sprouting et on ne swap plus le mesh. Le cycle gameplay du blé
+  // (grain, recolte) n est pas concerné par cette boucle.
+  if (!FIELD_VISUAL_EVOLUTION_ENABLED) return
   if (!state.wheatFields || !state.wheatFields.length) return
   for (const f of state.wheatFields) {
     if (!f) continue
