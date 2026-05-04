@@ -9,7 +9,7 @@ import { repaintCellSurface, colorForLayer } from './terrain.js'
 import {
   addTree, addHouse, addFoyer, addResearchHouse,
   assignResearcherToBuilding,
-  checkManorMerge, isCellOccupied, isMineBlocked,
+  isCellOccupied, isMineBlocked,
   addObservatory,
   isBuildingUniqueAndPlaced, isBushOn,
   addBigHouse,
@@ -863,10 +863,9 @@ function applyToolAtCell(cell) {
             // Lot B : spawn differe a la fin de construction (onBuildingComplete).
             cbEntry.pendingColonistsSpawn = 2
           } else {
-            spawnColonsAroundHouse(cell.x, cell.z, 2)
+            spawnColonsAroundHouse(cell.x, cell.z, 2,
+              { homeKind: 'house', homeBuilding: cbEntry })
           }
-          const manor = checkManorMerge(cell.x, cell.z)
-          if (manor) spawnColonsAroundHouse(manor.x + 1, manor.z + 1, 2)
         }
       }
       break
@@ -935,7 +934,8 @@ function applyToolAtCell(cell) {
           // Lot B : spawn differe a la fin de construction (onBuildingComplete).
           bhEntry.pendingColonistsSpawn = 4
         } else {
-          spawnColonsAroundHouse(cell.x + 1, cell.z + 1, 4)
+          spawnColonsAroundHouse(cell.x + 1, cell.z + 1, 4,
+            { homeKind: 'big-house', homeBuilding: bhEntry })
         }
       }
       break
@@ -1024,10 +1024,9 @@ function applyToolToStrata(cells) {
               // Lot B : spawn differe a la fin de construction.
               cbEntry2.pendingColonistsSpawn = 2
             } else {
-              spawnColonsAroundHouse(c.x, c.z, 2)
+              spawnColonsAroundHouse(c.x, c.z, 2,
+                { homeKind: 'house', homeBuilding: cbEntry2 })
             }
-            const manor = checkManorMerge(c.x, c.z)
-            if (manor) spawnColonsAroundHouse(manor.x + 1, manor.z + 1, 2)
           }
         }
         break
@@ -1095,7 +1094,8 @@ function applyToolToStrata(cells) {
           if (bhEntry2.isUnderConstruction) {
             bhEntry2.pendingColonistsSpawn = 4
           } else {
-            spawnColonsAroundHouse(c.x + 1, c.z + 1, 4)
+            spawnColonsAroundHouse(c.x + 1, c.z + 1, 4,
+              { homeKind: 'big-house', homeBuilding: bhEntry2 })
           }
         }
         break
