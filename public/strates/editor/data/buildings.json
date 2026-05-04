@@ -165,7 +165,7 @@
       "age": 1,
       "category": "monument",
       "size": "1x1",
-      "cost": { "stone": 50, "wood": 20, "bone": 10 },
+      "cost": { "stone": 50, "wood": 20 },
       "buildTime": 0,
       "requires": {
         "tech":       ["pick-stone", "axe-stone"],
