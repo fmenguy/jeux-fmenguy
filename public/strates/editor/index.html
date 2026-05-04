@@ -296,7 +296,20 @@
       box-shadow:0 0 0 1px var(--gold) inset, 0 0 18px rgba(212,184,112,.15);
     }
     .tool .ic{font-size:22px;line-height:1}
-    .tool .nm,.tool .lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;font-weight:400}
+    /* Labels resserres pour tenir dans 62x62 meme sur les noms longs
+       (HUTTE DU SAGE, GROSSE MAISON, PROMONTOIRE). Wrap autorise sur 2 lignes
+       via white-space:normal + word-break, line-height tight pour rester sous
+       l icone. Largeur contrainte a la largeur utile du bouton. */
+    .tool .nm,.tool .lab{
+      font-family:var(--mono);font-size:7.5px;letter-spacing:.04em;text-transform:uppercase;
+      opacity:.85;font-weight:400;
+      line-height:1.05;
+      text-align:center;
+      white-space:normal;
+      word-break:break-word;
+      hyphens:auto;
+      max-width:56px;
+    }
     .tool .kb,.tool .key{position:absolute;top:3px;right:4px;font-family:var(--mono);font-size:8px;color:var(--ink-3);opacity:.7;letter-spacing:.05em}
     .tool .cond{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:7px;color:var(--ink-3);letter-spacing:.03em}
     .tool.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
@@ -367,28 +380,6 @@
     .brush-zone .brush-pm:hover{border-color:var(--gold-2);color:var(--gold)}
     .brush-zone .brush-val{min-width:36px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink-2);border:1px solid var(--rule);border-radius:3px;padding:4px 4px;background:rgba(0,0,0,.2)}
     .brush-zone .brush-hint{font-family:var(--mono);font-size:7.5px;color:var(--ink-3);letter-spacing:.06em}
-
-    .tool{
-      display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;min-width:70px;
-      background:linear-gradient(180deg,var(--panel-2),var(--panel));
-      border:1px solid var(--rule);border-radius:3px;
-      cursor:pointer;color:var(--ink-2);transition:all .12s;position:relative;
-      font-family:inherit;
-    }
-    .tool:hover{border-color:var(--gold-2);color:var(--ink);transform:translateY(-1px)}
-    .tool.active, .tool.on{border-color:var(--gold);color:var(--gold);background:linear-gradient(180deg,rgba(212,184,112,.18),rgba(212,184,112,.04))}
-    .tool .ic{font-size:20px;line-height:1}
-    .tool .nm{font-family:var(--sans);font-size:11px;margin-top:2px;font-weight:500}
-    .tool .kb{position:absolute;top:3px;right:4px;font-family:var(--mono);font-size:8px;color:var(--ink-3);letter-spacing:.05em}
-    .tool .cond{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:7px;color:var(--ink-3);letter-spacing:.03em}
-    .tool.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
-    .tool.disabled-unique{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
-    .tool.disabled-unique:hover{transform:none}
-    .cancel-zone-btn{color:#e74c3c;border-color:#e74c3c;font-weight:bold;margin-left:8px}
-    .cancel-zone-btn.active,.cancel-zone-btn:hover{background:#e74c3c;color:#fff}
-
-    .sep{width:1px;background:var(--rule);margin:4px 6px;align-self:stretch}
-    .group-label{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;padding:0 8px;display:flex;align-items:center;white-space:nowrap}
 
     .brush {
       min-width: 30px; padding: 6px 4px;
