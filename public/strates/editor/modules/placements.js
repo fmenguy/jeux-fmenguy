@@ -1551,19 +1551,63 @@ export function clearAllPlacements() {
 // Phases de croissance du champ. L ordre dans le tableau définit la progression
 // quand growthProgress passe les seuils. Pour ajouter une phase 'mature' future,
 // il suffira d ajouter un objet ici et un seuil correspondant.
+// Stages visuels d un champ. Pilotés par Lot A (field.stage) et Lot B
+// (event 'strates:fieldCultivated' à la transformation par un fermier).
+// 'dirt'      = champ sauvage, rendu voxel procédural (variante F du POC).
+// 'sprouting' = champ cultivé,  rendu Farm.glb.
+// Les noms d ID restent 'dirt' / 'sprouting' pour rétrocompat persistence.
 const FIELD_STAGES = [
-  { id: 'dirt',      glbKey: 'farm-dirt' },
-  { id: 'sprouting', glbKey: 'farm-sprouting' },
+  { id: 'dirt',      glbKey: null,             builder: 'wild' },
+  { id: 'sprouting', glbKey: 'farm-sprouting', builder: 'glb' },
 ]
 
-// Lot E : evolution visuelle dirt -> sprouting desactivee. On garde uniquement
-// le glb de base (Farm.glb / 'farm-sprouting') a toutes les etapes. Le cycle
-// gameplay (semis, pousse, recolte du blé) reste intact ; seul le swap de mesh
-// est neutralise. Repasser a true pour reactiver l evolution mediavale.
+// Lot E + Lot B : la transition dirt -> sprouting n est plus pilotée par un
+// timer interne mais par l action du fermier (event externe). On garde le flag
+// disponible si on veut un jour réactiver une évolution autonome au tick.
 const FIELD_VISUAL_EVOLUTION_ENABLED = false
 
 const _bbox = new THREE.Box3()
 const _bsize = new THREE.Vector3()
+
+// Builder procédural voxel pour le stage 'sauvage' (variante F du POC champs).
+// Base 2x0.08x2 dirt-dark + 5 rangs de 9 blocs voxel dégradés vert→doré.
+// Origine locale (0,0) ; positionnement externe via group.position.
+function _buildWildFieldGroup() {
+  const g = new THREE.Group()
+  const COL_DIRT_DARK = 0x4a3220
+  const baseGeo = new THREE.BoxGeometry(2, 0.08, 2)
+  const baseMat = new THREE.MeshStandardMaterial({ color: COL_DIRT_DARK, roughness: 1, flatShading: true })
+  const base = new THREE.Mesh(baseGeo, baseMat)
+  base.position.set(0.5, 0.04, 0.5)
+  base.receiveShadow = true
+  g.add(base)
+  // RNG déterministe par appel pour éviter le scintillement entre rebuilds.
+  let s = 0x5a2b
+  const rng = () => { s = (s * 1664525 + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000 }
+  const rowCount = 5
+  const colCount = 9
+  for (let r = 0; r < rowCount; r++) {
+    const z = -0.8 + r * (1.6 / (rowCount - 1))
+    for (let i = 0; i < colCount; i++) {
+      const x = -0.9 + i * 0.225
+      const t = r / (rowCount - 1)
+      const cr = 0.49 + t * 0.30
+      const cg = 0.69 - t * 0.05
+      const cb = 0.29 - t * 0.15
+      const blockH = 0.18 + rng() * 0.05
+      const blockGeo = new THREE.BoxGeometry(0.18, blockH, 0.13)
+      const blockMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(cr, cg, cb), roughness: 0.85, flatShading: true
+      })
+      const block = new THREE.Mesh(blockGeo, blockMat)
+      block.position.set(0.5 + x, 0.08 + blockH / 2, 0.5 + z)
+      block.castShadow = true
+      block.receiveShadow = true
+      g.add(block)
+    }
+  }
+  return g
+}
 
 // Construit le mesh d un champ pour la phase donnée. Tente d utiliser le GLB
 // associé ; en fallback, retourne un mesh procédural minimal (4 dalles brunes).
@@ -1573,6 +1617,11 @@ function _makeFieldGroup(stageId, tops) {
   const stage = FIELD_STAGES.find(s => s.id === stageId) || FIELD_STAGES[0]
   const baseTop = tops ? tops[0] : 0
   const wrap = new THREE.Group()
+  // Stage sauvage : rendu procédural voxel (pas de GLB).
+  if (stage.builder === 'wild') {
+    wrap.add(_buildWildFieldGroup())
+    return wrap
+  }
   const model = stage.glbKey ? getModel(stage.glbKey) : null
   if (model) {
     // Centrer le modèle sur le 2x2. Le footprint world s étend de -0.5 à +1.5
@@ -1686,13 +1735,15 @@ export function addWheatField(gx, gz) {
   }
   if (!state.wheatFields) state.wheatFields = []
   if (!state.wheatFieldNextId) state.wheatFieldNextId = 1
-  // Lot E : evolution visuelle desactivee. On demarre directement au stage
-  // 'sprouting' (Farm.glb de base) et on n animera plus la transition.
-  const initialStage = FIELD_VISUAL_EVOLUTION_ENABLED ? 'dirt' : 'sprouting'
-  const initialProgress = FIELD_VISUAL_EVOLUTION_ENABLED ? 0.0 : 1.0
-  // Lot B fermier : id stable + capacite 1 fermier max via assignedColonistIds.
-  const entry = { id: state.wheatFieldNextId++, x: gx, z: gz, group: null, grain: 0.0,
-                  growthStage: initialStage, growthProgress: initialProgress,
+  // Lot E : champ sauvage par défaut → rendu voxel procédural (stage visuel 'dirt').
+  // Le passage en 'cultive' est piloté par Lot B (event strates:fieldCultivated
+  // ou mutation de field.stage), pas par timer interne.
+  const initialStage = 'dirt'
+  // Lot B fermier : id stable + capacité 1 fermier max via assignedColonistIds.
+  // wheat = compteur de blé accumulé au stage cultivé (séparé de grain).
+  const entry = { id: state.wheatFieldNextId++, x: gx, z: gz, group: null, grain: 0.0, wheat: 0.0,
+                  growthStage: initialStage, growthProgress: 0.0,
+                  stage: 'sauvage', transformProgress: 0,
                   assignedColonistIds: [] }
   updateFieldMesh(entry, initialStage)
   // Pas de buildTime sur champ-ble dans buildings.json (Lot A age 2). On
@@ -1721,27 +1772,61 @@ export function releaseFromWheatFields(colonistId) {
   }
 }
 
-// Tick des champs : avance growthProgress de 0 à 1 sur FIELD_GROWTH_DURATION
-// secondes pendant la phase 'dirt'. Au franchissement de 1, swap automatique
-// vers la phase 'sprouting'. Phase de transition propre via updateFieldMesh.
+// Lot B (two-stage field) : transformation d un champ sauvage en champ cultive.
+// Bascule field.stage de 'sauvage' vers 'cultive', remet transformProgress a 0,
+// et emet un event 'strates:fieldTransformed' que Lot E consomme pour swapper
+// le visuel. La logique de production (grain vs ble) lit field.stage chaque tick.
+export function transformField(field) {
+  if (!field) return false
+  if (field.stage === 'cultive') return false
+  field.stage = 'cultive'
+  field.transformProgress = 0
+  // Notification pour Lot E (swap visuel) et autres ecouteurs eventuels.
+  try {
+    const ev = new CustomEvent('strates:fieldTransformed', {
+      detail: { fieldId: field.id, x: field.x, z: field.z, stage: 'cultive' }
+    })
+    if (typeof window !== 'undefined' && window.dispatchEvent) window.dispatchEvent(ev)
+  } catch (e) { /* environnement sans window, ignore */ }
+  return true
+}
+
+// Tick des champs : observe field.stage (Lot A/B). Dès que stage devient
+// 'cultive' alors que le visuel est encore 'dirt', on bascule vers 'sprouting'
+// (Farm.glb). Et inversement si un champ revenait en 'sauvage' (cas rare).
+// Léger : un O(N) sur state.wheatFields, où N est typiquement <10.
 export function tickWheatFields(dt) {
-  // Lot E : evolution visuelle neutralisee. On ne fait plus avancer la phase
-  // dirt vers sprouting et on ne swap plus le mesh. Le cycle gameplay du blé
-  // (grain, recolte) n est pas concerné par cette boucle.
-  if (!FIELD_VISUAL_EVOLUTION_ENABLED) return
   if (!state.wheatFields || !state.wheatFields.length) return
   for (const f of state.wheatFields) {
     if (!f) continue
-    if (f.isUnderConstruction) continue
-    if (f.growthStage !== 'dirt') continue
-    if (typeof f.growthProgress !== 'number') f.growthProgress = 0
-    f.growthProgress += dt / FIELD_GROWTH_DURATION
-    if (f.growthProgress >= 1) {
-      f.growthProgress = 1
-      updateFieldMesh(f, 'sprouting')
+    const wantStage = (f.stage === 'cultive') ? 'sprouting' : 'dirt'
+    if (f.growthStage !== wantStage) {
+      updateFieldMesh(f, wantStage)
     }
   }
 }
+
+// Listener event Lot B : transformation explicite par fermier. La mutation
+// de field.stage est aussi captée par le tick ci-dessus (filet de sécurité),
+// mais l event permet un swap immédiat sans attendre 1/60 s.
+function _onFieldStageEvent(e) {
+  const detail = e && e.detail
+  if (!detail) return
+  let f = detail.field || null
+  if (!f) {
+    const id = detail.fieldId != null ? detail.fieldId : detail.id
+    if (id != null) f = findWheatFieldById(id)
+  }
+  if (!f) return
+  if ((detail.stage === 'cultive' || !detail.stage) && f.growthStage !== 'sprouting') {
+    f.stage = 'cultive'
+    updateFieldMesh(f, 'sprouting')
+  }
+}
+try {
+  window.addEventListener('strates:fieldCultivated', _onFieldStageEvent)
+  window.addEventListener('strates:fieldTransformed', _onFieldStageEvent)
+} catch (e) { /* environnement sans window : ignore */ }
 
 // ============================================================================
 // Cairn de pierre (monument de passage a l'Age du Bronze)
