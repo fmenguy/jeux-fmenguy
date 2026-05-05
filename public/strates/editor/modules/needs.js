@@ -174,6 +174,10 @@ export function computeProductivityMul(colonist) {
       }
     }
   }
+  // Lot B house utility : bonus repos. Si rested > 0.7, x1.15. Lu directement
+  // sur le colon pour eviter une dependance circulaire avec colonist.js.
+  const r = (typeof colonist.rested === 'number') ? colonist.rested : 0.5
+  if (r > 0.7) mul *= 1.15
   return Math.max(0.1, mul)
 }
 

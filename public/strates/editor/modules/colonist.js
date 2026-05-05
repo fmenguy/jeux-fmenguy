@@ -125,6 +125,147 @@ function tryEatMeatFromStocks(colonist) {
   return true
 }
 
+// ============================================================================
+// Lot B house utility (sommeil, reproduction)
+// ----------------------------------------------------------------------------
+// Le repos nocturne envoie chaque resident d une maison sur la cellule de sa
+// cabane des le passage en mode nuit. Pendant SLEEP, rested monte 3x plus vite
+// que dehors (au foyer commun). Au lever du jour, le colon repart en IDLE.
+// Si rested > 0.7, productivite x1.15 (cf. productivity.js et needs.js).
+//
+// Reproduction : si deux partenaires (partnerId reciproque) habitent la meme
+// maison et qu il reste de la place (residents.length < residentsCapacity),
+// reproductionTimer monte d 1 a chaque transition jour vers nuit. A 30, un
+// nouveau colon adulte spawne aupres de la maison, residents recoivent un toast
+// HUD "Nouveau ne". Capacite pleine, le compteur stagne (pas d incrementation).
+// ============================================================================
+
+// Vitesse de variation du repos. Valeurs en unites par seconde.
+// Un colon dehors la nuit (sans-abri ou repli foyer commun) recupere a
+// REST_RATE_OUTDOOR ; sous toit, on multiplie par 3 (REST_RATE_INDOOR).
+// La descente diurne pendant le travail est calee pour qu un colon repose a
+// 0.7 baisse en environ 8 minutes de travail continu.
+const REST_RATE_INDOOR  = 0.025   // par seconde, sous toit (sleep en cabane)
+const REST_RATE_OUTDOOR = REST_RATE_INDOOR / 3  // par seconde, dehors
+const FATIGUE_RATE_WORK = 0.008   // par seconde, en travail/construction
+const REST_BONUS_THRESHOLD = 0.7
+const REST_BONUS_FACTOR    = 1.15
+const REPRODUCTION_TARGET  = 30   // points (1 par jour)
+
+// Retourne le facteur de productivite lie au repos (1.15 si bien repose).
+// Expose pour productivity.js et needs.js. Plancher 1.0 (pas de malus).
+export function restedFactor(colonist) {
+  if (!colonist) return 1.0
+  const r = (typeof colonist.rested === 'number') ? colonist.rested : 0.5
+  return r > REST_BONUS_THRESHOLD ? REST_BONUS_FACTOR : 1.0
+}
+
+// Resout la cellule de couchage d un colon (centre de sa maison). Retourne
+// null s il n a pas de homeBuildingId valide. La cellule est calee sur le
+// coin (x, z) du batiment ; pour big-house/manoir on prend le centre 4x4 / 2x2.
+function getHomeSleepCell(colonist) {
+  if (!colonist || !colonist.homeBuildingId) return null
+  const r = resolveHomeBuilding(colonist.homeBuildingId)
+  if (!r || !r.building) return null
+  const b = r.building
+  if (b.isUnderConstruction) return null
+  if (r.kind === 'big-house') return { x: b.x + 1, z: b.z + 1, building: b, kind: r.kind }
+  if (r.kind === 'manor')     return { x: b.x + 1, z: b.z + 1, building: b, kind: r.kind }
+  return { x: b.x, z: b.z, building: b, kind: r.kind }
+}
+
+// Lot B house utility : tick global appele par main.js apres tickAllNeeds.
+// Detecte la transition jour vers nuit (compute une fois pour toute la
+// colonie) et met a jour le compteur de reproduction. Le retour a la maison
+// individuel est gere dans Colonist.update via _prevIsNight.
+let _prevIsNightGlobal = null
+export function tickHousing(_dt) {
+  const cur = !!state.isNight
+  if (_prevIsNightGlobal === null) { _prevIsNightGlobal = cur; return }
+  // Top de transition jour vers nuit : un seul declenchement reproduction.
+  if (!_prevIsNightGlobal && cur) {
+    tickReproduction()
+  }
+  _prevIsNightGlobal = cur
+}
+
+// Examine chaque couple cohabitant et fait avancer reproductionTimer. Les deux
+// partenaires partagent la meme valeur (synchronisation symetrique). A
+// REPRODUCTION_TARGET, on fait naitre un nouveau colon dans la maison si elle
+// a encore de la place et on remet a zero.
+function tickReproduction() {
+  if (!Array.isArray(state.colonists)) return
+  const seen = new Set()
+  for (const c of state.colonists) {
+    if (!c || c.partnerId == null) continue
+    if (seen.has(c.id)) continue
+    const partner = state.colonists.find(p => p && p.id === c.partnerId)
+    if (!partner) continue
+    seen.add(c.id); seen.add(partner.id)
+    // Cohabitation requise.
+    if (!c.homeBuildingId || c.homeBuildingId !== partner.homeBuildingId) continue
+    const ref = resolveHomeBuilding(c.homeBuildingId)
+    if (!ref || !ref.building) continue
+    const b = ref.building
+    if (b.isUnderConstruction) continue
+    const cap = (typeof b.residentsCapacity === 'number') ? b.residentsCapacity : 2
+    const cur = Array.isArray(b.residents) ? b.residents.length : 0
+    // Capacite pleine : on stagne, pas d incrementation.
+    if (cur >= cap) continue
+    const next = (c.reproductionTimer || 0) + 1
+    c.reproductionTimer = next
+    partner.reproductionTimer = next
+    if (next >= REPRODUCTION_TARGET) {
+      c.reproductionTimer = 0
+      partner.reproductionTimer = 0
+      _spawnChildAt(b, ref.kind, c, partner)
+    }
+  }
+}
+
+function _spawnChildAt(building, kind, parentA, parentB) {
+  // Cherche une cellule libre adjacente au coin (building.x, building.z).
+  const baseX = building.x
+  const baseZ = building.z
+  let sx = baseX, sz = baseZ
+  let found = false
+  outer:
+  for (let r = 1; r <= 3; r++) {
+    for (let dz = -r; dz <= r; dz++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (dx === 0 && dz === 0) continue
+        const x = baseX + dx, z = baseZ + dz
+        if (x < 0 || z < 0 || x >= GRID || z >= GRID) continue
+        const top = state.cellTop[z * GRID + x]
+        if (top <= SHALLOW_WATER_LEVEL) continue
+        if (isCellOccupied(x, z)) continue
+        let occ = false
+        for (const cc of state.colonists) if (cc.x === x && cc.z === z) { occ = true; break }
+        if (occ) continue
+        sx = x; sz = z; found = true; break outer
+      }
+    }
+  }
+  if (!found) { sx = baseX; sz = baseZ }
+  const child = spawnColonist(sx, sz, {})
+  if (!child) return
+  // Lien residence : ajoute aux residents si la place existe encore.
+  if (!Array.isArray(building.residents)) building.residents = []
+  const cap = (typeof building.residentsCapacity === 'number') ? building.residentsCapacity : 2
+  if (building.residents.length < cap) {
+    building.residents.push(child.id)
+    child.homeBuildingId = makeHomeRef(kind, building)
+    const shelterId = kind === 'big-house' ? 'big-house' : (kind === 'manor' ? 'manor' : 'cabane')
+    child.assignedBuildingId = shelterId
+  }
+  // Toast HUD pour les deux parents.
+  try {
+    const nameA = parentA && parentA.name ? parentA.name : 'colon'
+    const nameB = parentB && parentB.name ? parentB.name : 'colon'
+    showHudToast('Nouveau ne chez ' + nameA + ' et ' + nameB + '.', 4000)
+  } catch (_) {}
+}
+
 export function scheduleFlash(x, z) {
   state.flashes.push({ x, z, t: 0 })
   const i = topVoxelIndex(x, z)
@@ -539,6 +680,58 @@ export class Colonist {
     }
   }
 
+  // Lot B house utility : appele lors du passage du jour a la nuit.
+  // Le colon abandonne tout ordre proactif (bulle, flanerie) et tente de
+  // rejoindre son lit. S il a une faim critique, il mange d abord.
+  _onNightFall() {
+    // Pas de force-stop sur les taches de survie (faim) ni sur les ordres
+    // joueur en cours (WORKING). On se contente de reorienter quand le colon
+    // sera IDLE. La logique est appelee aussi via _tryGoSleep ci-dessous.
+    if (this.state === 'IDLE' && !isNeedCritical(this, 'hunger')) {
+      this._tryGoSleep()
+    }
+  }
+
+  // Lot B house utility : reveil. Si le colon dormait, repasser en IDLE pour
+  // que la branche normale reprenne (assignations, bulles, deplacements).
+  _onDayBreak() {
+    if (this.state === 'SLEEP') {
+      this.state = 'IDLE'
+      this.path = null
+      this.lineGeo.setFromPoints([])
+    }
+  }
+
+  // Lot B house utility : tente d envoyer le colon vers la cellule de sa
+  // maison. Si arrive (Manhattan <= 1), bascule directement en SLEEP. Sinon
+  // calcule un chemin (findApproach pour absorber les paliers) et passe
+  // MOVING. En cas d echec (pas de home, chemin inaccessible), n agit pas
+  // pour laisser la branche IDLE generer un repli (campfire / wander).
+  _tryGoSleep() {
+    if (!this.homeBuildingId) return false
+    const home = getHomeSleepCell(this)
+    if (!home) return false
+    const d = Math.abs(home.x - this.x) + Math.abs(home.z - this.z)
+    if (d <= 1) {
+      // Deja a la maison : dort sur place.
+      this.state = 'SLEEP'
+      this.path = null
+      this.lineGeo.setFromPoints([])
+      this.group.position.set(this.tx, this.ty, this.tz)
+      return true
+    }
+    const approach = findApproach(this.x, this.z, home.x, home.z)
+    if (!approach) return false
+    this.path = approach.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = false
+    // Flag pour faire basculer en SLEEP a l arrivee plutot qu en WORKING.
+    this._goingToSleep = true
+    this.updateTrail()
+    return true
+  }
+
   pickWander() {
     for (let tries = 0; tries < 10; tries++) {
       const dx = Math.floor((Math.random() * 7) - 3)
@@ -949,6 +1142,52 @@ export class Colonist {
     this.applyGravity(dt)
     this.updateSpeech(dt)
     this.faim = Math.max(0, this.faim - 0.5 * dt)
+    // Lot B house utility : repos. Pendant SLEEP, on monte plus vite si sous
+    // toit (REST_RATE_INDOOR), sinon a vitesse REST_RATE_OUTDOOR (foyer
+    // commun). Pendant le travail (WORKING/BUILDING/RESEARCHING/FARMING) la
+    // jauge baisse a FATIGUE_RATE_WORK. IDLE et MOVING sont neutres.
+    if (this.state === 'SLEEP') {
+      this.rested = Math.min(1, (this.rested || 0) + REST_RATE_INDOOR * dt)
+    } else if (this.state === 'WORKING' || this.state === 'BUILDING' ||
+               this.state === 'RESEARCHING' || this.state === 'FARMING') {
+      this.rested = Math.max(0, (this.rested || 0) - FATIGUE_RATE_WORK * dt)
+    } else if (state.isNight && this.state === 'IDLE' && !this.homeBuildingId) {
+      // Sans-abri la nuit : recuperation lente dehors (foyer commun).
+      this.rested = Math.min(1, (this.rested || 0) + REST_RATE_OUTDOOR * dt)
+    }
+    // Detection transition jour <-> nuit pour ce colon (envoi a la maison la
+    // nuit, reveil le matin). Independant du tickHousing global qui gere la
+    // reproduction sur le top jour vers nuit.
+    const nowNight = !!state.isNight
+    if (this._prevIsNight !== nowNight) {
+      if (nowNight) this._onNightFall()
+      else          this._onDayBreak()
+      this._prevIsNight = nowNight
+    }
+    // Si la nuit tombe sans transition (chargement save), s assurer que les
+    // colons ayant home et IDLE rejoignent leur lit. Ne s applique qu une fois
+    // par tick et seulement aux IDLE proches de chez eux.
+    if (nowNight && this.state === 'IDLE' && !isNeedCritical(this, 'hunger')) {
+      this._tryGoSleep()
+    }
+    // Etat SLEEP : statique, pas d action. Sortie au lever du jour ou si la
+    // faim devient critique (le colon prefere manger).
+    if (this.state === 'SLEEP') {
+      if (!nowNight) {
+        this.state = 'IDLE'
+        this.path = null
+        this.lineGeo.setFromPoints([])
+      } else if (isNeedCritical(this, 'hunger')) {
+        this.state = 'IDLE'
+        this.path = null
+        this.lineGeo.setFromPoints([])
+      } else {
+        // Animation : leger bob respiratoire, pas de bruit visuel sinon.
+        const bob = Math.sin(performance.now() * 0.003) * 0.03
+        this.group.position.set(this.tx, this.ty + Math.abs(bob), this.tz)
+        return
+      }
+    }
     // Arc visible si chasseur de profession ou job de chasse en cours
     if (this._bowGroup && this.state !== 'WORKING') {
       const activeHunt = (this.targetJob && this.targetJob.kind === 'hunt')
@@ -1442,6 +1681,16 @@ export class Colonist {
         }
       }
       if (!this.path || this.pathStep >= this.path.length) {
+        // Lot B house utility : arrivee au lit. On bascule directement en SLEEP
+        // sans passer par WORKING. Le sommeil persistera jusqu au lever du jour.
+        if (this._goingToSleep) {
+          this._goingToSleep = false
+          this.state = 'SLEEP'
+          this.path = null
+          this.lineGeo.setFromPoints([])
+          this.group.position.set(this.tx, this.ty, this.tz)
+          return
+        }
         // Lot B : arrivee au promontoire la nuit. On reste en IDLE (pas WORKING)
         // pour que isColonistOnObservatory genere les nightPoints, et on coupe
         // le flag pour que les decisions IDLE suivantes (campfire, wander) ne

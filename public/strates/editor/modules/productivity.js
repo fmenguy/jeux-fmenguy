@@ -67,7 +67,12 @@ export function computeJobProductivity(state, jobId, onlyState) {
     if (c.profession !== jobId) continue
     if (onlyState && c.state !== onlyState) continue
     const lvl = (typeof c.skillLevel === 'function') ? c.skillLevel(skillName) : 0
-    total += lvl / 10
+    // Lot B house utility : bonus de productivite si le colon est repose
+    // (rested > 0.7 -> x1.15). Plancher 1.0, jamais de malus depuis ce
+    // facteur. Lecture defensive (rested peut etre absent sur restore).
+    const r = (typeof c.rested === 'number') ? c.rested : 0.5
+    const restedF = r > 0.7 ? 1.15 : 1.0
+    total += (lvl / 10) * restedF
     count++
   }
   const minN = MIN_COLONISTS_FOR_JOB[jobId] || 1
