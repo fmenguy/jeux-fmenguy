@@ -354,8 +354,10 @@
       "icon": "🗺",
       "cost": { "research": 20 },
       "requires": ["scouting"],
-      "unlocks": {},
-      "description": "Techniques de releve cartographique. L'explorateur revele une zone plus large lors de ses missions.",
+      "unlocks": {
+        "features": ["vision-radius-plus"]
+      },
+      "description": "Techniques de releve cartographique. L'explorateur revele une zone plus large lors de ses missions (vision +50%).",
       "speech": ["Chaque expedition trace une route pour la suivante."]
     }
   ]
