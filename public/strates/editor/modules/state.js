@@ -50,7 +50,7 @@ export const state = {
   buildMarkers: new Map(),
 
   // ressources
-  stocks: { silex: 0, grain: 0 },
+  stocks: { silex: 0, grain: 0, wheat: 0 },
   techs: {
     'axe-stone':     { name: 'Hache en pierre',   cost: 4,  req: null,           age: 'pierre', icon: 'H', tint: '#8a6a4a', unlocked: false },
     'pick-stone':    { name: 'Pioche en pierre',  cost: 5,  req: null,           age: 'pierre', icon: 'P', tint: '#9ca3af', unlocked: false },
@@ -74,7 +74,7 @@ export const state = {
   nightPoints: 0,
   isNight: false,
   observatories: [],
-  resources: { berries: 0, wood: 0, stone: 0, viande: 0, 'raw-meat': 0, 'cooked-meat': 0, bone: 0, hide: 0, grain: 0, silex: 0 },
+  resources: { berries: 0, wood: 0, stone: 0, viande: 0, 'raw-meat': 0, 'cooked-meat': 0, bone: 0, hide: 0, grain: 0, wheat: 0, silex: 0 },
   gameStats: { housesPlaced: 0, minesCompleted: 0, totalBerriesHarvested: 0 },
 
   // colons

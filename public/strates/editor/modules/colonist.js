@@ -21,7 +21,7 @@ import { dlog } from './debug.js'
 import {
   findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn,
   isRockOn, collectRockAt, isBushOn, grabBushAt, isOreOn,
-  findWheatFieldById, releaseFromWheatFields, completeUpgrade,
+  findWheatFieldById, releaseFromWheatFields, completeUpgrade, transformField,
   makeHomeRef, resolveHomeBuilding
 } from './placements.js'
 import { findNearestBush, refreshBushBerries, isObservatoryOn, enterObservatory, releaseFromObservatory, OBSERVATORY_CAPACITY } from './placements.js'
@@ -31,7 +31,7 @@ import { makeBubbleCanvas, drawBubble, makeLabelCanvas, drawLabel } from './bubb
 import { activeSpeakers } from './speech.js'
 import { initColonistNeeds, isNeedCritical } from './needs.js'
 import { getGlobalSpeedFactor } from './productivity.js'
-import { NEEDS_DATA, JOBS_DATA } from './gamedata.js'
+import { NEEDS_DATA, JOBS_DATA, BUILDINGS_DATA } from './gamedata.js'
 import { showHudToast } from './ui/research-popup.js'
 // tasks.js : file de taches, utilisee ici pour marquer la tache courante.
 import { PRIORITY, TASK_KIND } from './tasks.js'
@@ -328,6 +328,11 @@ export class Colonist {
     // Lot B fermier : id du champ de ble auquel ce colon est attache (1 max).
     // null tant qu il n est pas agriculteur ou qu aucun champ libre n existe.
     this.assignedFieldId = null
+    // Lot B (two-stage field) : si vrai, la cible courante est un champ sauvage
+    // a transformer (state FARMING_TRANSFORM, 30s). Sinon la cible est un champ
+    // cultive a exploiter (state FARMING). Reset au reload.
+    this._fieldTransformTarget = false
+    this.farmingTransformTimer = 0
     this.lastContextLine = null
     this.favorite = false
     // Lot B : flag "etoile" (5% au spawn par maison construite). Affecte
@@ -1466,9 +1471,16 @@ export class Colonist {
             }
           }
         }
-        // Lot B fermier : agriculteur. Le jour, si la tech wheat-field est
-        // debloquee et qu un champ libre existe (assignedColonistIds vide),
-        // le colon s y assigne et part bosser. Capacite stricte 1 par champ.
+        // Lot B fermier (two-stage field) : agriculteur. Le jour, le fermier
+        // gere deux priorites :
+        //   P1 : trouver un champ SAUVAGE le plus proche pour le TRANSFORMER en
+        //        cultive (state FARMING_TRANSFORM, 30s). Aucun champ sauvage n a
+        //        de fermier assigne (production autonome), donc pas de check de
+        //        capacite ici. On marque _fieldTransformTarget pour que MOVING
+        //        bascule en FARMING_TRANSFORM a l arrivee.
+        //   P2 : si tous les champs sont deja cultives, prendre un champ
+        //        cultive libre (assignedColonistIds vide) comme avant pour
+        //        produire du ble (state FARMING).
         // La nuit, comme les autres metiers, il rentre au campfire.
         if (
           this.profession === 'agriculteur' &&
@@ -1483,22 +1495,50 @@ export class Colonist {
             if (!cur || cur.isUnderConstruction) {
               releaseFromWheatFields(this.id)
               this.assignedFieldId = null
+              this._fieldTransformTarget = false
             }
           }
           // Trouver un champ libre si pas encore assigne.
           if (this.assignedFieldId == null && state.wheatFields && state.wheatFields.length) {
-            let bestF = null, bestFD = Infinity
+            // P1 : champ sauvage le plus proche.
+            let bestWild = null, bestWildD = Infinity
             for (const f of state.wheatFields) {
               if (!f) continue
               if (f.isUnderConstruction) continue
-              if (!Array.isArray(f.assignedColonistIds)) f.assignedColonistIds = []
-              if (f.assignedColonistIds.length >= 1) continue
+              if ((f.stage || 'sauvage') !== 'sauvage') continue
               const d = Math.abs(f.x - this.x) + Math.abs(f.z - this.z)
-              if (d < bestFD) { bestFD = d; bestF = f }
+              if (d < bestWildD) { bestWildD = d; bestWild = f }
             }
-            if (bestF) {
-              bestF.assignedColonistIds.push(this.id)
-              this.assignedFieldId = bestF.id
+            if (bestWild) {
+              if (!Array.isArray(bestWild.assignedColonistIds)) bestWild.assignedColonistIds = []
+              // On reserve la cible pour eviter que deux fermiers convergent
+              // sur le meme champ sauvage. Capacite stricte 1.
+              if (bestWild.assignedColonistIds.length === 0) {
+                bestWild.assignedColonistIds.push(this.id)
+                this.assignedFieldId = bestWild.id
+                this._fieldTransformTarget = true
+              } else {
+                // Deja reserve : on tente quand meme de continuer en P2.
+                bestWild = null
+              }
+            }
+            // P2 : si pas de sauvage trouve, champ cultive libre le plus proche.
+            if (this.assignedFieldId == null) {
+              let bestF = null, bestFD = Infinity
+              for (const f of state.wheatFields) {
+                if (!f) continue
+                if (f.isUnderConstruction) continue
+                if ((f.stage || 'sauvage') !== 'cultive') continue
+                if (!Array.isArray(f.assignedColonistIds)) f.assignedColonistIds = []
+                if (f.assignedColonistIds.length >= 1) continue
+                const d = Math.abs(f.x - this.x) + Math.abs(f.z - this.z)
+                if (d < bestFD) { bestFD = d; bestF = f }
+              }
+              if (bestF) {
+                bestF.assignedColonistIds.push(this.id)
+                this.assignedFieldId = bestF.id
+                this._fieldTransformTarget = false
+              }
             }
           }
           if (this.assignedFieldId != null) {
@@ -1517,6 +1557,7 @@ export class Colonist {
               // Champ inaccessible : on libere pour permettre une autre cible.
               releaseFromWheatFields(this.id)
               this.assignedFieldId = null
+              this._fieldTransformTarget = false
             }
           }
         }
@@ -1724,14 +1765,20 @@ export class Colonist {
           this.group.position.set(this.tx, this.ty, this.tz)
           return
         }
-        // Lot B fermier : arrivee au champ. On bascule en FARMING tant qu il
-        // fait jour et que le champ est encore valide.
+        // Lot B fermier : arrivee au champ. Bascule en FARMING_TRANSFORM si la
+        // cible est un champ sauvage (transformation 30s vers cultive), sinon en
+        // FARMING (production de ble sur champ cultive).
         if (
           this.assignedFieldId != null &&
           this.profession === 'agriculteur' && this.assignedJob === 'farmer' &&
           !this.targetJob && !this.targetBush && !this.targetFoyer
         ) {
-          this.state = 'FARMING'
+          if (this._fieldTransformTarget) {
+            this.state = 'FARMING_TRANSFORM'
+            this.farmingTransformTimer = 0
+          } else {
+            this.state = 'FARMING'
+          }
           this.path = null
           this.lineGeo.setFromPoints([])
           this.group.position.set(this.tx, this.ty, this.tz)
@@ -1787,6 +1834,74 @@ export class Colonist {
       return
     }
 
+    if (this.state === 'FARMING_TRANSFORM') {
+      this.lineGeo.setFromPoints([])
+      // Lot B (two-stage field) : transformation d un champ sauvage en cultive.
+      // Duree lue depuis BUILDINGS_DATA.field.transformFrom.duration (defaut 30s).
+      // Gate universel : si plus fermier ou si nuit tombee, on rebascule en IDLE
+      // (le timer se reinitialise au prochain MOVING -> arrivee).
+      const stillFarmer = (this.profession === 'agriculteur' && this.assignedJob === 'farmer')
+      if (!stillFarmer || state.isNight) {
+        if (!stillFarmer) {
+          releaseFromWheatFields(this.id)
+          this.assignedFieldId = null
+          this._fieldTransformTarget = false
+        } else {
+          // Nuit : on garde l assignation, on reset le timer pour reprendre
+          // depuis zero le lendemain (transformation atomique).
+          this.farmingTransformTimer = 0
+        }
+        this.state = 'IDLE'
+        return
+      }
+      const field = findWheatFieldById(this.assignedFieldId)
+      if (!field || field.isUnderConstruction) {
+        releaseFromWheatFields(this.id)
+        this.assignedFieldId = null
+        this._fieldTransformTarget = false
+        this.state = 'IDLE'
+        return
+      }
+      // Si le champ a deja ete cultive entre temps (autre fermier, rechargement),
+      // on saute la transformation et on bascule directement en FARMING.
+      if (field.stage === 'cultive') {
+        this._fieldTransformTarget = false
+        this.farmingTransformTimer = 0
+        this.state = 'FARMING'
+        return
+      }
+      // Resolution data-driven de la duree de transformation.
+      let transformDuration = 30
+      try {
+        const fieldDef = (typeof BUILDINGS_DATA !== 'undefined' && BUILDINGS_DATA && BUILDINGS_DATA.buildings)
+          ? BUILDINGS_DATA.buildings.find(x => x.id === 'field') : null
+        if (fieldDef && fieldDef.transformFrom && typeof fieldDef.transformFrom.duration === 'number') {
+          transformDuration = fieldDef.transformFrom.duration
+        }
+      } catch (e) { /* fallback 30s */ }
+      this.farmingTransformTimer = (this.farmingTransformTimer || 0) + dt
+      // Mise a jour de la progression cote field pour eventuel feedback UI / save.
+      field.transformProgress = Math.min(1, this.farmingTransformTimer / transformDuration)
+      // Animation legere comme en FARMING.
+      const centerX = field.x + 1
+      const centerZ = field.z + 1
+      const dx = centerX - this.tx
+      const dz = centerZ - this.tz
+      this.group.rotation.y = Math.atan2(dx, dz)
+      const bob = Math.sin(performance.now() * 0.0045) * 0.07
+      this.group.position.set(this.tx, this.ty + Math.abs(bob), this.tz)
+      if (this.farmingTransformTimer >= transformDuration) {
+        // Transformation terminee : champ passe cultive, fermier reste assigne.
+        transformField(field)
+        this.farmingTransformTimer = 0
+        this._fieldTransformTarget = false
+        // Bascule en FARMING : le meme champ est desormais cultive et le fermier
+        // est deja sur place. La production de ble demarrera au prochain tick.
+        this.state = 'FARMING'
+      }
+      return
+    }
+
     if (this.state === 'FARMING') {
       this.lineGeo.setFromPoints([])
       // Gate universel : profession === 'agriculteur' ET assignedJob === 'farmer'.
@@ -1807,6 +1922,16 @@ export class Colonist {
       if (!field || field.isUnderConstruction) {
         releaseFromWheatFields(this.id)
         this.assignedFieldId = null
+        this.state = 'IDLE'
+        return
+      }
+      // Lot B (two-stage field) : si le champ est encore sauvage, on ne produit
+      // rien en FARMING. On retourne en IDLE pour que le picker rebascule en
+      // FARMING_TRANSFORM (cas save legacy ou changement d etat externe).
+      if ((field.stage || 'sauvage') === 'sauvage') {
+        releaseFromWheatFields(this.id)
+        this.assignedFieldId = null
+        this._fieldTransformTarget = false
         this.state = 'IDLE'
         return
       }

@@ -326,39 +326,73 @@ function tick(nowMs) {
     }
   }
 
-  // Lot B fermier : production de grain conditionnee a la presence d un fermier
-  // assigne et reellement en FARMING sur le champ. Le rate vient de buildings.json
-  // (provides.grain_per_tick) lu via BUILDINGS_DATA. Tick toutes les 2s.
+  // Lot B (two-stage field) : production differenciee par stage.
+  // - stage 'sauvage'  : production AUTONOME de grain au taux faible
+  //                      (stages.sauvage.provides.grain_per_tick), pas de fermier requis.
+  // - stage 'cultive'  : production de ble au taux eleve
+  //                      (stages.cultive.provides.wheat_per_tick), exige un fermier
+  //                      assigne et reellement en FARMING sur le champ.
+  // Lecture data-driven via BUILDINGS_DATA (entry id 'field' du Lot A). Fallback sur
+  // l ancien champ-ble si la nouvelle entry n est pas presente. Tick toutes les 2s.
   tick._grainAccum = (tick._grainAccum || 0) + dt
   if (tick._grainAccum >= 2.0) {
     tick._grainAccum -= 2.0
     if (state.wheatFields && state.wheatFields.length) {
-      // Lecture data-driven du rate par tick (defaut 0.08 si absent du JSON).
-      let ratePerTick = 0.08
+      // Resolution data-driven des taux. Fallback historique pour robustesse.
+      let wildGrainRate = 0.02
+      let cultiveWheatRate = 0.10
       if (BUILDINGS_DATA && Array.isArray(BUILDINGS_DATA.buildings)) {
-        const b = BUILDINGS_DATA.buildings.find(x => x.id === 'champ-ble')
-        if (b && b.provides && typeof b.provides.grain_per_tick === 'number') {
-          ratePerTick = b.provides.grain_per_tick
+        const fieldDef = BUILDINGS_DATA.buildings.find(x => x.id === 'field')
+        if (fieldDef && fieldDef.stages) {
+          const sw = fieldDef.stages.sauvage
+          const cu = fieldDef.stages.cultive
+          if (sw && sw.provides && typeof sw.provides.grain_per_tick === 'number') {
+            wildGrainRate = sw.provides.grain_per_tick
+          }
+          if (cu && cu.provides && typeof cu.provides.wheat_per_tick === 'number') {
+            cultiveWheatRate = cu.provides.wheat_per_tick
+          }
+        }
+        // Compatibilite arriere : si l ancienne entry champ-ble fournit grain_per_tick,
+        // on l utilise pour le stage cultive (faute de wheat_per_tick) afin que la
+        // production reste lisible meme sans la nouvelle structure stages.
+        if (!(BUILDINGS_DATA.buildings.find(x => x.id === 'field') || {}).stages) {
+          const legacy = BUILDINGS_DATA.buildings.find(x => x.id === 'champ-ble')
+          if (legacy && legacy.provides && typeof legacy.provides.grain_per_tick === 'number') {
+            cultiveWheatRate = legacy.provides.grain_per_tick
+          }
         }
       }
       for (const f of state.wheatFields) {
         if (!f) continue
         if (f.isUnderConstruction) continue
-        // Verifier qu un fermier assigne est effectivement en FARMING sur ce champ.
-        const ids = Array.isArray(f.assignedColonistIds) ? f.assignedColonistIds : []
-        if (ids.length === 0) continue
-        const hasActiveFarmer = state.colonists.some(c =>
-          c && ids.indexOf(c.id) !== -1 &&
-          c.profession === 'agriculteur' && c.assignedJob === 'farmer' &&
-          c.state === 'FARMING'
-        )
-        if (!hasActiveFarmer) continue
-        f.grain = (f.grain || 0) + ratePerTick
-        if (f.grain >= 1.0) {
-          const harvested = Math.floor(f.grain)
-          state.stocks.grain = (state.stocks.grain || 0) + harvested
-          state.resources.grain = (state.resources.grain || 0) + harvested
-          f.grain -= harvested
+        const stage = f.stage || 'sauvage'
+        if (stage === 'sauvage') {
+          // Production autonome de grain, pas besoin de worker.
+          f.grain = (f.grain || 0) + wildGrainRate
+          if (f.grain >= 1.0) {
+            const harvested = Math.floor(f.grain)
+            state.stocks.grain = (state.stocks.grain || 0) + harvested
+            state.resources.grain = (state.resources.grain || 0) + harvested
+            f.grain -= harvested
+          }
+        } else if (stage === 'cultive') {
+          // Production de ble conditionnee a la presence d un fermier en FARMING.
+          const ids = Array.isArray(f.assignedColonistIds) ? f.assignedColonistIds : []
+          if (ids.length === 0) continue
+          const hasActiveFarmer = state.colonists.some(c =>
+            c && ids.indexOf(c.id) !== -1 &&
+            c.profession === 'agriculteur' && c.assignedJob === 'farmer' &&
+            c.state === 'FARMING'
+          )
+          if (!hasActiveFarmer) continue
+          f.wheat = (f.wheat || 0) + cultiveWheatRate
+          if (f.wheat >= 1.0) {
+            const harvested = Math.floor(f.wheat)
+            state.stocks.wheat = (state.stocks.wheat || 0) + harvested
+            state.resources.wheat = (state.resources.wheat || 0) + harvested
+            f.wheat -= harvested
+          }
         }
       }
     }

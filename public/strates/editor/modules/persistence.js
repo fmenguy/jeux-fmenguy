@@ -205,9 +205,14 @@ function serializeSnapshot() {
     bigHouseNextId: state.bigHouseNextId || 1,
     manorNextId: state.manorNextId || 1,
     wheatFields: (state.wheatFields || []).map(f => ({
-      x: f.x, z: f.z, id: f.id, grain: f.grain || 0,
+      x: f.x, z: f.z, id: f.id, grain: f.grain || 0, wheat: f.wheat || 0,
       growthStage: f.growthStage || 'dirt',
       growthProgress: typeof f.growthProgress === 'number' ? f.growthProgress : 0,
+      // Lot B (two-stage field) : sauvegarde du stage et de la progression de
+      // transformation. Au reload, FARMING_TRANSFORM est remis a zero cote colon
+      // (le fermier reprend depuis IDLE), seul le stage final compte ici.
+      stage: f.stage || 'sauvage',
+      transformProgress: typeof f.transformProgress === 'number' ? f.transformProgress : 0,
       assignedColonistIds: Array.isArray(f.assignedColonistIds) ? f.assignedColonistIds.slice() : []
     })),
     wheatFieldNextId: state.wheatFieldNextId || 1,
@@ -406,9 +411,26 @@ function applySnapshot(data) {
         entry.assignedColonistIds = f.assignedColonistIds.slice()
       }
       if (typeof f.grain === 'number') entry.grain = f.grain
+      if (typeof f.wheat === 'number') entry.wheat = f.wheat
       if (typeof f.growthProgress === 'number') entry.growthProgress = f.growthProgress
       // Si la save indique stage 'sprouting', swap immédiatement le mesh.
       if (f.growthStage === 'sprouting') updateFieldMesh(entry, 'sprouting')
+      // Lot B (two-stage field) : restore du stage. Si cultive, on emet l event
+      // pour que Lot E swappe le visuel en consequence. transformProgress reset
+      // a 0 pour repartir sur une transformation propre si stage etait sauvage.
+      if (f.stage === 'cultive') {
+        entry.stage = 'cultive'
+        entry.transformProgress = 0
+        try {
+          const ev = new CustomEvent('strates:fieldTransformed', {
+            detail: { fieldId: entry.id, x: entry.x, z: entry.z, stage: 'cultive' }
+          })
+          if (typeof window !== 'undefined' && window.dispatchEvent) window.dispatchEvent(ev)
+        } catch (e) { /* ignore */ }
+      } else {
+        entry.stage = 'sauvage'
+        entry.transformProgress = 0
+      }
     }
   }
   if (typeof data.wheatFieldNextId === 'number') {
