@@ -9,6 +9,7 @@
 
 import { state } from '../state.js'
 import { openCharSheet } from '../charsheet-ui.js'
+import { openHousePicker } from '../housing.js'
 
 const CSS = `
 #social-overlay {
@@ -79,6 +80,19 @@ const CSS = `
 }
 .social-row.clickable { cursor: pointer; }
 .social-row.clickable:hover { background: rgba(255,217,138,0.08); border-color: rgba(255,217,138,0.30); }
+.social-row-inner.clickable { cursor: pointer; flex: 1; display: flex; align-items: center; gap: 8px; padding: 2px 0; border-radius: 3px; transition: color 0.12s; }
+.social-row-inner.clickable:hover { color: #ffd98a; }
+.social-house-btn {
+  margin-left: auto;
+  background: rgba(120,180,230,0.10);
+  border: 1px solid rgba(120,180,230,0.40);
+  color: #b0d4f5;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9.5px; letter-spacing: 0.06em;
+  padding: 3px 9px; border-radius: 3px; cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.social-house-btn:hover { background: rgba(120,180,230,0.22); color: #d8ecff; }
 .social-name { color: #f3ecdd; }
 .social-name.chief { color: #ffd98a; font-weight: 700; }
 .social-gender { font-size: 13px; }
@@ -134,8 +148,24 @@ function _ensureDom() {
   overlayEl.addEventListener('click', (e) => {
     if (e.target === overlayEl) closeSocialPanel()
   })
-  // Délégation : clic sur un nom de colon ouvre la charsheet
+  // Délégation : clic sur un nom de colon ouvre la charsheet ; clic sur un
+  // bouton "Loger" ouvre le picker maison.
   bodyEl.addEventListener('click', (e) => {
+    const houseBtn = e.target.closest('button.social-house-btn[data-cid]')
+    if (houseBtn) {
+      e.stopPropagation()
+      const cid = houseBtn.dataset.cid
+      const c = (state.colonists || []).find(x => String(x.id) === String(cid))
+      if (c) openHousePicker(c, () => { _renderBody() })
+      return
+    }
+    const inner = e.target.closest('.social-row-inner.clickable')
+    if (inner) {
+      const cid = inner.dataset.cid
+      const c = (state.colonists || []).find(x => String(x.id) === String(cid))
+      if (c) { closeSocialPanel(); openCharSheet(c) }
+      return
+    }
     const row = e.target.closest('.social-row.clickable')
     if (!row) return
     const cid = row.dataset.cid
@@ -251,7 +281,14 @@ function _renderBody() {
     : '<div class="social-empty">Aucun colon célibataire.</div>'
 
   const homelessHtml = homeless.length
-    ? homeless.map(c => '<div class="social-row clickable" data-cid="' + _escH(c.id) + '">' + _colonistInline(c, false) + '</div>').join('')
+    ? homeless.map(c =>
+        '<div class="social-row" data-cid="' + _escH(c.id) + '">' +
+          '<span class="social-row-inner clickable" data-cid="' + _escH(c.id) + '" data-pick="char">' +
+            _colonistInline(c, false) +
+          '</span>' +
+          '<button class="social-house-btn" data-cid="' + _escH(c.id) + '" data-pick="house" title="Loger ce colon">Loger</button>' +
+        '</div>'
+      ).join('')
     : '<div class="social-empty">Tous les colons ont un toit.</div>'
 
   bodyEl.innerHTML =

@@ -19,6 +19,7 @@ import { getBuildingById } from '../gamedata.js'
 import { techUnlocked } from '../tech.js'
 import { GRID, SHALLOW_WATER_LEVEL } from '../constants.js'
 import { openCharSheet } from '../charsheet-ui.js'
+import { openColonistPicker, removeFromHouse, homeLabel, getHomeOf } from '../housing.js'
 
 // Métiers (libellé court + icône) pour le badge dans la liste des résidents.
 const PROFESSION_BADGE = {
@@ -112,6 +113,40 @@ const CSS = `
 .bp-resident-clickable { cursor: pointer; transition: background 0.12s; border-radius: 4px; padding-left: 4px; padding-right: 4px; }
 .bp-resident-clickable:hover { background: rgba(255,217,138,0.10); }
 .bp-resident-empty { opacity: 0.6; }
+.bp-resident-remove {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid rgba(220,80,80,0.30);
+  color: rgba(220,140,140,0.65);
+  font-size: 11px; line-height: 1;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.bp-resident-remove:hover {
+  background: rgba(220,80,80,0.18);
+  border-color: rgba(220,80,80,0.55);
+  color: #ffaaaa;
+}
+.bp-resident-assign {
+  margin-left: auto;
+  background: rgba(120,180,230,0.10);
+  border: 1px solid rgba(120,180,230,0.40);
+  color: #b0d4f5;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--mono, monospace);
+  transition: background 0.12s, color 0.12s;
+}
+.bp-resident-assign:hover {
+  background: rgba(120,180,230,0.22);
+  color: #d8ecff;
+}
 .bp-resident-name { flex: 1; font-size: 12px; color: #f3ecdd; }
 .bp-resident-prof {
   font-size: 13px; line-height: 1;
@@ -288,6 +323,33 @@ function ensureDom() {
   bodyEl = document.getElementById('bp-body')
   // Délégation : clic sur un résident ouvre la fiche du colon (charsheet).
   bodyEl.addEventListener('click', (e) => {
+    // Bouton "Retirer" sur un résident : retire le colon, refresh.
+    const removeBtn = e.target.closest('button[data-action="remove-resident"]')
+    if (removeBtn) {
+      e.stopPropagation()
+      const cid = removeBtn.dataset.cid
+      const c = (state.colonists || []).find(x => String(x.id) === String(cid))
+      if (!c || !_currentBuilding) return
+      const home = getHomeOf(c)
+      const lbl = home ? homeLabel(home) : 'son foyer'
+      removeFromHouse(c)
+      try { showHudToast(c.name + ' retiré de ' + lbl + ', désormais sans-abri.', 2800) } catch (_) {}
+      bodyEl.innerHTML = buildContent(_currentType, _currentBuilding)
+      _wireUpgradeButton()
+      return
+    }
+    // Bouton "+ Assigner" sur un slot libre : ouvre le picker colon.
+    const assignBtn = e.target.closest('button[data-action="assign-resident"]')
+    if (assignBtn) {
+      e.stopPropagation()
+      if (!_currentBuilding || !_currentType) return
+      openColonistPicker(_currentBuilding, _currentType, () => {
+        bodyEl.innerHTML = buildContent(_currentType, _currentBuilding)
+        _wireUpgradeButton()
+      })
+      return
+    }
+    // Clic sur la ligne résident : ouvre la charsheet.
     const row = e.target.closest('.bp-resident-clickable')
     if (!row) return
     const cid = row.dataset.cid
@@ -394,7 +456,6 @@ function residentRow(colonistId) {
   const profBadge = profMeta
     ? '<span class="bp-resident-prof" title="' + _escH(profMeta.lbl) + '">' + profMeta.ic + '</span>'
     : ''
-  // Lot B : partnerId quand câblé. Avant câblage, simplement aucun badge.
   const partner = (c.partnerId != null) ? colonistById(c.partnerId) : null
   const partnerBadge = partner
     ? '<span class="bp-resident-partner" title="Couple avec ' + _escH(partner.name) + '">💞 ' + _escH(partner.name) + '</span>'
@@ -405,6 +466,7 @@ function residentRow(colonistId) {
     (c.isChief ? '<span class="bp-resident-chief">Chef</span>' : '') +
     profBadge +
     '<span class="bp-resident-gender ' + genClass + '">' + sym + '</span>' +
+    '<button class="bp-resident-remove" data-action="remove-resident" data-cid="' + _escH(c.id) + '" title="Retirer du foyer">&times;</button>' +
     (partnerBadge ? '<span class="bp-resident-row-meta">' + partnerBadge + '</span>' : '') +
   '</div>'
 }
@@ -413,6 +475,7 @@ function emptySlotRow() {
   return '<div class="bp-resident bp-resident-empty">' +
     '<span style="font-size:14px;opacity:.5">🪶</span>' +
     '<span class="bp-resident-name" style="font-style:italic;color:rgba(243,236,221,0.4)">Place libre</span>' +
+    '<button class="bp-resident-assign" data-action="assign-resident" title="Assigner un colon">+ Assigner</button>' +
   '</div>'
 }
 
