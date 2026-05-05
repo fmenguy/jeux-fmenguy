@@ -27,6 +27,9 @@ let refreshTimer = null
 let selectedTechId = null
 const QUEUE_MAX = 5
 let _viewedAge = 1
+// Cache des positions des nœuds par tech id, alimente par renderBranchDetail.
+// Utilise par centerOnViewedAge pour cadrer le viewport sur l'age en cours.
+let _lastNodePos = {}
 
 // Etat pan + zoom de la vue detail
 const view = {
@@ -513,7 +516,14 @@ function renderAgeRail() {
     d.title = 'Age ' + roman(a.id) + (a.name ? ', ' + a.name : '')
     d.textContent = roman(a.id)
     if (unlocked) {
-      d.addEventListener('click', function() { _viewedAge = a.id; render() })
+      d.addEventListener('click', function() {
+        _viewedAge = a.id
+        render()
+        // Si on est en vue detail, recentrer sur l'age fraichement selectionne.
+        if (root && root.classList.contains('detail-mode')) {
+          centerOnViewedAge()
+        }
+      })
     }
     rail.appendChild(d)
   })
@@ -637,6 +647,7 @@ function openBranch(brId) {
 
   renderBranchDetail(brId)
   resetPan()
+  centerOnViewedAge()
 
   // Selection automatique d'une tech interessante pour remplir la fiche
   const techs = (TECH_TREE_DATA && TECH_TREE_DATA.techs) || []
@@ -828,6 +839,71 @@ function resetPan() {
   view.tx = 240
   view.ty = 0
   applyTransform()
+}
+
+// Centre le viewport sur les techs de la branche pour l'age courant (_viewedAge).
+// Strategie : si plusieurs techs disponibles a cet age, on centre sur leur
+// barycentre. Si toutes acquises ou aucune dispo, on centre sur la derniere
+// acquise. Si rien du tout, on laisse le pan par defaut.
+function centerOnViewedAge() {
+  const wrap = root && root.querySelector('#ttp-canvas-wrap')
+  const canvas = root && root.querySelector('#ttp-canvas')
+  if (!wrap || !canvas || !currentBranch) return
+  const positions = _lastNodePos || {}
+  const ids = Object.keys(positions)
+  if (!ids.length) return
+
+  // Si le viewport n'est pas encore layoute (ouverture du panneau), reporter
+  // d'une frame pour recuperer des dimensions reelles.
+  if (wrap.getBoundingClientRect().width <= 0) {
+    requestAnimationFrame(centerOnViewedAge)
+    return
+  }
+
+  // Filtrer les techs de l'age vise
+  const ageIds = ids.filter(function(id) {
+    const t = byId(id)
+    return t && (t.age || 1) === _viewedAge
+  })
+
+  let target = null
+  if (ageIds.length) {
+    // Priorite : techs non encore unlocked (les plus pertinentes a regarder).
+    const pending = ageIds.filter(function(id) { return !techUnlocked(id) })
+    const pickList = pending.length ? pending : ageIds
+    let sx = 0, sy = 0
+    pickList.forEach(function(id) {
+      sx += positions[id].x
+      sy += positions[id].y
+    })
+    target = { x: sx / pickList.length, y: sy / pickList.length }
+  } else {
+    // Aucun noeud a cet age : tomber sur la derniere tech acquise toutes ages.
+    const unlocked = ids.filter(function(id) { return techUnlocked(id) })
+    if (unlocked.length) {
+      const last = unlocked[unlocked.length - 1]
+      target = { x: positions[last].x, y: positions[last].y }
+    }
+  }
+
+  if (!target) return
+
+  const rect = wrap.getBoundingClientRect()
+  const vw = rect.width
+  const vh = rect.height
+  // canvas.style.transform = translate(tx, ty) scale(s) avec origin top-left.
+  // Pour qu'un point (target.x, target.y) du canvas atterrisse au centre du
+  // viewport (vw/2, vh/2), on resout : tx + target.x * scale = vw/2.
+  view.tx = vw / 2 - target.x * view.scale
+  view.ty = vh / 2 - target.y * view.scale
+
+  // Transition douce pour le centrage initial, retiree apres pour ne pas
+  // freiner le pan manuel (pas d'inertie residuelle).
+  canvas.style.transition = 'transform 320ms ease'
+  applyTransform()
+  setTimeout(function() {
+    if (canvas) canvas.style.transition = ''
+  }, 360)
 }
 
 // ─── Selection + fiche droite ────────────────────────────────────────────────
