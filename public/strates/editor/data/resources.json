@@ -123,10 +123,37 @@
       "id": "grain",
       "name": "Grain",
       "icon": "🌾",
+      "age": 1,
+      "category": "nourriture",
+      "source": "Champ sauvage (production autonome, dès âge I)",
+      "usage": "Nourriture comestible directe, équivalent baies au léger taux supérieur"
+    },
+    {
+      "id": "wheat",
+      "name": "Blé",
+      "icon": "🌾",
       "age": 2,
       "category": "nourriture",
-      "source": "Champ de ble (Agriculteur)",
-      "usage": "Nourriture age Bronze, stockage Grenier"
+      "source": "Champ cultivé (Fermier, après transformation par le Fermier)",
+      "usage": "Transformé en farine au Moulin, puis en pain au Four à pain"
+    },
+    {
+      "id": "flour",
+      "name": "Farine",
+      "icon": "🥣",
+      "age": 2,
+      "category": "nourriture",
+      "source": "Stub : Moulin (à venir)",
+      "usage": "Stub : transformée en pain au Four à pain"
+    },
+    {
+      "id": "bread",
+      "name": "Pain",
+      "icon": "🍞",
+      "age": 2,
+      "category": "nourriture",
+      "source": "Stub : Four à pain (à venir)",
+      "usage": "Stub : nourriture haute valeur âge Bronze"
     },
     {
       "id": "bronze-tools",
