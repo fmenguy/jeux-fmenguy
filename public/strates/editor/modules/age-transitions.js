@@ -17,12 +17,6 @@ import { addCairn, isCellOccupied } from './placements.js'
 import { GRID, SHALLOW_WATER_LEVEL } from './constants.js'
 import { showHudToast } from './ui/research-popup.js'
 
-// ---------------------------------------------------------------------------
-// Flag dev : si true, la condition "os" est ignoree.
-// Lot B Chasseur livre : drop 2 os par cerf, condition reactivee.
-// ---------------------------------------------------------------------------
-const DEV_SKIP_BONES = false
-
 // Calcul derive de l'etat reel : somme des couts de recherche des techs debloquees.
 // Plus fiable que state.totalResearchSpent qui peut etre mal incremente sur
 // certains chemins de deblocage (alreadyPaid, saves anciennes, debug).
@@ -45,11 +39,10 @@ const SEUILS = {
   pierre:          30,    // stock pierre
   nourriture:      20,    // baies + viande
   researchPoints: 100,    // points de recherche accumules
-  os:              10,    // os (composant rituel du Cairn)
 }
 
-// Couts materiaux du Cairn
-export const CAIRN_COST = { stone: 50, wood: 20, bone: 10 }
+// Couts materiaux du Cairn (decision 2026-05-04 : os retire, rare sur petites cartes iles)
+export const CAIRN_COST = { stone: 50, wood: 20 }
 
 // ---------------------------------------------------------------------------
 // canBuildCairn
@@ -102,14 +95,6 @@ export function canBuildCairn(st) {
     missing.push(`${pts}/${SEUILS.researchPoints} pts recherche depenses`)
   }
 
-  // Condition : os (bypass si Chasseur pas livre)
-  if (!DEV_SKIP_BONES) {
-    const os = (st.stocks && st.stocks.bone) || 0
-    if (os < SEUILS.os) {
-      missing.push(`${os}/${SEUILS.os} os`)
-    }
-  }
-
   // Condition : pas deja en age 2+
   if (st.currentAge >= 2) {
     missing.push('Deja en age du Bronze')
@@ -148,11 +133,6 @@ export function getCairnProgress(st) {
 
   const pts = totalResearchSpentComputed()
   checks.push(Math.min(1, pts / SEUILS.researchPoints))
-
-  if (!DEV_SKIP_BONES) {
-    const os = (st.stocks && st.stocks.bone) || 0
-    checks.push(Math.min(1, os / SEUILS.os))
-  }
 
   const total = checks.reduce((a, b) => a + b, 0)
   return total / checks.length
@@ -345,12 +325,6 @@ function _consumeCairnResources() {
 
   state.resources.wood  -= CAIRN_COST.wood
   state.resources.stone -= CAIRN_COST.stone
-  // bone : ignore en mode DEV_SKIP_BONES
-  if (!DEV_SKIP_BONES && state.stocks) {
-    const bone = state.stocks.bone || 0
-    if (bone < CAIRN_COST.bone) return false
-    state.stocks.bone -= CAIRN_COST.bone
-  }
   return true
 }
 
@@ -379,10 +353,6 @@ function _showCondTooltip() {
     { label: 'Chercheur assigné',                                      ok: hasRes },
     { label: `🔬 Recherche : ${pts} / ${SEUILS.researchPoints} pts`, ok: pts    >= SEUILS.researchPoints },
   ]
-  if (!DEV_SKIP_BONES) {
-    const os = (state.stocks && state.stocks.bone) || 0
-    condDefs.push({ label: `🦴 Os : ${os} / ${SEUILS.os}`, ok: os >= SEUILS.os })
-  }
 
   const list = document.getElementById('cairn-cond-list')
   if (list) {
