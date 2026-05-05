@@ -11,7 +11,7 @@ const BASE = new URL('../assets/models/fantaisy/', import.meta.url).href
 
 // Constantes de mise a l'echelle par type (ajuster selon les GLB)
 export const TREE_GLB_SCALE = 0.40
-export const ROCK_GLB_SCALE = 0.96
+export const ROCK_GLB_SCALE = 1.92
 export const DEER_GLB_SCALE = 0.5
 // Scale appliqué aux GLB Farm/Farm Dirt après centrage. Le footprint cible
 // est 2x2 cellules ; le scale dépend de la taille native du GLB (ajustable).
