@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Strates · Changelog</title>
+<meta name="description" content="Historique des itérations du proto Strates." />
+<link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ------------------------------------------------------------------
+     Style "in-game HUD" Strates : ardoise + or, polices Fraunces (display)
+     + Inter (corps) + JetBrains Mono (libellés / dates / code).
+  ------------------------------------------------------------------ */
+  :root {
+    --ink:      #ede3cc;
+    --ink-2:    #c7b98c;
+    --ink-3:    #8a8170;
+    --gold:     #d4b870;
+    --gold-2:   #b89a52;
+    --gold-3:   #ffd98a;
+    --panel:    #1c1a14;
+    --panel-2:  #221e18;
+    --panel-3:  #2a2620;
+    --rule:     #3d352a;
+    --bg:       #14110d;
+    --serif:    "Fraunces", "Iowan Old Style", Georgia, serif;
+    --sans:     "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --mono:     "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 600px at 30% -200px, rgba(212,184,112,0.06), transparent 70%),
+      radial-gradient(900px 500px at 110% 110%, rgba(212,184,112,0.04), transparent 70%),
+      linear-gradient(180deg, #14110d 0%, #1c1812 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  a:hover { color: var(--gold-3); }
+
+  /* Header sticky */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: linear-gradient(180deg, rgba(28,26,20,0.96), rgba(20,18,14,0.96));
+    border-bottom: 1px solid var(--rule);
+    backdrop-filter: blur(6px);
+  }
+  .topbar-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 14px 22px;
+    display: flex; align-items: baseline; gap: 18px;
+  }
+  .topbar h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: 0.01em;
+    color: var(--gold-3);
+  }
+  .topbar h1 small {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-left: 6px;
+  }
+  .topbar nav {
+    margin-left: auto;
+    display: flex; gap: 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .topbar nav a {
+    padding: 4px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: rgba(0,0,0,0.25);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .topbar nav a:hover {
+    border-color: var(--gold-2);
+    color: var(--gold-3);
+    background: rgba(212,184,112,0.08);
+  }
+
+  /* Layout principal : sidebar sticky + main */
+  .layout {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* Sommaire */
+  aside.toc {
+    position: sticky; top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 16px 14px;
+  }
+  aside.toc h2 {
+    margin: 0 0 12px 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 8px;
+  }
+  aside.toc ul { list-style: none; padding: 0; margin: 0; }
+  aside.toc li + li { margin-top: 4px; }
+  aside.toc a {
+    display: block;
+    padding: 6px 8px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--ink-2);
+    border-left: 2px solid transparent;
+    border-radius: 2px;
+    transition: color 0.12s, background 0.12s, border-color 0.12s;
+    line-height: 1.4;
+  }
+  aside.toc a:hover {
+    color: var(--gold-3);
+    background: rgba(212,184,112,0.06);
+    border-left-color: var(--gold);
+  }
+  aside.toc a.active {
+    color: var(--gold-3);
+    background: rgba(212,184,112,0.10);
+    border-left-color: var(--gold);
+  }
+  aside.toc::-webkit-scrollbar { width: 6px; }
+  aside.toc::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+  /* Contenu principal */
+  main.content {
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 28px 32px 36px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+    min-width: 0;
+  }
+  main.content > p:first-child {
+    color: var(--ink-2);
+    font-style: italic;
+    margin-top: 0;
+  }
+
+  main h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 32px;
+    color: var(--gold-3);
+    margin: 0 0 6px 0;
+  }
+  main h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--ink);
+    margin: 36px 0 14px 0;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, rgba(212,184,112,0.08), rgba(212,184,112,0.02));
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--gold);
+    border-radius: 4px;
+    line-height: 1.3;
+    scroll-margin-top: 80px;
+  }
+  main h2 .h2-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 4px;
+  }
+  main h2 .h2-title {
+    font-family: var(--serif);
+    color: var(--ink);
+    font-size: 18px;
+    font-style: italic;
+  }
+  main h3 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold-3);
+    margin: 22px 0 8px 0;
+  }
+  main h4 {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 16px 0 6px 0;
+  }
+  main p { margin: 8px 0; color: var(--ink); }
+  main ul {
+    margin: 8px 0 14px 0;
+    padding-left: 22px;
+  }
+  main ul li {
+    margin: 4px 0;
+    line-height: 1.55;
+  }
+  main ul li::marker { color: var(--gold-2); }
+  main hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-2), transparent);
+    margin: 28px 0;
+    opacity: 0.45;
+  }
+  main code {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 1px 6px;
+    background: var(--panel-3);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    color: var(--gold-3);
+    letter-spacing: 0.02em;
+  }
+  main strong { color: var(--ink); font-weight: 600; }
+  main em { color: var(--ink-2); font-style: italic; }
+
+  /* Footer */
+  footer.below {
+    max-width: 1180px;
+    margin: 18px auto 0;
+    padding: 22px 22px 32px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  footer.below a { color: var(--ink-2); }
+  footer.below a:hover { color: var(--gold-3); }
+  footer.below .credits { display: flex; gap: 14px; flex-wrap: wrap; }
+
+  /* État de chargement */
+  .loading {
+    text-align: center;
+    color: var(--ink-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 60px 20px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <h1>Strates <small>· Changelog</small></h1>
+    <nav>
+      <a href="../index.html">&#8592; Retour au jeu</a>
+    </nav>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="toc" id="toc">
+    <h2>Sommaire</h2>
+    <ul id="toc-list"><li><a class="loading-toc">Chargement...</a></li></ul>
+  </aside>
+
+  <main class="content" id="content">
+    <div class="loading">Chargement du changelog...</div>
+  </main>
+</div>
+
+<footer class="below">
+  <div class="credits">
+    <a href="../index.html">Retour à la landing</a>
+    <a href="../editor/index.html">Jouer</a>
+  </div>
+  <div>Strates, François Menguy, 2026</div>
+</footer>
+
+<script>
+// ============================================================================
+// Mini parser markdown : H1 / H2 / H3 / H4, listes, hr, code inline, italique
+// (*text* et _text_), strong (**text**). Suffisant pour le format actuel du
+// changelog Strates. Pas de tables, pas de blocs de code triple-backtick.
+// Le markdown est chargé depuis ./changelog.md (même dossier que ce HTML).
+// ============================================================================
+
+function escH(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function inlineFmt(s) {
+  // 1. Échapper le HTML d'abord
+  let out = escH(s)
+  // 2. Code inline `...`
+  out = out.replace(/`([^`]+)`/g, '<code>$1</code>')
+  // 3. Strong **...**
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  // 4. Italique *...* (après strong, sinon conflit). Évite les * isolés.
+  out = out.replace(/(^|[^*])\*([^*\n]+)\*([^*]|$)/g, '$1<em>$2</em>$3')
+  return out
+}
+
+function slugify(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+}
+
+// Parse une H2 du changelog au format "YYYY-MM-DD ... : titre" pour rendre la
+// date en libellé mono distinct du titre.
+function parseH2(text) {
+  const m = text.match(/^(\d{4}-\d{2}-\d{2}(?:\s*\([^)]*\))?)\s*:\s*(.+)$/)
+  if (m) return { date: m[1], title: m[2] }
+  return { date: null, title: text }
+}
+
+function parseMarkdown(md) {
+  const lines = md.split(/\r?\n/)
+  const out = []
+  const toc = []
+  let inList = false
+  let para = []
+
+  function flushPara() {
+    if (para.length) {
+      out.push('<p>' + inlineFmt(para.join(' ')) + '</p>')
+      para = []
+    }
+  }
+  function closeList() {
+    if (inList) { out.push('</ul>'); inList = false }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    // Ligne vide : ferme paragraphe (mais garde la liste si la suivante est un -)
+    if (trimmed === '') {
+      flushPara()
+      const next = (lines[i+1] || '').trim()
+      if (!next.startsWith('- ') && !next.startsWith('* ')) closeList()
+      continue
+    }
+
+    // HR
+    if (trimmed === '---') {
+      flushPara(); closeList()
+      out.push('<hr />')
+      continue
+    }
+
+    // Titres H1-H4
+    let m
+    if ((m = trimmed.match(/^#\s+(.+)$/))) {
+      flushPara(); closeList()
+      out.push('<h1>' + inlineFmt(m[1]) + '</h1>')
+      continue
+    }
+    if ((m = trimmed.match(/^##\s+(.+)$/))) {
+      flushPara(); closeList()
+      const parsed = parseH2(m[1])
+      const id = slugify(m[1])
+      toc.push({ id, date: parsed.date, title: parsed.title, raw: m[1] })
+      const inner = parsed.date
+        ? '<span class="h2-date">' + inlineFmt(parsed.date) + '</span><span class="h2-title">' + inlineFmt(parsed.title) + '</span>'
+        : inlineFmt(m[1])
+      out.push('<h2 id="' + id + '">' + inner + '</h2>')
+      continue
+    }
+    if ((m = trimmed.match(/^###\s+(.+)$/))) {
+      flushPara(); closeList()
+      out.push('<h3>' + inlineFmt(m[1]) + '</h3>')
+      continue
+    }
+    if ((m = trimmed.match(/^####\s+(.+)$/))) {
+      flushPara(); closeList()
+      out.push('<h4>' + inlineFmt(m[1]) + '</h4>')
+      continue
+    }
+
+    // Liste
+    if ((m = trimmed.match(/^[-*]\s+(.+)$/))) {
+      flushPara()
+      if (!inList) { out.push('<ul>'); inList = true }
+      out.push('<li>' + inlineFmt(m[1]) + '</li>')
+      continue
+    }
+
+    // Paragraphe
+    closeList()
+    para.push(trimmed)
+  }
+  flushPara(); closeList()
+
+  return { html: out.join('\n'), toc }
+}
+
+function renderToc(toc) {
+  const list = document.getElementById('toc-list')
+  if (!list) return
+  list.innerHTML = toc.map(item => {
+    const label = item.date
+      ? '<span style="color:var(--gold);display:block;font-size:9.5px;letter-spacing:.16em">' + escH(item.date) + '</span>' +
+        '<span style="display:block;font-size:10.5px;color:var(--ink-2);margin-top:2px">' + escH(item.title.slice(0, 60)) + (item.title.length > 60 ? '…' : '') + '</span>'
+      : escH(item.raw)
+    return '<li><a href="#' + item.id + '" data-id="' + item.id + '">' + label + '</a></li>'
+  }).join('')
+}
+
+function setupScrollSpy(toc) {
+  const links = document.querySelectorAll('aside.toc a[data-id]')
+  if (!links.length) return
+  const headings = toc.map(t => document.getElementById(t.id)).filter(Boolean)
+  if (!headings.length) return
+  const linkById = new Map()
+  links.forEach(a => linkById.set(a.dataset.id, a))
+  function onScroll() {
+    let active = headings[0]
+    for (const h of headings) {
+      const r = h.getBoundingClientRect()
+      if (r.top < 120) active = h
+      else break
+    }
+    links.forEach(a => a.classList.remove('active'))
+    if (active) {
+      const a = linkById.get(active.id)
+      if (a) a.classList.add('active')
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+}
+
+async function load() {
+  try {
+    const res = await fetch('./changelog.md', { cache: 'no-cache' })
+    if (!res.ok) throw new Error('HTTP ' + res.status)
+    const md = await res.text()
+    const { html, toc } = parseMarkdown(md)
+    document.getElementById('content').innerHTML = html
+    renderToc(toc)
+    setupScrollSpy(toc)
+    // Ouvre l ancre demandée si présente dans l URL
+    if (location.hash) {
+      const el = document.getElementById(location.hash.slice(1))
+      if (el) setTimeout(() => el.scrollIntoView(), 100)
+    }
+  } catch (e) {
+    document.getElementById('content').innerHTML =
+      '<div class="loading" style="color:#ff8080">Échec du chargement du changelog (' + escH(String(e)) + ').</div>'
+  }
+}
+
+load()
+</script>
+
+</body>
+</html>
