@@ -8,8 +8,6 @@ import { drawLabel } from './bubbles.js'
 import { getHomeOf, homeLabel, openHousePicker } from './housing.js'
 import { camera, controls } from './scene.js'
 import { showHudToast } from './ui/research-popup.js'
-import { getHomeOf, homeLabel, openHousePicker } from './housing.js'
-import { camera, controls } from './scene.js'
 
 let panelEl = null
 let backdropEl = null
