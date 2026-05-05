@@ -4,7 +4,8 @@ import { rebuildTerrainFromState, repaintCellSurface, computeFertileCells } from
 import {
   addTree, addRock, addOre, addBush, addHouse, addResearchHouse,
   addManorFromSave, addBigHouseFromSave, clearAllPlacements, isCellOccupied, addObservatory,
-  addCairn, addWheatField, addDeer, applyFogToAllVegetation, updateFieldMesh
+  addCairn, addWheatField, addDeer, applyFogToAllVegetation, updateFieldMesh,
+  repairResidentsLinks
 } from './placements.js'
 import { spawnColonist, clearColonists } from './colonist.js'
 import { scene } from './scene.js'
@@ -184,6 +185,7 @@ function serializeSnapshot() {
     houses: state.houses.map(h => ({
       x: h.x, z: h.z, id: h.id,
       residents: Array.isArray(h.residents) ? h.residents.slice() : [],
+      residentsCapacity: typeof h.residentsCapacity === 'number' ? h.residentsCapacity : 2,
       isUnderUpgrade: !!h.isUnderUpgrade,
       upgradeProgress: typeof h.upgradeProgress === 'number' ? h.upgradeProgress : 0,
       upgradeTargetType: h.upgradeTargetType || null,
@@ -191,11 +193,13 @@ function serializeSnapshot() {
     })),
     manors: state.manors.map(m => ({
       x: m.x, z: m.z, id: m.id,
-      residents: Array.isArray(m.residents) ? m.residents.slice() : []
+      residents: Array.isArray(m.residents) ? m.residents.slice() : [],
+      residentsCapacity: typeof m.residentsCapacity === 'number' ? m.residentsCapacity : 4
     })),
     bigHouses: (state.bigHouses || []).map(b => ({
       x: b.x, z: b.z, id: b.id,
-      residents: Array.isArray(b.residents) ? b.residents.slice() : []
+      residents: Array.isArray(b.residents) ? b.residents.slice() : [],
+      residentsCapacity: typeof b.residentsCapacity === 'number' ? b.residentsCapacity : 6
     })),
     houseNextId: state.houseNextId || 1,
     bigHouseNextId: state.bigHouseNextId || 1,
@@ -229,7 +233,9 @@ function serializeSnapshot() {
       assignedJob: c.assignedJob ?? null,
       assignedFieldId: c.assignedFieldId ?? null,
       homeBuildingId: c.homeBuildingId ?? null,
-      partnerId: c.partnerId ?? null
+      partnerId: c.partnerId ?? null,
+      rested: typeof c.rested === 'number' ? c.rested : 0.5,
+      reproductionTimer: typeof c.reproductionTimer === 'number' ? c.reproductionTimer : 0
     })),
     spawn: state.spawn ? { x: state.spawn.x, z: state.spawn.z } : null,
     jobs: Array.from(state.jobs.keys()),
@@ -358,18 +364,21 @@ function applySnapshot(data) {
     // Lot B residents : restaure id stable et liste de residents.
     if (typeof h.id === 'number') entry.id = h.id
     if (Array.isArray(h.residents)) entry.residents = h.residents.slice()
+    if (typeof h.residentsCapacity === 'number') entry.residentsCapacity = h.residentsCapacity
   }
   for (const m of (data.manors || [])) {
     const entry = addManorFromSave(m.x, m.z)
     if (!entry) continue
     if (typeof m.id === 'number') entry.id = m.id
     if (Array.isArray(m.residents)) entry.residents = m.residents.slice()
+    if (typeof m.residentsCapacity === 'number') entry.residentsCapacity = m.residentsCapacity
   }
   for (const b of (data.bigHouses || [])) {
     const entry = addBigHouseFromSave(b.x, b.z)
     if (!entry) continue
     if (typeof b.id === 'number') entry.id = b.id
     if (Array.isArray(b.residents)) entry.residents = b.residents.slice()
+    if (typeof b.residentsCapacity === 'number') entry.residentsCapacity = b.residentsCapacity
   }
   // Lot B residents : restaure les compteurs d ids stables (sinon recalcul).
   if (typeof data.houseNextId === 'number') {
@@ -445,6 +454,11 @@ function applySnapshot(data) {
     if (typeof csav.ty === 'number') c.ty = csav.ty
     c.group.position.set(c.tx, c.ty, c.tz)
   }
+
+  // Lot B residents : auto-reparation des liens residents <-> colons. Couvre
+  // les saves anciennes ou le linkage etait casse (cabane 0/2 alors que des
+  // colons sont sans-abri a proximite).
+  try { repairResidentsLinks() } catch (_) {}
 
   // reference spawn
   if (data.spawn) state.spawn = { x: data.spawn.x, z: data.spawn.z }

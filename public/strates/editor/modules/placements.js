@@ -856,7 +856,9 @@ export function addHouse(gx, gz) {
   const g = makeHouse()
   g.position.set(gx + 0.5, top, gz + 0.5)
   scene.add(g)
-  const entry = { x: gx, z: gz, group: g, id: state.houseNextId++, residents: [] }
+  const def = getBuildingById('cabane')
+  const cap = (def && typeof def.residentsCapacity === 'number') ? def.residentsCapacity : 2
+  const entry = { x: gx, z: gz, group: g, id: state.houseNextId++, residents: [], residentsCapacity: cap }
   _markUnderConstruction(entry, 'cabane')
   state.houses.push(entry)
   revealAround(gx, gz, 8)
@@ -943,7 +945,9 @@ export function addBigHouse(gx, gz) {
   const g = makeBigHouse()
   g.position.set(gx + 2, top, gz + 2)
   scene.add(g)
-  const entry = { x: gx, z: gz, group: g, id: state.bigHouseNextId++, residents: [] }
+  const def = getBuildingById('big-house')
+  const cap = (def && typeof def.residentsCapacity === 'number') ? def.residentsCapacity : 6
+  const entry = { x: gx, z: gz, group: g, id: state.bigHouseNextId++, residents: [], residentsCapacity: cap }
   _markUnderConstruction(entry, 'big-house')
   state.bigHouses.push(entry)
   revealAround(gx + 2, gz + 2, 8)
@@ -981,10 +985,12 @@ export function addBigHouseFromSave(ox, oz) {
   g.position.set(ox + 2, top, oz + 2)
   scene.add(g)
   // Restauration depuis save : batiment deja construit dans la sauvegarde.
+  const def = getBuildingById('big-house')
+  const cap = (def && typeof def.residentsCapacity === 'number') ? def.residentsCapacity : 6
   const entry = {
     x: ox, z: oz, group: g, buildingId: 'big-house',
     isUnderConstruction: false, constructionProgress: 1, buildTime: 0,
-    id: state.bigHouseNextId++, residents: []
+    id: state.bigHouseNextId++, residents: [], residentsCapacity: cap
   }
   state.bigHouses.push(entry)
   return entry
@@ -1111,12 +1117,21 @@ export function completeUpgrade(sourceBuilding) {
     const g = makeBigHouse()
     g.position.set(ox + 2, top, oz + 2)
     scene.add(g)
+    const def = getBuildingById('big-house')
+    const cap = (def && typeof def.residentsCapacity === 'number') ? def.residentsCapacity : 6
     const entry = {
       x: ox, z: oz, group: g, buildingId: 'big-house',
       isUnderConstruction: false, constructionProgress: 1, buildTime: 0,
-      id: state.bigHouseNextId++, residents: residents
+      id: state.bigHouseNextId++, residents: residents, residentsCapacity: cap
     }
     state.bigHouses.push(entry)
+    // Lot B residents : recable le homeBuildingId des colons transferes pour
+    // pointer la nouvelle big-house (etait "house:<oldId>").
+    const newRef = makeHomeRef('big-house', entry)
+    for (const cid of residents) {
+      const c = state.colonists.find(x => x && x.id === cid)
+      if (c) c.homeBuildingId = newRef
+    }
     revealAround(ox + 2, oz + 2, 8)
     try { showHudToast('Grosse maison achevée.', 2500) } catch (_) {}
     return entry
@@ -1168,10 +1183,12 @@ function _placeManorGroup(ox, oz) {
   const g = makeManor()
   g.position.set(ox + 1, top, oz + 1)
   scene.add(g)
+  const def = getBuildingById('manor')
+  const cap = (def && typeof def.residentsCapacity === 'number') ? def.residentsCapacity : 4
   const entry = {
     x: ox, z: oz, group: g, buildingId: 'manor',
     isUnderConstruction: false, constructionProgress: 1, buildTime: 0,
-    id: state.manorNextId++, residents: []
+    id: state.manorNextId++, residents: [], residentsCapacity: cap
   }
   state.manors.push(entry)
   return entry
@@ -2419,4 +2436,79 @@ export function unlinkColonistFromHome(colonist) {
   }
   colonist.homeBuildingId = null
   colonist.assignedBuildingId = null
+}
+
+// Lot B residents : assigne un colon a un batiment d habitation. Verifie la
+// capacite, retire l ancien lien si present, pose le nouveau lien symetrique
+// (residents + homeBuildingId). Retourne { ok: true } ou { ok: false, reason }.
+// reason : 'full' | 'invalid' | 'unknown-kind'.
+export function assignColonistToHouse(colonist, building) {
+  if (!colonist || !building) return { ok: false, reason: 'invalid' }
+  // Devine le kind a partir de l appartenance aux tableaux d etat.
+  let kind = null
+  if (state.houses && state.houses.includes(building)) kind = 'house'
+  else if (state.bigHouses && state.bigHouses.includes(building)) kind = 'big-house'
+  else if (state.manors && state.manors.includes(building)) kind = 'manor'
+  if (!kind) return { ok: false, reason: 'unknown-kind' }
+  if (!Array.isArray(building.residents)) building.residents = []
+  const cap = (typeof building.residentsCapacity === 'number') ? building.residentsCapacity : 2
+  if (building.residents.length >= cap) return { ok: false, reason: 'full' }
+  // Retire de l ancienne maison si necessaire.
+  if (colonist.homeBuildingId) unlinkColonistFromHome(colonist)
+  building.residents.push(colonist.id)
+  colonist.homeBuildingId = makeHomeRef(kind, building)
+  // Conserve assignedBuildingId pour compat needs.js (besoin shelter).
+  colonist.assignedBuildingId = kind === 'big-house' ? 'big-house'
+                              : kind === 'manor'    ? 'manor'
+                              : 'cabane'
+  return { ok: true }
+}
+
+// Auto-reparation des liens residents <-> colons. Pour chaque maison sans
+// residents, attache jusqu a residentsCapacity colons sans-abri proches.
+// Utilise au reload pour les saves anciennes ou le linkage etait casse.
+export function repairResidentsLinks() {
+  const allHouses = [
+    ...(state.houses || []).map(b => ({ kind: 'house', b })),
+    ...(state.bigHouses || []).map(b => ({ kind: 'big-house', b })),
+    ...(state.manors || []).map(b => ({ kind: 'manor', b }))
+  ]
+  // Index des colons par id pour reparation des homeBuildingId existants.
+  const byId = new Map()
+  for (const c of state.colonists) byId.set(c.id, c)
+  // 1) Re-pose les homeBuildingId sur les colons listes dans residents.
+  for (const { kind, b } of allHouses) {
+    if (!Array.isArray(b.residents)) { b.residents = []; continue }
+    const ref = makeHomeRef(kind, b)
+    for (const cid of b.residents) {
+      const c = byId.get(cid)
+      if (c && !c.homeBuildingId) c.homeBuildingId = ref
+    }
+  }
+  // 2) Pour chaque maison vide, rattache les colons sans-abri proches.
+  for (const { kind, b } of allHouses) {
+    const cap = (typeof b.residentsCapacity === 'number') ? b.residentsCapacity
+              : kind === 'big-house' ? 6
+              : kind === 'manor'     ? 4
+              : 2
+    if (!Array.isArray(b.residents)) b.residents = []
+    if (b.residents.length >= cap) continue
+    const need = cap - b.residents.length
+    const cx = kind === 'big-house' ? b.x + 2 : kind === 'manor' ? b.x + 1 : b.x
+    const cz = kind === 'big-house' ? b.z + 2 : kind === 'manor' ? b.z + 1 : b.z
+    const candidates = state.colonists
+      .filter(c => c && !c.homeBuildingId)
+      .map(c => ({ c, d: Math.abs(c.x - cx) + Math.abs(c.z - cz) }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, need)
+    for (const { c } of candidates) {
+      b.residents.push(c.id)
+      c.homeBuildingId = makeHomeRef(kind, b)
+      if (!c.assignedBuildingId) {
+        c.assignedBuildingId = kind === 'big-house' ? 'big-house'
+                             : kind === 'manor'    ? 'manor'
+                             : 'cabane'
+      }
+    }
+  }
 }
