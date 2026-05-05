@@ -328,6 +328,12 @@ export class Colonist {
     // Lot B fermier : id du champ de ble auquel ce colon est attache (1 max).
     // null tant qu il n est pas agriculteur ou qu aucun champ libre n existe.
     this.assignedFieldId = null
+    // Lot B (explorateur) : cible courante de l explorateur, cellule {x,z}
+    // non encore revelee vers laquelle il marche. null hors metier ou apres
+    // arrivee. Le toast "monde entierement explore" est garde a un par colon
+    // via _toldAllRevealed (runtime, non persiste).
+    this.explorationTarget = null
+    this._toldAllRevealed = false
     // Lot B (two-stage field) : si vrai, la cible courante est un champ sauvage
     // a transformer (state FARMING_TRANSFORM, 30s). Sinon la cible est un champ
     // cultive a exploiter (state FARMING). Reset au reload.
@@ -404,6 +410,16 @@ export class Colonist {
       if (r.profession !== undefined) this.profession = r.profession
       if (r.assignedJob !== undefined) this.assignedJob = r.assignedJob
       if (typeof r.assignedFieldId === 'number') this.assignedFieldId = r.assignedFieldId
+      // Lot B (explorateur) : restore d une cible si toujours non revelee, sinon
+      // reset (le pickExplorationTarget en IDLE refera le travail).
+      if (r.explorationTarget && typeof r.explorationTarget.x === 'number' && typeof r.explorationTarget.z === 'number') {
+        const k = r.explorationTarget.z * GRID + r.explorationTarget.x
+        if (state.cellRevealed && !state.cellRevealed[k]) {
+          this.explorationTarget = { x: r.explorationTarget.x, z: r.explorationTarget.z }
+        } else {
+          this.explorationTarget = null
+        }
+      }
       // Lot B : restaure l assignation de bati si presente dans la save,
       // sinon suppose qu il y avait au moins une maison (la save implique
       // que le hameau initial a ete cree).
@@ -1569,6 +1585,32 @@ export class Colonist {
           this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.LEISURE, reason: 'cook_meat' }
           return
         }
+        // Lot B (explorateur) : le jour, l explorateur cherche en priorite
+        // la zone non revelee accessible la plus proche et y va. La nuit,
+        // comportement par defaut (campfire + wander). Quand tout le monde
+        // est decouvert, on retombe en wander avec un toast unique.
+        if (this.profession === 'explorateur' && !state.isNight) {
+          // Cible deja atteinte ou plus valide : reset.
+          if (this.explorationTarget) {
+            const t = this.explorationTarget
+            const k = t.z * GRID + t.x
+            const arrived = (this.x === t.x && this.z === t.z)
+            const nowRevealed = state.cellRevealed && state.cellRevealed[k]
+            if (arrived || nowRevealed) this.explorationTarget = null
+          }
+          if (!this.explorationTarget) {
+            if (this.pickExplorationTarget()) {
+              this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK, reason: 'explore' }
+              return
+            } else {
+              if (!this._toldAllRevealed) {
+                try { showHudToast('Explorateur : monde entierement explore') } catch (_) {}
+                this._toldAllRevealed = true
+              }
+              // Tombe en wander default plus bas.
+            }
+          }
+        }
       }
       // Lot B, B10 : auto-collecte de base au repos (rochers, arbres si hache).
       // desactive - remplace par systeme 3 boutons (pioche/hache/baie)
@@ -1814,8 +1856,9 @@ export class Colonist {
         this.pathStep++
         this.updateTrail()
         // Revelation du fog of war quand le colon change de cellule.
+        // Lot B : rayon dependant de la profession (explorateur eleve).
         if (this.x !== prevX || this.z !== prevZ) {
-          revealAround(this.x, this.z, 8)
+          revealAround(this.x, this.z, getColonistVisionRadius(this))
         }
       } else {
         this.tx += (dx / dist) * step

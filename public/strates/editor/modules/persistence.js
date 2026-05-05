@@ -237,6 +237,9 @@ function serializeSnapshot() {
       profession: c.profession ?? null,
       assignedJob: c.assignedJob ?? null,
       assignedFieldId: c.assignedFieldId ?? null,
+      explorationTarget: (c.explorationTarget && typeof c.explorationTarget.x === 'number')
+        ? { x: c.explorationTarget.x, z: c.explorationTarget.z }
+        : null,
       homeBuildingId: c.homeBuildingId ?? null,
       partnerId: c.partnerId ?? null,
       rested: typeof c.rested === 'number' ? c.rested : 0.5,

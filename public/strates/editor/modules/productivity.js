@@ -26,7 +26,9 @@ export const SKILL_FOR_JOB = Object.freeze({
   cueilleur:    'gathering',
   chasseur:     'hunting',
   chercheur:    'research',
-  constructeur: 'building'
+  constructeur: 'building',
+  // Lot B (explorateur) : pas de skill dedie, contribution productivite neutre.
+  explorateur:  null
 })
 
 export const MIN_COLONISTS_FOR_JOB = Object.freeze({

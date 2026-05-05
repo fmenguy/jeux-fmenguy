@@ -163,6 +163,18 @@ export const CAMERA_KEY_ROTATE_RIGHT = new Set(['e', 'E'])
 // de partir vers un site lointain isole.
 export const MAX_BUILDER_DISTANCE = 50
 
+// ============================================================================
+// Vision et fog of war (Lot B explorateur)
+// ============================================================================
+// Rayon (en cases) du fog revele autour d un colon mobile par defaut. Le
+// metier explorateur (age 2, gate sur tech 'scouting') beneficie d une vision
+// elargie via FOG_VISION_RADIUS_EXPLORER, multipliee par
+// FOG_VISION_CARTOGRAPHY_BONUS quand la tech 'cartography' est debloquee.
+// Lecture : voir colonist.js, fonction getColonistVisionRadius.
+export const FOG_VISION_RADIUS_DEFAULT  = 8
+export const FOG_VISION_RADIUS_EXPLORER = 14
+export const FOG_VISION_CARTOGRAPHY_BONUS = 1.5
+
 // Quetes definies dans data/quests.json, importées via gamedata.js
 
 // ============================================================================
