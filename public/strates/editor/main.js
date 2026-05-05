@@ -37,6 +37,7 @@ import { initAgriculturePanel } from './modules/ui/agriculture-panel.js'
 import { initCellTooltip } from './modules/ui/cell-tooltip.js'
 import { initTutoInvite, showTutoInvite } from './modules/ui/tutorial.js'
 import { buildFog, tickFog } from './modules/fog.js'
+import { buildDistantIslands } from './modules/distant-islands.js'
 import { tickConstructionFX } from './modules/construction-fx.js'
 import { initModalState } from './modules/ui/modal-state.js'
 import { initSeasonBar, tickSeasonBar } from './modules/ui/season-bar.js'
@@ -90,6 +91,8 @@ if (!isNewGame && pendingSlot && hasSave(pendingSlot) && loadGame(pendingSlot)) 
 }
 buildVegetation()
 buildFog()
+// Îles décoratives lointaines (visuel pur, pas d interaction).
+buildDistantIslands()
 setTool('nav')
 setBrush(1)
 refreshToolButtons()
