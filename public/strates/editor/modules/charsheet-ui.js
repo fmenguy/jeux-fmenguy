@@ -5,6 +5,11 @@
 
 import { state } from './state.js'
 import { drawLabel } from './bubbles.js'
+import { getHomeOf, homeLabel, openHousePicker } from './housing.js'
+import { camera, controls } from './scene.js'
+import { showHudToast } from './ui/research-popup.js'
+import { getHomeOf, homeLabel, openHousePicker } from './housing.js'
+import { camera, controls } from './scene.js'
 
 let panelEl = null
 let backdropEl = null
@@ -24,6 +29,8 @@ let elLastLine = null
 let elGender = null
 let elChief = null
 let elSkillsSection = null
+let elHomeSection = null
+let elHomeRow = null
 let elAssignedJobRow = null
 let elProfessionRow = null
 let elSkillsList = null
@@ -131,8 +138,102 @@ function ensureDom() {
   if (elFavBtn) elFavBtn.addEventListener('click', toggleFavorite)
 
   injectSkillsSection()
+  injectHomeSection()
 
   domReady = true
+}
+
+function injectHomeSection() {
+  if (!panelEl) return
+  if (panelEl.querySelector('#cs-home-section')) return
+  const body = panelEl.querySelector('.cs-body')
+  if (!body) return
+  const section = document.createElement('div')
+  section.className = 'cs-section'
+  section.id = 'cs-home-section'
+  section.innerHTML =
+    '<h4>Foyer</h4>' +
+    '<div id="cs-home-row" class="cs-home-row"></div>'
+  body.appendChild(section)
+  elHomeSection = section
+  elHomeRow = section.querySelector('#cs-home-row')
+  // Délégation : focus caméra sur la maison ou ouverture du picker.
+  elHomeRow.addEventListener('click', (e) => {
+    const focusBtn = e.target.closest('[data-action="focus-home"]')
+    if (focusBtn && currentColonist) {
+      const home = getHomeOf(currentColonist)
+      if (home && home.building && controls) {
+        const x = home.building.x + 0.5
+        const z = home.building.z + 0.5
+        controls.target.set(x, 2, z)
+        camera.position.set(x + 14, 18, z + 14)
+        camera.lookAt(controls.target)
+        if (controls.update) controls.update()
+      }
+      return
+    }
+    const assignBtn = e.target.closest('[data-action="assign-home"]')
+    if (assignBtn && currentColonist) {
+      openHousePicker(currentColonist, () => { refreshHome(currentColonist) })
+    }
+  })
+  injectHomeStyles()
+}
+
+function injectHomeStyles() {
+  if (document.getElementById('cs-home-style')) return
+  const style = document.createElement('style')
+  style.id = 'cs-home-style'
+  style.textContent =
+    '#char-panel .cs-home-row {' +
+    '  display: flex; align-items: center; gap: 8px;' +
+    '  padding: 6px 10px;' +
+    '  background: rgba(255,217,138,0.06);' +
+    '  border: 1px solid rgba(255,217,138,0.20);' +
+    '  border-radius: 6px;' +
+    '  font-size: 12px; color: #f3ecdd;' +
+    '}' +
+    '#char-panel .cs-home-row .cs-home-key {' +
+    '  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;' +
+    '  color: #c7b98c;' +
+    '}' +
+    '#char-panel .cs-home-row .cs-home-name {' +
+    '  flex: 1; font-weight: 600; color: #ffd98a;' +
+    '  cursor: pointer; transition: color 0.12s;' +
+    '}' +
+    '#char-panel .cs-home-row .cs-home-name:hover { color: #fff7d0; text-decoration: underline; }' +
+    '#char-panel .cs-home-row .cs-home-libre {' +
+    '  flex: 1; color: rgba(243,236,221,0.45); font-style: italic;' +
+    '}' +
+    '#char-panel .cs-home-row .cs-home-btn {' +
+    '  background: rgba(120,180,230,0.10);' +
+    '  border: 1px solid rgba(120,180,230,0.40);' +
+    '  color: #b0d4f5;' +
+    '  font-family: var(--mono, monospace);' +
+    '  font-size: 9.5px; letter-spacing: 0.06em;' +
+    '  padding: 3px 9px; border-radius: 3px; cursor: pointer;' +
+    '  transition: background 0.12s, color 0.12s;' +
+    '}' +
+    '#char-panel .cs-home-row .cs-home-btn:hover {' +
+    '  background: rgba(120,180,230,0.22); color: #d8ecff;' +
+    '}'
+  document.head.appendChild(style)
+}
+
+function refreshHome(c) {
+  if (!elHomeRow || !c) return
+  const home = getHomeOf(c)
+  if (home) {
+    const lbl = homeLabel(home)
+    elHomeRow.innerHTML =
+      '<span class="cs-home-key">Foyer</span>' +
+      '<span class="cs-home-name" data-action="focus-home" title="Centrer la caméra">' + escHtml(lbl) + '</span>'
+  } else {
+    elHomeRow.innerHTML =
+      '<span class="cs-home-key">Foyer</span>' +
+      '<span class="cs-home-libre">Sans-abri</span>' +
+      '<button class="cs-home-btn" data-action="assign-home">Assigner</button>'
+  }
 }
 
 function injectSkillsSection() {
@@ -298,6 +399,7 @@ function refreshDynamic() {
     elLastLine.classList.toggle('cs-muted', !line)
   }
   refreshSkills(c)
+  refreshHome(c)
 }
 
 function refreshSkills(c) {
