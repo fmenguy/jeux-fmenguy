@@ -101,9 +101,9 @@
       "cost": { "research": 15 },
       "requires": [],
       "unlocks": {
-        "buildings": ["champ"]
+        "buildings": ["field"]
       },
-      "description": "Domestication des plantes sauvages. Permet de placer des champs cultivables.",
+      "description": "Domestication des plantes sauvages. Permet de placer des champs sauvages (production autonome de grain).",
       "speech": ["Un champ ici fera notre bonheur."]
     },
     {
@@ -258,18 +258,18 @@
       "speech": ["On deplace des montagnes avec ca."]
     },
     {
-      "id": "wheat-field",
-      "name": "Champ de ble",
+      "id": "agriculture",
+      "name": "Agriculture",
       "age": 2,
       "branch": "agriculture",
       "icon": "🌾",
       "cost": { "research": 22 },
       "requires": ["first-field"],
       "unlocks": {
-        "buildings": ["champ-ble"],
-        "jobs":      ["agriculteur"]
+        "jobs":      ["fermier"],
+        "resources": ["wheat"]
       },
-      "description": "Culture du ble domestique. Debloque le champ de ble et le metier d'agriculteur.",
+      "description": "Maitrise de la culture du ble. Debloque le metier Fermier et la transformation d'un champ sauvage en champ cultive (production de ble).",
       "speech": ["Le ble nourrit bien plus que les baies."]
     },
     {
@@ -279,7 +279,7 @@
       "branch": "agriculture",
       "icon": "🏛",
       "cost": { "research": 20 },
-      "requires": ["wheat-field"],
+      "requires": ["agriculture"],
       "unlocks": {
         "buildings": ["grenier"]
       },

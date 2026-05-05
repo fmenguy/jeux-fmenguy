@@ -105,13 +105,14 @@
       "description": "Bûcheron équipé d'une hache en bronze. Meilleur rendement par arbre que la hache pierre."
     },
     {
-      "id": "agriculteur",
-      "name": "Agriculteur",
+      "id": "fermier",
+      "name": "Fermier",
       "age": 2,
-      "requires": { "buildings": ["champ-ble"] },
-      "produces": ["grain"],
+      "requires": { "tech": ["agriculture"] },
+      "techGate": "agriculture",
+      "produces": ["wheat"],
       "activity": "day",
-      "description": "Travaille dans les champs de blé. Nécessite un champ de blé construit."
+      "description": "Transforme les champs sauvages en champs cultivés (production de blé). Nécessite la tech Agriculture."
     },
     {
       "id": "forgeron",

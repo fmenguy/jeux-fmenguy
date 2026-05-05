@@ -22,6 +22,26 @@
     }
   },
   "_evolutiveNameDoc": "Le champ name peut etre redefini par age via une future map nameByAge: { 1: 'Grosse cabane', 4: 'Manoir', ... }. Pour l'instant nameByAge n'est pas pose, le name fige est valide pour les ages 1 a 3 (prehistoire, neolithique, bronze).",
+  "_stagesSchema": {
+    "doc": "Bloc optionnel sur un batiment. Permet d'avoir plusieurs etats gameplay (ex: champ sauvage / cultive). Le moteur (Lot B) lit le stage courant via state.buildings[id].stage et applique provides/needsWorker/visualKind correspondants.",
+    "fields": {
+      "label":        "string, libelle UI du stage",
+      "provides":     "objet ressources/services produits par tick dans ce stage",
+      "needsWorker":  "bool, true si un colon doit etre assigne pour produire",
+      "workerCount":  "int (optionnel), nombre de colons requis si needsWorker = true",
+      "visualKind":   "string, hint visuel pour le rendu (voxel | glb-farm | ...)",
+      "description":  "string, narration du stage"
+    }
+  },
+  "_transformFromSchema": {
+    "doc": "Bloc optionnel sur un batiment a stages. Decrit la transformation d'un stage source vers un stage cible (pas une demolition + re-construction). Distinct de upgradeFrom qui passe d'un batiment A a un batiment B.",
+    "fields": {
+      "from":     "string, id du stage source dans stages",
+      "to":       "string, id du stage cible dans stages",
+      "requires": "objet { tech: string, profession: string } a satisfaire pour declencher la transformation",
+      "duration": "int, duree de la transformation en secondes"
+    }
+  },
   "buildings": [
     {
       "id": "foyer",
@@ -100,7 +120,7 @@
       "_note": "flag unique consomme par Lot B"
     },
     {
-      "id": "champ",
+      "id": "field",
       "name": "Champ",
       "age": 1,
       "category": "alimentation",
@@ -108,10 +128,32 @@
       "cost": { "wood": 2 },
       "buildTime": 8,
       "requires": { "tech": ["first-field"] },
-      "provides": { "food_per_tick": 0.5 },
       "fusion": { "count": 4, "into": "potager" },
       "activity": "day",
-      "description": "Zone de culture rudimentaire. Production de nourriture passive. Fusion 4x en Potager."
+      "description": "Zone agricole à deux états. Démarre Sauvage (production autonome de grain), peut être transformée en Cultivé par un Fermier (tech Agriculture, âge 2) pour produire du blé.",
+      "stages": {
+        "sauvage": {
+          "label": "Sauvage",
+          "provides":     { "grain_per_tick": 0.02 },
+          "needsWorker":  false,
+          "visualKind":   "voxel",
+          "description":  "Champ sauvage à l'état initial. Production faible et autonome de grain (équivalent baies, légèrement supérieur)."
+        },
+        "cultive": {
+          "label":        "Cultivé",
+          "provides":     { "wheat_per_tick": 0.10 },
+          "needsWorker":  true,
+          "workerCount":  1,
+          "visualKind":   "glb-farm",
+          "description":  "Champ cultivé par un Fermier. Production élevée de blé (transformable en farine puis pain)."
+        }
+      },
+      "transformFrom": {
+        "from":     "sauvage",
+        "to":       "cultive",
+        "requires": { "tech": "agriculture", "profession": "fermier" },
+        "duration": 30
+      }
     },
     {
       "id": "buisson",
@@ -133,7 +175,7 @@
       "category": "alimentation",
       "size": "2x2",
       "cost": { "wood": 0 },
-      "requires": { "buildings": ["champ", "champ", "champ", "champ"] },
+      "requires": { "buildings": ["field", "field", "field", "field"] },
       "provides": { "food_per_tick": 3 },
       "activity": "day",
       "description": "Jardin potager issu de la fusion de 4 Champs. Production alimentaire amelioree."
@@ -150,19 +192,6 @@
       "provides": { "night_points_per_tick": 1 },
       "activity": "night",
       "description": "Tour d'observation nocturne. Permet aux chercheurs assignes de produire des points nocturnes la nuit."
-    },
-    {
-      "id": "champ-ble",
-      "name": "Champ de ble",
-      "age": 2,
-      "category": "alimentation",
-      "size": "2x2",
-      "cost": { "wood": 4, "stone": 2 },
-      "requires": { "tech": ["wheat-field"] },
-      "provides": { "grain_per_tick": 0.08 },
-      "fertility_required": true,
-      "activity": "day",
-      "description": "Culture de ble sur terrain fertile. Produit du grain transformable en farine puis en pain. Occupe 4 cases en carre."
     },
     {
       "id": "grenier",
