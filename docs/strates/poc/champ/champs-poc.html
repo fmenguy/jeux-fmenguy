@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Strates · POC champs âge de pierre</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --panel:#221e18; --panel-2:#2b261e;
+    --rule:#3d352a;
+    --ink:#ede3cc; --ink-2:#b9ad91; --ink-3:#7f7562;
+    --gold:#d4b870; --gold-2:#a88d4a;
+    --serif:'Fraunces', Georgia, serif;
+    --sans:'Inter', system-ui, sans-serif;
+    --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; height:100%; background:#15120e; color:var(--ink); font-family:var(--sans); overflow:hidden; }
+  header {
+    position:fixed; top:0; left:0; right:0; z-index:10;
+    padding:12px 22px;
+    background:linear-gradient(180deg, rgba(34,30,24,.95), rgba(20,18,14,.85));
+    border-bottom:1px solid var(--rule);
+    display:flex; align-items:baseline; gap:18px; flex-wrap:wrap;
+  }
+  h1 { font-family:var(--serif); font-weight:600; font-size:22px; margin:0; color:var(--ink); }
+  .sub { font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); }
+  .hint { font-family:var(--mono); font-size:10px; color:var(--ink-3); margin-left:auto; }
+
+  #grid {
+    position:fixed; inset:60px 0 0 0;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    grid-template-rows:repeat(2, 1fr);
+    gap:1px;
+    background:var(--rule);
+  }
+  .cell {
+    position:relative;
+    background:#1a1610;
+    overflow:hidden;
+  }
+  .cell canvas { display:block; width:100%; height:100%; }
+  .cell .label {
+    position:absolute; top:10px; left:12px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); background:rgba(20,18,14,.9);
+    padding:5px 10px; border:1px solid var(--gold-2); border-radius:3px;
+    pointer-events:none;
+  }
+  .cell .desc {
+    position:absolute; bottom:10px; left:12px; right:12px;
+    font-family:var(--sans); font-size:11px; line-height:1.4;
+    color:var(--ink-2); background:rgba(20,18,14,.85);
+    padding:6px 10px; border-left:2px solid var(--gold-2); border-radius:2px;
+    pointer-events:none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Champs âge de pierre</h1>
+  <span class="sub">POC visuel · 5 variantes procédurales</span>
+  <span class="hint">Clic-glissez pour orbiter chaque cellule. Molette pour zoomer.</span>
+</header>
+
+<div id="grid">
+  <div class="cell" data-variant="furrows">
+    <span class="label">A · Sillons</span>
+    <span class="desc">Sillons de terre en lignes parallèles, avec petites pousses vertes alignées. Lecture immédiate "champ cultivé".</span>
+  </div>
+  <div class="cell" data-variant="mounds">
+    <span class="label">B · Buttes</span>
+    <span class="desc">Petites mottes de terre en grille avec brins d'herbe. Plus rustique, look proto-agriculture.</span>
+  </div>
+  <div class="cell" data-variant="patches">
+    <span class="label">C · Parcelles</span>
+    <span class="desc">Carrés de terre retournée alternée terre claire/foncée. Style pixel-art voxel naturel.</span>
+  </div>
+  <div class="cell" data-variant="primitive">
+    <span class="label">D · Primitif</span>
+    <span class="desc">Patch de terre brut avec quelques pierres et bâtons fichés en marqueurs. Très âge de pierre.</span>
+  </div>
+  <div class="cell" data-variant="hybrid">
+    <span class="label">E · Hybride</span>
+    <span class="desc">Sillons + bâtons fichés aux 4 coins (clôture symbolique). Mix de A et D.</span>
+  </div>
+  <div class="cell" data-variant="rows-blocks">
+    <span class="label">F · Rangs voxel</span>
+    <span class="desc">Rangs de petits blocs voxel orange/vert sur sol terre. Style strates assumé.</span>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const COLORS = {
+  grass:    0x6b8e4e,
+  dirt:     0x6b4a2c,
+  dirtDark: 0x4a3220,
+  dirtLight:0x8a6840,
+  stone:    0x9a9080,
+  stick:    0x4a3520,
+  sprout:   0x7cb04a,
+  wheat:    0xc9a04a,
+  leaf:     0x4a8a3a,
+};
+
+function makeRenderer(canvas, w, h) {
+  const r = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+  r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  r.setSize(w, h, false);
+  r.shadowMap.enabled = true;
+  r.shadowMap.type = THREE.PCFSoftShadowMap;
+  r.setClearColor(0x1a1610, 1);
+  return r;
+}
+
+function makeScene() {
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x1a1610, 8, 18);
+  // Light
+  const sun = new THREE.DirectionalLight(0xffe6b0, 1.2);
+  sun.position.set(4, 8, 5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.left = -5; sun.shadow.camera.right = 5;
+  sun.shadow.camera.top = 5; sun.shadow.camera.bottom = -5;
+  scene.add(sun);
+  scene.add(new THREE.AmbientLight(0x6b6050, 0.55));
+  scene.add(new THREE.HemisphereLight(0xffefc8, 0x4a3826, 0.4));
+  return scene;
+}
+
+function addGround(scene) {
+  // herbe autour
+  const grassGeo = new THREE.PlaneGeometry(8, 8);
+  const grassMat = new THREE.MeshStandardMaterial({ color: COLORS.grass, roughness: 0.95 });
+  const grass = new THREE.Mesh(grassGeo, grassMat);
+  grass.rotation.x = -Math.PI/2;
+  grass.position.y = -0.001;
+  grass.receiveShadow = true;
+  scene.add(grass);
+}
+
+// --------- Variant builders : tous renvoient un Group centré sur 0,0, base 2x2 (~2 unités) ---------
+
+function buildFurrows() {
+  // 8 sillons parallèles avec pousses
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.08, 2),
+    new THREE.MeshStandardMaterial({ color: COLORS.dirt, roughness:1 })
+  );
+  base.position.y = 0.04; base.receiveShadow = true; base.castShadow = true;
+  g.add(base);
+
+  const ridgeMat = new THREE.MeshStandardMaterial({ color: COLORS.dirtDark, roughness:1 });
+  for (let i = 0; i < 8; i++) {
+    const x = -1 + (i + 0.5) * (2/8);
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.06, 1.9), ridgeMat);
+    ridge.position.set(x, 0.11, 0); ridge.receiveShadow = true; ridge.castShadow = true;
+    g.add(ridge);
+    // Pousses sur la crête
+    const sproutMat = new THREE.MeshStandardMaterial({ color: COLORS.sprout, roughness:.8 });
+    for (let j = 0; j < 6; j++) {
+      const sprout = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.04), sproutMat);
+      sprout.position.set(x + (Math.random()-0.5)*0.05, 0.22, -0.85 + j*0.34 + (Math.random()-0.5)*0.08);
+      sprout.castShadow = true;
+      g.add(sprout);
+    }
+  }
+  return g;
+}
+
+function buildMounds() {
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.06, 2),
+    new THREE.MeshStandardMaterial({ color: COLORS.dirt, roughness:1 })
+  );
+  base.position.y = 0.03; base.receiveShadow = true;
+  g.add(base);
+
+  const moundMat = new THREE.MeshStandardMaterial({ color: COLORS.dirtDark, roughness:1, flatShading:true });
+  const sproutMat = new THREE.MeshStandardMaterial({ color: COLORS.sprout, roughness:.8 });
+  // grille 4x4 de buttes
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      const cx = -0.75 + i*0.5;
+      const cz = -0.75 + j*0.5;
+      const mound = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 4), moundMat);
+      mound.scale.set(1, 0.6, 1);
+      mound.position.set(cx, 0.1, cz); mound.castShadow = true;
+      g.add(mound);
+      // brin d'herbe au sommet
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.04), sproutMat);
+      blade.position.set(cx + (Math.random()-0.5)*0.06, 0.27, cz + (Math.random()-0.5)*0.06);
+      blade.rotation.set((Math.random()-0.5)*0.3, 0, (Math.random()-0.5)*0.3);
+      blade.castShadow = true;
+      g.add(blade);
+    }
+  }
+  return g;
+}
+
+function buildPatches() {
+  const g = new THREE.Group();
+  // Damier 8x8 de petits voxels alternés terre claire / foncée
+  const sq = 2/8;
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      const dark = (i+j) % 2 === 0;
+      const v = new THREE.Mesh(
+        new THREE.BoxGeometry(sq*0.95, 0.08 + Math.random()*0.04, sq*0.95),
+        new THREE.MeshStandardMaterial({ color: dark ? COLORS.dirtDark : COLORS.dirtLight, roughness:1, flatShading:true })
+      );
+      v.position.set(-1 + (i+0.5)*sq, 0.05, -1 + (j+0.5)*sq);
+      v.castShadow = true; v.receiveShadow = true;
+      g.add(v);
+    }
+  }
+  // quelques pousses dispersées
+  const sproutMat = new THREE.MeshStandardMaterial({ color: COLORS.sprout, roughness:.8 });
+  for (let n = 0; n < 12; n++) {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.16, 0.04), sproutMat);
+    s.position.set((Math.random()-0.5)*1.7, 0.16, (Math.random()-0.5)*1.7);
+    s.castShadow = true;
+    g.add(s);
+  }
+  return g;
+}
+
+function buildPrimitive() {
+  const g = new THREE.Group();
+  // patch de terre brut, irrégulier
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.1, 1.1, 0.08, 12),
+    new THREE.MeshStandardMaterial({ color: COLORS.dirt, roughness:1, flatShading:true })
+  );
+  base.position.y = 0.04; base.receiveShadow = true;
+  g.add(base);
+
+  // pierres marqueurs
+  const stoneMat = new THREE.MeshStandardMaterial({ color: COLORS.stone, roughness:.95, flatShading:true });
+  for (let n = 0; n < 6; n++) {
+    const ang = (n / 6) * Math.PI * 2;
+    const r = 0.95;
+    const stone = new THREE.Mesh(new THREE.IcosahedronGeometry(0.13 + Math.random()*0.05, 0), stoneMat);
+    stone.position.set(Math.cos(ang)*r, 0.1, Math.sin(ang)*r);
+    stone.rotation.set(Math.random(), Math.random(), Math.random());
+    stone.castShadow = true;
+    g.add(stone);
+  }
+  // bâtons fichés
+  const stickMat = new THREE.MeshStandardMaterial({ color: COLORS.stick, roughness:1 });
+  for (let n = 0; n < 5; n++) {
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.45, 5), stickMat);
+    stick.position.set((Math.random()-0.5)*1.4, 0.22, (Math.random()-0.5)*1.4);
+    stick.rotation.z = (Math.random()-0.5)*0.5;
+    stick.rotation.x = (Math.random()-0.5)*0.5;
+    stick.castShadow = true;
+    g.add(stick);
+  }
+  // qq pousses
+  const sproutMat = new THREE.MeshStandardMaterial({ color: COLORS.sprout, roughness:.8 });
+  for (let n = 0; n < 8; n++) {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.2, 0.05), sproutMat);
+    s.position.set((Math.random()-0.5)*1.5, 0.18, (Math.random()-0.5)*1.5);
+    s.castShadow = true;
+    g.add(s);
+  }
+  return g;
+}
+
+function buildHybrid() {
+  // sillons + bâtons aux coins
+  const g = buildFurrows();
+  const stickMat = new THREE.MeshStandardMaterial({ color: COLORS.stick, roughness:1 });
+  const corners = [[-0.95,-0.95],[0.95,-0.95],[-0.95,0.95],[0.95,0.95]];
+  for (const [x,z] of corners) {
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.6, 6), stickMat);
+    stick.position.set(x, 0.32, z);
+    stick.castShadow = true;
+    g.add(stick);
+  }
+  // ficelle entre les bâtons (4 segments)
+  const ropeMat = new THREE.MeshStandardMaterial({ color: 0x8a7050, roughness:1 });
+  const pts = [...corners, corners[0]];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x1,z1] = pts[i], [x2,z2] = pts[i+1];
+    const len = Math.hypot(x2-x1, z2-z1);
+    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, len, 4), ropeMat);
+    rope.position.set((x1+x2)/2, 0.55, (z1+z2)/2);
+    rope.rotation.z = Math.PI/2;
+    rope.rotation.y = -Math.atan2(z2-z1, x2-x1);
+    g.add(rope);
+  }
+  return g;
+}
+
+function buildRowsBlocks() {
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.08, 2),
+    new THREE.MeshStandardMaterial({ color: COLORS.dirtDark, roughness:1 })
+  );
+  base.position.y = 0.04; base.receiveShadow = true;
+  g.add(base);
+  // 5 rangs de petits blocs voxel orange/vert dégradés
+  const rowCount = 5;
+  for (let r = 0; r < rowCount; r++) {
+    const z = -0.8 + r * (1.6/(rowCount-1));
+    for (let i = 0; i < 9; i++) {
+      const x = -0.9 + i*0.225;
+      const t = (r/(rowCount-1)); // 0 = vert, 1 = doré
+      const c = new THREE.Color().setRGB(
+        0.49 + t*0.3,   // vert -> orange
+        0.69 - t*0.05,
+        0.29 - t*0.15
+      );
+      const block = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 0.18 + Math.random()*0.05, 0.13),
+        new THREE.MeshStandardMaterial({ color:c, roughness:.85, flatShading:true })
+      );
+      block.position.set(x, 0.18, z);
+      block.castShadow = true; block.receiveShadow = true;
+      g.add(block);
+    }
+  }
+  return g;
+}
+
+const builders = {
+  furrows: buildFurrows,
+  mounds: buildMounds,
+  patches: buildPatches,
+  primitive: buildPrimitive,
+  hybrid: buildHybrid,
+  'rows-blocks': buildRowsBlocks,
+};
+
+function setupCell(cell) {
+  const variant = cell.dataset.variant;
+  const canvas = document.createElement('canvas');
+  cell.appendChild(canvas);
+  const w = cell.clientWidth, h = cell.clientHeight;
+  const renderer = makeRenderer(canvas, w, h);
+  const scene = makeScene();
+  addGround(scene);
+
+  const camera = new THREE.PerspectiveCamera(40, w/h, 0.1, 100);
+  camera.position.set(3.2, 2.6, 3.2);
+  camera.lookAt(0, 0, 0);
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.target.set(0, 0.2, 0);
+
+  const field = builders[variant]();
+  scene.add(field);
+
+  function tick() {
+    requestAnimationFrame(tick);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  tick();
+
+  const ro = new ResizeObserver(() => {
+    const nw = cell.clientWidth, nh = cell.clientHeight;
+    renderer.setSize(nw, nh, false);
+    camera.aspect = nw/nh; camera.updateProjectionMatrix();
+  });
+  ro.observe(cell);
+}
+
+document.querySelectorAll('.cell').forEach(setupCell);
+</script>
+
+</body>
+</html>

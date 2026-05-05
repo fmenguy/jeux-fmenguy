@@ -7,7 +7,8 @@ import {
   CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK,
   RAW_MEAT_SATIETY, COOKED_MEAT_SATIETY,
   MAX_BUILDER_DISTANCE, STAR_COLONIST_CHANCE,
-  IDLE_SPEECH_COOLDOWN
+  IDLE_SPEECH_COOLDOWN,
+  FOG_VISION_RADIUS_DEFAULT, FOG_VISION_RADIUS_EXPLORER, FOG_VISION_CARTOGRAPHY_BONUS
 } from './constants.js'
 import {
   MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
@@ -50,6 +51,17 @@ const PROFESSION_TO_KIND = {
   mineur:    'pick',
   cueilleur: 'mine',
   chasseur:  'hunt'
+}
+
+// Lot B (explorateur) : rayon de vision du colon pour la revelation du fog.
+// Explorateur beneficie d une vision elargie (14 au lieu de 8), avec bonus
+// cartography si la tech est debloquee (x1.5 = 21).
+function getColonistVisionRadius(colonist) {
+  if (colonist.profession === 'explorateur') {
+    const radius = FOG_VISION_RADIUS_EXPLORER
+    return techUnlocked('cartography') ? radius * FOG_VISION_CARTOGRAPHY_BONUS : radius
+  }
+  return FOG_VISION_RADIUS_DEFAULT
 }
 
 function pickUniqueName(gender, usedSet) {
@@ -635,6 +647,13 @@ export class Colonist {
         }
         return true
       }
+      case 'explorateur': {
+        if (!state.cellRevealed) return false
+        for (const revealed of state.cellRevealed) {
+          if (!revealed) return false
+        }
+        return true
+      }
       default:
         return false
     }
@@ -1128,6 +1147,31 @@ export class Colonist {
     this.targetConstructionSite = best
     this.builderSlot = { x: slot.x, z: slot.z }
     this.path = slot.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = false
+    this.updateTrail()
+    return true
+  }
+
+  pickExplorationTarget() {
+    if (!state.cellRevealed) return false
+    let best = null
+    let bestDist = Infinity
+    for (let k = 0; k < state.cellRevealed.length; k++) {
+      if (state.cellRevealed[k]) continue
+      const x = k % GRID, z = Math.floor(k / GRID)
+      if (x < 0 || x >= GRID || z < 0 || z >= GRID) continue
+      const biome = state.cellBiome ? state.cellBiome[k] : null
+      if (biome === 'water' || biome === 'deep-water' || biome === 'snow' || biome === 'rock') continue
+      const dist = Math.abs(x - this.x) + Math.abs(z - this.z)
+      if (dist < bestDist) { bestDist = dist; best = { x, z } }
+    }
+    if (!best) return false
+    const path = findApproach(this.x, this.z, best.x, best.z)
+    if (!path || path.length === 0) return false
+    this.explorationTarget = { x: best.x, z: best.z }
+    this.path = path
     this.pathStep = 0
     this.state = 'MOVING'
     this.isWandering = false
