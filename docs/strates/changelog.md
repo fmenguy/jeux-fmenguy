@@ -4,6 +4,46 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-05 : fix Lot B, quetes batiments comptent les chantiers termines
+
+- `fix(engine) building quests count only completed buildings` : les quetes "Construire N maisons" (`houses-3`, `houses-5`) reposaient sur le compteur `state.gameStats.housesPlaced` incremente des la pose du chantier, validant la quete avant la fin reelle de la construction. Nouveau type de goal `buildingsBuilt` dans `quests.js` qui compte les batiments du tableau d etat (`state.houses`, `state.bigHouses`, etc.) en filtrant `isUnderConstruction` et `isUnderUpgrade`. Pas de double-comptage entre cabane source en upgrade et big-house finale. Les quetes deja validees a tort en save ne sont pas devalidees retroactivement (juste plus produites a l avenir).
+
+---
+
+## 2026-05-04 : recapitulatif des commits non encore documentes (UI actionbar, social, dialogues, divers)
+
+Synthese groupee par lot des commits du 04 mai non couverts par les sections detaillees ci-dessous. Tri chronologique inverse (commit le plus recent en tete dans chaque lot).
+
+### Lot E (world / UI)
+
+- `4b5b0a0` feat(engine) defaults residents and couple links for new houses : a la completion d une cabane, spawn d un couple homme + femme, lien `partnerId` reciproque, `building.residents` cable, `colonist.homeBuildingId` pose. Grosse cabane : 2 couples spawnes, 2 places restantes.
+- `6d65a3b` feat(world) show residents in house panel and add social MVP modal : fiche batiment cabane / grosse cabane affiche les residents avec gender, metier, badge couple. Click resident ouvre charsheet. Nouvelle modale Social (rail droit) read-only listant couples, celibataires, sans-abri.
+- `9343a2d` chore(data) rename big-house to Grosse cabane and document residents schema : renommage Manoir -> Grosse cabane pour les 3 premiers ages, documentation du champ `residentsCapacity` et de `socialRelations`.
+- `896a945` feat(world) upgrade button from house to big-house in building panel : bouton "Ameliorer en grosse maison" sur fiche cabane terminee, gating tech / ressources / footprint 4x4, barre de progression pendant l upgrade, bascule auto sur fiche big-house a l achevement.
+- `1c1b1e8` chore(world) disable medieval field visual evolution : annulation du swap visuel du champ vers la version medievale, conservation du glb farm de base a toutes etapes de croissance.
+- `b76345c` feat(world) show assigned colonists in job picker greyed : modale Population / Metiers liste tous les colons en 3 groupes (libres, autres metiers, deja assignes grise avec badge ✓ Assigne et bouton Changer de metier).
+- `a379662` chore(world) remove builder tutorial step : suppression complete du tuto Constructeur (apparait trop tard, plus de valeur pedagogique). Flag `builderTutoDone` nettoye automatiquement par `resetTutorialFlags`.
+- `5b501c6` feat(world) redesign speech bubbles slate gold style : bulles colons passent de blanc translucide a fond ardoise opaque + bordure or 3px + texte creme. Contraste 9:1, lisibilite garantie sur tous biomes. Variantes `hint` (bleu) et `idle` (couleur metier) preservees.
+- `b3bd21f` fix(world) shrink tool labels to fit actionbar buttons : suppression d un bloc CSS `.tool` duplique qui overrideait silencieusement les regles POC A. Labels passent en mono 7.5px avec wrap autorise sur 2 lignes (HUTTE DU SAGE -> 2 lignes).
+- `7b809b5` fix(world) align in-game actionbar with POC A reference : alignement du markup et du CSS de #actionbar sur le POC A (3 zones ancrees, espacements, typo).
+- `6740fa4` fix(world) cell tooltip distinguishes basic rock from mountain rock : utilisation de `classifyMineableBlock` comme source de verite. Roche de base -> "Necessite une Pioche". Roche de montagne -> "Mineur Niv.5+ requis".
+- `0fa3e40` feat(world) three-zone anchored actionbar layout : refonte d actionbar en CSS Grid 3 zones (Naviguer gauche, outils centre, Annuler+Demolir droite). Annuler et Demolir restent au meme pixel quel que soit l onglet.
+- `d14229e` fix(world) bubble scale grows with camera distance : echelle des bulles colons ajustee selon distance camera (clamp [0.95, 2.2]), plus de troncature visuelle au dezoom.
+- `cc37f96` feat(world) enlarge colonist speech bubbles : premiere passe d agrandissement bulles, canvas 768x240, font Inter 700 38px, scale Sprite 3.4x1.1.
+
+### Lot B (engine)
+
+- `df08560` fix(engine) single-click activation for cancel and destroy buttons : helper `exitAllModesAndEnter(modeName)` consolide la sortie atomique de tous les modes (outil, field placement, cairn placement, destroy). Un clic unique sur Annuler ou Demolir entre directement dans le mode cible, sans double-clic.
+- `ef2769c` fix(engine) cancel zone removes construction sites and frees builders : `cancelJobsInRect` etendu pour detecter les chantiers via `findConstructionSitesInCells`, suppression via `removeConstructionSite` qui libere les colons BUILDER (reset IDLE, vide `targetConstructionSite`). Demolir bloque sur chantier non termine via toast informatif.
+- `d03e453` feat(engine) promontoire houses up to 2 researchers at night with active light : `OBSERVATORY_CAPACITY = 2`, helpers `enterObservatory` / `releaseFromObservatory` / `releaseAllObservatoryOccupants`, PointLight 0xffd070 active si occupants > 0, mesh chercheur masque a l entree, sortie automatique au lever du jour.
+
+### Lot A (data)
+
+- `e32aa5a` feat(data) add upgrade cost from house to big-house : ajout du bloc `upgradeFrom` sur big-house dans buildings.json. From `cabane`, cost wood:8 stone:5, buildTime 24s. Schema documente via `_upgradeFromSchema`.
+- `88214d9` chore(data) remove bones requirement from cairn : suppression de la condition os pour la finalisation du Cairn (rare sur petites iles entierement explorees, blocage de fin d age I).
+
+---
+
 ## 2026-05-04 : Lot B, fusion auto retiree au profit d un upgrade explicite Cabane vers Grosse maison
 
 La fusion automatique de 4 cabanes en manoir 2x2 etait buguee (declenchee des le placement, sans attendre la construction), bloquant les colons en BUILDER. Elle a ete entierement retiree.

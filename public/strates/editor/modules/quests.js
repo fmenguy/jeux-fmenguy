@@ -25,7 +25,7 @@ const QUEST_CATALOG = [
     id: 'houses-3',
     title: 'Bâtir le hameau',
     description: 'Construisez 3 maisons pour le clan.',
-    goal: { type: 'stat', key: 'housesPlaced', target: 3 },
+    goal: { type: 'buildingsBuilt', kind: 'house', target: 3 },
     rewards: [
       { type: 'research', amount: 20 },
       { type: 'resource', id: 'wood', amount: 10 }
@@ -71,7 +71,7 @@ const QUEST_CATALOG = [
     id: 'houses-5',
     title: 'Village en essor',
     description: 'Construisez 5 maisons.',
-    goal: { type: 'stat', key: 'housesPlaced', target: 5 },
+    goal: { type: 'buildingsBuilt', kind: 'house', target: 5 },
     reward: { researchPoints: 45, stone: 5 },
     color: '#c97a4a'
   },
@@ -93,10 +93,37 @@ const QUEST_CATALOG = [
   }
 ]
 
+// Retourne le tableau d etat correspondant a une quete "buildingsBuilt".
+// On accepte soit un kind logique ("house", "big-house", "manor"), soit un
+// nom de tableau direct ("houses", "bigHouses", "manors").
+function _arrayForBuildingKind(kind) {
+  if (!kind) return []
+  if (kind === 'house'     || kind === 'houses')    return state.houses    || []
+  if (kind === 'big-house' || kind === 'bigHouses') return state.bigHouses || []
+  if (kind === 'manor'     || kind === 'manors')    return state.manors    || []
+  if (Array.isArray(state[kind])) return state[kind]
+  return []
+}
+
+// Compte uniquement les batiments TERMINES, pas les chantiers en cours et pas
+// ceux en cours d upgrade (sinon double-comptage avec leur futur upgrade).
+function _countBuiltBuildings(kind) {
+  const arr = _arrayForBuildingKind(kind)
+  let n = 0
+  for (const b of arr) {
+    if (!b) continue
+    if (b.isUnderConstruction) continue
+    if (b.isUnderUpgrade) continue
+    n++
+  }
+  return n
+}
+
 function resolveGoal(goal) {
-  if (goal.type === 'stat')      return () => state.gameStats[goal.key] || 0
-  if (goal.type === 'colonists') return () => state.colonists.length
-  if (goal.type === 'foyer')     return () => (state.foyers || []).length
+  if (goal.type === 'stat')           return () => state.gameStats[goal.key] || 0
+  if (goal.type === 'colonists')      return () => state.colonists.length
+  if (goal.type === 'foyer')          return () => (state.foyers || []).length
+  if (goal.type === 'buildingsBuilt') return () => _countBuiltBuildings(goal.kind)
   return () => 0
 }
 
