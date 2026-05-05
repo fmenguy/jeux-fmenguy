@@ -21,7 +21,8 @@ import { dlog } from './debug.js'
 import {
   findResearchBuildingById, isCellOccupied, extractOreAt, chopTreeAt, isTreeOn,
   isRockOn, collectRockAt, isBushOn, grabBushAt, isOreOn,
-  findWheatFieldById, releaseFromWheatFields, completeUpgrade
+  findWheatFieldById, releaseFromWheatFields, completeUpgrade,
+  makeHomeRef, resolveHomeBuilding
 } from './placements.js'
 import { findNearestBush, refreshBushBerries, isObservatoryOn, enterObservatory, releaseFromObservatory, OBSERVATORY_CAPACITY } from './placements.js'
 import { techUnlocked, classifyMineableBlock, canMineResource } from './tech.js'
@@ -204,6 +205,18 @@ export class Colonist {
     // Lot B residents : id du colon partenaire (couple). Symetrique. null par
     // defaut. Casse a la mort d un des deux ou a la demolition.
     this.partnerId = null
+    // Lot B house utility : etat de repos (0..1). Monte pendant SLEEP, baisse
+    // pendant le travail. Au-dela de 0.7 le colon beneficie d un bonus de
+    // productivite (cf. productivity.js et needs.js computeProductivityMul).
+    this.rested = 0.5
+    // Lot B house utility : compteur de reproduction des couples cohabitant.
+    // Incremente d 1 a chaque debut de nuit si conditions reunies. A 30, un
+    // enfant naitra (spawn colon adulte) et le compteur est remis a zero.
+    this.reproductionTimer = 0
+    // Lot B house utility : derniere phase jour/nuit vue par ce colon. Sert
+    // a detecter la transition jour vers nuit pour declencher le retour a la
+    // maison (logique SLEEP) sans relire l etat global a chaque tick.
+    this._prevIsNight = !!state.isNight
     this.productivityMul = 1.0           // expose en lecture pour le cablage par placements.js et tech.js (post-Lot-B)
     // Lot B (mode mixte) : flag mis par pickJob/pickHarvest quand le colon
     // prend une tache basique (cueillette, minage pierre) sans avoir la
@@ -253,13 +266,18 @@ export class Colonist {
       // Lot B residents : reference d habitation precise et lien social couple.
       if (typeof r.homeBuildingId === 'string') this.homeBuildingId = r.homeBuildingId
       if (typeof r.partnerId === 'number') this.partnerId = r.partnerId
+      // Lot B house utility : restaure repos et compteur de reproduction.
+      if (typeof r.rested === 'number') this.rested = Math.max(0, Math.min(1, r.rested))
+      if (typeof r.reproductionTimer === 'number') this.reproductionTimer = Math.max(0, r.reproductionTimer)
     } else if (opts && opts.forceName) {
       this.gender = opts.forceGender || 'M'
       this.name = opts.forceName
       state.usedNames.add(this.name)
       this.isChief = !!opts.isChief
     } else {
-      this.gender = Math.random() < 0.5 ? 'M' : 'F'
+      // Lot B residents : permet de forcer le genre pour appairer des couples
+      // M/F dans une cabane sans avoir a fournir un forceName explicite.
+      this.gender = (opts && opts.forceGender) ? opts.forceGender : (Math.random() < 0.5 ? 'M' : 'F')
       this.name = pickUniqueName(this.gender, state.usedNames)
     }
     this.relationships = new Map()
@@ -1979,12 +1997,14 @@ export function onBuildingComplete(site) {
   if (site.buildingId === 'big-house' && site.pendingColonistsSpawn > 0) {
     const cx = site.x + 2
     const cz = site.z + 2
-    spawnColonsAroundHouse(cx, cz, site.pendingColonistsSpawn)
+    spawnColonsAroundHouse(cx, cz, site.pendingColonistsSpawn,
+      { homeKind: 'big-house', homeBuilding: site })
     site.pendingColonistsSpawn = 0
   }
   // Cabane : meme pattern, spawn differe a la fin de construction.
   if (site.buildingId === 'cabane' && site.pendingColonistsSpawn > 0) {
-    spawnColonsAroundHouse(site.x, site.z, site.pendingColonistsSpawn)
+    spawnColonsAroundHouse(site.x, site.z, site.pendingColonistsSpawn,
+      { homeKind: 'house', homeBuilding: site })
     site.pendingColonistsSpawn = 0
   }
   // Promontoire : reveler la zone de vision en differe.
@@ -2061,16 +2081,52 @@ function applyRandomLevelsAndStar(c) {
   }
 }
 
-export function spawnColonsAroundHouse(hx, hz, count) {
-  const spawned = []
+// Lot B residents : choisit le genre du i-ieme colon spawne pour permettre
+// l appairage de couples M/F dans la meme habitation (cabane = 1 couple,
+// big-house = jusqu a 2 couples). Au dela, alterne pour eviter les biais.
+function _genderForIndex(i, count) {
+  if (count >= 2) {
+    if (i === 0) return 'M'
+    if (i === 1) return 'F'
+    if (i === 2) return 'M'
+    if (i === 3) return 'F'
+  }
+  return (i % 2 === 0) ? 'M' : 'F'
+}
+
+export function spawnColonsAroundHouse(hx, hz, count, opts = {}) {
+  const homeKind = opts && opts.homeKind ? opts.homeKind : null
+  const homeBuilding = opts && opts.homeBuilding ? opts.homeBuilding : null
+  // Compat : assignedBuildingId reste l id de batiments.json le plus pertinent
+  // pour le besoin shelter (utilise par needs.js avant la generalisation
+  // residents). En l absence d info, on retombe sur 'cabane'.
+  const shelterId = homeKind === 'big-house' ? 'big-house'
+                  : homeKind === 'manor'     ? 'manor'
+                  : 'cabane'
+  const homeRef = (homeKind && homeBuilding) ? makeHomeRef(homeKind, homeBuilding) : null
+
+  const spawned = []           // colons effectivement crees
+  const spawnedCells = []      // coords (compat retour legacy)
   const tried = new Set()
-  // Lot B : tout colon qui spawn autour d une maison recoit cette maison
-  // comme assignedBuildingId. needs.js l utilise pour le besoin shelter.
-  // On choisit l id de batiment habitation le plus courant a l age I : "cabane".
-  // La maison proto actuelle est encore placee par placements.addHouse sans
-  // id explicite, mais le colon a juste besoin de savoir qu il est assigne
-  // a une habitation pour ne pas etre Sans-abri.
-  const shelterId = 'cabane'
+  let idx = 0
+
+  const _link = (c) => {
+    if (!c) return
+    c.assignedBuildingId = shelterId
+    applyRandomLevelsAndStar(c)
+    if (homeRef && homeBuilding) {
+      if (!Array.isArray(homeBuilding.residents)) homeBuilding.residents = []
+      // Verifie capacite : si pleine, on link pas (le colon reste Sans-abri).
+      const cap = (typeof homeBuilding.residentsCapacity === 'number')
+        ? homeBuilding.residentsCapacity
+        : Infinity
+      if (homeBuilding.residents.length < cap) {
+        homeBuilding.residents.push(c.id)
+        c.homeBuildingId = homeRef
+      }
+    }
+  }
+
   for (let r = 1; r <= 2 && spawned.length < count; r++) {
     for (let dz = -r; dz <= r && spawned.length < count; dz++) {
       for (let dx = -r; dx <= r && spawned.length < count; dx++) {
@@ -2086,24 +2142,34 @@ export function spawnColonsAroundHouse(hx, hz, count) {
         let occ = false
         for (const c of state.colonists) if (c.x === x && c.z === z) { occ = true; break }
         if (occ) continue
-        const c = spawnColonist(x, z)
-        if (c) {
-          c.assignedBuildingId = shelterId
-          applyRandomLevelsAndStar(c)
-        }
-        spawned.push({ x, z })
+        const g = _genderForIndex(idx, count)
+        const c = spawnColonist(x, z, { forceGender: g })
+        _link(c)
+        spawned.push(c)
+        spawnedCells.push({ x, z })
+        idx++
       }
     }
   }
   while (spawned.length < count) {
     const fx = Math.max(0, Math.min(GRID - 1, hx + spawned.length))
     const fz = Math.max(0, Math.min(GRID - 1, hz))
-    const c = spawnColonist(fx, fz)
-    if (c) {
-      c.assignedBuildingId = shelterId
-      applyRandomLevelsAndStar(c)
-    }
-    spawned.push({ x: fx, z: fz })
+    const g = _genderForIndex(idx, count)
+    const c = spawnColonist(fx, fz, { forceGender: g })
+    _link(c)
+    spawned.push(c)
+    spawnedCells.push({ x: fx, z: fz })
+    idx++
   }
-  return spawned
+
+  // Lot B residents : appairer les couples (0+1 et 2+3 si presents).
+  if (count >= 2 && spawned[0] && spawned[1]) {
+    spawned[0].partnerId = spawned[1].id
+    spawned[1].partnerId = spawned[0].id
+  }
+  if (count >= 4 && spawned[2] && spawned[3]) {
+    spawned[2].partnerId = spawned[3].id
+    spawned[3].partnerId = spawned[2].id
+  }
+  return spawnedCells
 }
