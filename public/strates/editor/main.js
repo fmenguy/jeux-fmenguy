@@ -27,6 +27,7 @@ import { initCharSheet } from './modules/charsheet-ui.js'
 import { initHelpOverlay, isHelpOverlayOpen } from './modules/help-overlay.js'
 import { initDayNight, bindDayNightUI, tickDayNight, refreshNightPointsHUD } from './modules/daynight.js'
 import { tickAllNeeds } from './modules/needs.js'
+import { tickHousing } from './modules/colonist.js'
 import { computeJobProductivity } from './modules/productivity.js'
 import { TECH_TREE_DATA, BUILDINGS_DATA } from './modules/gamedata.js'
 import { initAgeTransitions, checkCairnOverlay } from './modules/age-transitions.js'
@@ -304,6 +305,10 @@ function tick(nowMs) {
   // Lot B : monter les besoins (faim, Sans-abri) avant la MAJ des colons
   // pour que leur state soit coherent avant la prise de decision.
   tickAllNeeds(dt)
+  // Lot B house utility : detection transition jour vers nuit + reproduction
+  // des couples cohabitants. Doit etre avant la MAJ des colons pour que les
+  // naissances spawnent dans la meme frame que la transition.
+  tickHousing(dt)
 
   for (const c of state.colonists) c.update(dt)
 
