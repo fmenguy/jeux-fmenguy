@@ -89,11 +89,15 @@
     {
       "id": "explorateur",
       "name": "Explorateur",
-      "age": 1,
+      "icon": "🧭",
+      "age": 2,
+      "workplaceType": null,
+      "maxPerVillage": 2,
       "requires": { "tech": ["scouting"] },
       "produces": [],
+      "provides": { "revealsFog": true },
       "activity": "day",
-      "description": "Étend le rayon de vision de la colonie. Nécessite la tech Éclaireur."
+      "description": "Parcourt le monde, révèle le brouillard de guerre. Vision étendue."
     },
     {
       "id": "bucheron-bronze",
