@@ -43,6 +43,7 @@ import { tickConstructionFX } from './modules/construction-fx.js'
 import { initModalState } from './modules/ui/modal-state.js'
 import { initSeasonBar, tickSeasonBar } from './modules/ui/season-bar.js'
 import { initSocialPanel, openSocialPanel, closeSocialPanel, isSocialPanelOpen } from './modules/ui/social-panel.js'
+import { getTestModeFromURL, applyTestMode } from './modules/age-test-modes.js'
 // stocks.js import initialise state.stocks[k] = 0
 import './modules/stocks.js'
 
@@ -80,10 +81,16 @@ if (TECH_TREE_DATA && TECH_TREE_DATA.techs) {
 }
 
 buildTerrain()
+// Mode de test par age : ?mode=bronze-test (et futurs iron-test, etc.)
+// Active avant la logique de save/spawn pour bypasser new-game et onboarding.
+const _testMode = getTestModeFromURL()
 const isNewGame = (() => { try { const v = localStorage.getItem('strates-new-game'); localStorage.removeItem('strates-new-game'); return !!v } catch(e) { return false } })()
 const pendingSlot = (() => { try { const v = localStorage.getItem('strates-pending-load'); localStorage.removeItem('strates-pending-load'); return v } catch(e) { return null } })()
 if (isNewGame) resetTutorialFlags()
-if (!isNewGame && pendingSlot && hasSave(pendingSlot) && loadGame(pendingSlot)) {
+if (_testMode) {
+  // Mode test : bypass save, spawn, et onboarding.
+  applyTestMode(_testMode)
+} else if (!isNewGame && pendingSlot && hasSave(pendingSlot) && loadGame(pendingSlot)) {
   forceSeasonRepaint()
 } else if (!isNewGame && hasSave('auto') && loadGame('auto')) {
   forceSeasonRepaint()
