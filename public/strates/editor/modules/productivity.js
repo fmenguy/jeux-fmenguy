@@ -21,23 +21,34 @@
 // ============================================================================
 
 export const SKILL_FOR_JOB = Object.freeze({
-  bucheron:     'logging',
-  mineur:       'mining',
-  cueilleur:    'gathering',
-  chasseur:     'hunting',
-  chercheur:    'research',
-  constructeur: 'building',
-  // Lot B (explorateur) : pas de skill dedie, contribution productivite neutre.
-  explorateur:  null
+  bucheron:           'logging',
+  mineur:             'mining',
+  cueilleur:          'gathering',
+  chasseur:           'hunting',
+  chercheur:          'research',
+  constructeur:       'building',
+  // Lot B age 2 : nouveaux metiers.
+  // bucheron-bronze reutilise la skill logging (meme geste, meilleur outil).
+  // fermier reutilise gathering (pas de skill farming dedie a date).
+  // forgeron : skill 'forge' n existe pas encore cote charsheet, on laisse
+  // null en attendant. explorateur : neutre.
+  'bucheron-bronze':  'logging',
+  fermier:            'gathering',
+  forgeron:           null,
+  explorateur:        null
 })
 
 export const MIN_COLONISTS_FOR_JOB = Object.freeze({
-  constructeur: 1,
-  chercheur:    1,
-  bucheron:     1,
-  mineur:       1,
-  cueilleur:    1,
-  chasseur:     1
+  constructeur:      1,
+  chercheur:         1,
+  bucheron:          1,
+  mineur:            1,
+  cueilleur:         1,
+  chasseur:          1,
+  // Lot B age 2.
+  'bucheron-bronze': 1,
+  fermier:           1,
+  forgeron:          1
 })
 
 // Boost global temporaire (recompense de quete speedBoost). Lu par
