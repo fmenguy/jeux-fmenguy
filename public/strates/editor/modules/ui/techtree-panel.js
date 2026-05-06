@@ -794,7 +794,12 @@ function renderBranchDetail(brId) {
   // Memoriser pour centerOnViewedAge (auto scroll vers la colonne age active)
   _lastNodePos = nodePos
 
-  // Liens SVG orthogonaux — les coords cx/cy sont le CENTRE du nœud (transform:-50%,-50%)
+  // Liens SVG en courbe Bezier — routage Y par nœud (pas d'axe central partagé).
+  // Chaque lien part du bord droit du noeud source au Y de ce noeud, et
+  // arrive au bord gauche du noeud cible au Y de ce noeud. Si la cible est
+  // dans la meme colonne (dx faible), on bascule sur un routage vertical
+  // local (sortie bas, entree haut) avec une Bezier courte.
+  // nodePos contient {x, y, w, h} ou (x, y) est le CENTRE du noeud.
   branchTechs.forEach(function(t) {
     const to = nodePos[t.id]
     if (!to) return
@@ -805,26 +810,40 @@ function renderBranchDetail(brId) {
       if (src.branch !== brId) return
       const from = nodePos[rid]
       if (!from) return
-      // Choisir le bord de sortie/entrée selon la direction dominante
-      const dx = to.x - from.x
-      const dy = to.y - from.y
-      let x1, y1, x2, y2, d
-      if (Math.abs(dx) >= Math.abs(dy)) {
-        // Connexion principalement horizontale : sortie droite, entrée gauche
-        x1 = from.x + from.w / 2
-        y1 = from.y
-        x2 = to.x - to.w / 2
-        y2 = to.y
-        const midX = (x1 + x2) / 2
-        d = 'M ' + x1 + ' ' + y1 + ' L ' + midX + ' ' + y1 + ' L ' + midX + ' ' + y2 + ' L ' + x2 + ' ' + y2
+      const dxCenter = to.x - from.x
+      const dyCenter = to.y - from.y
+      let sx, sy, tx, ty, d
+      // Routage vertical local quand les deux noeuds partagent (quasiment) la
+      // meme colonne. Seuil : moitie de la largeur d'un noeud.
+      if (Math.abs(dxCenter) < from.w * 0.5 && Math.abs(dyCenter) > 0) {
+        if (dyCenter >= 0) {
+          sx = from.x; sy = from.y + from.h / 2
+          tx = to.x;   ty = to.y - to.h / 2
+        } else {
+          sx = from.x; sy = from.y - from.h / 2
+          tx = to.x;   ty = to.y + to.h / 2
+        }
+        const dy = ty - sy
+        const c1x = sx, c1y = sy + dy / 3
+        const c2x = tx, c2y = ty - dy / 3
+        d = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + c2x + ' ' + c2y + ' ' + tx + ' ' + ty
       } else {
-        // Connexion principalement verticale : sortie bas, entrée haut
-        x1 = from.x
-        y1 = from.y + from.h / 2
-        x2 = to.x
-        y2 = to.y - to.h / 2
-        const midY = (y1 + y2) / 2
-        d = 'M ' + x1 + ' ' + y1 + ' L ' + x1 + ' ' + midY + ' L ' + x2 + ' ' + midY + ' L ' + x2 + ' ' + y2
+        // Routage horizontal : sortie cote droit du source au Y du source,
+        // entree cote gauche de la cible au Y de la cible. Si jamais la cible
+        // est a gauche (cas rare), on inverse les bords.
+        if (dxCenter >= 0) {
+          sx = from.x + from.w / 2
+          tx = to.x - to.w / 2
+        } else {
+          sx = from.x - from.w / 2
+          tx = to.x + to.w / 2
+        }
+        sy = from.y
+        ty = to.y
+        const dx = tx - sx
+        const c1x = sx + dx / 3, c1y = sy
+        const c2x = tx - dx / 3, c2y = ty
+        d = 'M ' + sx + ' ' + sy + ' C ' + c1x + ' ' + c1y + ' ' + c2x + ' ' + c2y + ' ' + tx + ' ' + ty
       }
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
       path.setAttribute('d', d)
