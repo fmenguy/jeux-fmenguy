@@ -225,6 +225,141 @@ function makeForgeTente(scene, lightRegistry) {
   return g
 }
 
+// ---------- Ziggurat ----------
+// Registre global des paliers : chaque entrée = { tiers: [Group...], statue?: Group, lights: [{light, baseIntensity}] }
+const zigguratRegistry = []
+let currentZigguratTier = 4
+
+const COL_LIGHT = new THREE.MeshLambertMaterial({ color: 0xc0a878 })
+const COL_DARK  = new THREE.MeshLambertMaterial({ color: 0x8a7050 })
+const COL_COPPER = new THREE.MeshLambertMaterial({ color: 0xb87333 })
+
+// 4 étages décroissants : 4x4, 3x3, 2x2, 1x1, hauteur 0.5 chacun.
+function makeZigguratTiers(count = 4) {
+  const tiers = []
+  const sizes = [4, 3, 2, 1]
+  const h = 0.5
+  for (let i = 0; i < count; i++) {
+    const g = new THREE.Group()
+    const s = sizes[i]
+    const mat = (i % 2 === 0) ? COL_LIGHT : COL_DARK
+    const m = new THREE.Mesh(new THREE.BoxGeometry(s, h, s), mat)
+    m.castShadow = true; m.receiveShadow = true
+    m.position.y = i * h + h / 2
+    g.add(m)
+    tiers.push(g)
+  }
+  return tiers
+}
+
+function makeStaircase() {
+  const g = new THREE.Group()
+  // 4 marches sur la face avant (z+), la marche 0 au sol à l'extérieur, la marche 3 plus haute proche du centre
+  for (let i = 0; i < 4; i++) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.4), COL_DARK)
+    m.castShadow = true; m.receiveShadow = true
+    m.position.set(0, 0.05 + i * 0.1, 2.4 - i * 0.4)
+    g.add(m)
+  }
+  return g
+}
+
+function makeZigguratV1() {
+  const root = new THREE.Group()
+  const tiers = makeZigguratTiers(4)
+  tiers.forEach(t => root.add(t))
+  const stairs = makeStaircase()
+  root.add(stairs)
+  // Light nuit centrale au sommet
+  const pl = new THREE.PointLight(0xff8844, 0, 4)
+  pl.position.set(0, 4 * 0.5 + 0.2, 0)
+  root.add(pl)
+  const lights = [{ light: pl, baseIntensity: 1.2 }]
+  zigguratRegistry.push({ tiers, statue: null, stairs, lights })
+  lights.forEach(l => allFlameLights.push({ type: 'ziggurat', light: l.light, baseIntensity: l.baseIntensity }))
+  return root
+}
+
+function makeZigguratV2() {
+  const root = new THREE.Group()
+  const tiers = makeZigguratTiers(4)
+  tiers.forEach(t => root.add(t))
+  // Rampe diagonale plate sur le côté +x, du sol jusqu'au sommet de l'étage 4
+  const totalH = 4 * 0.5
+  const dx = 4.0   // distance horizontale parcourue (de x=2 sommet vers x=6 au sol approximativement)
+  const rampLen = Math.sqrt(totalH * totalH + dx * dx)
+  const angle = Math.atan2(totalH, dx)
+  const ramp = new THREE.Mesh(
+    new THREE.BoxGeometry(rampLen, 0.08, 0.6),
+    COL_DARK
+  )
+  ramp.castShadow = true; ramp.receiveShadow = true
+  // Centre de la rampe : x médian entre x=0 (sommet) et x=4 (sol), y médian entre 0 et totalH
+  ramp.position.set(dx / 2, totalH / 2, 0)
+  ramp.rotation.z = -angle
+  root.add(ramp)
+  // Light nuit centrale au sommet
+  const pl = new THREE.PointLight(0xff8844, 0, 4)
+  pl.position.set(0, totalH + 0.2, 0)
+  root.add(pl)
+  const lights = [{ light: pl, baseIntensity: 1.2 }]
+  zigguratRegistry.push({ tiers, statue: null, ramp, lights })
+  lights.forEach(l => allFlameLights.push({ type: 'ziggurat', light: l.light, baseIntensity: l.baseIntensity }))
+  return root
+}
+
+function makeZigguratV3() {
+  const root = new THREE.Group()
+  // Seulement 3 étages bas
+  const tiers = makeZigguratTiers(3)
+  tiers.forEach(t => root.add(t))
+  // Statue au sommet de l'étage 3 (y = 3 * 0.5 = 1.5)
+  const statue = new THREE.Group()
+  const baseY = 3 * 0.5
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.8, 12), COL_COPPER)
+  body.castShadow = true; body.receiveShadow = true
+  body.position.set(0, baseY + 0.4, 0)
+  statue.add(body)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 10), COL_COPPER)
+  head.castShadow = true
+  head.position.set(0, baseY + 0.8 + 0.25, 0)
+  statue.add(head)
+  root.add(statue)
+  // 4 PointLights aux 4 coins de l'étage haut (3e, taille 2)
+  const lights = []
+  const cornerOffsets = [[0.9, 0.9], [-0.9, 0.9], [0.9, -0.9], [-0.9, -0.9]]
+  cornerOffsets.forEach(([x, z]) => {
+    const pl = new THREE.PointLight(0xff8844, 0, 4)
+    pl.position.set(x, baseY + 0.1, z)
+    root.add(pl)
+    lights.push({ light: pl, baseIntensity: 1.2 })
+  })
+  zigguratRegistry.push({ tiers, statue, lights })
+  lights.forEach(l => allFlameLights.push({ type: 'ziggurat', light: l.light, baseIntensity: l.baseIntensity }))
+  return root
+}
+
+function applyZigguratTier(tier) {
+  currentZigguratTier = tier
+  zigguratRegistry.forEach(entry => {
+    entry.tiers.forEach((t, i) => {
+      // i = 0 base, doit toujours être visible si tier >= 1
+      t.visible = (i + 1) <= tier
+    })
+    if (entry.statue) {
+      // statue visible seulement à P4
+      entry.statue.visible = (tier >= 4)
+    }
+    if (entry.stairs) {
+      entry.stairs.visible = (tier >= 1)
+    }
+    if (entry.ramp) {
+      // rampe visible dès P1 (en construction visuellement avec la base)
+      entry.ramp.visible = (tier >= 1)
+    }
+  })
+}
+
 // ---------- GLB loader ----------
 function loadGLB(scene, group, path, targetHeight = 2.2) {
   loader.load(path, (gltf) => {
@@ -252,7 +387,7 @@ const allScenes = []
 const allAmbients = []
 const allFlameLights = []
 
-function makeScene(canvas, builder) {
+function makeScene(canvas, builder, opts = {}) {
   const parent = canvas.parentElement
   const w = parent.clientWidth
   const h = parent.clientHeight - 28
@@ -268,10 +403,12 @@ function makeScene(canvas, builder) {
   scene.background = new THREE.Color(0x6a8fb5)
 
   const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 60)
-  camera.position.set(2.4, 1.8, 2.6)
+  const camPos = opts.cameraPos || [2.4, 1.8, 2.6]
+  camera.position.set(camPos[0], camPos[1], camPos[2])
 
   const controls = new OrbitControls(camera, canvas)
-  controls.target.set(0, 0.7, 0)
+  const camTarget = opts.cameraTarget || [0, 0.7, 0]
+  controls.target.set(camTarget[0], camTarget[1], camTarget[2])
   controls.enableDamping = true
   controls.update()
 
@@ -335,6 +472,17 @@ const BUILDERS = {
   'forge:1':   (s, g, l) => g.add(makeForgePrimitive(s, l)),
   'forge:2':   (s, g, l) => g.add(makeForgeTente(s, l)),
   'forge:3':   (s, g) => loadGLB(s, g, GLB_BASE + 'Mine.glb', 2.2),
+
+  'ziggurat:1': (s, g) => g.add(makeZigguratV1()),
+  'ziggurat:2': (s, g) => g.add(makeZigguratV2()),
+  'ziggurat:3': (s, g) => g.add(makeZigguratV3()),
+}
+
+const SCENE_OPTS = {
+  ziggurat: {
+    cameraPos: [5.5, 4.0, 5.5],
+    cameraTarget: [0, 1.0, 0],
+  },
 }
 
 // ---------- Init ----------
@@ -342,7 +490,21 @@ document.querySelectorAll('canvas[data-build]').forEach(canvas => {
   const key = canvas.dataset.build + ':' + canvas.dataset.variant
   const fn = BUILDERS[key]
   if (!fn) { console.warn('Builder manquant', key); return }
-  makeScene(canvas, fn)
+  const opts = SCENE_OPTS[canvas.dataset.build] || {}
+  makeScene(canvas, fn, opts)
+})
+
+// Init paliers Ziggurat à P4 par défaut
+applyZigguratTier(currentZigguratTier)
+
+// Bind boutons palier
+document.querySelectorAll('.tier-bar button[data-tier]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tier = parseInt(btn.dataset.tier, 10)
+    applyZigguratTier(tier)
+    document.querySelectorAll('.tier-bar button[data-tier]').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+  })
 })
 
 // ---------- Day/Night ----------
@@ -357,14 +519,22 @@ btn.addEventListener('click', () => {
     sun.color = new THREE.Color(isNight ? 0x6080a0 : 0xfff2cc)
   })
   allAmbients.forEach(a => { a.intensity = isNight ? 0.15 : 0.55 })
-  allFlameLights.forEach(({ light, baseIntensity }) => {
-    light.intensity = isNight ? baseIntensity * 1.8 : baseIntensity * 0.4
+  allFlameLights.forEach(({ type, light, baseIntensity }) => {
+    if (type === 'ziggurat') {
+      light.intensity = isNight ? baseIntensity : 0
+    } else {
+      light.intensity = isNight ? baseIntensity * 1.8 : baseIntensity * 0.4
+    }
   })
 })
 
-// initial state, flammes faibles de jour
-allFlameLights.forEach(({ light, baseIntensity }) => {
-  light.intensity = baseIntensity * 0.4
+// initial state, flammes faibles de jour, ziggurat éteint
+allFlameLights.forEach(({ type, light, baseIntensity }) => {
+  if (type === 'ziggurat') {
+    light.intensity = 0
+  } else {
+    light.intensity = baseIntensity * 0.4
+  }
 })
 
 // ---------- Resize ----------

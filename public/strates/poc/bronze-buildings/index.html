@@ -19,11 +19,24 @@
   #grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 280px;
+    grid-auto-rows: minmax(280px, auto);
     gap: 2px;
     padding: 2px;
     background: #1a1c22;
   }
+  .cell.row-big { min-height: 392px; }
+  .tier-bar {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 12px; background: #1b1e25; border-top: 1px solid #2a2d36;
+  }
+  .tier-bar .lbl { color: #b9a877; font-size: 11px; letter-spacing: 1px; }
+  .tier-bar button {
+    background: #2a2d36; color: #ccc; border: 1px solid #3a3d46;
+    padding: 4px 10px; font: 11px monospace; cursor: pointer; border-radius: 3px;
+  }
+  .tier-bar button:hover { background: #3a3d46; }
+  .tier-bar button.active { background: #e8c87a; color: #1a1c22; border-color: #e8c87a; }
   .cell {
     background: #181a20;
     display: flex; flex-direction: column;
@@ -90,6 +103,18 @@
   <div class="cell"><canvas data-build="forge" data-variant="1"></canvas><div class="legend"><span class="name">Forge V1 primitive</span><span class="badge voxel">Voxel</span></div></div>
   <div class="cell"><canvas data-build="forge" data-variant="2"></canvas><div class="legend"><span class="name">Forge V2 tente</span><span class="badge voxel">Voxel</span></div></div>
   <div class="cell"><canvas data-build="forge" data-variant="3"></canvas><div class="legend"><span class="name">Forge V3 Mine.glb</span><span class="badge glb">GLB</span></div></div>
+
+  <div class="row-label">Ziggurat (Merveille âge 2, 4×4)</div>
+  <div class="tier-bar">
+    <span class="lbl">Paliers de construction</span>
+    <button data-tier="1">Palier 1</button>
+    <button data-tier="2">Palier 2</button>
+    <button data-tier="3">Palier 3</button>
+    <button data-tier="4" class="active">Palier 4</button>
+  </div>
+  <div class="cell row-big"><canvas data-build="ziggurat" data-variant="1"></canvas><div class="legend"><span class="name">Ziggurat V1 compact</span><span class="badge voxel">Voxel</span></div></div>
+  <div class="cell row-big"><canvas data-build="ziggurat" data-variant="2"></canvas><div class="legend"><span class="name">Ziggurat V2 rampe</span><span class="badge voxel">Voxel</span></div></div>
+  <div class="cell row-big"><canvas data-build="ziggurat" data-variant="3"></canvas><div class="legend"><span class="name">Ziggurat V3 statue</span><span class="badge voxel">Voxel</span></div></div>
 </div>
 
 <div id="status">Chargement Three.js...</div>
