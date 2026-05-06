@@ -17,6 +17,7 @@ import {
   removeConstructionSite, findConstructionSitesInCells
 } from './placements.js'
 import { addJob, removeJob, removeBuildJob, jobKey } from './jobs.js'
+import { getBuildingById } from './gamedata.js'
 import { canMineCell, techUnlocked, hasTreeAt, classifyMineableBlock } from './tech.js'
 import { spawnColonsAroundHouse } from './colonist.js'
 import { refreshHUD } from './hud.js'
@@ -318,6 +319,9 @@ export function refreshToolButtons() {
   }
 
   setLocked('.tool[data-tool="place-big-house"]', !techUnlocked('big-house'))
+  setLocked('.tool[data-tool="place-grenier"]',     !techUnlocked('granary'))
+  setLocked('.tool[data-tool="place-forge"]',       !techUnlocked('forge'))
+  setLocked('.tool[data-tool="place-route-pavee"]', !techUnlocked('paved-road'))
 }
 
 window.addEventListener('strates:techComplete', refreshToolButtons)
@@ -347,6 +351,31 @@ const BUILDING_PLACEMENT_TOOLS = new Set([
   'house', 'place-foyer', 'place-research', 'observatory', 'place-big-house',
   'place-grenier', 'place-forge', 'place-route-pavee'
 ])
+
+// Verifie le cout d un batiment (defini dans buildings.json, lu via gamedata).
+// Retourne true si les ressources sont suffisantes, sinon affiche un toast et
+// retourne false. Le decrement effectif est fait par consumeBuildingCost.
+function hasBuildingCost(buildingId) {
+  const def = getBuildingById(buildingId)
+  if (!def || !def.cost) return true
+  for (const [res, qty] of Object.entries(def.cost)) {
+    const have = state.resources[res] || 0
+    if (have < qty) {
+      const parts = Object.entries(def.cost).map(([r, q]) => `${q} ${r}`).join(', ')
+      showHudToast(`Pas assez de ressources (${parts} requis).`, 2500)
+      return false
+    }
+  }
+  return true
+}
+
+function consumeBuildingCost(buildingId) {
+  const def = getBuildingById(buildingId)
+  if (!def || !def.cost) return
+  for (const [res, qty] of Object.entries(def.cost)) {
+    state.resources[res] = (state.resources[res] || 0) - qty
+  }
+}
 
 export function isBuildingPlacementTool(t) {
   return BUILDING_PLACEMENT_TOOLS.has(t)
@@ -944,17 +973,20 @@ function applyToolAtCell(cell) {
     }
     case 'place-grenier': {
       if (!techUnlocked('granary')) break
-      addGrenier(cell.x, cell.z)
+      if (!hasBuildingCost('grenier')) break
+      if (addGrenier(cell.x, cell.z)) consumeBuildingCost('grenier')
       break
     }
     case 'place-forge': {
       if (!techUnlocked('forge')) break
-      addForge(cell.x, cell.z)
+      if (!hasBuildingCost('forge')) break
+      if (addForge(cell.x, cell.z)) consumeBuildingCost('forge')
       break
     }
     case 'place-route-pavee': {
       if (!techUnlocked('paved-road')) break
-      addRoadTile(cell.x, cell.z)
+      if (!hasBuildingCost('route-pavee')) break
+      if (addRoadTile(cell.x, cell.z)) consumeBuildingCost('route-pavee')
       break
     }
   }
@@ -1119,17 +1151,20 @@ function applyToolToStrata(cells) {
       }
       case 'place-grenier': {
         if (!techUnlocked('granary')) break
-        addGrenier(c.x, c.z)
+        if (!hasBuildingCost('grenier')) break
+        if (addGrenier(c.x, c.z)) consumeBuildingCost('grenier')
         break
       }
       case 'place-forge': {
         if (!techUnlocked('forge')) break
-        addForge(c.x, c.z)
+        if (!hasBuildingCost('forge')) break
+        if (addForge(c.x, c.z)) consumeBuildingCost('forge')
         break
       }
       case 'place-route-pavee': {
         if (!techUnlocked('paved-road')) break
-        addRoadTile(c.x, c.z)
+        if (!hasBuildingCost('route-pavee')) break
+        if (addRoadTile(c.x, c.z)) consumeBuildingCost('route-pavee')
         break
       }
     }
