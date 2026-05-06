@@ -9,7 +9,7 @@ import {
   RAW_MEAT_SATIETY, COOKED_MEAT_SATIETY,
   MAX_BUILDER_DISTANCE, STAR_COLONIST_CHANCE,
   IDLE_SPEECH_COOLDOWN,
-  FOG_VISION_RADIUS_DEFAULT, FOG_VISION_RADIUS_EXPLORER, FOG_VISION_CARTOGRAPHY_BONUS
+  FOG_VISION_RADIUS_DEFAULT, FOG_VISION_RADIUS_EXPLORER, FOG_VISION_RADIUS_EXPLORER_NIGHT, FOG_VISION_CARTOGRAPHY_BONUS
 } from './constants.js'
 import {
   MALE_NAMES, FEMALE_NAMES, SPEECH_LINES, SPEECH_LINES_INSISTENT, SPEECH_LINES_BY_NAME
@@ -90,6 +90,9 @@ function isWoodcutterActive(c) {
 // cartography si la tech est debloquee (x1.5 = 21).
 function getColonistVisionRadius(colonist) {
   if (colonist.profession === 'explorateur') {
+    // La nuit : rayon reduit, plus petit qu un colon normal. La torche
+    // eclaire localement, pas de bonus cartography applicable.
+    if (state.isNight) return FOG_VISION_RADIUS_EXPLORER_NIGHT
     const radius = FOG_VISION_RADIUS_EXPLORER
     return techUnlocked('cartography') ? radius * FOG_VISION_CARTOGRAPHY_BONUS : radius
   }

@@ -178,6 +178,7 @@ export const MAX_BUILDER_DISTANCE = 50
 // Lecture : voir colonist.js, fonction getColonistVisionRadius.
 export const FOG_VISION_RADIUS_DEFAULT  = 8
 export const FOG_VISION_RADIUS_EXPLORER = 14
+export const FOG_VISION_RADIUS_EXPLORER_NIGHT = 4
 export const FOG_VISION_CARTOGRAPHY_BONUS = 1.5
 
 // Quetes definies dans data/quests.json, importées via gamedata.js
