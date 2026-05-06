@@ -48,6 +48,10 @@ export const RAW_MEAT_SATIETY    = 40
 export const COOKED_MEAT_SATIETY = 80
 // Duree de cuisson au foyer (secondes reelles).
 export const COOK_DURATION       = 8
+// Duree d un cycle de craft a la forge (secondes reelles). A la fin, le forgeron
+// consomme 2 copper + 1 tin et produit 1 bronze. Lu par le bloc WORKING dans
+// colonist.js, branche targetForge.
+export const FORGE_CRAFT_DURATION = 8
 
 // ============================================================================
 // Identite des colons

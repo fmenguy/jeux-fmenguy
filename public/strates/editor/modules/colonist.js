@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import {
   GRID, MIN_STRATES, MAX_STRATES, WATER_LEVEL, SHALLOW_WATER_LEVEL,
   COLONIST_SPEED, WORK_DURATION, HARVEST_DURATION, HARVEST_RADIUS, GRAVITY,
+  FORGE_CRAFT_DURATION,
   UNASSIGNED_PRODUCTIVITY_MUL,
   GENDER_SYMBOLS, GENDER_COLORS,
   CHIEF_COLOR, COL, ORE_TO_STOCK, RESEARCH_TICK,
@@ -55,7 +56,15 @@ const PROFESSION_TO_KIND = {
   // bucheron-bronze utilise le meme kind 'hache' (multiplicateur applique
   // dans le bloc WORKING). fermier et forgeron n ont pas de job cellule
   // (ils travaillent sur des batiments dedies, pas sur la grille).
-  'bucheron-bronze':  'hache'
+  'bucheron-bronze':  'hache',
+  forgeron:           'forge'
+}
+
+// Lot B age 2 : helper utilitaire centralise pour le forgeron. Le metier est
+// pose par la modale population avec profession === 'forgeron'. Aucun ancien
+// alias a supporter (metier introduit a l age 2).
+export function isForgeronActive(c) {
+  return !!(c && c.profession === 'forgeron')
 }
 
 // Lot B age 2 : helper utilitaire centralise pour la detection du metier
@@ -328,6 +337,10 @@ export class Colonist {
     this.targetBush = null
     // Lot B : foyer cible pour aller cuire de la viande (LEISURE).
     this.targetFoyer = null
+    // Lot B age 2 (forgeron) : forge cible quand un colon forgeron part allier
+    // cuivre et etain en bronze. null tant qu il n a pas trouve de forge libre
+    // ou qu il manque de matieres premieres (>= 2 copper + 1 tin).
+    this.targetForge = null
     this.targetBuildJob = null
     // Lot B : chantier cible quand le colon est constructeur. Mis a null
     // quand le batiment est termine ou inaccessible.
@@ -448,6 +461,14 @@ export class Colonist {
       if (r.profession !== undefined) this.profession = r.profession
       if (r.assignedJob !== undefined) this.assignedJob = r.assignedJob
       if (typeof r.assignedFieldId === 'number') this.assignedFieldId = r.assignedFieldId
+      // Lot B age 2 (forgeron) : restore de la cible forge {x,z}. On retrouve
+      // l entry vivante dans state.forges par coordonnees, sinon null. L etat
+      // du colon est de toute facon force a IDLE par serializeSnapshot, donc
+      // ce champ n est utile que si une logique future l observe au reload.
+      if (r.targetForge && typeof r.targetForge.x === 'number' && typeof r.targetForge.z === 'number') {
+        const tf = (state.forges || []).find(f => f.x === r.targetForge.x && f.z === r.targetForge.z) || null
+        this.targetForge = tf
+      }
       // Lot B (explorateur) : restore d une cible si toujours non revelee, sinon
       // reset (le pickExplorationTarget en IDLE refera le travail).
       if (r.explorationTarget && typeof r.explorationTarget.x === 'number' && typeof r.explorationTarget.z === 'number') {
@@ -672,6 +693,17 @@ export class Colonist {
           if (ids.indexOf(this.id) !== -1) return false
         }
         return true
+      }
+      case 'forgeron': {
+        // Aucune tache si pas de forge construite ou stocks insuffisants
+        // (moins de 2 copper ou moins de 1 tin).
+        const forges = state.forges || []
+        if (forges.length === 0) return true
+        const hasReady = forges.some(f => f && !f.isUnderConstruction && !f.isUnderUpgrade)
+        if (!hasReady) return true
+        if ((state.stocks.copper || 0) < 2) return true
+        if ((state.stocks.tin || 0) < 1) return true
+        return false
       }
       case 'explorateur': {
         if (!state.cellRevealed) return false
@@ -1036,6 +1068,35 @@ export class Colonist {
     const approach = findApproach(this.x, this.z, best.x, best.z)
     if (!approach) return false
     this.targetFoyer = best
+    this.path = approach.path
+    this.pathStep = 0
+    this.state = 'MOVING'
+    this.isWandering = false
+    this.updateTrail()
+    return true
+  }
+
+  // Lot B age 2 (forgeron) : cherche la forge la plus proche et lance un cycle
+  // de craft de bronze. Conditions strictes : le colon doit etre forgeron,
+  // au moins une forge construite (non en chantier), et les stocks doivent
+  // contenir au moins 2 cuivre + 1 etain. Retourne true si un trajet a ete
+  // engage (bascule en MOVING), false sinon.
+  pickForge() {
+    if (!isForgeronActive(this)) return false
+    if (!state.forges || !state.forges.length) return false
+    if ((state.stocks.copper || 0) < 2) return false
+    if ((state.stocks.tin || 0) < 1) return false
+    let best = null, bestD = Infinity
+    for (const f of state.forges) {
+      if (!f) continue
+      if (f.isUnderConstruction || f.isUnderUpgrade) continue
+      const d = Math.abs(f.x - this.x) + Math.abs(f.z - this.z)
+      if (d < bestD) { bestD = d; best = f }
+    }
+    if (!best) return false
+    const approach = findApproach(this.x, this.z, best.x, best.z)
+    if (!approach) return false
+    this.targetForge = best
     this.path = approach.path
     this.pathStep = 0
     this.state = 'MOVING'
@@ -1652,6 +1713,16 @@ export class Colonist {
             }
           }
         }
+        // Lot B age 2 (forgeron) : le jour, le forgeron tente un cycle de craft
+        // a la forge la plus proche, sous reserve que les stocks contiennent
+        // 2 copper + 1 tin. Si rien n est dispo (pas de forge, pas de matieres),
+        // il reste IDLE. La nuit, comportement par defaut (campfire + wander).
+        if (this.profession === 'forgeron' && !state.isNight) {
+          if (this.pickForge()) {
+            this.currentTask = { kind: TASK_KIND.PLAYER_JOB, priority: PRIORITY.WORK, reason: 'forgeron' }
+            return
+          }
+        }
         // Lot B LEISURE : si de la viande crue traine dans les stocks et
         // qu un foyer libre est dispo, n importe quel colon peut prendre
         // l initiative d aller la cuire. Action collective non specifique
@@ -1877,6 +1948,21 @@ export class Colonist {
         }
         if (this.researchBuildingId != null && this.profession === 'chercheur' && !this.targetJob && !this.targetBush && !this.targetFoyer) {
           this.state = 'RESEARCHING'
+          this.path = null
+          this.lineGeo.setFromPoints([])
+          this.group.position.set(this.tx, this.ty, this.tz)
+          return
+        }
+        // Lot B age 2 (forgeron) : arrivee a la forge. On bascule en WORKING
+        // avec un workTimer remis a zero. La fin de cycle (FORGE_CRAFT_DURATION)
+        // declenche la consommation des matieres et la production de bronze.
+        if (
+          this.targetForge &&
+          isForgeronActive(this) &&
+          !this.targetJob && !this.targetBush && !this.targetFoyer && !this.targetBuildJob
+        ) {
+          this.state = 'WORKING'
+          this.workTimer = 0
           this.path = null
           this.lineGeo.setFromPoints([])
           this.group.position.set(this.tx, this.ty, this.tz)
@@ -2161,6 +2247,53 @@ export class Colonist {
 
     if (this.state === 'WORKING') {
       this.workTimer += dt
+      // Lot B age 2 (forgeron) : cycle de craft a la forge. Independant des
+      // autres targets cellulaires (job, buisson, foyer, build). A la fin de
+      // FORGE_CRAFT_DURATION, on consomme 2 copper + 1 tin et on produit 1
+      // bronze. Si un autre forgeron a vide le stock entre temps, le cycle
+      // echoue silencieusement et le colon repart en IDLE pour reessayer.
+      if (this.targetForge) {
+        // Garde universelle : si plus forgeron, ou si nuit, ou si la forge a
+        // disparu / passe en chantier (upgrade), on annule le cycle.
+        const forgeStillValid = state.forges && state.forges.indexOf(this.targetForge) !== -1
+          && !this.targetForge.isUnderConstruction && !this.targetForge.isUnderUpgrade
+        if (!isForgeronActive(this) || state.isNight || !forgeStillValid) {
+          this.targetForge = null
+          this.workTimer = 0
+          this.currentTask = null
+          this.state = 'IDLE'
+          return
+        }
+        const dx = (this.targetForge.x + 0.5) - this.tx
+        const dz = (this.targetForge.z + 0.5) - this.tz
+        this.group.rotation.y = Math.atan2(dx, dz)
+        this.bounce = Math.sin(this.workTimer * 12) * 0.08
+        const grounded = this.ty <= topY(this.x, this.z) + 1e-4 && this.vy === 0
+        this.group.position.set(this.tx, this.ty + (grounded ? Math.abs(this.bounce) : 0), this.tz)
+        if (this.workTimer >= FORGE_CRAFT_DURATION) {
+          if ((state.stocks.copper || 0) >= 2 && (state.stocks.tin || 0) >= 1) {
+            state.stocks.copper = (state.stocks.copper || 0) - 2
+            state.stocks.tin = (state.stocks.tin || 0) - 1
+            state.stocks.bronze = (state.stocks.bronze || 0) + 1
+            // Resources mirror, pour cohesion avec les autres ressources visibles.
+            state.resources.copper = (state.resources.copper || 0) - 2
+            state.resources.tin = (state.resources.tin || 0) - 1
+            state.resources.bronze = (state.resources.bronze || 0) + 1
+            this.skills.forging = (this.skills.forging || 0) + 1
+            try { scheduleFlash(this.targetForge.x, this.targetForge.z) } catch (_) {}
+            dlog('[forge] craft bronze', {
+              colonist: this.name, x: this.targetForge.x, z: this.targetForge.z,
+              copperLeft: state.stocks.copper, tinLeft: state.stocks.tin, bronze: state.stocks.bronze
+            })
+          }
+          this.targetForge = null
+          this.workTimer = 0
+          this.currentTask = null
+          this.state = 'IDLE'
+          this.path = null
+        }
+        return
+      }
       const focusTarget = this.targetJob || this.targetBush || this.targetBuildJob || this.targetFoyer
       if (focusTarget) {
         const dx = (focusTarget.x + 0.5) - this.tx
@@ -2449,6 +2582,10 @@ export class Colonist {
       releaseFromWheatFields(this.id)
       this.assignedFieldId = null
     }
+    // Lot B age 2 (forgeron) : abandonner la forge cible, le bronze ne sera
+    // pas produit. Pas de release a effectuer (la forge n a pas de slot par
+    // colon, plusieurs forgerons peuvent partager la meme forge en sequentiel).
+    if (this.targetForge) this.targetForge = null
     scene.remove(this.group)
     scene.remove(this.line)
     this.group.traverse(o => { if (o.material) o.material.dispose?.(); if (o.geometry) o.geometry.dispose?.() })
