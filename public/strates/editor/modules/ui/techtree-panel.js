@@ -791,6 +791,9 @@ function renderBranchDetail(brId) {
     })
   })
 
+  // Memoriser pour centerOnViewedAge (auto scroll vers la colonne age active)
+  _lastNodePos = nodePos
+
   // Liens SVG orthogonaux — les coords cx/cy sont le CENTRE du nœud (transform:-50%,-50%)
   branchTechs.forEach(function(t) {
     const to = nodePos[t.id]
