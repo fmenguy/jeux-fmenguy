@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { GRID } from './constants.js'
 import { state } from './state.js'
 import { topVoxelIndex, colorForLayer, surfaceColor } from './terrain.js'
+import { snapshotStats } from './journal.js'
 
 // ============================================================================
 // Cycle de saisons
@@ -223,6 +224,9 @@ export function tickSeasons(dt) {
     // Lot B perf : on relance un cycle complet depuis le debut, par chunks.
     _repaintIdx = 0
     repaintAccum = REPAINT_INTERVAL // force repaint immediat du premier chunk
+    // Lot B (journal) : snapshot des stats agregees a chaque changement de
+    // saison. Capture pop, stocks, ressources, techs, batiments.
+    try { snapshotStats() } catch (_) { /* ignore */ }
   }
   repaintAccum += dt
   if (repaintAccum >= REPAINT_INTERVAL) {
