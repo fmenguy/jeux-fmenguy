@@ -4,6 +4,12 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-06 : Lot C, fix auto-scroll de la vue detaillee branche vers l age actif
+
+- `feat(ui) auto-scroll tech tree branch view to active age` : le cache `_lastNodePos` declare au top de `techtree-panel.js` n etait jamais alimente, ce qui faisait sortir `centerOnViewedAge()` immediatement (`if (!ids.length) return`). Resultat : a l ouverture d une branche en mode bronze-test (currentAge=2), la vue restait calee a gauche sur la colonne Pierre au lieu d etre centree sur la colonne Bronze. Fix : `_lastNodePos = nodePos` en fin de `renderBranchDetail`, juste apres le placement des cards. Le centrage smooth (transition 320ms) deja branche sur `openBranch` et sur le clic du rail bas des ages se declenche maintenant correctement, le barycentre des techs de l age vise est ramene au centre du wrap.
+
+---
+
 ## 2026-05-06 : Lot D, infra modes de test par age + scenario bronze-test
 
 - `feat(transitions): test mode infra + bronze-test scenario` : nouveau module `modules/age-test-modes.js`. Lecture du parametre URL `?mode=bronze-test` via `getTestModeFromURL()`. Fonction `applyTestMode(mode)` qui dispatch vers un handler dedie. `setupBronzeTest()` injecte un etat complet de fin d'age 1 : 6 colons (Francois chef + 5), foyer + 2 cabanes + hutte du sage + promontoire places et marques termines, stocks wood:100 / stone:100 / food:50 / copper:20 / tin:20, 13 techs age 1 toutes debloquees, `currentAge=2` sans cinematique ni Cairn, techs age 2 marquees `_bronzeAvailable` (meme pattern que `_applyBronzeAge`), 50 pts de recherche disponibles. Pas d'ecriture localStorage (mode session pur). Badge HUD rouge "TEST MODE : BRONZE" inject sous la topbar via `_showTestModeBadge()`. Branchement dans `main.js` apres `buildTerrain()` et avant le spawn par defaut, bypass complet du flow save/new-game. Le tutoriel est neutralise automatiquement par `isPartieAvancee()` (currentAge > 1). Architecture extensible : pour ajouter iron-test, creer `setupIronTest()` qui appelle `setupBronzeTest()` puis injecte les conditions age 2->3.
