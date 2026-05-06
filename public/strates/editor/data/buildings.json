@@ -223,12 +223,12 @@
       "age": 2,
       "category": "production",
       "size": "1x1",
-      "cost": { "stone": 20, "wood": 15 },
-      "buildTime": 30,
+      "cost": { "stone": 20, "wood": 10 },
+      "buildTime": 40,
       "requires": { "tech": ["forge"] },
-      "provides": { "crafting": true },
+      "provides": { "smelting": true },
       "activity": "day",
-      "description": "Lieu de travail du metal. Le Forgeron y elabore des outils en bronze a partir du cuivre."
+      "description": "Stub age 2. Foyer de forge. Permet au forgeron d'allier cuivre et etain en bronze."
     },
     {
       "id": "cairn-pierre",
