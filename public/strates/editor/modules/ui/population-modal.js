@@ -23,7 +23,8 @@ const JOB_DEFS = [
   { id: 'chercheur',    label: 'Chercheur',    icon: '📜', desc: 'Génère des points de recherche',             req: 'Hutte du sage' },
   { id: 'chasseur',     label: 'Chasseur',     icon: '🏹', desc: 'Chasse le gibier, rapporte viande et os',    req: 'Arc' },
   { id: 'constructeur', label: 'Constructeur', icon: '🔨', desc: 'Construit les bâtiments du village',         req: null },
-  { id: 'agriculteur',  label: 'Agriculteur',  icon: '🌾', desc: 'Travaille les champs de blé, produit du grain', req: 'Champ de blé', techGate: 'wheat-field' },
+  { id: 'agriculteur',  label: 'Fermier',      icon: '🌾', desc: 'Travaille les champs de blé, produit du grain', req: 'Champ de blé', techGate: 'agriculture' },
+  { id: 'forgeron',     label: 'Forgeron',     icon: '🔨', desc: 'Travaille à la forge, allie cuivre et étain en bronze', req: 'Forge', techGate: 'forge' },
 ]
 
 // Mapping métier vers compétence pour afficher le niveau dans les chips
@@ -35,6 +36,7 @@ const JOB_SKILL = {
   chercheur:    'research',
   constructeur: 'building',
   agriculteur:  'gathering',
+  forgeron:     'forge',
 }
 
 // Mapping profession (ID français) vers assignedJob (ID anglais attendu par le moteur Lot B)
@@ -46,6 +48,7 @@ const PROFESSION_TO_ASSIGNED_JOB = {
   chasseur:     'hunter',
   constructeur: 'builder',
   agriculteur:  'farmer',
+  forgeron:     'smith',
 }
 
 // Helpers de niveau / xp de compétences (lecture seule sur le raw colonist)
