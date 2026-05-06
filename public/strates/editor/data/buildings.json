@@ -201,7 +201,7 @@
       "size": "1x1",
       "cost": { "wood": 15, "stone": 10 },
       "requires": { "tech": ["granary"] },
-      "provides": { "storage": 0 },
+      "provides": { "storage": 200 },
       "activity": "both",
       "description": "Stub age 2. Stockage communal du grain. Augmente la capacite de stockage alimentaire."
     },
@@ -213,9 +213,22 @@
       "size": "1x1",
       "cost": { "stone": 10 },
       "requires": { "tech": ["paved-road"] },
-      "provides": { "speed_bonus": 0 },
+      "provides": { "speed_multiplier": 1.2 },
       "activity": "both",
       "description": "Stub age 2. Revetement de pierre taillee. Les colons se deplacent plus vite sur les routes pavees."
+    },
+    {
+      "id": "forge",
+      "name": "Forge",
+      "age": 2,
+      "category": "production",
+      "size": "1x1",
+      "cost": { "stone": 20, "wood": 15 },
+      "buildTime": 30,
+      "requires": { "tech": ["forge"] },
+      "provides": { "crafting": true },
+      "activity": "day",
+      "description": "Lieu de travail du metal. Le Forgeron y elabore des outils en bronze a partir du cuivre."
     },
     {
       "id": "cairn-pierre",
