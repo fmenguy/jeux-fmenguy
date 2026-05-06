@@ -478,6 +478,39 @@
 .pv2-competences::-webkit-scrollbar { width: 5px; height: 5px; }
 .pv2-competences::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
 
+.pv2-skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+}
+.pv2-skill-chip {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: rgba(20,18,15,.4);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.pv2-skill-chip:hover { background: rgba(212,184,112,.06); color: var(--ink-2); }
+.pv2-skill-chip.active {
+  background: rgba(212,184,112,.10);
+  color: var(--gold);
+  border-color: var(--gold-2, var(--gold));
+}
+
+.pv2-skill-row-label { cursor: pointer; transition: color .12s; }
+.pv2-skill-row-label:hover { color: var(--gold); }
+.pv2-skill-table td.col-name.sorted { color: var(--gold); }
+.pv2-skill-sort-arrow { font-size: 9px; color: var(--gold); margin-left: 3px; }
+
 .pv2-skill-cat { margin-bottom: 20px; }
 .pv2-skill-cat-title {
   font-family: var(--mono);
