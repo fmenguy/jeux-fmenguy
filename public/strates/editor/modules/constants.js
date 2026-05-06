@@ -93,6 +93,7 @@ export const COL = {
 export const ORE_TYPES = {
   'ore-gold':      { label: 'or',        rock: new THREE.Color('#e8c547'), crystal: new THREE.Color('#ffe98a') },
   'ore-copper':    { label: 'cuivre',    rock: new THREE.Color('#c97a4a'), crystal: new THREE.Color('#e8a47a') },
+  'ore-tin':       { label: 'etain',     rock: new THREE.Color('#c0c0c0'), crystal: new THREE.Color('#e0e0e0') },
   'ore-silver':    { label: 'argent',    rock: new THREE.Color('#d8dde0'), crystal: new THREE.Color('#f4f7f9') },
   'ore-iron':      { label: 'fer',       rock: new THREE.Color('#7d8a9a'), crystal: new THREE.Color('#b4c0cc') },
   'ore-coal':      { label: 'charbon',   rock: new THREE.Color('#2a2a2a'), crystal: new THREE.Color('#5a5a5a') },
@@ -114,6 +115,7 @@ export const STOCK_LABELS = {
 export const ORE_TO_STOCK = {
   'ore-gold': 'gold',
   'ore-copper': 'copper',
+  'ore-tin': 'tin',
   'ore-silver': 'silver',
   'ore-iron': 'iron',
   'ore-coal': 'coal',
@@ -126,6 +128,7 @@ export const ORE_TO_STOCK = {
 export const RESEARCH_TICK = 3.0
 export const ORE_TECH = {
   'ore-copper': 'pick-bronze',
+  'ore-tin': 'pick-bronze',
   'ore-coal': 'pick-bronze',
   'ore-iron': 'pick-iron',
   'ore-silver': 'pick-iron',
