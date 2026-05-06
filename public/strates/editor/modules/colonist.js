@@ -53,10 +53,8 @@ const PROFESSION_TO_KIND = {
   cueilleur:          'mine',
   chasseur:           'hunt',
   // Lot B age 2 : nouveaux metiers cables sur les memes "kinds" de jobs.
-  // bucheron-bronze utilise le meme kind 'hache' (multiplicateur applique
-  // dans le bloc WORKING). fermier et forgeron n ont pas de job cellule
-  // (ils travaillent sur des batiments dedies, pas sur la grille).
-  'bucheron-bronze':  'hache',
+  // fermier et forgeron n ont pas de job cellule (ils travaillent sur des
+  // batiments dedies, pas sur la grille).
   forgeron:           'forge'
 }
 
@@ -78,13 +76,12 @@ function isFarmerActive(c) {
   return false
 }
 
-// Lot B age 2 : helper bucheron, accepte le bucheron starter (axe-stone) et
-// le bucheron bronze (axe-bronze). Pour le multiplicateur de yield, voir le
-// bloc WORKING qui detecte profession === 'bucheron-bronze' explicitement.
+// Lot B age 2 : helper bucheron. Le bonus axe-bronze est applique
+// automatiquement a tous les bucherons des que la tech est debloquee
+// (cf. bloc WORKING). Plus de profession dediee 'bucheron-bronze'.
 function isWoodcutterActive(c) {
   if (!c) return false
   if (c.profession === 'bucheron' && c.assignedJob === 'woodcutter') return true
-  if (c.profession === 'bucheron-bronze') return true
   return false
 }
 
@@ -875,8 +872,9 @@ export class Colonist {
     const professionGate = (j) => {
       // Abattage : reserve aux bucherons
       if (j.kind === 'hache') {
-        // Lot B age 2 : bucheron pierre OU bucheron-bronze peuvent abattre.
-        const ok = (this.profession === 'bucheron') || (this.profession === 'bucheron-bronze')
+        // Lot B age 2 : seul le bucheron peut abattre. Le bonus axe-bronze
+        // est applique au bloc WORKING via la tech (pas de metier dedie).
+        const ok = (this.profession === 'bucheron')
         return { ok, unassigned: false }
       }
       // Chasse : reservee aux chasseurs
@@ -1541,11 +1539,11 @@ export class Colonist {
           }
         }
         // Comportement proactif selon profession (priorite LEISURE, derriere les ordres joueur)
-        // Lot B age 2 : bucheron pierre (gate axe-stone) ou bucheron bronze
-        // (gate axe-bronze) declenchent la recherche proactive d arbre.
+        // Lot B age 2 : un seul metier bucheron (gate axe-stone). Le bonus
+        // axe-bronze est applique automatiquement au bloc WORKING quand la
+        // tech est debloquee, sans changement de profession.
         const isBucheronStarter = (this.profession === 'bucheron' && this.assignedJob === 'woodcutter' && techUnlocked('axe-stone'))
-        const isBucheronBronze  = (this.profession === 'bucheron-bronze' && techUnlocked('axe-bronze'))
-        if (isBucheronStarter || isBucheronBronze) {
+        if (isBucheronStarter) {
           let best = null, bestD = Infinity
           for (const t of state.trees) {
             if (t.growth < 0.66) continue
@@ -2401,11 +2399,10 @@ export class Colonist {
           // force le joueur a sequencer les ordres (ramasser avant miner).
           const treeEntry = state.trees.find(t => t.x === x && t.z === z)
           if (isTreeOn(x, z) && treeEntry && treeEntry.growth >= 0.66 && chopTreeAt(x, z)) {
-            // Lot B age 2 : bucheron-bronze a un meilleur rendement
-            // (multiplicateur 1.3x sur le bois recolte, arrondi a +1 wood
-            // bonus quand la tech axe-bronze est debloquee). Le bucheron
-            // pierre garde son comportement initial (1 unite par arbre).
-            const bronzeBonus = (this.profession === 'bucheron-bronze' && techUnlocked('axe-bronze')) ? 1 : 0
+            // Lot B age 2 : la tech axe-bronze offre un bonus +1 bois par
+            // arbre a TOUS les bucherons (upgrade d outil, pas de metier
+            // dedie). Sans la tech, comportement initial 1 unite par arbre.
+            const bronzeBonus = techUnlocked('axe-bronze') ? 1 : 0
             state.resources.wood += 1 + bronzeBonus
             this.skills.logging++
             scheduleFlash(x, z)

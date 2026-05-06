@@ -100,15 +100,6 @@
       "description": "Parcourt le monde, révèle le brouillard de guerre. Vision étendue."
     },
     {
-      "id": "bucheron-bronze",
-      "name": "Bûcheron Bronze",
-      "age": 2,
-      "requires": { "tech": ["axe-bronze"] },
-      "produces": ["wood"],
-      "activity": "day",
-      "description": "Bûcheron équipé d'une hache en bronze. Meilleur rendement par arbre que la hache pierre."
-    },
-    {
       "id": "fermier",
       "name": "Fermier",
       "age": 2,
