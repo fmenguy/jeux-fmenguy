@@ -246,16 +246,18 @@
       "speech": ["Ces filons n'attendaient que nous."]
     },
     {
-      "id": "shovel-bronze",
-      "name": "Pelle Bronze",
+      "id": "arrow-bronze",
+      "name": "Pointes de bronze",
       "age": 2,
       "branch": "outils",
-      "icon": "🪣",
+      "icon": "🏹",
       "cost": { "research": 18 },
-      "requires": ["shovel-stone"],
-      "unlocks": {},
-      "description": "Pelle en bronze. Terraformation plus efficace, plus de terrain deplace par colon.",
-      "speech": ["On deplace des montagnes avec ca."]
+      "requires": ["bow-wood"],
+      "unlocks": {
+        "tools": ["arrow-bronze"]
+      },
+      "description": "Pointes de fleches forgees en bronze. Tous les chasseurs gagnent +1 viande par proie abattue. L'arc reste en bois, ce sont les pointes qui changent.",
+      "speech": ["Ces pointes traversent le cuir comme du beurre."]
     },
     {
       "id": "agriculture",
