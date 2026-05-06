@@ -978,6 +978,7 @@ function renderFiche(tech) {
   if (Array.isArray(unlocks.buildings)) unlocks.buildings.forEach(function(b) { unlockItems.push({ kind: 'Batiment', label: b }) })
   if (Array.isArray(unlocks.resources)) unlocks.resources.forEach(function(r) { unlockItems.push({ kind: 'Ressource', label: r }) })
   if (Array.isArray(unlocks.tools)) unlocks.tools.forEach(function(r) { unlockItems.push({ kind: 'Outil', label: r }) })
+  if (Array.isArray(unlocks.features)) unlocks.features.forEach(function(f) { unlockItems.push({ kind: 'Fonctionnalite', label: f }) })
   let unlocksHtml = ''
   if (unlockItems.length) {
     unlocksHtml = '<div class="ttp-fsec"><h5 style="margin:0 0 3px">Debloque</h5><div class="ttp-unlock-list">' +
