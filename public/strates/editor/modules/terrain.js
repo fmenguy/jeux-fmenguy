@@ -113,6 +113,7 @@ export function colorForLayer(biome, y, top) {
 
 export function surfaceColor(surface, fallback) {
   if (surface === 'field') return COL.field
+  if (surface === 'paved-road') return COL.rock
   return fallback
 }
 

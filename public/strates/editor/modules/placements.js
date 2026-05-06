@@ -887,6 +887,66 @@ function makeFoyer() {
   return g
 }
 
+export function addGrenier(gx, gz) {
+  const top = state.cellTop[gz * GRID + gx]
+  if (top <= SHALLOW_WATER_LEVEL) return false
+  if (isCellOccupied(gx, gz)) return false
+  const g = new THREE.Group()
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1.2, 1),
+    new THREE.MeshLambertMaterial({ color: 0xc8a060 })
+  )
+  base.position.y = 0.6
+  base.castShadow = true
+  g.add(base)
+  g.position.set(gx + 0.5, top, gz + 0.5)
+  scene.add(g)
+  const entry = { x: gx, z: gz, group: g, id: `grenier-${gx}-${gz}` }
+  _markUnderConstruction(entry, 'grenier')
+  if (!state.greniers) state.greniers = []
+  state.greniers.push(entry)
+  revealAround(gx, gz, 6)
+  return true
+}
+
+export function addForge(gx, gz) {
+  const top = state.cellTop[gz * GRID + gx]
+  if (top <= SHALLOW_WATER_LEVEL) return false
+  if (isCellOccupied(gx, gz)) return false
+  const g = new THREE.Group()
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1.0, 1),
+    new THREE.MeshLambertMaterial({ color: 0x606060 })
+  )
+  base.position.y = 0.5
+  base.castShadow = true
+  g.add(base)
+  const light = new THREE.PointLight(0xff4400, 2.0, 6)
+  light.position.set(0, 1.2, 0)
+  g.add(light)
+  g.position.set(gx + 0.5, top, gz + 0.5)
+  scene.add(g)
+  const entry = { x: gx, z: gz, group: g, light, id: `forge-${gx}-${gz}` }
+  _markUnderConstruction(entry, 'forge')
+  if (!state.forges) state.forges = []
+  state.forges.push(entry)
+  revealAround(gx, gz, 6)
+  return true
+}
+
+export function addRoadTile(gx, gz) {
+  const top = state.cellTop[gz * GRID + gx]
+  if (top <= SHALLOW_WATER_LEVEL) return false
+  const k = gz * GRID + gx
+  if (!state.cellSurface) return false
+  if (state.cellSurface[k] === 'paved-road') return false
+  state.cellSurface[k] = 'paved-road'
+  repaintCellSurface(gx, gz)
+  if (!state.roads) state.roads = []
+  state.roads.push({ x: gx, z: gz })
+  return true
+}
+
 export function addFoyer(gx, gz) {
   const top = state.cellTop[gz * GRID + gx]
   if (top <= SHALLOW_WATER_LEVEL) return false
