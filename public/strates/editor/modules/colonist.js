@@ -34,6 +34,7 @@ import { activeSpeakers } from './speech.js'
 import { initColonistNeeds, isNeedCritical } from './needs.js'
 import { getGlobalSpeedFactor } from './productivity.js'
 import { NEEDS_DATA, JOBS_DATA, BUILDINGS_DATA } from './gamedata.js'
+import { getBuildingById } from './gamedata.js'
 import { showHudToast } from './ui/research-popup.js'
 // tasks.js : file de taches, utilisee ici pour marquer la tache courante.
 import { PRIORITY, TASK_KIND } from './tasks.js'
@@ -2055,7 +2056,13 @@ export class Colonist {
       const dist = Math.hypot(dx, dz)
       const _roadK = nz * GRID + nx
       const _onRoad = state.cellSurface && state.cellSurface[_roadK] === 'paved-road'
-      const speed = (this.isWandering ? COLONIST_SPEED * 0.5 : COLONIST_SPEED) * (_onRoad ? 1.2 : 1.0)
+      // Lot B : multiplicateur de vitesse sur route pavee, lu depuis buildings.json
+      // (paved-road.provides.speed_multiplier). Fallback 1.2 si donnee absente.
+      const _roadDef = _onRoad ? getBuildingById('paved-road') : null
+      const _roadMul = _roadDef && _roadDef.provides && typeof _roadDef.provides.speed_multiplier === 'number'
+        ? _roadDef.provides.speed_multiplier
+        : 1.2
+      const speed = (this.isWandering ? COLONIST_SPEED * 0.5 : COLONIST_SPEED) * (_onRoad ? _roadMul : 1.0)
       const step = speed * dt
       if (dist <= step) {
         this.tx = targetX; this.tz = targetZ
