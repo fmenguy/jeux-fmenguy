@@ -240,9 +240,9 @@
       "cost": { "research": 20 },
       "requires": ["pick-stone"],
       "unlocks": {
-        "resources": ["copper", "coal"]
+        "resources": ["copper", "coal", "tin"]
       },
-      "description": "Pioche en bronze. Permet d'exploiter les filons de cuivre et de charbon reveles a l'Age de Pierre.",
+      "description": "Pioche en bronze. Permet d'exploiter les filons de cuivre, etain et charbon reveles a l'Age de Pierre. Le cuivre + etain alimentent la Forge pour produire du bronze, le charbon sert de combustible.",
       "speech": ["Ces filons n'attendaient que nous."]
     },
     {
