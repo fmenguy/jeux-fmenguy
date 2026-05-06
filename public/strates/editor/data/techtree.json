@@ -226,9 +226,9 @@
       "cost": { "research": 20 },
       "requires": ["axe-stone"],
       "unlocks": {
-        "jobs": ["bucheron-bronze"]
+        "tools": ["axe-bronze"]
       },
-      "description": "Hache en alliage de bronze. Meilleur rendement par arbre abattu.",
+      "description": "Hache en alliage de bronze. Tous les bûcherons gagnent automatiquement +1 bois par arbre abattu.",
       "speech": ["Ce metal coupe bien mieux que la pierre."]
     },
     {

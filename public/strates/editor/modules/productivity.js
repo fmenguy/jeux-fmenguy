@@ -28,11 +28,9 @@ export const SKILL_FOR_JOB = Object.freeze({
   chercheur:          'research',
   constructeur:       'building',
   // Lot B age 2 : nouveaux metiers.
-  // bucheron-bronze reutilise la skill logging (meme geste, meilleur outil).
   // fermier reutilise gathering (pas de skill farming dedie a date).
   // forgeron : skill 'forging' (alimente par le bloc WORKING quand un cycle
   // de craft a la forge est complete). explorateur : neutre.
-  'bucheron-bronze':  'logging',
   fermier:            'gathering',
   forgeron:           'forging',
   explorateur:        null
@@ -46,7 +44,6 @@ export const MIN_COLONISTS_FOR_JOB = Object.freeze({
   cueilleur:         1,
   chasseur:          1,
   // Lot B age 2.
-  'bucheron-bronze': 1,
   fermier:           1,
   forgeron:          1
 })
