@@ -239,7 +239,7 @@ function setupBronzeTest() {
   let deersSpawned = 0
   let stonesSpawned = 0
   let coppersSpawned = 0
-  let ironsSpawned = 0  // ore-iron utilisé en remplacement de ore-tin (absent de ORE_TYPES)
+  let tinsSpawned = 0
   let coalsSpawned = 0
 
   // Arbres : ~30, biome grass ou forest, rayon 15-25
@@ -301,9 +301,8 @@ function setupBronzeTest() {
     if (addOre(ox, oz, 'ore-copper')) coppersSpawned++
   }
 
-  // Filons de fer (remplacement ore-tin absent de ORE_TYPES) : 3-4
-  // ore-tin n'est pas defini dans ORE_TYPES -- on utilise ore-iron, proche contexte age Bronze.
-  for (let tries = 0; tries < 2000 && ironsSpawned < 3; tries++) {
+  // Filons d'etain : 3-4
+  for (let tries = 0; tries < 2000 && tinsSpawned < 3; tries++) {
     const angle = Math.random() * Math.PI * 2
     const dist  = 15 + Math.random() * 10
     const ox = Math.round(cx + Math.cos(angle) * dist)
@@ -312,7 +311,7 @@ function setupBronzeTest() {
     const top = state.cellTop ? state.cellTop[oz * GRID + ox] : 0
     if (top <= SHALLOW_WATER_LEVEL) continue
     if (isCellOccupied(ox, oz)) continue
-    if (addOre(ox, oz, 'ore-iron')) ironsSpawned++
+    if (addOre(ox, oz, 'ore-tin')) tinsSpawned++
   }
 
   // Filons de charbon : 3-4
@@ -341,7 +340,7 @@ function setupBronzeTest() {
     deersSpawned + ' cerfs, ' +
     stonesSpawned + ' rochers pierre, ' +
     coppersSpawned + ' filons cuivre, ' +
-    ironsSpawned + ' filons fer (ore-tin absent de ORE_TYPES), ' +
+    tinsSpawned + ' filons etain, ' +
     coalsSpawned + ' filons charbon)'
   )
 }
