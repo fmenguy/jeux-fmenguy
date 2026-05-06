@@ -4,6 +4,12 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-06 : Lot D, infra modes de test par age + scenario bronze-test
+
+- `feat(transitions): test mode infra + bronze-test scenario` : nouveau module `modules/age-test-modes.js`. Lecture du parametre URL `?mode=bronze-test` via `getTestModeFromURL()`. Fonction `applyTestMode(mode)` qui dispatch vers un handler dedie. `setupBronzeTest()` injecte un etat complet de fin d'age 1 : 6 colons (Francois chef + 5), foyer + 2 cabanes + hutte du sage + promontoire places et marques termines, stocks wood:100 / stone:100 / food:50 / copper:20 / tin:20, 13 techs age 1 toutes debloquees, `currentAge=2` sans cinematique ni Cairn, techs age 2 marquees `_bronzeAvailable` (meme pattern que `_applyBronzeAge`), 50 pts de recherche disponibles. Pas d'ecriture localStorage (mode session pur). Badge HUD rouge "TEST MODE : BRONZE" inject sous la topbar via `_showTestModeBadge()`. Branchement dans `main.js` apres `buildTerrain()` et avant le spawn par defaut, bypass complet du flow save/new-game. Le tutoriel est neutralise automatiquement par `isPartieAvancee()` (currentAge > 1). Architecture extensible : pour ajouter iron-test, creer `setupIronTest()` qui appelle `setupBronzeTest()` puis injecte les conditions age 2->3.
+
+---
+
 ## 2026-05-06 : Lot A, dependances data du forgeron (forge, etain, bronze, stocks)
 
 - `feat(data) add forge + tin/bronze resources + stocks for forgeron` : mise en coherence des donnees requises par le job forgeron cable par Lot B. Mise a jour de la forge dans `buildings.json` (cost stone:20 wood:10, buildTime:40, provides smelting:true, description alignee spec). Ajout de la ressource `tin` (Etain, age 2, minerai) dans `resources.json`. Mise a jour de la ressource `bronze` (source et usage alignes spec). Ajout de `tin` et `bronze` dans `STOCK_KEYS` et `STOCK_LABELS` dans `constants.js` (stocks.js initialise automatiquement copper:0, tin:0, bronze:0 au boot via la boucle STOCK_KEYS). Ajout de `copper`, `tin`, `bronze` dans `state.resources` initial. Ajout de `state.forges = []` dans les placements de `state.js`.
