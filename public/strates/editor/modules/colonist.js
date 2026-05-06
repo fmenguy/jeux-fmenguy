@@ -1282,10 +1282,10 @@ export class Colonist {
       if (dist < bestDist) { bestDist = dist; best = { x, z } }
     }
     if (!best) return false
-    const path = findApproach(this.x, this.z, best.x, best.z)
-    if (!path || path.length === 0) return false
+    const approach = findApproach(this.x, this.z, best.x, best.z)
+    if (!approach || !approach.path || approach.path.length === 0) return false
     this.explorationTarget = { x: best.x, z: best.z }
-    this.path = path
+    this.path = approach.path
     this.pathStep = 0
     this.state = 'MOVING'
     this.isWandering = false
@@ -2033,6 +2033,18 @@ export class Colonist {
         this.state = 'WORKING'
         this.workTimer = 0
         this.lineGeo.setFromPoints([])
+        return
+      }
+      // Lot B garde defensive : protege contre tout chemin invalide ou hors
+      // borne en MOVING (cause racine connue : pickExplorationTarget assignait
+      // un objet au lieu d un tableau). Si on arrive ici sans cellule valide,
+      // on retombe proprement en IDLE plutot que de crasher sur le destructuring.
+      if (!this.path || !Array.isArray(this.path) || this.pathStep >= this.path.length || !this.path[this.pathStep]) {
+        console.warn('[colonist] path invalide en MOVING', { id: this.id, profession: this.profession, state: this.state, pathStep: this.pathStep, path: this.path })
+        this.state = 'IDLE'
+        this.path = null
+        this.pathStep = 0
+        if (this.lineGeo) this.lineGeo.setFromPoints([])
         return
       }
       const [nx, nz] = this.path[this.pathStep]
