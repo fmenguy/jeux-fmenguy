@@ -4,6 +4,12 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-06 : Lot A, dependances data du forgeron (forge, etain, bronze, stocks)
+
+- `feat(data) add forge + tin/bronze resources + stocks for forgeron` : mise en coherence des donnees requises par le job forgeron cable par Lot B. Mise a jour de la forge dans `buildings.json` (cost stone:20 wood:10, buildTime:40, provides smelting:true, description alignee spec). Ajout de la ressource `tin` (Etain, age 2, minerai) dans `resources.json`. Mise a jour de la ressource `bronze` (source et usage alignes spec). Ajout de `tin` et `bronze` dans `STOCK_KEYS` et `STOCK_LABELS` dans `constants.js` (stocks.js initialise automatiquement copper:0, tin:0, bronze:0 au boot via la boucle STOCK_KEYS). Ajout de `copper`, `tin`, `bronze` dans `state.resources` initial. Ajout de `state.forges = []` dans les placements de `state.js`.
+
+---
+
 ## 2026-05-05 : Lot C, tech tree centre la vue sur l age courant a l ouverture d une branche
 
 - `feat(ui) tech tree centers on current age when section clicked` : a l ouverture d une branche du tech tree (clic sur la constellation ou bascule via le rail bas des ages), le viewport est desormais cadre automatiquement sur les techs de l age en cours (`_viewedAge`). Avant ce fix, l ouverture restait calee a gauche et les techs de l age 2+ tombaient hors viewport, obligeant a panner manuellement. Nouvelle fonction `centerOnViewedAge()` dans `techtree-panel.js` : calcule le barycentre des cards correspondant a `_viewedAge` (priorite aux techs non encore acquises pour mettre l attention sur ce qui reste a chercher), fallback sur la derniere tech debloquee si toutes sont prises, puis ajuste `view.tx / view.ty` pour amener ce point au centre du wrap. Ajout d une transition CSS `transform 320ms ease` retiree apres 360ms pour ne pas freiner le pan manuel. Reporte d une rAF si le viewport n est pas encore layoute. Le clic sur le rail bas des ages declenche aussi le recentrage si on est en mode detail. Cache `_lastNodePos` partagee entre `renderBranchDetail` et le centrage pour eviter la recompute des positions.
