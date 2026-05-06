@@ -26,7 +26,8 @@ import { TECH_TREE_DATA } from './gamedata.js'
 import { getTechsForAge, getBuildingsForAge } from './gamedata.js'
 import { spawnColonist } from './colonist.js'
 import {
-  addHouse, addFoyer, addResearchHouse, addObservatory, isCellOccupied
+  addHouse, addFoyer, addResearchHouse, addObservatory, isCellOccupied,
+  addTree, addDeer, addRock, addOre
 } from './placements.js'
 import { GRID, CHIEF_NAME, SHALLOW_WATER_LEVEL } from './constants.js'
 
@@ -228,6 +229,105 @@ function setupBronzeTest() {
   if (!state.researchQueue) state.researchQueue = []
   if (state.activeResearch === undefined) state.activeResearch = null
 
+  // --- 9. Ressources naturelles autour du village ---
+  // Les bâtiments du test occupent le centre (rayon ~10).
+  // On spawne arbres, cerfs et filons dans un anneau rayon 15-25.
+
+  const cx = sx
+  const cz = sz
+  let treesSpawned = 0
+  let deersSpawned = 0
+  let stonesSpawned = 0
+  let coppersSpawned = 0
+  let ironsSpawned = 0  // ore-iron utilisé en remplacement de ore-tin (absent de ORE_TYPES)
+  let coalsSpawned = 0
+
+  // Arbres : ~30, biome grass ou forest, rayon 15-25
+  for (let tries = 0; tries < 3000 && treesSpawned < 30; tries++) {
+    const angle = Math.random() * Math.PI * 2
+    const dist  = 15 + Math.random() * 10
+    const tx = Math.round(cx + Math.cos(angle) * dist)
+    const tz = Math.round(cz + Math.sin(angle) * dist)
+    if (tx < 2 || tz < 2 || tx >= GRID - 2 || tz >= GRID - 2) continue
+    const biome = state.cellBiome ? state.cellBiome[tz * GRID + tx] : null
+    const top   = state.cellTop   ? state.cellTop[tz * GRID + tx]   : 0
+    if (top <= SHALLOW_WATER_LEVEL) continue
+    if (biome !== 'grass' && biome !== 'forest') continue
+    if (isCellOccupied(tx, tz)) continue
+    if (addTree(tx, tz)) treesSpawned++
+  }
+
+  // Cerfs : 4-5, biome grass ou forest, rayon 15-25
+  for (let tries = 0; tries < 2000 && deersSpawned < 5; tries++) {
+    const angle = Math.random() * Math.PI * 2
+    const dist  = 15 + Math.random() * 10
+    const dx = Math.round(cx + Math.cos(angle) * dist)
+    const dz = Math.round(cz + Math.sin(angle) * dist)
+    if (dx < 2 || dz < 2 || dx >= GRID - 2 || dz >= GRID - 2) continue
+    const biome = state.cellBiome ? state.cellBiome[dz * GRID + dx] : null
+    const top   = state.cellTop   ? state.cellTop[dz * GRID + dx]   : 0
+    if (top <= SHALLOW_WATER_LEVEL) continue
+    if (biome !== 'grass' && biome !== 'forest') continue
+    if (isCellOccupied(dx, dz)) continue
+    if (addDeer(dx, dz)) deersSpawned++
+  }
+
+  // Rochers (pierre extractible) : 8-10, tous biomes > eau, rayon 15-25
+  // Note : ore-stone n'existe pas dans ORE_TYPES -- on utilise addRock() pour la pierre.
+  for (let tries = 0; tries < 2000 && stonesSpawned < 9; tries++) {
+    const angle = Math.random() * Math.PI * 2
+    const dist  = 15 + Math.random() * 10
+    const rx = Math.round(cx + Math.cos(angle) * dist)
+    const rz = Math.round(cz + Math.sin(angle) * dist)
+    if (rx < 2 || rz < 2 || rx >= GRID - 2 || rz >= GRID - 2) continue
+    const top = state.cellTop ? state.cellTop[rz * GRID + rx] : 0
+    if (top <= SHALLOW_WATER_LEVEL) continue
+    if (isCellOccupied(rx, rz)) continue
+    const prevRocks = state.rocks.length
+    addRock(rx, rz)
+    if (state.rocks.length > prevRocks) stonesSpawned++
+  }
+
+  // Filons de cuivre : 4-5
+  for (let tries = 0; tries < 2000 && coppersSpawned < 4; tries++) {
+    const angle = Math.random() * Math.PI * 2
+    const dist  = 15 + Math.random() * 10
+    const ox = Math.round(cx + Math.cos(angle) * dist)
+    const oz = Math.round(cz + Math.sin(angle) * dist)
+    if (ox < 2 || oz < 2 || ox >= GRID - 2 || oz >= GRID - 2) continue
+    const top = state.cellTop ? state.cellTop[oz * GRID + ox] : 0
+    if (top <= SHALLOW_WATER_LEVEL) continue
+    if (isCellOccupied(ox, oz)) continue
+    if (addOre(ox, oz, 'ore-copper')) coppersSpawned++
+  }
+
+  // Filons de fer (remplacement ore-tin absent de ORE_TYPES) : 3-4
+  // ore-tin n'est pas defini dans ORE_TYPES -- on utilise ore-iron, proche contexte age Bronze.
+  for (let tries = 0; tries < 2000 && ironsSpawned < 3; tries++) {
+    const angle = Math.random() * Math.PI * 2
+    const dist  = 15 + Math.random() * 10
+    const ox = Math.round(cx + Math.cos(angle) * dist)
+    const oz = Math.round(cz + Math.sin(angle) * dist)
+    if (ox < 2 || oz < 2 || ox >= GRID - 2 || oz >= GRID - 2) continue
+    const top = state.cellTop ? state.cellTop[oz * GRID + ox] : 0
+    if (top <= SHALLOW_WATER_LEVEL) continue
+    if (isCellOccupied(ox, oz)) continue
+    if (addOre(ox, oz, 'ore-iron')) ironsSpawned++
+  }
+
+  // Filons de charbon : 3-4
+  for (let tries = 0; tries < 2000 && coalsSpawned < 3; tries++) {
+    const angle = Math.random() * Math.PI * 2
+    const dist  = 15 + Math.random() * 10
+    const ox = Math.round(cx + Math.cos(angle) * dist)
+    const oz = Math.round(cz + Math.sin(angle) * dist)
+    if (ox < 2 || oz < 2 || ox >= GRID - 2 || oz >= GRID - 2) continue
+    const top = state.cellTop ? state.cellTop[oz * GRID + ox] : 0
+    if (top <= SHALLOW_WATER_LEVEL) continue
+    if (isCellOccupied(ox, oz)) continue
+    if (addOre(ox, oz, 'ore-coal')) coalsSpawned++
+  }
+
   // Rafraichir le tech tree si deja ouvert
   try {
     import('./techtree-ui.js').then(mod => {
@@ -235,7 +335,15 @@ function setupBronzeTest() {
     }).catch(() => {})
   } catch (e) {}
 
-  console.info('[age-test-modes] setupBronzeTest() termine : age 2, 6 colons, techs age 1 debloquees, techs age 2 disponibles.')
+  console.info(
+    '[age-test-modes] setupBronzeTest() : spawn complet (' +
+    treesSpawned + ' arbres, ' +
+    deersSpawned + ' cerfs, ' +
+    stonesSpawned + ' rochers pierre, ' +
+    coppersSpawned + ' filons cuivre, ' +
+    ironsSpawned + ' filons fer (ore-tin absent de ORE_TYPES), ' +
+    coalsSpawned + ' filons charbon)'
+  )
 }
 
 // ---------------------------------------------------------------------------

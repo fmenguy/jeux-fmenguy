@@ -4,6 +4,12 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-07 : Lot D, bronze-test spawns arbres, cerfs et filons
+
+- `feat(transitions): bronze-test spawns trees, deer and ore veins` : `setupBronzeTest()` dans `age-test-modes.js` spawne desormais des ressources naturelles autour du village de test. 30 arbres (biome grass/forest, rayon 15-25 depuis le spawn), 4-5 cerfs (meme criteres biome), 8-10 rochers pierre (via `addRock`), 4-5 filons de cuivre (`ore-copper`), 3-4 filons de fer (`ore-iron`, substitut car `ore-tin` absent de `ORE_TYPES`), 3-4 filons de charbon (`ore-coal`). Tous places dans un anneau rayon 15-25 pour ne pas ecraser les batiments du centre. Nouvelles fonctions importees depuis `placements.js` : `addTree`, `addDeer`, `addRock`, `addOre`. Log final recapitulatif des quantites effectivement placees. Note : `ore-tin` n'existe pas dans `ORE_TYPES` du moteur ; le filon etain reste a creer cote data (ticket Lot A).
+
+---
+
 ## 2026-05-07 : Lot A, pick-bronze unlocks tin + description mise a jour
 
 - `feat(data) pick-bronze unlocks tin + updated description` : ajout de "tin" dans `unlocks.resources` de la tech `pick-bronze` (etait ["copper", "coal"], devient ["copper", "coal", "tin"]). Description mise a jour pour mentionner l'etain et le role de la Forge (cuivre + etain -> bronze, charbon = combustible). La ressource `tin` existait deja dans `resources.json` (ajoutee lors de la session du 2026-05-06).
