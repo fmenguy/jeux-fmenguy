@@ -120,6 +120,15 @@
       "usage": "Age Bronze uniquement"
     },
     {
+      "id": "bronze",
+      "name": "Bronze",
+      "icon": "🔶",
+      "age": 2,
+      "category": "materiau",
+      "source": "Alliage cuivre + etain a la Forge (Forgeron)",
+      "usage": "Outillage age Bronze, armes, decoration"
+    },
+    {
       "id": "grain",
       "name": "Grain",
       "icon": "🌾",
