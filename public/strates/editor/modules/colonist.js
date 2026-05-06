@@ -47,10 +47,36 @@ function jobOf(professionId) {
   return JOBS_DATA.jobs.find(j => j.id === professionId) || null
 }
 const PROFESSION_TO_KIND = {
-  bucheron:  'hache',
-  mineur:    'pick',
-  cueilleur: 'mine',
-  chasseur:  'hunt'
+  bucheron:           'hache',
+  mineur:             'pick',
+  cueilleur:          'mine',
+  chasseur:           'hunt',
+  // Lot B age 2 : nouveaux metiers cables sur les memes "kinds" de jobs.
+  // bucheron-bronze utilise le meme kind 'hache' (multiplicateur applique
+  // dans le bloc WORKING). fermier et forgeron n ont pas de job cellule
+  // (ils travaillent sur des batiments dedies, pas sur la grille).
+  'bucheron-bronze':  'hache'
+}
+
+// Lot B age 2 : helper utilitaire centralise pour la detection du metier
+// fermier. La modale de population peut poser soit profession === 'fermier'
+// (jobs.json age 2) soit l ancien couple ('agriculteur', 'farmer') laisse
+// par compat. On accepte les deux pour ne rien casser cote UI.
+function isFarmerActive(c) {
+  if (!c) return false
+  if (c.profession === 'fermier') return true
+  if (c.profession === 'agriculteur' && c.assignedJob === 'farmer') return true
+  return false
+}
+
+// Lot B age 2 : helper bucheron, accepte le bucheron starter (axe-stone) et
+// le bucheron bronze (axe-bronze). Pour le multiplicateur de yield, voir le
+// bloc WORKING qui detecte profession === 'bucheron-bronze' explicitement.
+function isWoodcutterActive(c) {
+  if (!c) return false
+  if (c.profession === 'bucheron' && c.assignedJob === 'woodcutter') return true
+  if (c.profession === 'bucheron-bronze') return true
+  return false
 }
 
 // Lot B (explorateur) : rayon de vision du colon pour la revelation du fog.
@@ -817,7 +843,9 @@ export class Colonist {
     const professionGate = (j) => {
       // Abattage : reserve aux bucherons
       if (j.kind === 'hache') {
-        return { ok: this.profession === 'bucheron', unassigned: false }
+        // Lot B age 2 : bucheron pierre OU bucheron-bronze peuvent abattre.
+        const ok = (this.profession === 'bucheron') || (this.profession === 'bucheron-bronze')
+        return { ok, unassigned: false }
       }
       // Chasse : reservee aux chasseurs
       if (j.kind === 'hunt') {
@@ -1406,7 +1434,7 @@ export class Colonist {
       // reserve. Evite qu un champ reste verrouille apres un changement de role.
       if (
         this.assignedFieldId != null &&
-        (this.profession !== 'agriculteur' || this.assignedJob !== 'farmer')
+        !isFarmerActive(this)
       ) {
         releaseFromWheatFields(this.id)
         this.assignedFieldId = null
@@ -1452,7 +1480,11 @@ export class Colonist {
           }
         }
         // Comportement proactif selon profession (priorite LEISURE, derriere les ordres joueur)
-        if (this.profession === 'bucheron' && this.assignedJob === 'woodcutter' && techUnlocked('axe-stone')) {
+        // Lot B age 2 : bucheron pierre (gate axe-stone) ou bucheron bronze
+        // (gate axe-bronze) declenchent la recherche proactive d arbre.
+        const isBucheronStarter = (this.profession === 'bucheron' && this.assignedJob === 'woodcutter' && techUnlocked('axe-stone'))
+        const isBucheronBronze  = (this.profession === 'bucheron-bronze' && techUnlocked('axe-bronze'))
+        if (isBucheronStarter || isBucheronBronze) {
           let best = null, bestD = Infinity
           for (const t of state.trees) {
             if (t.growth < 0.66) continue
@@ -1543,8 +1575,7 @@ export class Colonist {
         //        produire du ble (state FARMING).
         // La nuit, comme les autres metiers, il rentre au campfire.
         if (
-          this.profession === 'agriculteur' &&
-          this.assignedJob === 'farmer' &&
+          isFarmerActive(this) &&
           !state.isNight &&
           techUnlocked('wheat-field')
         ) {
@@ -1856,7 +1887,7 @@ export class Colonist {
         // FARMING (production de ble sur champ cultive).
         if (
           this.assignedFieldId != null &&
-          this.profession === 'agriculteur' && this.assignedJob === 'farmer' &&
+          isFarmerActive(this) &&
           !this.targetJob && !this.targetBush && !this.targetFoyer
         ) {
           if (this._fieldTransformTarget) {
@@ -1927,7 +1958,7 @@ export class Colonist {
       // Duree lue depuis BUILDINGS_DATA.field.transformFrom.duration (defaut 30s).
       // Gate universel : si plus fermier ou si nuit tombee, on rebascule en IDLE
       // (le timer se reinitialise au prochain MOVING -> arrivee).
-      const stillFarmer = (this.profession === 'agriculteur' && this.assignedJob === 'farmer')
+      const stillFarmer = isFarmerActive(this)
       if (!stillFarmer || state.isNight) {
         if (!stillFarmer) {
           releaseFromWheatFields(this.id)
@@ -1995,7 +2026,7 @@ export class Colonist {
       // La nuit, le fermier rentre se reposer comme les autres metiers (rebascule
       // en IDLE pour laisser le campfire le prendre en charge). Le champ reste
       // assigne (assignedFieldId) pour qu il y revienne le lendemain.
-      const stillFarmer = (this.profession === 'agriculteur' && this.assignedJob === 'farmer')
+      const stillFarmer = isFarmerActive(this)
       if (!stillFarmer || state.isNight) {
         if (!stillFarmer) {
           // Changement de metier : on libere completement le champ.
@@ -2235,7 +2266,12 @@ export class Colonist {
           // force le joueur a sequencer les ordres (ramasser avant miner).
           const treeEntry = state.trees.find(t => t.x === x && t.z === z)
           if (isTreeOn(x, z) && treeEntry && treeEntry.growth >= 0.66 && chopTreeAt(x, z)) {
-            state.resources.wood++
+            // Lot B age 2 : bucheron-bronze a un meilleur rendement
+            // (multiplicateur 1.3x sur le bois recolte, arrondi a +1 wood
+            // bonus quand la tech axe-bronze est debloquee). Le bucheron
+            // pierre garde son comportement initial (1 unite par arbre).
+            const bronzeBonus = (this.profession === 'bucheron-bronze' && techUnlocked('axe-bronze')) ? 1 : 0
+            state.resources.wood += 1 + bronzeBonus
             this.skills.logging++
             scheduleFlash(x, z)
             removeJob(x, z, true)
