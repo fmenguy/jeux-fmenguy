@@ -30,11 +30,11 @@ export const SKILL_FOR_JOB = Object.freeze({
   // Lot B age 2 : nouveaux metiers.
   // bucheron-bronze reutilise la skill logging (meme geste, meilleur outil).
   // fermier reutilise gathering (pas de skill farming dedie a date).
-  // forgeron : skill 'forge' n existe pas encore cote charsheet, on laisse
-  // null en attendant. explorateur : neutre.
+  // forgeron : skill 'forging' (alimente par le bloc WORKING quand un cycle
+  // de craft a la forge est complete). explorateur : neutre.
   'bucheron-bronze':  'logging',
   fermier:            'gathering',
-  forgeron:           null,
+  forgeron:           'forging',
   explorateur:        null
 })
 
