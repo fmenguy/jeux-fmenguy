@@ -1,6 +1,7 @@
 import { GRID, ORE_TECH, TECH_BUBBLE_COOLDOWN, MOUNTAIN_Y_THRESHOLD, RESOURCE_MIN_LEVELS } from './constants.js'
 import { TECH_BUBBLE_LINES, TECH_TREE_DATA } from './gamedata.js'
 import { state } from './state.js'
+import { logEvent } from './journal.js'
 
 // ============================================================================
 // Tech tree, gating de minage, bulles "tech bloque"
@@ -151,6 +152,15 @@ export function unlockTech(id, refreshTechsPanel, opts) {
   if (refreshTechsPanel) refreshTechsPanel()
   const el = document.getElementById('tech-' + id)
   if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 800) }
+  // Lot B : journal -- tech debloquee.
+  try {
+    const techData = TECH_TREE_DATA && Array.isArray(TECH_TREE_DATA.techs)
+      ? TECH_TREE_DATA.techs.find(x => x.id === id)
+      : null
+    const techName = (techData && (techData.name || techData.label))
+      || t.name || t.label || id
+    logEvent('tech_unlocked', { techId: id, techName })
+  } catch (_) { /* ignore */ }
   return true
 }
 

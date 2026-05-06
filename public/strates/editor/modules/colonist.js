@@ -38,6 +38,27 @@ import { getBuildingById } from './gamedata.js'
 import { showHudToast } from './ui/research-popup.js'
 // tasks.js : file de taches, utilisee ici pour marquer la tache courante.
 import { PRIORITY, TASK_KIND } from './tasks.js'
+// journal.js : log d evenements gameplay (Lot B). Couplage faible : si le
+// journal n est pas disponible, logEvent est un no-op cote module.
+import { logEvent } from './journal.js'
+
+// Lot B (journal) : helper local pour detecter le franchissement d un palier
+// de skill (5 ou 10) lors d un increment d XP. Appele a chaque endroit ou une
+// skill est incrementee. La levelFn correspond a Math.floor(xp / 20).
+function _checkSkillLevelup(colonist, skillName, before, after) {
+  const lvlBefore = Math.floor(before / 20)
+  const lvlAfter = Math.floor(after / 20)
+  if (lvlAfter > lvlBefore && (lvlAfter === 5 || lvlAfter === 10)) {
+    try {
+      logEvent('skill_levelup', {
+        colonistId: colonist.id,
+        name: colonist.name,
+        skill: skillName,
+        level: lvlAfter
+      })
+    } catch (_) { /* ignore */ }
+  }
+}
 
 export const COLONIST_COLORS = [0xffcf6b, 0x6bd0ff, 0xff8a8a, 0xb78aff, 0x8aff9c, 0xffa07a, 0x98ddca]
 
@@ -312,6 +333,17 @@ function _spawnChildAt(building, kind, parentA, parentB) {
     const nameB = parentB && parentB.name ? parentB.name : 'colon'
     showHudToast('Nouveau ne chez ' + nameA + ' et ' + nameB + '.', 4000)
   } catch (_) {}
+  // Lot B : journal -- naissance d un nouveau colon.
+  try {
+    logEvent('colonist_born', {
+      childId: child.id,
+      childName: child.name,
+      parentAId: parentA ? parentA.id : null,
+      parentAName: parentA ? parentA.name : null,
+      parentBId: parentB ? parentB.id : null,
+      parentBName: parentB ? parentB.name : null
+    })
+  } catch (_) { /* ignore */ }
 }
 
 export function scheduleFlash(x, z) {
@@ -1439,7 +1471,9 @@ export class Colonist {
       this.researchXpTimer += dt
       if (this.researchXpTimer >= RESEARCH_TICK) {
         this.researchXpTimer -= RESEARCH_TICK
+        const _xpBefore = this.skills.research || 0
         this.skills.research++
+        _checkSkillLevelup(this, 'research', _xpBefore, this.skills.research)
       }
       this.nextSpeech -= dt
       if (this.nextSpeech <= 0) {
@@ -2205,7 +2239,9 @@ export class Colonist {
       this.researchXpTimer = (this.researchXpTimer || 0) + dt
       if (this.researchXpTimer >= RESEARCH_TICK) {
         this.researchXpTimer -= RESEARCH_TICK
-        this.skills.gathering = (this.skills.gathering || 0) + 1
+        const _xpBefore = this.skills.gathering || 0
+        this.skills.gathering = _xpBefore + 1
+        _checkSkillLevelup(this, 'gathering', _xpBefore, this.skills.gathering)
       }
       return
     }
@@ -2242,7 +2278,9 @@ export class Colonist {
       const prodMul = (typeof this.productivityMul === 'number') ? this.productivityMul : 1
       const speedMul = getGlobalSpeedFactor(state)
       // XP building accumule dans this.skills.building (paliers via skillLevel).
-      this.skills.building = (this.skills.building || 0) + dt
+      const _bxpBefore = this.skills.building || 0
+      this.skills.building = _bxpBefore + dt
+      _checkSkillLevelup(this, 'building', _bxpBefore, this.skills.building)
 
       if (isUpgrade) {
         // Upgrade explicite Cabane -> Grosse maison : meme moteur de progression
@@ -2288,6 +2326,15 @@ export class Colonist {
         }
         if (site.builderSlots) site.builderSlots.clear()
         this.builderSlot = null
+        // Lot B : journal -- trace le batisseur qui pose la derniere unite.
+        try {
+          logEvent('building_built', {
+            buildingType: site.buildingId || site.buildingType || site.type || 'unknown',
+            x: site.x, z: site.z,
+            builderId: this.id,
+            builderName: this.name
+          })
+        } catch (_) { /* ignore */ }
         onBuildingComplete(site)
         this.targetConstructionSite = null
         this.currentTask = null
@@ -2331,7 +2378,9 @@ export class Colonist {
             state.resources.copper = (state.resources.copper || 0) - 2
             state.resources.tin = (state.resources.tin || 0) - 1
             state.resources.bronze = (state.resources.bronze || 0) + 1
-            this.skills.forging = (this.skills.forging || 0) + 1
+            const _fxpBefore = this.skills.forging || 0
+            this.skills.forging = _fxpBefore + 1
+            _checkSkillLevelup(this, 'forging', _fxpBefore, this.skills.forging)
             try { scheduleFlash(this.targetForge.x, this.targetForge.z) } catch (_) {}
             dlog('[forge] craft bronze', {
               colonist: this.name, x: this.targetForge.x, z: this.targetForge.z,
@@ -2405,7 +2454,9 @@ export class Colonist {
           state.resources['bone']     = boneBefore + 2
           state.resources['hide']     = (state.resources['hide']     || 0) + 1
           state.stocks.bone           = (state.stocks.bone           || 0) + 2
-          this.skills.hunting++
+          const _hxpBefore = this.skills.hunting || 0
+          this.skills.hunting = _hxpBefore + 1
+          _checkSkillLevelup(this, 'hunting', _hxpBefore, this.skills.hunting)
           dlog('[hunt] kill (drop raw-meat, +2 bone, +1 hide)', {
             arrowBonus,
             colonist: this.name,
@@ -2463,7 +2514,9 @@ export class Colonist {
             // dedie). Sans la tech, comportement initial 1 unite par arbre.
             const bronzeBonus = techUnlocked('axe-bronze') ? 1 : 0
             state.resources.wood += 1 + bronzeBonus
-            this.skills.logging++
+            const _lxpBefore = this.skills.logging || 0
+            this.skills.logging = _lxpBefore + 1
+            _checkSkillLevelup(this, 'logging', _lxpBefore, this.skills.logging)
             scheduleFlash(x, z)
             removeJob(x, z, true)
             state.gameStats.minesCompleted++
@@ -2472,7 +2525,9 @@ export class Colonist {
             state.resources.stone += got
             state.stocks.stone += got
             if (Math.random() < 0.15) { state.resources.silex++; state.stocks.silex++ }
-            this.skills.mining++
+            const _mxpBefore = this.skills.mining || 0
+            this.skills.mining = _mxpBefore + 1
+            _checkSkillLevelup(this, 'mining', _mxpBefore, this.skills.mining)
             scheduleFlash(x, z)
             removeJob(x, z, true)
             state.gameStats.minesCompleted++
@@ -2481,7 +2536,9 @@ export class Colonist {
             if (oreType) {
               const stockKey = ORE_TO_STOCK[oreType]
               if (stockKey && state.stocks[stockKey] != null) state.stocks[stockKey]++
-              this.skills.mining++
+              const _moxpBefore = this.skills.mining || 0
+              this.skills.mining = _moxpBefore + 1
+              _checkSkillLevelup(this, 'mining', _moxpBefore, this.skills.mining)
               scheduleFlash(x, z)
               removeJob(x, z, true)
               state.gameStats.minesCompleted++
@@ -2490,7 +2547,9 @@ export class Colonist {
               const bonus = techUnlocked('gathering-improved') ? 1 : 0
               state.resources.berries += picked + bonus
               state.gameStats.totalBerriesHarvested += picked + bonus
-              this.skills.gathering++
+              const _gxpBefore = this.skills.gathering || 0
+              this.skills.gathering = _gxpBefore + 1
+              _checkSkillLevelup(this, 'gathering', _gxpBefore, this.skills.gathering)
               scheduleFlash(x, z)
               removeJob(x, z, true)
               state.gameStats.minesCompleted++
@@ -2606,7 +2665,9 @@ export class Colonist {
             state.resources['raw-meat'] -= 1
             foyer.isCooking = true
             foyer.cookTimer = 0
-            this.skills.gathering = (this.skills.gathering || 0) + 1
+            const _cgxpBefore = this.skills.gathering || 0
+            this.skills.gathering = _cgxpBefore + 1
+            _checkSkillLevelup(this, 'gathering', _cgxpBefore, this.skills.gathering)
           }
           this.targetFoyer = null
         }
