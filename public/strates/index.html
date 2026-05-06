@@ -239,7 +239,7 @@
   }
   [data-mist="off"] .mist { display: none; }
 
-  /* Soleil heure dorée */
+  /* Soleil heure dorée (cliquable, bascule clair/sombre) */
   .sun {
     position: absolute;
     right: 12%;
@@ -248,12 +248,40 @@
     border-radius: 50%;
     background: radial-gradient(circle at 40% 40%, #fbe7b0 0%, #f0c878 55%, rgba(240,200,120,0) 70%);
     filter: blur(.3px);
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 5;
+    transition: opacity 600ms ease, filter 600ms ease;
+    outline: none;
   }
+  .sun:hover { filter: brightness(1.08); }
+  .sun:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
   [data-theme="dark"] .sun {
     background: radial-gradient(circle at 40% 40%, #e8dfc9 0%, #a8a088 40%, rgba(168,160,136,0) 62%);
     opacity: .8;
   }
+
+  /* Arcs de transition soleil / lune (descente vers bas-gauche, remontée) */
+  @keyframes arcSunOut {
+    0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(-220px, 220px) scale(.7); opacity: 0; }
+  }
+  @keyframes arcMoonIn {
+    0%   { transform: translate(220px, 220px) scale(.7); opacity: 0; }
+    100% { transform: translate(0, 0) scale(1); opacity: 1; }
+  }
+  @keyframes arcMoonOut {
+    0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(-220px, 220px) scale(.7); opacity: 0; }
+  }
+  @keyframes arcSunIn {
+    0%   { transform: translate(220px, 220px) scale(.7); opacity: 0; }
+    100% { transform: translate(0, 0) scale(1); opacity: 1; }
+  }
+  .sun.is-arc-out  { animation: arcSunOut 600ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
+  .sun.is-arc-in   { animation: arcSunIn  600ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
+  .moon.is-arc-out { animation: arcMoonOut 600ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
+  .moon.is-arc-in  { animation: arcMoonIn  600ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
 
   /* Wrapper de la scène voxel */
   .scene-wrap {
@@ -483,23 +511,36 @@
   .cfx-progress .track { width: 38px; height: 4px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,217,138,.5); border-radius: 2px; overflow: hidden; }
   .cfx-progress .fill { height: 100%; background: linear-gradient(90deg, #d4b870, #ffd98a); }
 
-  /* Lune subtile dans le ciel (cycle jour/nuit) */
+  /* Lune cliquable, bascule clair/sombre */
   .moon {
     position: absolute;
-    left: 14%; top: 16%;
-    width: 30px; height: 30px;
+    left: 12%; top: 14%;
+    width: 84px; height: 84px;
     border-radius: 50%;
-    background: radial-gradient(circle at 38% 38%, #f4ecd6 0%, #c9bda5 55%, rgba(201,189,165,0) 72%);
-    opacity: .32;
-    animation: moonPulse 8s ease-in-out infinite;
-    pointer-events: none;
-    filter: blur(.4px);
+    background: radial-gradient(circle at 38% 38%, #f4ecd6 0%, #c9bf9a 55%, rgba(201,191,154,0) 72%);
+    box-shadow:
+      inset -6px -6px 14px rgba(120,110,80,.35),
+      inset 4px 4px 10px rgba(255,250,220,.25);
+    opacity: .35;
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 5;
+    transition: opacity 600ms ease, filter 600ms ease;
+    outline: none;
   }
-  @keyframes moonPulse {
-    0%,100% { opacity: .28; }
-    50%     { opacity: .5; }
+  .moon:hover { filter: brightness(1.08); }
+  .moon:focus-visible { box-shadow:
+      inset -6px -6px 14px rgba(120,110,80,.35),
+      inset 4px 4px 10px rgba(255,250,220,.25),
+      0 0 0 2px var(--accent); }
+  [data-theme="dark"] .moon {
+    opacity: 1;
+    background: radial-gradient(circle at 38% 38%, #fbf6e4 0%, #ddd2af 55%, rgba(221,210,175,0) 75%);
+    box-shadow:
+      inset -8px -8px 18px rgba(60,55,40,.55),
+      inset 4px 4px 12px rgba(255,250,220,.35),
+      0 0 24px rgba(244,236,214,.18);
   }
-  [data-theme="dark"] .moon { opacity: .55; }
 
   /* Bulle de colon (signature Dorfromantik-ish) */
   .bubble {
@@ -1071,10 +1112,10 @@
 
   <!-- ================= STAGE : scène voxel ================= -->
   <section class="stage">
-    <div class="sun"></div>
+    <div class="sun" role="button" tabindex="0" aria-label="Mode clair"></div>
     <div class="mist m1"></div>
     <div class="mist m2"></div>
-    <div class="moon"></div>
+    <div class="moon" role="button" tabindex="0" aria-label="Mode sombre"></div>
 
     <div class="scene-wrap">
       <div class="voxel">
@@ -1367,7 +1408,74 @@
     });
   });
 
+  // Restaure le thème depuis localStorage ou prefers-color-scheme
+  const THEME_KEY = "strates-theme";
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "dark" || saved === "light") {
+      state.theme = saved;
+    } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      state.theme = "dark";
+    }
+  } catch (e) {}
+
   applyState();
+
+  // ---------- Sun/Moon toggle avec animations arc ----------
+  (function() {
+    const sunEl = document.querySelector(".sun");
+    const moonEl = document.querySelector(".moon");
+    let isAnimating = false;
+
+    function setTheme(next) {
+      if (isAnimating || state.theme === next) return;
+      isAnimating = true;
+      const goingDark = next === "dark";
+
+      if (goingDark) {
+        sunEl.classList.add("is-arc-out");
+        moonEl.classList.add("is-arc-in");
+      } else {
+        moonEl.classList.add("is-arc-out");
+        sunEl.classList.add("is-arc-in");
+      }
+
+      window.setTimeout(() => {
+        state.theme = next;
+        applyState();
+        try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+        try {
+          window.parent.postMessage({type: "__edit_mode_set_keys", edits: {theme: next}}, "*");
+        } catch (e) {}
+      }, 30);
+
+      window.setTimeout(() => {
+        sunEl.classList.remove("is-arc-out", "is-arc-in");
+        moonEl.classList.remove("is-arc-out", "is-arc-in");
+        isAnimating = false;
+      }, 640);
+    }
+
+    if (sunEl) {
+      sunEl.addEventListener("click", () => setTheme("light"));
+      sunEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setTheme("light");
+        }
+      });
+    }
+
+    if (moonEl) {
+      moonEl.addEventListener("click", () => setTheme("dark"));
+      moonEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setTheme("dark");
+        }
+      });
+    }
+  })();
 
   // ---------- Menu principal : Nouvelle partie vs Continuer ----------
   (function() {
