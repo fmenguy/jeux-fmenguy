@@ -26,6 +26,7 @@ export const state = {
   bushes: [],
   deers: [],
   foyers: [],
+  forges: [],
   houses: [],
   manors: [],
   bigHouses: [],
@@ -74,7 +75,7 @@ export const state = {
   nightPoints: 0,
   isNight: false,
   observatories: [],
-  resources: { berries: 0, wood: 0, stone: 0, viande: 0, 'raw-meat': 0, 'cooked-meat': 0, bone: 0, hide: 0, grain: 0, wheat: 0, silex: 0 },
+  resources: { berries: 0, wood: 0, stone: 0, viande: 0, 'raw-meat': 0, 'cooked-meat': 0, bone: 0, hide: 0, grain: 0, wheat: 0, silex: 0, copper: 0, tin: 0, bronze: 0 },
   gameStats: { housesPlaced: 0, minesCompleted: 0, totalBerriesHarvested: 0 },
 
   // colons

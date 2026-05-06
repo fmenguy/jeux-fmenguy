@@ -120,13 +120,22 @@
       "usage": "Age Bronze uniquement"
     },
     {
+      "id": "tin",
+      "name": "Etain",
+      "icon": "🪙",
+      "age": 2,
+      "category": "minerai",
+      "source": "Filons d'etain (mineur, pioche bronze)",
+      "usage": "Alliage bronze a la forge"
+    },
+    {
       "id": "bronze",
       "name": "Bronze",
       "icon": "🔶",
       "age": 2,
       "category": "materiau",
-      "source": "Alliage cuivre + etain a la Forge (Forgeron)",
-      "usage": "Outillage age Bronze, armes, decoration"
+      "source": "Alliage cuivre + etain a la forge (forgeron)",
+      "usage": "Outils et armes age 2"
     },
     {
       "id": "grain",
