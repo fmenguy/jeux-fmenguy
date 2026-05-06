@@ -4,6 +4,12 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-07 : Lot A, pick-bronze unlocks tin + description mise a jour
+
+- `feat(data) pick-bronze unlocks tin + updated description` : ajout de "tin" dans `unlocks.resources` de la tech `pick-bronze` (etait ["copper", "coal"], devient ["copper", "coal", "tin"]). Description mise a jour pour mentionner l'etain et le role de la Forge (cuivre + etain -> bronze, charbon = combustible). La ressource `tin` existait deja dans `resources.json` (ajoutee lors de la session du 2026-05-06).
+
+---
+
 ## 2026-05-07 : Lot C, refactor routage des liens du tech tree (Y par noeud, plus d axe central)
 
 - `refactor(ui) tech tree links per-node Y routing instead of central axis` : avant ce fix, l ancien routage orthogonal des liens dans la vue detaillee d une branche utilisait un seul midX horizontal (ou midY vertical) calcule sur les centres des deux noeuds. Resultat : sur la branche Outils, les chaines Pioche -> Pioche Bronze, Hache -> Hache Bronze et Arc -> Pointes de bronze partaient du meme axe Y central de la colonne Pierre et arrivaient toutes confondues sur une seule ligne horizontale, impossible de distinguer les chaines. Nouveau routage en courbe Bezier cubique dans `techtree-panel.js` : chaque lien part du bord droit du noeud source au Y de ce noeud (`sx = from.x + from.w/2, sy = from.y`) et arrive au bord gauche du noeud cible au Y de ce noeud (`tx = to.x - to.w/2, ty = to.y`). Control points a un tiers et deux tiers du delta horizontal. Routage vertical local (sortie bas, entree haut) quand source et cible partagent quasiment la meme colonne (delta X inferieur a la moitie de la largeur d un noeud), pour les chaines verticales type Pioche -> Terraformation. Les chaines parallele sont maintenant visuellement distinctes a leur Y respectif. CSS `techtree.css` : stroke-linecap et stroke-linejoin passes en `round` (transitions courbes propres), couleur repos `rgba(255,255,255,0.15)` 1.5px, hover req-hi 2.5px (toujours or pulse). Le hover req-highlight, le filtre de branche et l auto-scroll par age (livre 676e686) sont preserves. La vue globale constellation (spokes) n est pas touchee.
