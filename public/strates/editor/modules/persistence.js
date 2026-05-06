@@ -160,6 +160,20 @@ export function getSaveMeta(slot = 'auto') {
 
 // ---------------- serialization ----------------
 
+// Lot B : detecte les modes de test (?mode=xxx-test) pour eviter de polluer
+// les saves localStorage avec un journal genere depuis un etat seed artificiel.
+// Les evenements et snapshots de la session de test ne sont pas persistes.
+function _isTestModeActive() {
+  try {
+    if (typeof window === 'undefined' || !window.location) return false
+    const params = new URLSearchParams(window.location.search)
+    const mode = params.get('mode')
+    return !!(mode && mode.endsWith('-test'))
+  } catch (e) {
+    return false
+  }
+}
+
 function serializeSnapshot() {
   return {
     version: SAVE_VERSION,
@@ -276,7 +290,15 @@ function serializeSnapshot() {
     ageUnlockedAt: state.ageUnlockedAt || { 1: Date.now() },
     achievements: Array.isArray(state.achievements) ? state.achievements.slice() : [],
     cairns: (state.cairns || []).map(c => ({ x: c.x, z: c.z })),
-    deers: (state.deers || []).map(d => ({ x: d.x, z: d.z }))
+    deers: (state.deers || []).map(d => ({ x: d.x, z: d.z })),
+    // Lot B : journal du village. Skip integral en mode test (-test) pour ne
+    // pas polluer la save auto avec des events generes depuis un seed.
+    journal: (_isTestModeActive() || !state.journal)
+      ? null
+      : {
+          events: Array.isArray(state.journal.events) ? state.journal.events.slice() : [],
+          snapshots: Array.isArray(state.journal.snapshots) ? state.journal.snapshots.slice() : []
+        }
   }
 }
 
@@ -320,6 +342,8 @@ function clearEverything() {
   state.houseNextId = 1
   state.bigHouseNextId = 1
   state.manorNextId = 1
+  // Lot B : reset journal du village.
+  state.journal = { events: [], snapshots: [] }
 }
 
 function applySnapshot(data) {
@@ -562,6 +586,16 @@ function applySnapshot(data) {
     for (const d of data.deers) {
       addDeer(d.x, d.z)
     }
+  }
+
+  // Lot B : journal. Restaure si present dans la save, sinon reinitialise vide.
+  if (data.journal && typeof data.journal === 'object') {
+    state.journal = {
+      events: Array.isArray(data.journal.events) ? data.journal.events.slice() : [],
+      snapshots: Array.isArray(data.journal.snapshots) ? data.journal.snapshots.slice() : []
+    }
+  } else {
+    state.journal = { events: [], snapshots: [] }
   }
 
   // Fog of war : repaint du terrain et de la vegetation apres restauration

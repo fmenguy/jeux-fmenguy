@@ -126,5 +126,9 @@ export const state = {
   // (recherche, construction, recolte). Expire automatiquement, decremente
   // chaque tick. null si aucun boost actif.
   // Forme : { factor: 1.20, expiresAt: <secondes performance.now() / 1000> }
-  speedBoost: null
+  speedBoost: null,
+
+  // Lot B : journal du village (events log + snapshots de stats par saison).
+  // Voir modules/journal.js pour les helpers logEvent / snapshotStats.
+  journal: { events: [], snapshots: [] }
 }

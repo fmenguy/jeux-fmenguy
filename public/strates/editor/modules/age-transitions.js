@@ -16,6 +16,7 @@ import { getTechsForAge, getBuildingsForAge, getTotalFood, TECH_TREE_DATA } from
 import { addCairn, isCellOccupied } from './placements.js'
 import { GRID, SHALLOW_WATER_LEVEL } from './constants.js'
 import { showHudToast } from './ui/research-popup.js'
+import { logEvent } from './journal.js'
 
 // Calcul derive de l'etat reel : somme des couts de recherche des techs debloquees.
 // Plus fiable que state.totalResearchSpent qui peut etre mal incremente sur
@@ -156,9 +157,12 @@ export function triggerAgeTransitionBronze() {
 
 function _applyBronzeAge() {
   // Bascule d'age
+  const _oldAge = state.currentAge || 1
   state.currentAge = 2
   state.ageUnlockedAt[2] = Date.now()
   state.achievements.push({ id: 'bronze_age', at: Date.now() })
+  // Lot B : journal -- bascule d age.
+  try { logEvent('age_changed', { from: _oldAge, to: 2 }) } catch (_) { /* ignore */ }
 
   // Debloquer les techs Bronze (age 2) sans prérequis (ou dont les pre-requis
   // sont tous en age 1 et déjà dispo)
