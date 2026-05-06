@@ -2341,14 +2341,19 @@ export class Colonist {
           // raw-meat et hide en resources (consommables / artisanat).
           // bone en resources ET en stocks.bone (utilise par age-transitions
           // pour la condition Cairn de passage au Bronze).
+          // Lot B age 2 : la tech arrow-bronze offre un bonus +1 viande par
+          // proie abattue (pointe de fleche en bronze, meilleure penetration).
+          // bone et hide restent inchanges.
+          const arrowBonus = techUnlocked('arrow-bronze') ? 1 : 0
           const rawBefore = state.resources['raw-meat'] || 0
           const boneBefore = state.resources['bone'] || 0
-          state.resources['raw-meat'] = rawBefore + 3
+          state.resources['raw-meat'] = rawBefore + 3 + arrowBonus
           state.resources['bone']     = boneBefore + 2
           state.resources['hide']     = (state.resources['hide']     || 0) + 1
           state.stocks.bone           = (state.stocks.bone           || 0) + 2
           this.skills.hunting++
-          dlog('[hunt] kill (drop +3 raw-meat, +2 bone, +1 hide)', {
+          dlog('[hunt] kill (drop raw-meat, +2 bone, +1 hide)', {
+            arrowBonus,
             colonist: this.name,
             profession: this.profession,
             assignedJob: this.assignedJob,
