@@ -908,13 +908,14 @@
 }
 .ttp-links path {
   fill: none;
-  stroke-linecap: square;
-  stroke-linejoin: miter;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .ttp-link-line {
-  stroke: var(--ttp-ink-3);
-  stroke-width: 1.4;
-  opacity: 0.45;
+  stroke: rgba(255,255,255,0.15);
+  stroke-width: 1.5;
+  opacity: 1;
+  transition: stroke 120ms ease, stroke-width 120ms ease;
 }
 .ttp-link-line.done {
   stroke: var(--ttp-gold);
@@ -944,7 +945,7 @@
 
 .ttp-link-line.req-hi {
   stroke: var(--ttp-gold);
-  stroke-width: 2.2;
+  stroke-width: 2.5;
   opacity: 1;
   filter: drop-shadow(0 0 6px rgba(212, 184, 112, 0.6));
 }

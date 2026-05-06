@@ -4,6 +4,12 @@ Historique des itérations du proto. Les anciens protos 1 à 5 ont été fusionn
 
 ---
 
+## 2026-05-07 : Lot C, refactor routage des liens du tech tree (Y par noeud, plus d axe central)
+
+- `refactor(ui) tech tree links per-node Y routing instead of central axis` : avant ce fix, l ancien routage orthogonal des liens dans la vue detaillee d une branche utilisait un seul midX horizontal (ou midY vertical) calcule sur les centres des deux noeuds. Resultat : sur la branche Outils, les chaines Pioche -> Pioche Bronze, Hache -> Hache Bronze et Arc -> Pointes de bronze partaient du meme axe Y central de la colonne Pierre et arrivaient toutes confondues sur une seule ligne horizontale, impossible de distinguer les chaines. Nouveau routage en courbe Bezier cubique dans `techtree-panel.js` : chaque lien part du bord droit du noeud source au Y de ce noeud (`sx = from.x + from.w/2, sy = from.y`) et arrive au bord gauche du noeud cible au Y de ce noeud (`tx = to.x - to.w/2, ty = to.y`). Control points a un tiers et deux tiers du delta horizontal. Routage vertical local (sortie bas, entree haut) quand source et cible partagent quasiment la meme colonne (delta X inferieur a la moitie de la largeur d un noeud), pour les chaines verticales type Pioche -> Terraformation. Les chaines parallele sont maintenant visuellement distinctes a leur Y respectif. CSS `techtree.css` : stroke-linecap et stroke-linejoin passes en `round` (transitions courbes propres), couleur repos `rgba(255,255,255,0.15)` 1.5px, hover req-hi 2.5px (toujours or pulse). Le hover req-highlight, le filtre de branche et l auto-scroll par age (livre 676e686) sont preserves. La vue globale constellation (spokes) n est pas touchee.
+
+---
+
 ## 2026-05-06 : Lot C, fix auto-scroll de la vue detaillee branche vers l age actif
 
 - `feat(ui) auto-scroll tech tree branch view to active age` : le cache `_lastNodePos` declare au top de `techtree-panel.js` n etait jamais alimente, ce qui faisait sortir `centerOnViewedAge()` immediatement (`if (!ids.length) return`). Resultat : a l ouverture d une branche en mode bronze-test (currentAge=2), la vue restait calee a gauche sur la colonne Pierre au lieu d etre centree sur la colonne Bronze. Fix : `_lastNodePos = nodePos` en fin de `renderBranchDetail`, juste apres le placement des cards. Le centrage smooth (transition 320ms) deja branche sur `openBranch` et sur le clic du rail bas des ages se declenche maintenant correctement, le barycentre des techs de l age vise est ramene au centre du wrap.
