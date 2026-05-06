@@ -237,6 +237,9 @@ function serializeSnapshot() {
       profession: c.profession ?? null,
       assignedJob: c.assignedJob ?? null,
       assignedFieldId: c.assignedFieldId ?? null,
+      targetForge: (c.targetForge && typeof c.targetForge.x === 'number' && typeof c.targetForge.z === 'number')
+        ? { x: c.targetForge.x, z: c.targetForge.z }
+        : null,
       explorationTarget: (c.explorationTarget && typeof c.explorationTarget.x === 'number')
         ? { x: c.explorationTarget.x, z: c.explorationTarget.z }
         : null,
