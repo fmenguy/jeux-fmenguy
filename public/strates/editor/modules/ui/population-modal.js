@@ -81,6 +81,25 @@ const SKILL_CATEGORIES = [
   { id: 'savoir',  label: 'Savoir',    color: '#a89ac8', skills: ['recherche', 'oratoire', 'medecine', 'magie'] },
 ]
 
+// Mapping FR (UI) vers EN (clés réelles dans c.skills, alimentées par l engine).
+// Les skills FR sans équivalent EN (herboristerie, peche, artisanat, cuisine,
+// arc, force, discretion, combat, oratoire, medecine, magie) ne sont pas dans
+// le mapping et resteront affichées à 0 tant que l engine ne les alimente pas.
+// Skills réelles confirmées dans colonist.js / productivity.js :
+//   gathering, logging, mining, research, hunting, building, forging.
+const SKILL_FR_TO_EN = {
+  // Récolte
+  'bois':         'logging',
+  'cueillette':   'gathering',
+  'pioche':       'mining',
+  'chasse':       'hunting',
+  // Artisanat
+  'construction': 'building',
+  'forge':        'forging',
+  // Savoir
+  'recherche':    'research',
+}
+
 // ---- Adapter ----
 
 function stateActivity(raw) {
@@ -175,6 +194,10 @@ export class PopulationModal {
     this.sortDir = 1
     this.selectedId = null
     this.openJobId = null
+    // Onglet Compétences : filtre catégorie ('all' ou id de catégorie),
+    // skill triée (FR) et sens (1 = desc par défaut, peut être réservé futur).
+    this.skillCatFilter = 'all'
+    this.skillSortBy = null
     this._loadPrefs()
     this._injectFrame()
     this._bindEvents()
@@ -233,6 +256,25 @@ export class PopulationModal {
         const cid = assignBtn.dataset.cid
         const action = assignBtn.dataset.action
         this._toggleAssign(jid, cid, action)
+        return
+      }
+
+      // Onglet Compétences : chips de catégorie
+      const catChip = e.target.closest('.pv2-skill-chip')
+      if (catChip) {
+        this.skillCatFilter = catChip.dataset.cat || 'all'
+        this._renderBody()
+        return
+      }
+
+      // Onglet Compétences : tri par skill (clic sur le label de ligne)
+      const skillLabel = e.target.closest('.pv2-skill-row-label')
+      if (skillLabel) {
+        const sk = skillLabel.dataset.skill
+        if (sk) {
+          this.skillSortBy = (this.skillSortBy === sk) ? null : sk
+          this._renderBody()
+        }
         return
       }
 
@@ -533,19 +575,62 @@ export class PopulationModal {
       return '<div class="pv2-competences" style="color:var(--ink-3);font-family:var(--mono);font-size:11px;padding:24px">Aucun colon.</div>'
     }
 
-    const sections = SKILL_CATEGORIES.map(cat => {
+    // Helper local : niveau (0-10) à partir d une skill FR.
+    const lvlFor = (c, skillFr) => {
+      const en = SKILL_FR_TO_EN[skillFr]
+      if (!en) return 0
+      return skillLevelOf(c._raw, en)
+    }
+
+    // Tri des colons : par défaut alphabétique. Si une skill est sélectionnée,
+    // tri descendant par niveau dans cette skill, départage alphabétique.
+    let cols = colonists.slice()
+    if (this.skillSortBy) {
+      const sortKey = this.skillSortBy
+      cols.sort((a, b) => {
+        const la = lvlFor(a, sortKey)
+        const lb = lvlFor(b, sortKey)
+        if (la !== lb) return lb - la
+        return String(a.name).localeCompare(String(b.name))
+      })
+    } else {
+      cols.sort((a, b) => String(a.name).localeCompare(String(b.name)))
+    }
+
+    // Chips de catégorie
+    const chipDefs = [{ id: 'all', label: 'Tous', color: null }].concat(
+      SKILL_CATEGORIES.map(c => ({ id: c.id, label: c.label, color: c.color }))
+    )
+    const chipsHtml = '<div class="pv2-skill-chips">' +
+      chipDefs.map(cd => {
+        const active = this.skillCatFilter === cd.id
+        const style = (active && cd.color) ? ' style="border-color:' + cd.color + ';color:' + cd.color + '"' : ''
+        return '<button class="pv2-skill-chip' + (active ? ' active' : '') + '" data-cat="' + escH(cd.id) + '"' + style + '>' +
+          escH(cd.label) + '</button>'
+      }).join('') +
+      '</div>'
+
+    const visibleCats = this.skillCatFilter === 'all'
+      ? SKILL_CATEGORIES
+      : SKILL_CATEGORIES.filter(c => c.id === this.skillCatFilter)
+
+    const sections = visibleCats.map(cat => {
       const headerCols = '<th class="col-name"></th>' +
-        colonists.map(c => '<th title="' + escH(c.name) + '">' + escH(c.name[0]) + '</th>').join('')
+        cols.map(c => '<th title="' + escH(c.name) + '">' + escH(c.name[0]) + '</th>').join('')
 
       const bodyRows = cat.skills.map(skill => {
-        const cells = colonists.map(c => {
-          const lvl = (c.skills[skill] || 0)
-          const opacity = lvl > 0 ? (0.18 + lvl * 0.165) : 0.06
+        const cells = cols.map(c => {
+          const lvl = lvlFor(c, skill)
+          const opacity = lvl > 0 ? (0.18 + lvl * 0.082) : 0.06
           const bg = lvl > 0 ? cat.color : 'var(--panel-3)'
           return '<td><div class="pv2-skill-cell" style="background:' + bg + ';opacity:' + opacity.toFixed(2) + ';min-width:24px">' +
             (lvl > 0 ? lvl : '') + '</div></td>'
         }).join('')
-        return '<tr><td class="col-name">' + escH(skill) + '</td>' + cells + '</tr>'
+        const sorted = this.skillSortBy === skill
+        const labelCls = 'col-name pv2-skill-row-label' + (sorted ? ' sorted' : '')
+        const arrow = sorted ? ' <span class="pv2-skill-sort-arrow">▼</span>' : ''
+        return '<tr><td class="' + labelCls + '" data-skill="' + escH(skill) + '">' +
+          escH(skill) + arrow + '</td>' + cells + '</tr>'
       }).join('')
 
       return '<div class="pv2-skill-cat">' +
@@ -557,7 +642,7 @@ export class PopulationModal {
         '</table></div></div>'
     })
 
-    return '<div class="pv2-competences">' + sections.join('') + '</div>'
+    return '<div class="pv2-competences">' + chipsHtml + sections.join('') + '</div>'
   }
 }
 
