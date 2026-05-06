@@ -610,6 +610,30 @@ export class Colonist {
     this.group.add(bowGroup)
     this._bowGroup = bowGroup
 
+    // Torche de l explorateur, visible uniquement la nuit. Cale sur la main droite
+    // (bras a x=0.34, y=0.78) avec un leger decalage avant pour eclairer la marche.
+    const torchGroup = new THREE.Group()
+    const torchStick = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.4, 0.08),
+      new THREE.MeshLambertMaterial({ color: 0x6b4226 })
+    )
+    torchStick.position.y = 0.2
+    torchGroup.add(torchStick)
+    const torchFlame = new THREE.Mesh(
+      new THREE.BoxGeometry(0.14, 0.18, 0.14),
+      new THREE.MeshBasicMaterial({ color: 0xffaa33 })
+    )
+    torchFlame.position.y = 0.5
+    torchGroup.add(torchFlame)
+    const torchLight = new THREE.PointLight(0xff8844, 1.5, 6)
+    torchLight.position.set(0, 0.5, 0)
+    torchGroup.add(torchLight)
+    torchGroup.position.set(0.42, 0.95, 0.18)
+    torchGroup.visible = false
+    this._torchGroup = torchGroup
+    this._torchLight = torchLight
+    this.group.add(torchGroup)
+
     this.updateHat()
   }
 
@@ -1347,6 +1371,14 @@ export class Colonist {
     if (this._bowGroup && this.state !== 'WORKING') {
       const activeHunt = (this.targetJob && this.targetJob.kind === 'hunt')
       this._bowGroup.visible = (this.profession === 'chasseur' || activeHunt)
+    }
+    // Torche de l explorateur : visible uniquement la nuit, intensite vacillante.
+    if (this._torchGroup) {
+      const showTorch = (this.profession === 'explorateur') && state.isNight
+      this._torchGroup.visible = showTorch
+      if (showTorch && this._torchLight) {
+        this._torchLight.intensity = 1.2 + Math.sin(performance.now() * 0.012) * 0.3
+      }
     }
     if (this.state !== 'MOVING' && this.legL) {
       const k = Math.min(1, dt * 8)
