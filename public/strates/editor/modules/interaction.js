@@ -13,6 +13,7 @@ import {
   addObservatory,
   isBuildingUniqueAndPlaced, isBushOn,
   addBigHouse,
+  addGrenier, addForge, addRoadTile,
   removeConstructionSite, findConstructionSitesInCells
 } from './placements.js'
 import { addJob, removeJob, removeBuildJob, jobKey } from './jobs.js'
@@ -343,7 +344,8 @@ export function labelOfTool(t) {
 // batiment et l outil reste actif (multi-placement). On peut quitter via Echap,
 // le bouton Annuler de l actionbar, ou en re-cliquant sur le meme bouton.
 const BUILDING_PLACEMENT_TOOLS = new Set([
-  'house', 'place-foyer', 'place-research', 'observatory', 'place-big-house'
+  'house', 'place-foyer', 'place-research', 'observatory', 'place-big-house',
+  'place-grenier', 'place-forge', 'place-route-pavee'
 ])
 
 export function isBuildingPlacementTool(t) {
@@ -940,6 +942,21 @@ function applyToolAtCell(cell) {
       }
       break
     }
+    case 'place-grenier': {
+      if (!techUnlocked('granary')) break
+      addGrenier(cell.x, cell.z)
+      break
+    }
+    case 'place-forge': {
+      if (!techUnlocked('forge')) break
+      addForge(cell.x, cell.z)
+      break
+    }
+    case 'place-route-pavee': {
+      if (!techUnlocked('paved-road')) break
+      addRoadTile(cell.x, cell.z)
+      break
+    }
   }
   refreshHUD()
 }
@@ -1098,6 +1115,21 @@ function applyToolToStrata(cells) {
               { homeKind: 'big-house', homeBuilding: bhEntry2 })
           }
         }
+        break
+      }
+      case 'place-grenier': {
+        if (!techUnlocked('granary')) break
+        addGrenier(c.x, c.z)
+        break
+      }
+      case 'place-forge': {
+        if (!techUnlocked('forge')) break
+        addForge(c.x, c.z)
+        break
+      }
+      case 'place-route-pavee': {
+        if (!techUnlocked('paved-road')) break
+        addRoadTile(c.x, c.z)
         break
       }
     }

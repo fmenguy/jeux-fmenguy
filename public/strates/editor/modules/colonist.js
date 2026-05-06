@@ -1922,7 +1922,9 @@ export class Colonist {
       const dx = targetX - this.tx
       const dz = targetZ - this.tz
       const dist = Math.hypot(dx, dz)
-      const speed = this.isWandering ? COLONIST_SPEED * 0.5 : COLONIST_SPEED
+      const _roadK = nz * GRID + nx
+      const _onRoad = state.cellSurface && state.cellSurface[_roadK] === 'paved-road'
+      const speed = (this.isWandering ? COLONIST_SPEED * 0.5 : COLONIST_SPEED) * (_onRoad ? 1.2 : 1.0)
       const step = speed * dt
       if (dist <= step) {
         this.tx = targetX; this.tz = targetZ
