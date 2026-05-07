@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Strates · Pilotage Âge de Pierre · v0.3</title>
+<title>Strates · Pilotage Âge de Pierre · v0.8</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -225,7 +225,6 @@ const TABS = [
   ["strates",     "Checklist par strate"],
   ["quests",      "Quêtes 1-7"],
   ["contract",    "Contrat techtree.json"],
-  ["tickets",     "Tickets Claude"],
   ["bronze",      "Passage au Bronze"],
   ["order",       "Ordre de livraison"],
   ["later",       "Nice-to-have"],
@@ -234,10 +233,10 @@ const TABS = [
 
 // ---------- Data ---------- //
 const STATUS_FROM_REPO = {
-  done:    ['Grille voxel, chunks, A*', 'Pioche pierre (tech)', 'Hache pierre (tech)', 'Recherche (hutte + pts)', 'Cueillette baies', 'Placement maison + spawn 2 colons', 'Bulles contextuelles', 'Noms + genre + François chef', 'Quêtes initiales (3)', 'Sauvegarde localStorage', 'Saisons (palette, neige, pluie)', 'Cycle jour/nuit (toggle N)', 'Promontoire → points nocturnes', 'Feu de camp social (MVP)', 'Filon extraction (pioche gate)', 'Verticalité (strates 10)'],
-  partial: ['Outils colons : seules pioche + hache (il manque pelle, faucille, canne)', 'Besoins vitaux (faim/sommeil à câbler)', 'Tech tree (4 techs linéaires = proto, arbre XXL à faire)', 'Métiers (pas d\'attribution de rôles côté UI)', 'Fog of war (désactivé temporairement)'],
-  missing: ['Monument "Cairn de pierre" (passage d\'âge)', 'Chasse (gibier → viande/os/peau)', 'Besoins faim + sans-abri câblés sur pop', 'JSON techtree/buildings/jobs/needs (data-driven âge 1)', 'Cinématique passage bronze', 'Tutoriel enchaîné premières 15 min', 'Totem (+1 moral)', 'Abri de fortune comme bâtiment distinct'],
-  newlyDone: ['UI Tech tree XXL — vue globale constellation (7 branches en orbite) + vue détaillée Humankind (angles droits, pan/zoom bornés)', 'File de recherche en bulles (bas de page, 5 max, drag contraint)', 'Cross-branch badges (↗ Savoir, ↗ Outils, etc.) sur techs avec prérequis hors branche', 'Cadenas chiffré sur techs locked (🔒 + nb de prérequis manquants)', 'Bouton « Mettre le chemin en file » (chaîne topologique auto)', 'Popup unlock façon Endless Space (2 suggestions cliquables)']
+  done:    ['Grille voxel, chunks, A*', 'Pioche pierre (tech)', 'Hache pierre (tech)', 'Recherche (hutte + pts)', 'Cueillette baies', 'Placement maison + spawn 2 colons', 'Bulles contextuelles', 'Noms + genre + François chef', 'Quêtes initiales (3)', 'Sauvegarde localStorage', 'Saisons (palette, neige, pluie)', 'Cycle jour/nuit (toggle N)', 'Promontoire → points nocturnes (daynight.js + isColonistOnObservatory)', 'Feu de camp social (MVP)', 'Filon extraction (pioche gate)', 'Verticalité (strates 10)', 'Foyer posable (gate fire-mastery, unique, GLB + fallback flamme)', 'Fiche personnage cliquable (charsheet-ui : renommer, favoris, gatée oral-tradition)', 'Tutoriel onboarding unique 6 étapes + bulle invitation différée (tutorial.js — labels 1/6..6/6 confirmés)', 'Cinématique passage bronze (fade + fanfare Web Audio + titre)', 'Cairn de pierre : canBuildCairn + bouton actionbar + pose physique addCairn + overlay badge', 'Moteur besoins data-driven (needs.js) câblé main.js — faim + sans-abri', 'Panneau info bâtiment (building-panel.js)', 'Grosse maison (big-house) 4x4 cellules, gatée par tech big-house (âge 1)', 'Arc en bois (bow-wood) dans techtree.json (cost research:12, débloque chasseur)', 'Astronomie I dans techtree.json (cost research:12, night:20, req promontory)', 'Mode sandbox (?mode=sandbox — sandbox.js : techs débloquées, ressources max)', 'Compteur Année dans le HUD (seasons.js : state.year, affiché à la place de J./heure)', 'Chasseur : HUNT câblé colonist.js (profession chasseur, hunt timer, drop raw-meat x3 + bone x2), DEV_SKIP_BONES=false', 'Attribution rôle (population-modal) : assignedJob câblé (population-modal.js + charsheet-ui.js affiche rôle assigné)', 'Astronome : profession astronome + pickObservatory() dans colonist.js, génère pts nocturnes la nuit'],
+  partial: ['Besoins vitaux (faim + sans-abri câblés)', 'Tech tree (arbre XXL livré, contenu âge 1 complet)', 'Fog of war (module fog.js présent, non activé dans main.js)', 'Système de quêtes (moteur disponible/active/complétées livré, catalogue 9 quêtes)', 'Terraformation/Pelle pierre (tech shovel-stone dans techtree.json, outil Niveler/Placer livré dans interaction.js)', 'Viande crue (raw-meat) : drop câblé colonist.js ligne 985, cuisson foyer câblée (tickFoyers main.js)', 'Viande cuite (cooked-meat) : produite par cuisson foyer, satiété COOKED_MEAT_SATIETY=80 câblée dans colonist.js', 'Os (bone) : DEV_SKIP_BONES=false dans age-transitions.js, drop câblé colonist.js ligne 986+988', 'Constructeur : métier todo, architecture jobs extensible à prévoir'],
+  missing: ['Silex (défini dans resources.json, non droppé par le minage en jeu)', 'Cueillette améliorée — effet +1 baie non câblé dans colonist.js malgré tech gathering-improved dans techtree.json', 'Scaling productivité : vitesse tâche = somme niveaux colons assignés', 'Tri par niveau dans vue assignation population-modal', 'Tutoriel constructeur (déclenché à l\'achat de Promontoire ou Grosse maison)'],
+  newlyDone: ['UI Tech tree XXL — vue globale constellation (7 branches en orbite) + vue détaillée Humankind (angles droits, pan/zoom bornés)', 'File de recherche en bulles (bas de page, 5 max, drag contraint)', 'Cross-branch badges (↗ Savoir, ↗ Outils, etc.) sur techs avec prérequis hors branche', 'Cadenas chiffré sur techs locked (🔒 + nb de prérequis manquants)', 'Bouton « Mettre le chemin en file » (chaîne topologique auto)', 'Popup unlock façon Endless Space (2 suggestions cliquables)', 'Actionbar finale : nav-zone permanente + 3 onglets Récoltes/Construire/Terraformer', 'Outil Niveler : retrait direct de voxel terrain sans colon (minerais protégés)', 'Outil Placer : pose directe de voxel depuis les stocks sans colon', 'Pinceau carré pour tous les outils terraformation (1x1, 3x3, 5x5, 7x7)', 'Colonist : ne terraformant plus le terrain nu, mining limité aux ressources', 'Tech tree : fiche droite 340px (coût/description/murmure/prérequis/débloque/actions)', 'Tech tree : hover req-highlight (liens SVG pulsés or, techs irrélevantes estompées)', 'Tech tree : file de recherche en bulles (vue globale uniquement, 5 slots max)', 'Tech tree : constellation globale avec spokes, filtres branches, rail des âges', 'Sélection rectangulaire par drag (mine/hache/pick) alignée grille voxel perspective', 'Outil cancel-zone par drag pour annuler jobs de récolte', 'Quêtes : système disponibles/active/complétées avec catalogue 9 quêtes et rewards', 'Worldgen : GRID 128, biomes, rivières, falloff cubique sans îles de bord', 'Navigation tech tree unifiée (Retour/✕ dans vues globale et détaillée)', 'Constellation : masquage des branches sans tech âge courant', 'Aide en jeu : rubrique Récolte, mise à jour Caméra, raccourci N jour/nuit', 'Fiche personnage (charsheet) ouverture gatée par tech oral-tradition', 'Tutoriel refactorisé : tuto unique 6 étapes (labels 1/6..6/6 confirmés dans tutorial.js), suppression du Tuto 2', 'Mode sandbox (?mode=sandbox — sandbox.js)', 'Compteur Année dans HUD (seasons.js), sélection rectangulaire Chasse (interaction.js)', 'Outil Chasse : sélection rectangulaire cerfs, gate bow-wood (interaction.js — colon non câblé)']
 };
 
 const STRATES = {
@@ -246,30 +245,29 @@ const STRATES = {
     color: 'tech',
     branches: {
       'Outils': [
-        { n: 'Pioche pierre',   s: 'done', c: 5, req: ['Silex'], notes: 'craftée au Foyer, améliore rendement Mineur' },
-        { n: 'Hache pierre',    s: 'done', c: 5, req: ['Silex'], notes: 'craftée au Foyer, débloque Bûcheron' },
-        { n: 'Lance en bois',   s: 'todo', c: 5, req: [], notes: 'craftée au Foyer, débloque Chasseur' },
-        { n: 'Pelle pierre',    s: 'todo', c: 8, req: ['Pioche pierre'], notes: '[optionnel âge I] terrassier' },
+        { n: 'Pioche pierre',   s: 'done', c: 12, req: [], notes: 'tech pick-stone (cost research:12), débloque jobs mineur + ressources stone/copper/coal' },
+        { n: 'Hache pierre',    s: 'done', c: 12, req: [], notes: 'tech axe-stone (cost research:12), débloque jobs bucheron + ressource wood' },
+        { n: 'Arc en bois',     s: 'done', c: 12, req: [], notes: 'tech bow-wood dans techtree.json (cost research:12, icône 🏹). Outil hunt livré (interaction.js : sélection rectangulaire cerfs, gate bow-wood). Comportement colon câblé (colonist.js : profession chasseur, huntTimer, tir portée 6, drop viande/os - commit 9b23223).' },
+        { n: 'Pelle pierre',    s: 'partial', c: 15, req: ['Pioche pierre'], notes: 'tech shovel-stone dans techtree.json (cost research:15, "Terraformation"), outil Niveler/Placer câblé dans interaction.js. Métier Terrassier déclaré, pas de colon assigné.' },
         { n: 'Faucille pierre', s: 'todo', c: 10, req: ['Hache pierre'], notes: '[transition Bronze] récolte blé sauvage' }
       ],
       'Agriculture': [
-        { n: 'Cueillette améliorée', s: 'todo', c: 8, req: [], notes: '+1 baie par buisson' },
-        { n: 'Premier champ',        s: 'partial', c: 10, req: [], notes: 'buisson cultivé posable, besoin d\'être câblé à la récolte' }
+        { n: 'Cueillette améliorée', s: 'todo', c: 10, req: [], notes: 'tech gathering-improved (cost research:10) dans techtree.json. Effet +1 baie non câblé dans colonist.js.' },
+        { n: 'Premier champ',        s: 'partial', c: 15, req: [], notes: 'tech first-field (cost research:15), débloque building "champ". Champ posable câblé dans interaction.js via outil "field". Récolte du champ non câblée.' }
       ],
       'Construction': [
-        { n: 'Maîtrise du feu', s: 'done', c: 0, req: [], notes: 'starter, gratuit' },
-        { n: 'Abri de fortune', s: 'todo', c: 5, req: [], notes: 'bâtiment starter, avant Cabane' }
+        { n: 'Maîtrise du feu', s: 'done', c: 0, req: [], notes: 'starter, gratuit' }
       ],
       'Savoir': [
         { n: 'Tradition orale', s: 'done', c: 0, req: ['Maîtrise du feu'], notes: 'starter' },
         { n: 'Recherche de base', s: 'done', c: 0, req: [], notes: 'hutte du sage' }
       ],
       'Exploration': [
-        { n: 'Éclaireur', s: 'todo', c: 8, req: [], notes: 'débloque métier Explorateur + rayon vision' }
+        { n: 'Éclaireur', s: 'later', c: 8, req: [], notes: 'déplacé âge 2 dans techtree.json (commit lot-A: scouting passe age 2)' }
       ],
       'Nocturne': [
-        { n: 'Promontoire', s: 'done', c: 0, req: [], notes: 'génère points nocturnes, déjà livré' },
-        { n: 'Astronomie I', s: 'todo', c: 10, req: ['Promontoire'], notes: '-20s nuit, bonus cartographie' }
+        { n: 'Promontoire', s: 'done', c: 0, req: [], notes: 'génère points nocturnes via daynight.js (isColonistOnObservatory), câblé' },
+        { n: 'Astronomie I', s: 'partial', c: 12, req: ['Promontoire'], notes: 'tech astronomy-1 dans techtree.json (cost: research 12 + night 20). Effet gameplay (-20s nuit) pas câblé dans daynight.js.' }
       ]
     }
   },
@@ -278,8 +276,8 @@ const STRATES = {
     color: 'build',
     branches: {
       'Habitation': [
-        { n: 'Abri de fortune', s: 'todo', c: '5 Bois', req: [], notes: 'pop +1, dispo dès le début, upgradable → Cabane' },
-        { n: 'Cabane',          s: 'done', c: '10 Bois + 5 Pierre', req: ['Foyer'], notes: 'pop +2, upgrade de l\'Abri' },
+        { n: 'Cabane',          s: 'done', c: '10 Bois + 5 Pierre', req: ['Foyer'], notes: 'pop +2' },
+        { n: 'Grosse maison',   s: 'done', c: '4x4 cellules', req: ['tech big-house'], notes: 'posable via actionbar (place-big-house), capacité 8, gatée tech big-house âge 1' },
         { n: 'Longhouse',       s: 'partial', c: 'fusion 4x Cabane', req: ['4x Cabane'], notes: 'fusion, existe dans code' }
       ],
       'Recherche': [
@@ -290,14 +288,13 @@ const STRATES = {
         { n: 'Potager (2x2)',   s: 'todo', c: 'fusion 4x Champ', req: ['4x Champ'], notes: 'fusion' }
       ],
       'Production': [
-        { n: 'Foyer', s: 'todo', c: '8 Pierre + 3 Bois', req: [], notes: '★ cœur du camp : craft Hache/Pioche/Lance + cuisson viande' }
+        { n: 'Foyer', s: 'done', c: '8 Pierre + 3 Bois', req: [], notes: '★ posable via actionbar (gate fire-mastery), unique, GLB Bonfire + fallback flamme animée' }
       ],
       'Nocturne': [
         { n: 'Promontoire', s: 'done', c: '15 Pierre + 5 Bois', req: ['Hutte du sage'], notes: 'génère pts nocturnes (nuit), débloque Astronome' }
       ],
       'Monument': [
-        { n: 'Totem',         s: 'todo', c: '10 Bois (+ Os ?)', req: [], notes: '+1 moral colonie, pas de prod' },
-        { n: 'Cairn de pierre', s: 'todo', c: '50 Pierre + 20 Bois + 10 Os', req: ['checklist Bronze 100%'], notes: '🏔 DÉBLOQUE passage au Bronze, construction LONGUE (rituel)' }
+        { n: 'Cairn de pierre', s: 'partial', c: '50 Pierre + 20 Bois + 10 Os', req: ['checklist Bronze 100%'], notes: 'age-transitions.js : canBuildCairn + getCairnProgress + bouton actionbar + tooltip conditions + addCairn (pose physique voxels) + cinématique fade+fanfare. Partiel car chasse en cours de finalisation (drop viande/os).' }
       ]
     }
   },
@@ -306,26 +303,28 @@ const STRATES = {
     color: 'comm',
     branches: {
       'Métiers jour': [
-        { n: 'Cueilleur',   s: 'partial', c: null, req: [], notes: '★ métier starter par défaut, aucun outil, priorité buissons non épuisés' },
-        { n: 'Bûcheron',    s: 'partial', c: null, req: ['Hache pierre'], notes: 'cherche l\'arbre le plus proche' },
-        { n: 'Mineur',      s: 'partial', c: null, req: [], notes: 'MAINS NUES en âge I (pioche améliore rendement). Drop Pierre + Silex' },
-        { n: 'Chasseur',    s: 'todo', c: null, req: ['Lance'], notes: 'patrouille zone, attaque animal. ⚠ risque état BLESSÉ' },
-        { n: 'Chercheur',   s: 'done', c: null, req: ['Hutte du sage'], notes: 'reste dans le bâtiment, +pts recherche/tick' }
+        { n: 'Cueilleur',   s: 'partial', c: null, req: [], notes: '★ métier starter, récolte manuelle buissons uniquement (auto-récolte supprimée commit 2b6403d), EAT_SEEK_FOOD câblé. Tech gathering-improved dans techtree.json mais effet +1 baie non câblé dans colonist.js.' },
+        { n: 'Bûcheron',    s: 'partial', c: null, req: ['Hache pierre'], notes: 'cherche l\'arbre le plus proche (chopTreeAt), gate axe-stone. Attribution de rôle câblée via population-modal.js (assignedJob).' },
+        { n: 'Mineur',      s: 'partial', c: null, req: [], notes: 'mains nues en âge I (tech pick-stone améliore rendement via gate). Drop Pierre confirmé (extractOreAt/colonist.js). Silex non droppé en jeu malgré sa définition dans resources.json.' },
+        { n: 'Chasseur',    s: 'done', c: null, req: ['Arc'], notes: 'HUNT câblé dans colonist.js : profession chasseur, huntTimer, déplacement vers cerf, tir à distance (portée 6), killDeer, drop raw-meat x3 + bone x2 + hide x1 (colonist.js ligne 985-988). DEV_SKIP_BONES=false dans age-transitions.js (commit 9b23223). HUD hunt resources câblé (hud.js).' },
+        { n: 'Chercheur',   s: 'done', c: null, req: ['Hutte du sage'], notes: 'reste dans le bâtiment, +pts recherche/tick' },
+        { n: 'Constructeur', s: 'todo', c: null, req: ['tech bâtiment non-gratuite'], notes: 'Nouveau métier âge I. Seuls les colons assignés Constructeur peuvent bâtir. Durée de construction variable selon niveau du colon × nombre de constructeurs assignés. Bâtiments en mode "chantier" (scaffold + barre de progression) jusqu\'à complétion. La Hutte du sage reste instantanée (tech starter). Débloqué à l\'achat de Promontoire ou Grosse maison.' }
       ],
       'Métiers nuit': [
-        { n: 'Astronome', s: 'partial', c: null, req: ['Promontoire'], notes: 'génère pts nocturnes/tick la nuit' }
+        { n: 'Astronome', s: 'done', c: null, req: ['Promontoire'], notes: 'colonist.js : profession astronome détectée, pickObservatory() envoie le colon vers le promontoire la nuit (commit a1be21f). isColonistOnObservatory() dans daynight.js génère pts nocturnes. Attribution rôle via population-modal.js (assignedJob).' }
       ],
       'Besoins': [
-        { n: 'Faim',       s: 'todo', c: null, req: [], notes: '3 seuils : Rassasié (prod 100%) → Affamé (prod -50% + anim) → Famine (MORT)' },
-        { n: 'Sans-abri',  s: 'todo', c: null, req: [], notes: 'Prod -30% + Moral -1/nuit dehors. Hiver → mortalité accélérée' },
-        { n: 'Blessé',     s: 'todo', c: null, req: ['Chasseur actif'], notes: 'SIMPLE (pas maladie). Prod réduite, récupère avec repos' },
+        { n: 'Faim',       s: 'partial', c: null, req: [], notes: 'needs.js data-driven câblé : jauge monte de need.rate/s, seuils LOW 50% et CRITIQUE 80%, malus prod parseProductivityEffect(). EAT_SEEK_FOOD câblé dans colonist.js (cherche buisson ou raw-meat/cooked-meat). Mort par famine non activée. getTotalFood intègre baies + raw-meat + cooked-meat*2 (gamedata.js commit ec0fd36).' },
+        { n: 'Sans-abri',  s: 'partial', c: null, req: [], notes: 'needs.js : règle colonist_has_assigned_cabane évaluée via evalRuleNeed(), malus prod -30% câblé via computeProductivityMul(). Besoin SHELTER dans needs.json.' },
         { n: 'Maladie',    s: 'later', c: null, req: [], notes: 'repoussé Bronze' },
         { n: 'Froid',      s: 'later', c: null, req: [], notes: 'repoussé Bronze (vêtements Peau)' }
       ],
       'Job System': [
-        { n: 'File de tâches',  s: 'partial', c: null, req: [], notes: 'états existent, file formelle à structurer' },
-        { n: 'Priorités S>W>L>F', s: 'todo', c: null, req: ['Faim'], notes: 'bascule auto survie → travail' },
-        { n: 'Attribution rôle', s: 'todo', c: null, req: [], notes: 'UI panneau par colon' }
+        { n: 'File de tâches',  s: 'partial', c: null, req: [], notes: 'tasks.js livré : PRIORITY (SURVIVAL=100, WORK=60, LEISURE=30, IDLE=10) + TASK_KIND + enqueueTask/peekTask/popTask. Exécution dans colonist.js.' },
+        { n: 'Priorités S>W>L>F', s: 'partial', c: null, req: ['Faim'], notes: 'tasks.js définit les constantes PRIORITY. colonist.js intègre EAT_SEEK_FOOD en priorité SURVIVAL et CAMPFIRE/WANDER en LEISURE. PLAYER_JOB=WORK câblé.' },
+        { n: 'Attribution rôle', s: 'done', c: null, req: [], notes: 'population-modal.js : assignedJob câblé (commit 2fbb8eb), PROFESSION_TO_ASSIGNED_JOB mapping, raw.assignedJob écrit sur le colon. charsheet-ui.js affiche le rôle assigné. Colonists assignés masqués des autres listes (commit 63adf61).' },
+        { n: 'Scaling productivité', s: 'todo', c: null, req: [], notes: 'Productivité d\'un colon = niveau_métier / niveau_max. Vitesse totale d\'une tâche = somme des productivités des colons assignés. 2 chercheurs Niv.10 = 2× plus vite qu\'1 seul. Architecture à prévoir pour âges II+ (minimum de colons requis pour certaines tâches).' },
+        { n: 'Tri par niveau (assignation)', s: 'todo', c: null, req: [], notes: 'Dans population-modal, la liste d\'assignation trie les colons par niveau du métier concerné (plus haut en premier). Niveaux déjà affichés (Niv.1 à Niv.10), tri pas encore implémenté.' }
       ],
       'Animations vie': [
         { n: 'Bulles contextuelles', s: 'done', c: null, req: [], notes: 'OK, à enrichir pool' },
@@ -336,38 +335,21 @@ const STRATES = {
 };
 
 const RESOURCES_AGE1 = [
-  { k: '🪵 Bois',         src: 'Arbres (Bûcheron + Hache pierre)',  use: 'Construction cabane, foyer, abri, totem',       s: 'partial' },
+  { k: '🪵 Bois',         src: 'Arbres (Bûcheron + Hache pierre)',  use: 'Construction cabane, foyer',                    s: 'partial', note: 'Hache pierre câblée (tech axe-stone, Bûcheron).' },
   { k: '🪨 Pierre',       src: 'Affleurements (Mineur, mains nues OK)', use: 'Construction, outils, Cairn',              s: 'done' },
-  { k: '🪨 Silex',        src: 'Sous-type Pierre (minage affleurement)', use: 'Craft Hache pierre + Pioche pierre au Foyer', s: 'todo', note: 'sous-type de Pierre, drop rare' },
-  { k: '🫐 Baies',        src: 'Buissons (Cueilleur, aucun outil)',  use: 'Nourriture basique (Faim faible)',              s: 'partial', note: 'buissons ÉPUISABLES → gestion' },
-  { k: '🥩 Viande crue',  src: 'Chasse (Chasseur + lance)',          use: 'Cuisson Foyer → Viande cuite',                  s: 'todo' },
-  { k: '🍖 Viande cuite', src: 'Cuisson Foyer',                      use: 'Nourriture haute valeur (Faim élevée)',         s: 'todo' },
-  { k: '🦴 Os',           src: 'Chasse',                             use: 'Craft outils basiques, Cairn (10 os)',          s: 'todo' },
+  { k: '🪨 Silex',        src: 'Sous-type Pierre (minage affleurement)', use: 'Craft Hache pierre + Pioche pierre au Foyer', s: 'todo', note: 'défini dans resources.json (subtype:pierre), testé dans gamedata.js — mais non droppé dans le minage en jeu (placements.js/colonist.js)' },
+  { k: '🫐 Baies',        src: 'Buissons (Cueilleur, aucun outil)',  use: 'Nourriture basique (Faim faible)',              s: 'partial', note: 'buissons épuisables + repousse câblés (refreshBushBerries), récolte manuelle + EAT_SEEK_FOOD. Tech gathering-improved non câblée en jeu (+1 baie absent).' },
+  { k: '🥩 Viande crue',  src: 'Chasse (Chasseur + Arc)',            use: 'Cuisson Foyer → Viande cuite',                  s: 'partial', note: 'drop raw-meat x3 câblé colonist.js (commit 9b23223). Cuisson foyer câblée via tickFoyers (commit 94629bb). Satiété RAW_MEAT_SATIETY=40 câblée. Viande consommée via EAT dans colonist.js (have raw-meat). HUD affiché (hud.js commit cfe689e).' },
+  { k: '🍖 Viande cuite', src: 'Cuisson Foyer',                     use: 'Nourriture haute valeur (Faim élevée)',          s: 'partial', note: 'produite par foyer (tickFoyers). Satiété COOKED_MEAT_SATIETY=80 câblée. getTotalFood intègre cooked-meat*2 (gamedata.js ec0fd36). HUD affiché.' },
+  { k: '🦴 Os',           src: 'Chasse',                             use: 'Craft outils basiques, Cairn (10 os)',          s: 'partial', note: 'drop bone x2 câblé colonist.js + stocks.bone pour condition Cairn. DEV_SKIP_BONES=false (age-transitions.js). HUD affiché (hud.js).' },
   { k: '🧶 Peau',         src: 'Chasse',                             use: '[Nice-to-have] Vêtements contre Froid',          s: 'todo' },
-  { k: '🌾 Terre',        src: 'Minage herbe/sable',                 use: 'Construction Abri, nivellement',                s: 'done' },
+  { k: '🌾 Terre',        src: 'Minage herbe/sable',                 use: 'Nivellement terrain',                           s: 'done' },
   { k: '🧠 Points recherche', src: 'Hutte du sage (jour, Chercheur)', use: 'Débloquer techs',                              s: 'done' },
   { k: '🌙 Points nocturnes', src: 'Promontoire (nuit, Astronome)',   use: 'Débloquer techs Nocturne',                     s: 'done' },
   { k: '🔩 [Réservé] Cuivre', src: 'Filons visibles, non exploitables âge I', use: 'Âge Bronze uniquement',                 s: 'later' },
   { k: '🔩 [Réservé] Charbon', src: 'Idem',                          use: 'Âge Bronze uniquement',                         s: 'later' }
 ];
 
-// Quêtes enchaînées 1-7 — tutoriel des 15-20 premières min + objectif long terme
-const QUESTS_AGE1 = [
-  { id: 1, title: 'Les premiers pas',      dur: '2 min',  obj: 'Collecter 10 Bois + 5 Pierre (mains nues)',
-    tuto: 'Clic sur ressource, déplacement colon',              reward: 'Schéma Foyer débloqué' },
-  { id: 2, title: 'Le feu sacré',          dur: '3 min',  obj: 'Construire le Foyer',
-    tuto: 'Interface construction, placement bâtiment',         reward: 'Recettes Hache + Pioche + Lance' },
-  { id: 3, title: 'Nourrir la tribu',      dur: '3 min',  obj: 'Avoir 10 Nourriture en stock',
-    tuto: 'Assigner Cueilleur, comprendre état Faim',           reward: 'Schéma Abri de fortune' },
-  { id: 4, title: 'Un toit pour tous',     dur: '3 min',  obj: 'Loger 3 villageois (Abri + Cabane)',
-    tuto: 'Construire Abri + Cabane, état Sans-abri',           reward: '+1 villageois spawn' },
-  { id: 5, title: 'La chasse est ouverte', dur: '4 min',  obj: 'Obtenir 5 Viande + 3 Os',
-    tuto: 'Craft Lance, assigner Chasseur, zones de chasse',    reward: 'Recette Totem' },
-  { id: 6, title: 'La nuit révèle les étoiles', dur: 'libre', obj: 'Construire Hutte du Sage + Promontoire',
-    tuto: 'Toggle Jour/Nuit, Points Nocturnes',                 reward: 'Arbre Recherche accessible' },
-  { id: 7, title: 'L\'héritage de pierre', dur: 'long terme', obj: 'Compléter checklist Cairn de pierre',
-    tuto: 'Lecture checklist, gestion des priorités',           reward: 'Cinématique Bronze · Âge 2 débloqué' }
-];
 
 // Nice-to-have documentés mais repoussés
 const NICE_TO_HAVE = [
@@ -393,7 +375,7 @@ function Header({ tab, setTab }) {
       </div>
       <div className="brandrow" style={{ marginTop: 4 }}>
         <div className="brand">STRATES · Âge I</div>
-        <div className="sub">plan de bataille pour livrer l'âge de pierre de bout en bout · v0.3 · tech tree XXL livré · intégration HUD en cours</div>
+        <div className="sub">plan de bataille pour livrer l'âge de pierre de bout en bout · v0.8 · session 2026-05-03 · Chasseur DONE (drop câblé, DEV_SKIP_BONES=false) · Astronome DONE · Attribution rôle DONE · Viande/Os PARTIAL · Constructeur + Scaling productivité : nouvelles mécaniques décidées</div>
       </div>
       <div className="tabs">
         {TABS.map(([id, name], i) => (
@@ -460,11 +442,10 @@ function OverviewTab() {
       <hr className="wavy"/>
 
       <div className="callout" style={{ borderColor: 'var(--done)', background: '#e8f2e1' }}>
-        <span className="lbl" style={{ color: 'var(--done)' }}>✅ Livré aujourd'hui · v0.3</span>
+        <span className="lbl" style={{ color: 'var(--done)' }}>✅ Livraisons récentes · v0.7</span>
         <ul style={{ margin: '4px 0 0', paddingLeft: 18, fontSize: 13 }}>
           {STATUS_FROM_REPO.newlyDone.map((x,i)=><li key={i}>{x}</li>)}
         </ul>
-        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 6 }}>→ Source brute lisible : <span className="code">public/strates/techtree-v2.html</span>. Claude VSCode intègre le HUD (Lot C UI) en parallèle.</div>
       </div>
 
       <h3 className="hh">État du repo <span className="sub">(branche <span className="code">strate</span>, lecture docs + changelog)</span></h3>
@@ -496,18 +477,16 @@ function OverviewTab() {
 function DefinitionTab() {
   const CRITERIA = [
     { c: 'Le joueur démarre avec 2 colons, un chef (François), une carte procédurale insulaire.', s: 'done' },
-    { c: 'Les colons ont un état FAIM qui monte dans le temps, une bulle se déclenche s\'il n\'y a plus de nourriture.', s: 'todo' },
-    { c: 'Les colons sans Cabane attribuée sont marqués SANS-ABRI (bulle + icône au-dessus), effet : productivité -30%.', s: 'todo' },
-    { c: 'Le joueur peut cliquer un colon et voir sa fiche (nom, état, métier actif). Optionnel pour âge I : juste la bulle.', s: 'partial', note: 'bulles OK, fiche clic à faire ou repoussé' },
-    { c: 'Les ressources de base (Bois / Pierre / Silex / Baies / Viande crue+cuite / Os / Peau) se récoltent via les 5 métiers (Bûcheron / Mineur / Cueilleur / Chasseur / Chercheur).', s: 'partial', note: 'manque Viande, Os, Peau, Silex + Chasseur + cuisson Foyer' },
+    { c: 'Les colons ont un état FAIM qui monte dans le temps, une bulle se déclenche s\'il n\'y a plus de nourriture.', s: 'partial', note: 'needs.js câblé : jauge faim monte via tickColonistNeeds, malus prod LOW/CRITIQUE via computeProductivityMul. EAT_SEEK_FOOD câblé dans colonist.js (cherche buisson, mange sur place). Bulle faim déclenchée par speech contextuelles. Mort par famine non activée. Viande absente comme source de satiété.' },
+    { c: 'Le joueur peut cliquer un colon et voir sa fiche (nom, état, métier actif). Optionnel pour âge I : juste la bulle.', s: 'done' },
+    { c: 'Les ressources de base (Bois / Pierre / Silex / Baies / Viande crue+cuite / Os / Peau) se récoltent via les 5 métiers (Bûcheron / Mineur / Cueilleur / Chasseur / Chercheur).', s: 'partial', note: 'OK : Bois (Bûcheron), Pierre (Mineur), Baies (Cueilleur), Points recherche (Chercheur). Manquants : Silex (resources.json défini, non droppé), Viande/Os/Peau (Chasseur outil UI livré mais colon non câblé), cuisson Foyer absente.' },
     { c: 'Le tech tree XXL est visible (panneau arbre scrollable/zoomable), affiche les 7 âges, seul l\'âge I est actif, le reste est teased en flou.', s: 'done', note: 'livré v0.3 — vue globale constellation + vue détaillée Humankind, pan/zoom bornés, teaser Bronze en colonne de droite' },
-    { c: 'Au moins 4 techs âge I débloquables : Pioche pierre, Hache pierre, Pelle pierre, Cueillette améliorée.', s: 'partial', note: '2/4 faits' },
-    { c: 'Les bâtiments âge I sont posables via désignation (mode jeu) : Abri, Cabane (req Foyer), Foyer (pivot), Hutte du sage (req Cabane), Promontoire (req Hutte), Champ, Totem.', s: 'partial', note: 'manque Abri, Foyer, Totem + chaîne de prereqs' },
-    { c: 'Les 7 quêtes enchaînées couvrent le tutoriel (Q1→Q6 env. 15-20 min) et l\'objectif long terme (Q7 Cairn). Voir onglet Quêtes.', s: 'partial', note: '3 quêtes existent, 4 à ajouter + chaînage' },
-    { c: 'Le Cairn de pierre est posable quand les conditions cumulatives sont remplies (voir onglet Passage au Bronze).', s: 'todo' },
-    { c: 'Poser le Cairn déclenche une cinématique courte (fade + titre "Âge du Bronze" + son) et bascule state.currentAge = 2.', s: 'todo' },
-    { c: 'Le tech tree se "déverrouille" : les techs Bronze deviennent recherchables, tease des âges 3+ reste actif.', s: 'todo' },
-    { c: 'Une sauvegarde faite âge I charge correctement après bascule Bronze (persistance).', s: 'partial', note: 'localStorage OK, tester passage' },
+    { c: 'Au moins 4 techs âge I débloquables : Pioche pierre, Hache pierre, Pelle pierre, Cueillette améliorée.', s: 'partial', note: 'Pioche (pick-stone r:12), Hache (axe-stone r:12), Pelle (shovel-stone r:15) débloquables en jeu. Cueillette améliorée (gathering-improved r:10) dans techtree.json mais effet +1 baie non câblé dans colonist.js.' },
+    { c: 'Les bâtiments âge I sont posables via désignation (mode jeu) : Cabane (req Foyer), Foyer (pivot), Hutte du sage (req Cabane), Promontoire (req Hutte), Champ.', s: 'partial', note: 'Posables confirmés : Foyer (gate fire-mastery), Cabane, Grosse Maison (gate big-house, 4x4), Hutte du Sage (gate basic-research), Promontoire (gate promontory), Champ (gate first-field), Cairn (gate Bronze).' },
+    { c: 'Le Cairn de pierre est posable quand les conditions cumulatives sont remplies (voir onglet Passage au Bronze).', s: 'partial', note: 'age-transitions.js : bouton Cairn + canBuildCairn (6 conditions vérifiées) + addCairn (pose physique). Conditions bloquantes : Chasse absente (DEV_SKIP_BONES=true), population et stocks atteignables.' },
+    { c: 'Poser le Cairn déclenche une cinématique courte (fade + titre "Âge du Bronze" + son) et bascule state.currentAge = 2.', s: 'partial', note: 'cinematics.js + age-transitions.js livrés : addCairn pose le mesh, triggerAgeTransitionBronze déclenche le fade + fanfare Web Audio + titre "AGE DU BRONZE", _applyBronzeAge bascule state.currentAge=2. Reste : tester passage bout-en-bout.' },
+    { c: 'Le tech tree se "déverrouille" : les techs Bronze deviennent recherchables, tease des âges 3+ reste actif.', s: 'partial', note: '_applyBronzeAge() dans age-transitions.js marque _bronzeAvailable sur les techs âge 2 et rafraîchit via refreshTechTreeAfterAgeChange. À tester en jeu.' },
+    { c: 'Une sauvegarde faite âge I charge correctement après bascule Bronze (persistance).', s: 'partial', note: 'persistence.js sauvegarde currentAge + achievements + ageUnlockedAt. saveGame("auto") appelé dans _applyBronzeAge. Passage bout-en-bout non testé.' },
     { c: 'Les sons clé sont en place : construction (pose maison), récolte (cueillette/abattage/minage), passage d\'âge (fanfare).', s: 'partial', note: 'musique saisons OK, SFX à ajouter' }
   ];
 
@@ -619,7 +598,7 @@ function ContractTab() {
       <h2 className="sec"><span className="n">05</span>Contrat partagé · <span className="code">techtree.json</span></h2>
       <p className="sec-desc">
         <b>Critique.</b> Ce format doit être gelé AVANT que qui que ce soit écrive la moindre ligne de code UI ou moteur.
-        Tous les Claudes/agents s'appuient dessus. Si tu changes le format en cours de route, tu casses 3 lots en parallèle.
+        Tous les modules s'appuient dessus. Si tu changes le format en cours de route, tu casses 3 lots en parallèle.
       </p>
 
       <div className="callout">
@@ -792,166 +771,17 @@ function ContractTab() {
   );
 }
 
-// ---------- Tickets Claude ---------- //
-function TicketsTab() {
-  const TICKETS = [
-    {
-      lot: 'lotA',
-      title: 'Lot A · Data-driven configs âge I',
-      owner: 'Claude data',
-      files: ['data/techtree.json', 'data/buildings.json', 'data/jobs.json', 'data/needs.json', 'data/resources.json', 'modules/gamedata.js (extension)'],
-      forbidden: ['modules/state.js', 'modules/ui/*', 'tout code de rendu'],
-      objective: 'Figer le format (SPEC v1) et remplir le contenu âge I complet. Aucun âge suivant (juste les entrées vides/teasing dans ages[]).',
-      tasks: [
-        'Créer les 5 fichiers JSON avec le schéma documenté (onglet Contrat).',
-        'Lister exhaustivement les techs/bâtiments/métiers/ressources âge I (voir onglet Checklist par strate).',
-        'Étendre modules/gamedata.js pour charger et valider les 5 fichiers au démarrage.',
-        'Exposer des accesseurs : getTechsForAge(n), getBuildingById(id), getJobsRequiringTech(id).',
-        'Écrire 6 tests unitaires purs sur les accesseurs (fonctions pures, faciles à Vitest plus tard).'
-      ],
-      accept: [
-        'Tous les JSON valident contre un schéma (même simple JS) au boot.',
-        'Chaque requires pointe vers un id existant (linter custom).',
-        'Aucun texte en dur dans le moteur — tout vient des JSON.'
-      ]
-    },
-    {
-      lot: 'lotB',
-      title: 'Lot B · Moteur : Job System, besoins, états',
-      owner: 'Claude moteur',
-      files: ['modules/jobs.js (nouveau)', 'modules/needs.js (nouveau)', 'modules/colonist.js (ajout FAIM + SANS-ABRI)', 'modules/state.js (nouveaux champs)'],
-      forbidden: ['data/*.json (lecture seule)', 'modules/ui/*'],
-      objective: 'Ajouter la file de tâches par colon, les priorités Survie > Travail > Loisir > Flâne, et 2 besoins : Faim + Sans-abri.',
-      tasks: [
-        'Structure : chaque colonist a colonist.jobQueue (Array<Task>) et colonist.needs (Map<id, value>).',
-        'Boucle tick : évaluer needs (+rate par seconde), si critique → push tâche survie en priorité.',
-        'Tâche survie exemple : si hunger > 80, chercher baies ou viande dispo, aller manger, -40 hunger.',
-        'Assignation bâtiment : un colon peut avoir assignedBuildingId (Cabane pour dormir, Hutte du sage pour bosser).',
-        'État SANS-ABRI : affiché en bulle rouge + icône HUD, productivité *0.7 appliquée.',
-        'Consommer les JSON du Lot A (pas de hardcode).'
-      ],
-      accept: [
-        'Un colon sans nourriture devient FAIM critique puis cherche nourriture tout seul.',
-        'Un colon sans Cabane attribuée est marqué SANS-ABRI dans l\'UI.',
-        'Test : lancer une nouvelle partie, laisser 5 min en accéléré, voir les colons chercher à manger sans intervention.'
-      ]
-    },
-    {
-      lot: 'lotC',
-      title: 'Lot C · UI Tech tree XXL  ✅ LIVRÉ v0.3 (à intégrer au repo)',
-      owner: 'Claude UI',
-      files: ['modules/ui/techtree-panel.js (nouveau)', 'modules/ui/techtree-node.js (nouveau)', 'styles/techtree.css', 'index.html (bouton d\'ouverture)'],
-      forbidden: ['data/*.json (lecture seule)', 'modules/jobs.js', 'modules/needs.js'],
-      objective: 'Panneau arbre visuel scrollable/zoomable, 7 colonnes (âges) × 6 lignes (branches). Âge I actif, 2-7 teased/verrouillés en flou.',
-      tasks: [
-        'Panneau plein écran ouvert via touche T ou bouton HUD.',
-        'Pan à la souris (drag background), zoom molette (0.5× à 2×).',
-        'Colonnes = âges (header "Âge I — Pierre", etc.). Lignes = branches.',
-        'Nœuds = cartes (icône + nom + coût), états visuels : verrouillé (0.3), disponible (bordure neutre), recherchable (glow bleu), en cours (progress), débloqué (glow doré).',
-        'Liens SVG entre prérequis (depuis requires).',
-        'Filtre par branche (toggles en haut).',
-        'Recherche texte (filtre cards par nom).',
-        'Âges 2+ affichés en flou + "?????" au lieu du nom des techs — preserve la surprise.'
-      ],
-      accept: [
-        'Ouvrir le panneau affiche toutes les techs âge I avec leur statut réel depuis state.',
-        'Cliquer "Rechercher" sur une tech disponible lance la recherche en puisant dans researchPoints.',
-        'Zoom/pan fluide sur 48x48x8 et plus, pas de lag.',
-        'Pas de contenu âge 2+ visible en clair (même via devtools du jeu).'
-      ]
-    },
-    {
-      lot: 'lotD',
-      title: 'Lot D · Monument Cairn + passage au Bronze',
-      owner: 'Claude transitions',
-      files: ['modules/age-transitions.js (nouveau)', 'modules/cinematics.js (nouveau)', 'data/buildings.json (ajout Cairn)', 'index.html + styles/cinematic.css'],
-      forbidden: ['ne pas toucher à Lot A B C en parallèle — consomme uniquement leurs APIs'],
-      objective: 'Implémenter le Cairn de pierre, ses conditions, la cinématique et la bascule d\'âge.',
-      tasks: [
-        'Nouveau bâtiment Cairn dans buildings.json avec conditions cumulatives (voir onglet Passage au Bronze).',
-        'Fonction canBuildCairn(state) qui retourne true/false + liste des conditions non remplies.',
-        'UI overlay "Monument" qui apparaît sur la barre bâtiments quand les conditions se rapprochent (>80% satisfait).',
-        'onBuild Cairn → trigger_age_transition_bronze : fade noir 1s + titre "Âge du Bronze" 2s + son fanfare + fade retour 1s.',
-        'Bascule state.currentAge = 2, re-render tech tree (Bronze devient accessible), bulles de dialogue célébrant l\'événement.',
-        'Sauvegarder l\'événement dans state.achievements pour affichage plus tard.'
-      ],
-      accept: [
-        'Impossible de poser le Cairn tant qu\'une condition manque (tooltip explicite).',
-        'Passage Bronze joue la cinématique, aucun freeze.',
-        'Tech tree Bronze devient recherchable après cinématique.',
-        'Sauvegarde + reload après passage → on est bien en âge Bronze.'
-      ]
-    }
-  ];
-
-  return (
-    <>
-      <h2 className="sec"><span className="n">06</span>Tickets Claude · 4 lots parallèles</h2>
-      <p className="sec-desc">
-        Chaque lot a un scope clair, une liste de fichiers touchés, une liste de fichiers interdits.
-        Colle ces tickets directement dans le contexte de chaque agent.
-        Le Lot A <b>doit être terminé en premier</b> (contrat JSON gelé), les lots B/C/D peuvent ensuite partir en parallèle.
-      </p>
-
-      <div className="callout">
-        <span className="lbl">📋 Template de prompt pour chaque Claude</span>
-        <pre className="code-block" style={{ marginTop: 6, background: '#2a241c' }}>{`Contexte : je bosse sur Strates, god-game voxel.
-Lis d'abord :
-- docs/strates/README.md
-- docs/strates/roadmap.md (axe 2.3)
-- docs/strates/design-ideas.md (sections Tech tree XXL + Catalogue métiers)
-- (ce doc) age-pierre-pilotage.html onglet 05 ton lot
-
-Ton lot : [coller le ticket ici]
-
-Règles dures :
-- Respecte data/_spec "v1". Jamais modifier le schéma sans ouvrir un ticket.
-- Ne touche pas aux fichiers listés dans "Interdits".
-- Un commit par tâche quand elle est finie, message "lot-X: <tâche>".
-- Vérifie dans le navigateur avant de commit (pas juste la syntaxe).
-- Met à jour docs/strates/changelog.md à la fin.`}</pre>
-      </div>
-
-      {TICKETS.map((t,i) => (
-        <div key={i} className={cls('ticket', t.lot)}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
-            <h4>{t.title}</h4>
-            <span className={cls('pill', t.lot)}>{t.owner}</span>
-          </div>
-          <p style={{ fontSize: 14, margin: '4px 0 10px' }}><b>Objectif :</b> {t.objective}</p>
-
-          <dl className="kv">
-            <dt>Fichiers</dt>
-            <dd>{t.files.map((f,j)=>(<span key={j} className="code" style={{ marginRight: 4 }}>{f}</span>))}</dd>
-            <dt>Interdits</dt>
-            <dd style={{ color: 'var(--blocked)' }}>{t.forbidden.map((f,j)=>(<span key={j} className="code" style={{ marginRight: 4, color: 'var(--blocked)', borderColor: 'var(--blocked)' }}>{f}</span>))}</dd>
-          </dl>
-
-          <h5 className="h-hand" style={{ fontSize: 18, margin: '10px 0 4px' }}>Tâches</h5>
-          <ol style={{ margin: 0, paddingLeft: 20, fontSize: 13 }}>
-            {t.tasks.map((x,j)=><li key={j} style={{ marginBottom: 2 }}>{x}</li>)}
-          </ol>
-
-          <h5 className="h-hand" style={{ fontSize: 18, margin: '10px 0 4px' }}>Critères d'acceptation</h5>
-          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13 }}>
-            {t.accept.map((x,j)=><li key={j} style={{ marginBottom: 2 }}>{x}</li>)}
-          </ul>
-        </div>
-      ))}
-    </>
-  );
-}
 
 // ---------- Bronze passage ---------- //
 function BronzeTab() {
   const CONDITIONS = [
-    { c: '5 villageois logés (Abri + Cabane)', s: 'todo', why: 'masse critique du campement' },
-    { c: 'Stock : 50 Bois + 30 Pierre + 20 Nourriture', s: 'todo', why: 'matériaux pour le rituel + survie pendant construction' },
-    { c: 'Foyer construit et actif', s: 'todo', why: 'pivot outils + cuisson' },
-    { c: 'Hutte du Sage construite', s: 'done', why: 'savoir actif' },
-    { c: '1 Chercheur assigné', s: 'done', why: 'production points recherche' },
-    { c: '100 Points de Recherche accumulés', s: 'todo', why: 'preuve de maîtrise intellectuelle' },
-    { c: 'Stock 10 Os (pour construction Cairn)', s: 'todo', why: 'composant rituel du Cairn — oblige à chasser' }
+    { c: '6 villageois logés (Abri + Cabane)', s: 'partial', why: 'masse critique — condition câblée dans canBuildCairn (SEUILS.population=6). Atteignable sans Abri (Cabane x3 suffit).' },
+    { c: 'Stock : 50 Bois + 30 Pierre + 20 Nourriture', s: 'partial', why: 'câblé dans canBuildCairn (bois 50, pierre 30, getTotalFood 20). Atteignable par Bûcheron + Mineur + Cueilleur.' },
+    { c: 'Foyer construit et actif', s: 'partial', why: 'foyer posable via actionbar (gate fire-mastery). Condition Cairn vérifie researchHouses, pas le foyer directement.' },
+    { c: 'Hutte du Sage construite', s: 'done', why: 'savoir actif — condition câblée : hasLab = researchHouses.length > 0' },
+    { c: '1 Chercheur assigné', s: 'partial', why: 'condition câblée dans canBuildCairn (hasResearcher). Attribution de rôle via labo, pas via UI métier.' },
+    { c: '100 Points de Recherche accumulés', s: 'partial', why: 'totalResearchSpentComputed() vérifie les techs débloquées. Atteignable si toutes les techs âge 1 sont recherchées (pick-stone 5 + axe-stone 5 + bow-wood 5 + shovel-stone 8 + gathering-improved 8 + first-field 10 + big-house 5 + astronomy-1 10 + promontory 0 + fire-mastery 0 + basic-research 0 + oral-tradition 0 = 56pts max âge I visible).' },
+    { c: 'Stock 10 Os (pour construction Cairn)', s: 'todo', why: 'bypassé via DEV_SKIP_BONES=true dans age-transitions.js (Chasseur pas livré). Condition réelle : chasse obligatoire.' }
   ];
   const CAIRN_COST = '50 Pierre + 20 Bois + 10 Os';
   return (
@@ -1037,9 +867,9 @@ function OrderTab() {
     { n: 1, title: 'Contrat gelé', what: 'Lot A démarre seul. Tous les JSON âge I écrits. gamedata.js charge et valide. Aucune UI, aucun moteur touché.', deps: [], unlocks: 'Lots B, C, D peuvent démarrer' },
     { n: 2, title: 'Moteur + UI en parallèle', what: 'Lot B (Job System + besoins). Lot C (UI tech tree XXL). Les deux consomment Lot A.', deps: ['Lot A'], unlocks: 'joueur peut voir tech tree complet + les colons ont faim' },
     { n: 3, title: 'Métiers actifs', what: 'Formaliser Bûcheron / Cueilleur / Mineur / Chercheur en rôles assignables, UI panneau colon. Ajouter Chasseur (gibier → viande/os/peau).', deps: ['Lot A', 'Lot B'], unlocks: 'toutes les ressources âge I récoltables' },
-    { n: 4, title: 'Bâtiments âge I complets', what: 'Ajouter Abri de fortune, Foyer, Totem. Câbler Champ (récolte). Vérifier fusion 4x→Longhouse.', deps: ['Lot A'], unlocks: 'toutes les conditions Cairn atteignables' },
+    { n: 4, title: 'Bâtiments âge I complets', what: 'Câbler Champ (récolte). Vérifier fusion 4x→Longhouse.', deps: ['Lot A'], unlocks: 'toutes les conditions Cairn atteignables' },
     { n: 5, title: 'Cairn + cinématique', what: 'Lot D : bâtiment Cairn, conditions, cinématique, bascule. Premier test bout-en-bout.', deps: ['Lots A,B,C', 'Session 3+4'], unlocks: 'Definition of Done atteignable' },
-    { n: 6, title: 'Polish + tutoriel', what: 'Enchaîner les 3 quêtes starter pour un vrai tutoriel des 15 premières minutes. SFX manquants. Bulles enrichies.', deps: ['toutes'], unlocks: 'âge I livrable publiquement' },
+    { n: 6, title: 'Polish + SFX', what: 'SFX manquants. Bulles enrichies. Attribution de rôles UI.', deps: ['toutes'], unlocks: 'âge I livrable publiquement' },
     { n: 7, title: 'Playtest + équilibrage', what: 'Tester 3x de bout en bout. Ajuster seuils (pop, ressources, coûts de recherche). Fixer bugs.', deps: ['Session 6'], unlocks: 'LIVRAISON ÂGE I' }
   ];
   return (
@@ -1071,9 +901,9 @@ function OrderTab() {
           ['S1', 'Rien visible (infrastructure)', 'Mais tout le monde peut bosser après.'],
           ['S2', 'Ouvrir T → arbre XXL', 'Les colons ont une jauge de faim.'],
           ['S3', 'Cliquer colon → choisir métier', 'Chasseur rapporte viande.'],
-          ['S4', 'Nouveaux bâtiments posables', 'Foyer, Abri, Totem dans la palette.'],
+          ['S4', 'Nouveaux bâtiments posables', 'Champ câblé, Longhouse.'],
           ['S5', 'Poser le Cairn → Bronze', 'Cinématique, nouvelle ambiance.'],
-          ['S6', 'Tutoriel enchaîné', 'Première fois = guidé.'],
+          ['S6', 'Polish SFX + rôles', 'Attribution de rôle UI, sons.'],
           ['S7', 'Équilibré', 'Rythme 30-60 min, pas de deadlock.']
         ].map((s,i)=>(
           <div key={i} className="sketch-box tight">
@@ -1091,19 +921,17 @@ function OrderTab() {
 function AdviceTab() {
   const PITFALLS = [
     { t: 'Construire "en largeur"', d: 'Faire tout l\'arbre techno (60 techs) d\'un coup → 50 techs dormantes sans bâtiments/métiers associés. Symptôme : rien ne change à l\'écran après 2 sessions.', fix: 'Toujours livrer vertical : 1 tech + son bâtiment + son métier + son usage visible dans la même session.' },
-    { t: 'Schéma JSON qui glisse', d: 'Un agent trouve un champ manquant, l\'ajoute sans prévenir. Les 3 autres lots cassent.', fix: 'Bumper _spec à v2 sur breaking change. Un agent qui veut ajouter un champ ouvre un ticket "spec bump" avant de coder.' },
-    { t: 'Agents qui se marchent dessus', d: 'Deux Claudes éditent modules/state.js en même temps.', fix: 'Liste "fichiers interdits" explicite dans chaque ticket. Un seul agent "propriétaire" par fichier critique.' },
+    { t: 'Schéma JSON qui glisse', d: 'Un développeur trouve un champ manquant, l\'ajoute sans prévenir. Les 3 autres lots cassent.', fix: 'Bumper _spec à v2 sur breaking change. Tout changement de schéma passe par un ticket "spec bump" avant de coder.' },
+    { t: 'Modifications en parallèle', d: 'Deux développeurs éditent modules/state.js en même temps.', fix: 'Liste "fichiers interdits" explicite dans chaque lot. Un seul propriétaire par fichier critique.' },
     { t: 'Repousser le moment récompense', d: 'Tout livrer sauf la cinématique et la bascule au Bronze. L\'âge I n\'est jamais "fini" émotionnellement.', fix: 'La cinématique (même ultra-simple : un fade + un titre) fait partie du MVP âge I, pas du polish.' },
     { t: 'Contenu âge 2+ visible par erreur', d: 'Un agent remplit le JSON Bronze pour "gagner du temps" → teasing cassé.', fix: 'Le JSON ne contient que l\'âge I. Les âges 2+ sont des stubs vides : {id: 2, name: "Bronze", unlocked: false} sans aucune tech.' },
     { t: 'Perfectionnisme visuel avant gameplay', d: 'Tu as un axe 4 (visuel) qui est prio. Mais repousser Cairn/Bronze pour peaufiner shaders = piège.', fix: 'Visuel de polish après DoD atteinte. Tu peux toujours ajouter cel-shading après avoir livré l\'âge I jouable.' }
   ];
   const FAQ = [
-    { q: 'Je ne peux avoir qu\'un seul agent qui bosse à la fois, pas 4. Comment je fais ?', a: 'Fais les lots dans l\'ordre A → B → C → D. Le principe de parallélisation reste utile : chaque lot a un scope étanche, donc tu peux reprendre plus tard sans relire tout le projet. Un Claude par session = pas de conflit.' },
     { q: 'Combien de temps pour livrer l\'âge I complet ?', a: 'Estimation : 6-8 sessions de 2-3h. Plus court si tu as déjà l\'infra (c\'est ton cas), plus long si tu itères beaucoup sur le visuel.' },
-    { q: 'Je fais quoi quand je ne sais plus où j\'en suis ?', a: 'Tu as ton agent strates-guide. Sinon : re-ouvre cet onglet, regarde la Definition of Done, trouve la première case rouge, c\'est ton prochain chantier.' },
+    { q: 'Je fais quoi quand je ne sais plus où j\'en suis ?', a: 'Re-ouvre cet onglet, regarde la Definition of Done, trouve la première case rouge, c\'est ton prochain chantier.' },
     { q: 'Le Cairn c\'est ringard, je veux un monolithe obsidien/un feu sacré.', a: 'Renomme-le. Le nom n\'est qu\'un placeholder. Ce qui compte c\'est la mécanique : un bâtiment unique, conditions cumulatives, déclenche le passage.' },
-    { q: 'Je dois vraiment faire le tech tree XXL maintenant ?', a: 'Oui. Pas le CONTENU XXL (seul âge I est rempli), mais la STRUCTURE XXL. Ajouter plus tard un panneau fondamentalement différent = refonte + bugs. Commencer dès le début avec le vrai panneau = zéro dette technique.' },
-    { q: 'La mindmap et ce doc risquent de se désynchroniser.', a: 'On peut brancher ce doc pour qu\'il lise directement data/techtree.json de ton repo (via fetch ou export JSON statique). Dis-moi si tu veux que je fasse cette plomberie.' }
+    { q: 'Je dois vraiment faire le tech tree XXL maintenant ?', a: 'Oui. Pas le CONTENU XXL (seul âge I est rempli), mais la STRUCTURE XXL. Ajouter plus tard un panneau fondamentalement différent = refonte + bugs. Commencer dès le début avec le vrai panneau = zéro dette technique.' }
   ];
 
   return (
@@ -1119,21 +947,6 @@ function AdviceTab() {
             <div style={{ fontSize: 13, color: 'var(--done)' }}><b>Parade :</b> {p.fix}</div>
           </div>
         ))}
-      </div>
-
-      <hr className="wavy"/>
-
-      <h3 className="hh">💡 Bonnes pratiques pour les Claudes</h3>
-      <div className="sketch-box">
-        <ol style={{ fontSize: 14, lineHeight: 1.5, paddingLeft: 20, margin: 0 }}>
-          <li><b>Toujours lire</b> <span className="code">docs/strates/roadmap.md</span> et <span className="code">changelog.md</span> en début de session (ton agent <span className="code">strates-guide</span> le fait pour toi).</li>
-          <li><b>Vérifier dans le navigateur</b> avant commit, pas juste <span className="code">node --check</span>.</li>
-          <li><b>Un commit = une tâche finie.</b> Message <span className="code">lot-A: ajouter techtree.json âge 1</span>.</li>
-          <li><b>Mettre à jour le changelog</b> à chaque livraison, même mineure. Ça devient ton fil d'Ariane.</li>
-          <li><b>Sub-agent <span className="code">strates-guide</span></b> à invoquer quand un agent arrive : il synthétise vision + état + prochaine étape.</li>
-          <li><b>Ne jamais modifier la branche <span className="code">strate</span> sans branche dédiée</b>. Un lot = une branche <span className="code">lot-A-data-age1</span>.</li>
-          <li><b>Les tests Vitest (axe 1.6)</b> peuvent attendre, mais écris les fonctions pures comme si tu allais les tester demain.</li>
-        </ol>
       </div>
 
       <hr className="wavy"/>
@@ -1161,55 +974,11 @@ function AdviceTab() {
 function QuestsTab() {
   return (
     <>
-      <h2 className="sec"><span className="n">04</span>Quêtes enchaînées 1-7</h2>
-      <p className="sec-desc">
-        Le tutoriel de l'âge I est porté par 7 quêtes qui s'enchaînent automatiquement.
-        Q1→Q6 couvrent les 15-20 premières minutes (onboarding guidé). Q7 est l'objectif long terme (Cairn).
-        Chaque quête débloque la suivante via sa <b>récompense</b> qui est soit un schéma, soit un spawn, soit un accès.
-      </p>
-
+      <h2 className="sec"><span className="n">04</span>Système de quêtes</h2>
       <div className="callout">
-        <span className="lbl">🎯 Règle du chaînage</span>
-        Une quête ne peut démarrer que si la précédente est validée. Le joueur peut en revanche <b>continuer</b> à jouer
-        sans être bloqué — la prochaine quête apparaît dès qu'il a les moyens. Pas de mur bloquant, juste une guidance.
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        {QUESTS_AGE1.map((q, i) => (
-          <div key={q.id} className="sketch-box" style={{ marginBottom: 10, display: 'grid', gridTemplateColumns: '60px 1fr 220px', gap: 14, alignItems: 'center' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div className="h-hand" style={{ fontSize: 44, lineHeight: 1, color: 'var(--hl)' }}>Q{q.id}</div>
-              <div className="mono" style={{ fontSize: 10, color: 'var(--ink-faint)' }}>{q.dur}</div>
-            </div>
-            <div>
-              <div className="h-hand" style={{ fontSize: 24 }}>{q.title}</div>
-              <div style={{ fontSize: 13, margin: '2px 0' }}><b>Objectif :</b> {q.obj}</div>
-              <div style={{ fontSize: 12, color: 'var(--ink-faint)' }}><b>Tuto :</b> {q.tuto}</div>
-            </div>
-            <div style={{ fontSize: 12 }}>
-              <div className="pill" style={{ marginBottom: 4 }}>RÉCOMPENSE</div>
-              <div style={{ fontSize: 13 }}>{q.reward}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <hr className="wavy"/>
-
-      <h3 className="hh">🔗 Dépendances implicites de chaînage</h3>
-      <div className="sketch-box">
-        <table className="t">
-          <thead><tr><th>Quête</th><th>Pré-état requis</th><th>Verrou levé à la fin</th></tr></thead>
-          <tbody>
-            <tr><td>Q1</td><td>Nouveau jeu</td><td>Foyer posable</td></tr>
-            <tr><td>Q2</td><td>Foyer posable (Q1)</td><td>Craft Hache/Pioche/Lance au Foyer</td></tr>
-            <tr><td>Q3</td><td>Outils craftables (Q2)</td><td>Abri posable</td></tr>
-            <tr><td>Q4</td><td>Abri + Cabane posables (Q3)</td><td>Spawn +1 villageois</td></tr>
-            <tr><td>Q5</td><td>Lance + Chasseur assignable (Q2)</td><td>Totem posable</td></tr>
-            <tr><td>Q6</td><td>Cabane construite (Q4)</td><td>Arbre Recherche ouvert</td></tr>
-            <tr><td>Q7</td><td>Toutes Q1-Q6 validées</td><td>Cinématique Bronze → Âge 2</td></tr>
-          </tbody>
-        </table>
+        <span className="lbl">✅ Moteur livré</span>
+        Le moteur de quêtes est présent dans le code (quests.js) : états disponible/active/complétée, catalogue de 9 quêtes génériques, rewards câblés.
+        Les quêtes scénarisées enchaînées ont été retirées du scope âge I.
       </div>
     </>
   );
@@ -1221,8 +990,8 @@ function LaterTab() {
     <>
       <h2 className="sec"><span className="n">09</span>Nice-to-have (repoussés mais documentés)</h2>
       <p className="sec-desc">
-        Ces items sont <b>volontairement hors scope</b> âge I pour éviter le glissement. Ils sont documentés ici pour que les Claudes
-        ne les réimplémentent pas "au cas où" dans un lot. Si tu veux les activer plus tard, reviens à ce doc.
+        Ces items sont <b>volontairement hors scope</b> âge I pour éviter le glissement. Documentés ici pour ne pas les réimplémenter
+        "au cas où" en cours de route. Si tu veux les activer plus tard, reviens à ce doc.
       </p>
 
       <div className="grid-2">
@@ -1251,9 +1020,9 @@ function LaterTab() {
       </div>
 
       <div className="callout" style={{ marginTop: 12 }}>
-        <span className="lbl">💬 Réponse standard à un Claude qui veut les implémenter</span>
-        "C'est dans l'onglet Nice-to-have du doc de pilotage. Reporte à la fin de l'âge I ou à l'âge suivant.
-        Ne l'ajoute pas maintenant, ça casse la focalisation verticale."
+        <span className="lbl">🎯 Principe</span>
+        Si un de ces items est tentant, reporte-le à la fin de l'âge I ou à l'âge suivant.
+        L'ajouter maintenant casse la focalisation verticale.
       </div>
     </>
   );
@@ -1274,7 +1043,6 @@ function App() {
         {tab==='strates'    && <StratesTab/>}
         {tab==='quests'     && <QuestsTab/>}
         {tab==='contract'   && <ContractTab/>}
-        {tab==='tickets'    && <TicketsTab/>}
         {tab==='bronze'     && <BronzeTab/>}
         {tab==='order'      && <OrderTab/>}
         {tab==='later'      && <LaterTab/>}
