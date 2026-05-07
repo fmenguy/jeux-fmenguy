@@ -1,8 +1,8 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Strates — Mindmap de conception · v0.3</title>
+<title>Strates — Mindmap de conception · v0.4</title>
 <style>
   /* v0.3 — Axe Social injected banner */
   .v03-banner{position:sticky;top:0;z-index:100;background:#fff6c9;border-bottom:1.5px dashed #d94a2c;padding:10px 28px;font-family:'Kalam',system-ui,sans-serif;font-size:13.5px;color:#1f1a14}
@@ -363,7 +363,7 @@
 </style>
 </head>
 <body>
-  <div class="v03-banner"><b>v0.3 ·</b> Tech tree XXL livré (source brute <code>public/strates/techtree-v2.html</code>) · nouvel axe <b style="color:#6a4a8a">Social</b> à intégrer ↓ · <a href="age-pierre-pilotage-v0.3.html" style="color:#3d5a99">◄ voir pilotage Âge de Pierre v0.3</a></div>
+  <div class="v03-banner"><b>v0.4 · 2026-05-02 ·</b> Tech tree XXL livré (source brute <code>public/strates/techtree-v2.html</code>) · nouvel axe <b style="color:#6a4a8a">Social</b> à intégrer ↓ · <a href="age-pierre-pilotage-v0.3.html" style="color:#3d5a99">◄ voir pilotage Âge de Pierre v0.3</a></div>
 
   <section class="v03-social">
     <h3>🫂 Axe Social — à intégrer comme 4e strate</h3>
@@ -429,12 +429,12 @@
       { "roman": "VII", "name": "Espace",       "era": "Endgame, orbital" }
     ],
     "tree_tech": {
-      "Outils":        [["Hache pierre","Pioche pierre"],["Hache bronze","Pioche bronze","Pelle bronze"],["Pioche fer","Houe fer","Pioche or"],["Machine à vapeur"],[],[],[]],
-      "Agriculture":   [["Premier champ"],["Champ de blé","Grenier"],["Irrigation","Moulin"],[],[],[],[]],
-      "Construction":  [["Maîtrise du feu","Abri de fortune"],["Forge","Route pavée"],["Château fort"],[],[],[],["Fusée orbitale"]],
-      "Savoir":        [["Tradition orale"],["Écriture"],["Bibliothèque"],[],["Électricité"],["Énergie nucléaire"],[]],
-      "Exploration":   [["Éclaireur"],["Cartographie","Routes comm."],["Tour de vigie","Grande expédition"],["Navigation"],["Colonies"],[],[]],
-      "Nocturne 🌙":   [["Promontoire*"],[],["Observatoire*"],[],["Grand télescope*"],["Radio-télescope*"],["Portail orbital*"]]
+      "Outils":        [["Hache pierre","Pioche pierre","Arc","Terraformation"],["Hache bronze","Pioche bronze","Pelle bronze"],["Pioche fer","Houe fer","Pioche or"],["Machine à vapeur"],[],[],[]],
+      "Agriculture":   [["Cueillette améliorée","Premier champ"],["Champ de blé","Grenier"],["Irrigation","Moulin"],[],[],[],[]],
+      "Construction":  [["Maîtrise du feu","Grosse maison"],["Forge","Route pavée"],["Château fort"],[],[],[],["Fusée orbitale"]],
+      "Savoir":        [["Recherche de base","Tradition orale"],["Écriture"],["Bibliothèque"],[],["Électricité"],["Énergie nucléaire"],[]],
+      "Exploration":   [[],["Éclaireur","Cartographie","Routes comm."],["Tour de vigie","Grande expédition"],["Navigation"],["Colonies"],[],[]],
+      "Nocturne 🌙":   [["Promontoire*","Astronomie I"],[],["Observatoire*"],[],["Grand télescope*"],["Radio-télescope*"],["Portail orbital*"]]
     },
     "tree_build": {
       "Habitation":    [["Cabane (+2)"],["Maison (+5)"],["Manoir (+12)"],["Château (+28)"],[],["Palais (+60)"],["Arcologie (+200)"]],
@@ -478,7 +478,7 @@
       { "name":"Meunier",    "age":3, "req":[{"k":"build","l":"Moulin"}], "out":[{"k":"res","l":"Farine"}] },
       { "name":"Pêcheur",    "age":3, "req":[{"k":"build","l":"Port"}], "out":[{"k":"res","l":"Poisson"}] },
       { "name":"Bâtisseur",  "age":3, "req":[{"k":"res","l":"Planches"},{"k":"res","l":"Pierre"}], "out":[{"k":"res","l":"Constructions"}] },
-      { "name":"Explorateur","age":1, "req":[{"k":"tech","l":"Éclaireur"}], "out":[{"k":"res","l":"Carte"}] },
+      { "name":"Explorateur","age":2, "req":[{"k":"tech","l":"Éclaireur"}], "out":[{"k":"res","l":"Carte"}] },
       { "name":"Médecin",    "age":4, "req":[{"k":"build","l":"Infirmerie"}], "out":[{"k":"res","l":"Soins"}] },
       { "name":"Ingénieur",  "age":4, "req":[{"k":"build","l":"Université"}], "out":[{"k":"res","l":"Recherche+"}] }
     ]
