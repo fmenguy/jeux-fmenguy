@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>POC bulles colon — comparaison avant / après</title>
+<style>
+  body {
+    margin: 0; padding: 24px;
+    background: linear-gradient(180deg, #7cc06a 0%, #5a9e4c 60%, #6a6256 100%);
+    min-height: 100vh;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    color: #f3ecdd;
+    overflow-x: hidden;
+  }
+  h1 { margin: 0 0 12px; font-size: 18px; letter-spacing: 0.06em; color: #ffd98a; }
+  .controls {
+    background: rgba(20,18,14,0.85);
+    border: 1px solid rgba(212,184,112,0.35);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  label { font-size: 11px; min-width: 130px; color: #c7b98c; }
+  input[type=range] { flex: 1; max-width: 380px; }
+  .val { font-size: 11px; color: #ffd98a; min-width: 80px; text-align: right; }
+  button {
+    background: rgba(212,184,112,0.15);
+    border: 1px solid rgba(212,184,112,0.45);
+    color: #f3ecdd;
+    font-family: inherit;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+  }
+  button:hover { background: rgba(212,184,112,0.25); }
+  button.active { background: rgba(212,184,112,0.4); color: #1a1814; font-weight: 700; }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 800px) { .stage { grid-template-columns: 1fr; } }
+  .scene {
+    position: relative;
+    background: linear-gradient(180deg, #cfe6f5 0%, #94cd7e 60%, #5a9e4c 100%);
+    border: 2px solid rgba(0,0,0,0.4);
+    border-radius: 6px;
+    height: 520px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+  .scene .label {
+    position: absolute; top: 8px; left: 12px;
+    background: rgba(20,18,14,0.85);
+    border: 1px solid rgba(212,184,112,0.35);
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #ffd98a;
+    z-index: 10;
+  }
+  .scene .meta {
+    position: absolute; bottom: 8px; left: 12px;
+    background: rgba(20,18,14,0.78);
+    color: #c7b98c;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 2px;
+    z-index: 10;
+  }
+  .colonist {
+    position: absolute; left: 50%; bottom: 60px;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .col-bubble {
+    /* La bulle est rendue via canvas-to-image, scaled comme un sprite world. */
+    transform-origin: bottom center;
+    margin-bottom: 4px;
+  }
+  .col-body {
+    width: 16px; height: 28px;
+    background: #d9b14a;
+    border: 2px solid #1a1814;
+    border-radius: 2px;
+  }
+  .col-head {
+    width: 14px; height: 14px;
+    background: #ead3b0;
+    border: 2px solid #1a1814;
+    border-radius: 50%;
+    margin-bottom: -4px;
+  }
+  .col-name {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    background: rgba(20,18,14,0.85);
+    color: #ffd98a;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>POC bulles colons — comparaison avant (commit cc37f96) ↔ après</h1>
+
+<div class="controls">
+  <div class="row">
+    <label>Phrase</label>
+    <button data-line="0" class="active">Courte</button>
+    <button data-line="1">Moyenne</button>
+    <button data-line="2">Longue</button>
+    <button data-line="3">Très longue (3 lignes)</button>
+  </div>
+  <div class="row">
+    <label>Distance caméra</label>
+    <input type="range" id="dist" min="6" max="50" step="0.5" value="16" />
+    <span class="val" id="dist-val">16 u</span>
+  </div>
+  <div class="row">
+    <label>Hauteur scène (px)</label>
+    <input type="range" id="ppu" min="20" max="80" step="2" value="42" />
+    <span class="val" id="ppu-val">42 px/u</span>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="scene" id="scene-old">
+    <div class="label">AVANT (canvas 512×160, font 28px, sprite 2.4×0.75)</div>
+    <div class="colonist">
+      <img class="col-bubble" id="bubble-old" />
+      <div class="col-head"></div>
+      <div class="col-body"></div>
+      <div class="col-name">★ François</div>
+    </div>
+    <div class="meta" id="meta-old"></div>
+  </div>
+
+  <div class="scene" id="scene-new">
+    <div class="label">APRÈS (style ardoise+or, font 700 40px, sprite 3.4×1.1)</div>
+    <div class="colonist">
+      <img class="col-bubble" id="bubble-new" />
+      <div class="col-head"></div>
+      <div class="col-body"></div>
+      <div class="col-name">★ François</div>
+    </div>
+    <div class="meta" id="meta-new"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// drawBubble : reproduction fidèle des deux versions de bubbles.js du projet.
+// ============================================================================
+
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r }
+    this.beginPath()
+    this.moveTo(x + r.tl, y)
+    this.lineTo(x + w - r.tr, y)
+    this.quadraticCurveTo(x + w, y, x + w, y + r.tr)
+    this.lineTo(x + w, y + h - r.br)
+    this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h)
+    this.lineTo(x + r.bl, y + h)
+    this.quadraticCurveTo(x, y + h, x, y + h - r.bl)
+    this.lineTo(x + r.tl, y)
+    this.quadraticCurveTo(x, y, x + r.tl, y)
+    this.closePath()
+    return this
+  }
+}
+
+function drawBubble(canvas, text, cfg) {
+  const ctx = canvas.getContext('2d')
+  const padX = cfg.padX, padY = cfg.padY, lineH = cfg.lineH
+  const bodyFont = cfg.bodyFont
+  const maxTextW = canvas.width - padX * 2
+  ctx.font = bodyFont
+  const words = text.split(' ')
+  const lines = []
+  let cur = ''
+  for (const w of words) {
+    const c = cur ? cur + ' ' + w : w
+    if (cur && ctx.measureText(c).width > maxTextW) { lines.push(cur); cur = w }
+    else cur = c
+  }
+  if (cur) lines.push(cur)
+  let maxLW = 0
+  for (const l of lines) { const w = ctx.measureText(l).width; if (w > maxLW) maxLW = w }
+  const bw = Math.min(canvas.width - 8, maxLW + padX * 2)
+  const bh = lines.length * lineH + padY * 2
+  const by = cfg.by
+  const tipH = cfg.tipH
+  const canvasH = by + bh + tipH + cfg.bottom
+  if (canvas.height !== canvasH) canvas.height = canvasH
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.font = bodyFont
+  const bx = (canvas.width - bw) / 2
+  const r = cfg.r
+  // Style "ardoise+or" pour le profil "new" ; classique blanc pour "old".
+  if (cfg.styleArdoise) {
+    // Drop shadow nette
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'
+    ctx.beginPath(); ctx.roundRect(bx + 4, by + 5, bw, bh, r); ctx.fill()
+    // Corps ardoise
+    ctx.fillStyle = '#1c1a14'
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill()
+    // Bordure or
+    ctx.strokeStyle = '#c8a84b'
+    ctx.lineWidth = 3
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.stroke()
+    // Liseré crème intérieur
+    ctx.strokeStyle = 'rgba(243,236,221,0.18)'
+    ctx.lineWidth = 1
+    ctx.beginPath(); ctx.roundRect(bx + 3, by + 3, bw - 6, bh - 6, r - 3); ctx.stroke()
+  } else {
+    ctx.fillStyle = 'rgba(0,0,0,0.22)'
+    ctx.beginPath(); ctx.roundRect(bx + 3, by + 4, bw, bh, r); ctx.fill()
+    ctx.fillStyle = '#ffffff'
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'
+    ctx.lineWidth = 2
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, r); ctx.fill(); ctx.stroke()
+  }
+  const cxp = canvas.width / 2
+  const tipY = by + bh + tipH
+  const tipBaseHalf = cfg.tipBaseHalf
+  ctx.beginPath()
+  ctx.moveTo(cxp - tipBaseHalf, by + bh - 1)
+  ctx.lineTo(cxp + tipBaseHalf, by + bh - 1)
+  ctx.lineTo(cxp, tipY)
+  ctx.closePath()
+  if (cfg.styleArdoise) {
+    ctx.fillStyle = '#1c1a14'; ctx.fill()
+    ctx.strokeStyle = '#c8a84b'; ctx.lineWidth = 3; ctx.stroke()
+    ctx.fillStyle = '#1c1a14'
+    ctx.fillRect(cxp - tipBaseHalf + 1, by + bh - 2, tipBaseHalf * 2 - 2, 4)
+  } else {
+    ctx.fillStyle = '#ffffff'; ctx.fill()
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.stroke()
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(cxp - tipBaseHalf + 1, by + bh - 2, tipBaseHalf * 2 - 2, 3)
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  ctx.fillStyle = cfg.styleArdoise ? '#f3ecdd' : '#1a1f2a'
+  ctx.font = bodyFont
+  const textX = canvas.width / 2
+  const textStartY = by + padY + lineH / 2
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], textX, textStartY + i * lineH)
+  }
+  return { bw, bh: canvasH }
+}
+
+const CFG_OLD = {
+  canvasW: 512, canvasH: 160,
+  padX: 24, padY: 16, lineH: 36,
+  bodyFont: '500 28px system-ui, sans-serif',
+  by: 10, tipH: 26, tipBaseHalf: 11, bottom: 14, r: 16,
+  spriteW: 2.4, spriteH: 0.75,
+  zoomMin: 0.7, zoomMax: 2.2,
+}
+// APRÈS : style "ardoise + or" cohérent avec le HUD du jeu.
+// Fond opaque sombre + bordure dorée + texte crème = contraste 9:1, lisible
+// sur tous les biomes (herbe, neige, eau, sable). Police 700 40px Inter.
+const CFG_NEW = {
+  canvasW: 768, canvasH: 260,
+  padX: 36, padY: 24, lineH: 48,
+  bodyFont: '700 40px "Inter", "Segoe UI", system-ui, sans-serif',
+  by: 18, tipH: 30, tipBaseHalf: 16, bottom: 22, r: 14,
+  spriteW: 3.4, spriteH: 1.1,
+  zoomMin: 0.95, zoomMax: 4.5,
+  styleArdoise: true,
+}
+
+const LINES = [
+  "Bonjour !",
+  "Le foyer me réchauffe bien ce soir.",
+  "Le Cairn avance, on en verra bientôt le sommet, j'espère.",
+  "Je rêve d'une forge digne de ce nom, un jour viendra où le bronze remplacera nos haches en pierre.",
+]
+
+let currentLine = 0
+let dist = 16
+let ppu = 42
+
+function buildCanvas(cfg) {
+  const c = document.createElement('canvas')
+  c.width = cfg.canvasW; c.height = cfg.canvasH
+  return c
+}
+const canvasOld = buildCanvas(CFG_OLD)
+const canvasNew = buildCanvas(CFG_NEW)
+
+const imgOld = document.getElementById('bubble-old')
+const imgNew = document.getElementById('bubble-new')
+const metaOld = document.getElementById('meta-old')
+const metaNew = document.getElementById('meta-new')
+
+function render() {
+  const text = LINES[currentLine]
+  const { bw: bwO, bh: bhO } = drawBubble(canvasOld, text, CFG_OLD)
+  const { bw: bwN, bh: bhN } = drawBubble(canvasNew, text, CFG_NEW)
+  imgOld.src = canvasOld.toDataURL()
+  imgNew.src = canvasNew.toDataURL()
+
+  // Sprite scale = baseW * zoomFactor, idem côté projet
+  const zoomOld = Math.max(CFG_OLD.zoomMin, Math.min(CFG_OLD.zoomMax, dist / 16))
+  const zoomNew = Math.max(CFG_NEW.zoomMin, Math.min(CFG_NEW.zoomMax, dist / 16))
+  const baseWO = Math.max(1.2, (bwO / 512) * 3.2)
+  const baseHO = Math.max(0.4, (bhO / 160) * 0.75)
+  const baseWN = Math.max(1.8, (bwN / 768) * 4.5)
+  const baseHN = Math.max(0.6, (bhN / 240) * 1.05)
+  const wO = baseWO * zoomOld * ppu
+  const hO = baseHO * zoomOld * ppu
+  const wN = baseWN * zoomNew * ppu
+  const hN = baseHN * zoomNew * ppu
+  imgOld.style.width = wO + 'px'; imgOld.style.height = hO + 'px'
+  imgNew.style.width = wN + 'px'; imgNew.style.height = hN + 'px'
+
+  metaOld.textContent =
+    'canvas ' + canvasOld.width + '×' + canvasOld.height +
+    ' | sprite ' + baseWO.toFixed(2) + '×' + baseHO.toFixed(2) +
+    ' u | zoom ' + zoomOld.toFixed(2) +
+    ' | écran ' + Math.round(wO) + '×' + Math.round(hO) + ' px'
+  metaNew.textContent =
+    'canvas ' + canvasNew.width + '×' + canvasNew.height +
+    ' | sprite ' + baseWN.toFixed(2) + '×' + baseHN.toFixed(2) +
+    ' u | zoom ' + zoomNew.toFixed(2) +
+    ' | écran ' + Math.round(wN) + '×' + Math.round(hN) + ' px'
+}
+
+document.querySelectorAll('button[data-line]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('button[data-line]').forEach(x => x.classList.remove('active'))
+    b.classList.add('active')
+    currentLine = parseInt(b.dataset.line, 10)
+    render()
+  })
+})
+const distInput = document.getElementById('dist')
+const distVal = document.getElementById('dist-val')
+distInput.addEventListener('input', () => {
+  dist = parseFloat(distInput.value)
+  distVal.textContent = dist.toFixed(1) + ' u'
+  render()
+})
+const ppuInput = document.getElementById('ppu')
+const ppuVal = document.getElementById('ppu-val')
+ppuInput.addEventListener('input', () => {
+  ppu = parseFloat(ppuInput.value)
+  ppuVal.textContent = ppu + ' px/u'
+  render()
+})
+
+render()
+</script>
+</body>
+</html>
