@@ -338,6 +338,112 @@
       margin-top: 0.3rem;
     }
 
+    .dev-card {
+      background: var(--surface);
+      border: 1px dashed rgba(245,158,11,0.35);
+      border-radius: 14px;
+      padding: 1.8rem 1.8rem 1.6rem;
+      margin-top: 0.5rem;
+    }
+    .dev-card-head {
+      display: flex;
+      align-items: baseline;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.9rem;
+    }
+    .dev-card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f0e0c0;
+      letter-spacing: 0.04em;
+    }
+    .dev-card-status {
+      font-size: 0.7rem;
+      color: #f59e0b;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .dev-card p {
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--text);
+      margin-bottom: 0.8rem;
+    }
+    .dev-card a.inline {
+      color: var(--gold);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(212,160,23,0.3);
+    }
+    .dev-card a.inline:hover { border-color: var(--gold); }
+
+    .dev-progress {
+      margin-top: 1.4rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--border);
+    }
+    .dev-progress-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+    .ages {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.4rem;
+      margin-bottom: 0.9rem;
+      max-width: 420px;
+    }
+    .age {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+      position: relative;
+    }
+    .age.done {
+      background: rgba(74,222,128,0.08);
+      border-color: rgba(74,222,128,0.4);
+      color: #4ade80;
+    }
+    .age.wip {
+      background: rgba(245,158,11,0.1);
+      border-color: rgba(245,158,11,0.5);
+      color: #f59e0b;
+    }
+    .age.wip::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 7px;
+      border: 1px solid rgba(245,158,11,0.3);
+      animation: agepulse 2s ease-in-out infinite;
+    }
+    @keyframes agepulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.05); }
+    }
+    .dev-progress-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .dev-progress-meta strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
     .card-mini-header {
       display: flex;
       align-items: center;
@@ -465,6 +571,36 @@
 
   </div>
 
+  <div class="section-label">Jeux en cours de développement</div>
+
+  <div class="dev-card">
+    <div class="dev-card-head">
+      <span class="dev-card-title">Strates</span>
+      <span class="dev-card-status">En développement</span>
+    </div>
+    <p>
+      Jeu de simulation voxel inspiré de <a class="inline" href="/fda/">Forge des Âges</a>. Une colonie débarque sur une île et traverse sept âges de civilisation, de la pierre jusqu'à l'espace.
+    </p>
+    <p>
+      Le but du joueur, explorer le monde, accompagner ses colons, et atteindre le dernier âge.
+    </p>
+
+    <div class="dev-progress">
+      <div class="dev-progress-label">Avancement</div>
+      <div class="ages">
+        <div class="age done" title="Âge 1, Pierre, finalisé">I</div>
+        <div class="age wip" title="Âge 2, en cours">II</div>
+        <div class="age" title="Âge 3">III</div>
+        <div class="age" title="Âge 4">IV</div>
+        <div class="age" title="Âge 5">V</div>
+        <div class="age" title="Âge 6">VI</div>
+        <div class="age" title="Âge 7">VII</div>
+      </div>
+      <p class="dev-progress-meta">
+        Au <strong>10 mai 2026</strong>, deux mois de travail sur le projet. Âge 1 (Pierre) finalisé, âge 2 en cours.
+      </p>
+    </div>
+  </div>
 
 </main>
 
