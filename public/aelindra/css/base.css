@@ -32,6 +32,30 @@ html, body {
   border-radius: var(--radius);
 }
 
+/* Sur vrai mobile : plein écran, sans bordure ni arrondi */
+@media (max-width: 480px) {
+  html, body {
+    display: block;
+    overflow: hidden;
+  }
+
+  #phone {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* hauteur dynamique, tient compte de la barre Android */
+    border: none;
+    border-radius: 0;
+  }
+}
+
+/* Écrans hauts mais pas assez larges (portrait serré) */
+@media (max-height: 660px) and (min-width: 481px) {
+  :root {
+    --phone-h: calc(100vh - 20px);
+    --phone-w: calc((100vh - 20px) * 9 / 16);
+  }
+}
+
 /* ---- Écrans ---- */
 .scr {
   position: absolute;
