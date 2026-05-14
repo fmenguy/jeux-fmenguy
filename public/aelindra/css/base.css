@@ -1,0 +1,59 @@
+/* ============================================
+   AELINDRA · css/base.css
+   Reset, layout global, phone frame
+   ============================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-title);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* ---- Phone frame (mobile 9:16) ---- */
+#phone {
+  width: var(--phone-w);
+  height: var(--phone-h);
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--b);
+  border-radius: var(--radius);
+}
+
+/* ---- Écrans ---- */
+.scr {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.scr.on {
+  display: flex;
+}
+
+/* ---- Scrollbars fines ---- */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
+
+/* ---- Utilitaires ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+}

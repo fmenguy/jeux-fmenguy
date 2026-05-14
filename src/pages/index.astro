@@ -190,6 +190,18 @@
     .card-featured--cyan::before { background: linear-gradient(90deg, transparent, #38bdf8, transparent); }
     .card-featured--cyan .card-cta { color: #38bdf8; }
 
+    .card-banner--aelindra {
+      background: radial-gradient(ellipse at 50% 70%, #2a0e14 0%, #160709 55%, #07090f 100%);
+    }
+    .card-featured--aelindra:hover {
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 0 1px #c8a84b;
+      border-color: #c8a84b;
+    }
+    .card-featured--aelindra::before {
+      background: linear-gradient(90deg, transparent, #c8a84b, transparent);
+    }
+    .card-featured--aelindra .card-cta { color: #c8a84b; }
+
     .card-body {
       padding: 1.4rem 1.5rem 1.6rem;
       flex: 1;
@@ -579,6 +591,37 @@
   </div>
 
   <div class="section-label">Jeux en cours de développement</div>
+
+  <a class="card-featured card-featured--aelindra" href="/aelindra/" style="display:flex;flex-direction:column;margin-bottom:1.5rem;text-decoration:none;color:inherit;">
+    <div class="card-banner card-banner--aelindra">
+      <svg viewBox="0 0 160 140" xmlns="http://www.w3.org/2000/svg" width="160" height="140" aria-label="Aelindra">
+        <defs>
+          <linearGradient id="aelgold" x1="0%" y1="0%" x2="60%" y2="100%">
+            <stop offset="0%" stop-color="#f5e070"/>
+            <stop offset="45%" stop-color="#d4a017"/>
+            <stop offset="100%" stop-color="#8a6008"/>
+          </linearGradient>
+          <filter id="aelglow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <line x1="14" y1="22" x2="58" y2="22" stroke="#c8a84b" stroke-width="1" opacity="0.45"/>
+        <line x1="102" y1="22" x2="146" y2="22" stroke="#c8a84b" stroke-width="1" opacity="0.45"/>
+        <polygon points="80,6 84,16 80,12 76,16" fill="#c8a84b" opacity="0.75"/>
+        <text x="80" y="118" text-anchor="middle" font-family="Cinzel, serif" font-size="110" font-weight="900" fill="url(#aelgold)" filter="url(#aelglow)">A</text>
+        <line x1="14" y1="128" x2="58" y2="128" stroke="#c8a84b" stroke-width="1" opacity="0.45"/>
+        <line x1="102" y1="128" x2="146" y2="128" stroke="#c8a84b" stroke-width="1" opacity="0.45"/>
+        <circle cx="80" cy="128" r="2" fill="#c8a84b" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <span class="card-tag card-tag--soon">En développement</span>
+      <div class="card-title">Aelindra · Chroniques des Profondeurs</div>
+      <div class="card-desc">RPG tactique au tour par tour sur mobile. Constituez votre équipe de héros, explorez des donjons en grille 7×7, combattez des boss et gérez votre guilde. Gacha, équipement, missions quotidiennes.</div>
+      <span class="card-cta">Jouer (beta)</span>
+    </div>
+  </a>
 
   <div class="dev-card">
     <div class="dev-card-head">
