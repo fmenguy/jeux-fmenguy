@@ -1,0 +1,95 @@
+/* ============================================
+   AELINDRA · css/animations.css
+   Keyframes et classes d'animation
+   ============================================ */
+
+/* ---- GACHA ORB SPIN ---- */
+@keyframes orb-spin {
+  0%   { transform: scale(.8) rotate(-20deg); }
+  50%  { transform: scale(1.15) rotate(10deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.anim-spin { animation: orb-spin .6s ease; }
+
+/* ---- CARD POP (résultat gacha) ---- */
+@keyframes card-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  80%  { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.anim-pop { animation: card-pop .3s ease both; }
+
+/* ---- LEVEL UP FLASH ---- */
+@keyframes lv-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(200,168,75,.6); }
+  70%  { box-shadow: 0 0 0 10px rgba(200,168,75,0); }
+  100% { box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+}
+.anim-levelup { animation: lv-flash .6s ease; }
+
+/* ---- HERO REVEAL SLIDE ---- */
+@keyframes slide-from-right {
+  0%   { right: -420px; }
+  100% { right: 40px; }
+}
+@keyframes slide-from-left {
+  0%   { left: -360px; }
+  100% { left: 30px; }
+}
+.anim-slide-right { animation: slide-from-right .8s cubic-bezier(.22,1,.36,1) forwards; }
+.anim-slide-left  { animation: slide-from-left  .9s cubic-bezier(.22,1,.36,1) .15s forwards; }
+
+/* ---- FLASH BLANC (reveal) ---- */
+@keyframes white-flash {
+  0%   { opacity: .6; }
+  100% { opacity: 0; }
+}
+.anim-flash { animation: white-flash .4s ease forwards; }
+
+/* ---- PARTICULES ---- */
+@keyframes particle-float {
+  0%   { opacity: 0; transform: translateY(0) scale(0); }
+  20%  { opacity: .6; }
+  80%  { opacity: .3; }
+  100% { opacity: 0; transform: translateY(-200px) scale(.2); }
+}
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particle-float linear infinite;
+}
+
+/* ---- BOUNCE (flèche tuto) ---- */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+.anim-bounce { animation: bounce 1s ease infinite; }
+
+/* ---- ORB GAIN (monnaie) ---- */
+@keyframes orb-gain {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.anim-orb-gain { animation: orb-gain .4s ease; }
+
+/* ---- DAMAGE NUMBER (combat) ---- */
+@keyframes dmg-float {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+.dmg-number {
+  position: absolute;
+  font-family: var(--font-title);
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+  z-index: 50;
+  animation: dmg-float .8s ease forwards;
+}
+.dmg-elf    { color: var(--green); }
+.dmg-enemy  { color: var(--red); }
+.dmg-crit   { color: var(--gold); font-size: 14px; }
+.dmg-heal   { color: #88ccaa; }

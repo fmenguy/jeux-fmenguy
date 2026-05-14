@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Aelindra · Chroniques des Profondeurs</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/screens.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+
+<div id="phone">
+
+  <!-- ========== OVERLAYS GLOBAUX ========== -->
+
+  <!-- Nom du joueur -->
+  <div class="overlay name-overlay" id="name-overlay">
+    <div class="name-box">
+      <label>NOM DU JOUEUR</label>
+      <input class="name-input" id="name-input" type="text" maxlength="16" placeholder="Ton nom d'aventurier...">
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:0">
+        <button class="btn-outline" onclick="$('name-overlay').classList.remove('on')">ANNULER</button>
+        <button class="btn-gold" onclick="savePlayerName()">CONFIRMER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Résultat Gacha -->
+  <div class="result-modal" id="res-modal">
+    <div class="result-title" id="res-modal-title">INVOCATION</div>
+    <div class="result-cards" id="res-modal-cards"></div>
+    <button class="btn-outline" style="margin-top:14px;padding:9px 28px;letter-spacing:2px;font-size:10px"
+      onclick="$('res-modal').classList.remove('on')">FERMER</button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ========== ÉCRAN : ACCUEIL ========== -->
+  <div id="s-splash" class="scr on">
+    <div class="topbar">
+      <div class="pname-wrap" onclick="openNameEdit()">
+        <div class="pav" id="pav">A</div>
+        <span id="pnm" style="font-size:11px;letter-spacing:.5px">Aventurier</span>
+        <span style="font-size:9px;color:var(--dim);margin-left:1px">✎</span>
+      </div>
+      <div class="currs">
+        <div class="curr">
+          <span style="color:var(--gold)">◈</span>
+          <span style="color:var(--gold)" id="gs">120</span>
+        </div>
+        <div class="curr">
+          <span style="color:var(--orb)">◆</span>
+          <span style="color:var(--orb)" id="os">15</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="logo-zone">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+        <div class="deco-line"></div>
+        <span style="font-size:12px;color:var(--gold2)">✦</span>
+        <div class="deco-line"></div>
+      </div>
+      <div class="logo-title">AELINDRA</div>
+      <div class="logo-sub">CHRONIQUES DES PROFONDEURS</div>
+    </div>
+
+    <div class="team-strip">
+      <div class="strip-lbl">ÉQUIPE ACTIVE</div>
+      <div class="team-row" id="team-row"></div>
+    </div>
+
+    <div class="hub-grid">
+      <div class="hb hb-acc" onclick="goScreen('dungeons')">
+        <div class="hb-icon">🏰</div>
+        <div class="hb-name">DONJONS</div>
+        <div class="hb-desc">Missions et exploration des profondeurs</div>
+        <div class="hb-bdg badge-new" id="tutbdg">TUTO</div>
+      </div>
+      <div class="hb" onclick="goScreen('guild')">
+        <div class="hb-icon">⚔️</div>
+        <div class="hb-name">GUILDE</div>
+        <div class="hb-desc">Invoquer de nouveaux aventuriers</div>
+      </div>
+      <div class="hb" onclick="goScreen('market')">
+        <div class="hb-icon">🏪</div>
+        <div class="hb-name">MARCHÉ</div>
+        <div class="hb-desc">Armes et armures · Or uniquement</div>
+      </div>
+      <div class="hb" onclick="goScreen('heroes')">
+        <div class="hb-icon">📖</div>
+        <div class="hb-name">ÉQUIPE</div>
+        <div class="hb-desc">Gérer et équiper tes héros</div>
+      </div>
+      <div class="hb" onclick="goScreen('missions')">
+        <div class="hb-icon">📋</div>
+        <div class="hb-name">MISSIONS</div>
+        <div class="hb-desc">Quêtes principales et défis quotidiens</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ÉCRAN : DONJONS ========== -->
+  <div id="s-dungeons" class="scr">
+    <div class="sh">
+      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
+      <div class="st">DONJONS</div>
+      <div class="scurr">
+        <span style="color:var(--gold);font-size:9px">◈</span>
+        <span style="color:var(--gold)" id="gd">120</span>
+      </div>
+    </div>
+    <div class="dlist" id="dlist"></div>
+  </div>
+
+  <!-- ========== ÉCRAN : DONJON (ÉTAGES POST-TUTO) ========== -->
+  <div id="s-dungeon-floors" class="scr">
+    <div class="sh">
+      <button class="bk" onclick="goScreen('dungeons')">← RETOUR</button>
+      <div class="st" id="dungeon-floors-title">DONJON</div>
+    </div>
+    <div id="dungeon-floors-desc" style="padding:7px 12px 8px;border-bottom:1px solid var(--b);flex-shrink:0;font-size:9px;color:var(--dim);font-family:var(--font-body);line-height:1.5"></div>
+    <div id="dungeon-floors-wrap" style="overflow-y:auto;flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <!-- ========== ÉCRAN : GOUFFRE (TUTO) ========== -->
+  <div id="s-gouffre" class="scr">
+    <div class="sh">
+      <button class="bk" onclick="goScreen('dungeons')">← RETOUR</button>
+      <div class="st">LE GOUFFRE DES ORIGINES</div>
+    </div>
+    <div style="padding:7px 12px 8px;border-bottom:1px solid var(--b);flex-shrink:0;font-size:9px;color:var(--dim);font-family:var(--font-body);line-height:1.5">
+      5 paliers dans les profondeurs · Un héros offert à chaque descente · Débloque les autres donjons
+    </div>
+    <div class="fw" id="fw"></div>
+  </div>
+
+  <!-- ========== ÉCRAN : COMBAT ========== -->
+  <div id="s-combat" class="scr">
+    <div class="combat-topbar">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:2px" id="combat-turn-info">TOUR 1 · PHASE ELFES</div>
+      <div style="font-size:10px;color:var(--dim)" id="combat-alive">Elfes: 0 · Ennemis: 0</div>
+      <button class="bk" onclick="endElfTurn()" id="end-turn-btn">FIN →</button>
+    </div>
+
+    <div class="combat-main">
+      <!-- Panneau gauche : unité sélectionnée + actions -->
+      <div class="combat-left">
+        <div style="height:90px;background:#08111c;display:flex;align-items:center;justify-content:center;font-size:40px;border-bottom:1px solid var(--b)" id="sel-portrait">🧝</div>
+        <div style="padding:8px 10px;flex:1;display:flex;flex-direction:column;gap:6px;overflow:hidden">
+          <div style="font-size:10px;color:var(--gold);letter-spacing:.5px" id="sel-name">Aucun</div>
+          <div style="font-size:8px;color:var(--dim);font-family:var(--font-body)" id="sel-stats"></div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+            <button class="btn-outline" style="font-size:9px;text-align:left;padding:5px 8px" onclick="setCombatAction('move')"   id="btn-move">⚡ Déplacer (1 PA)</button>
+            <button class="btn-outline" style="font-size:9px;text-align:left;padding:5px 8px" onclick="setCombatAction('attack')" id="btn-attack">⚔ Attaquer (2 PA)</button>
+            <button class="btn-outline" style="font-size:9px;text-align:left;padding:5px 8px" onclick="setCombatAction('spell')"  id="btn-spell">✨ Sort (2 PA)</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;margin-top:6px;border-top:1px solid var(--b);padding-top:5px" id="ability-btns"></div>
+        </div>
+      </div>
+
+      <!-- Grille de combat -->
+      <div class="combat-grid-wrap">
+        <div id="combat-grid"></div>
+      </div>
+
+      <!-- Journal -->
+      <div class="combat-log">
+        <div class="log-title">JOURNAL</div>
+        <div class="log-entries" id="combat-log-entries"></div>
+      </div>
+    </div>
+
+    <div class="combat-bottom" id="combat-hint">Sélectionnez une unité elfique pour commencer.</div>
+  </div>
+
+  <!-- ========== ÉCRAN : MARCHÉ ========== -->
+  <div id="s-market" class="scr">
+    <div class="sh">
+      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
+      <div class="st">MARCHÉ</div>
+      <div class="scurr">
+        <span style="color:var(--gold);font-size:9px">◈</span>
+        <span style="color:var(--gold)" id="gm">120</span>
+      </div>
+    </div>
+    <div class="mkt-tabs">
+      <button class="mkt-tab on" onclick="switchMarketTab('armes',this)">ARMES</button>
+      <button class="mkt-tab"    onclick="switchMarketTab('armures',this)">ARMURES</button>
+      <button class="mkt-tab"    onclick="switchMarketTab('potions',this)">POTIONS</button>
+    </div>
+    <div class="mkt-body" id="mkt-body"></div>
+  </div>
+
+  <!-- ========== ÉCRAN : GUILDE ========== -->
+  <div id="s-guild" class="scr">
+    <div class="sh">
+      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
+      <div class="st">GUILDE DES AVENTURIERS</div>
+      <div class="scurr">
+        <span style="color:var(--orb);font-size:9px">◆</span>
+        <span style="color:var(--orb)" id="og">15</span>
+      </div>
+    </div>
+    <div class="guild-body" id="guild-body"></div>
+  </div>
+
+  <!-- ========== ÉCRAN : ÉQUIPE ========== -->
+  <div id="s-heroes" class="scr">
+    <div class="sh">
+      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
+      <div class="st">TON ÉQUIPE</div>
+    </div>
+    <div id="heroes-list" style="flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <!-- ========== ÉCRAN : DÉTAIL HÉROS ========== -->
+  <div id="s-hero-detail" class="scr">
+    <div class="sh">
+      <button class="bk" onclick="goScreen('heroes')">← RETOUR</button>
+      <div class="st" id="hero-detail-name">Héros</div>
+    </div>
+
+    <div class="hero-detail-body">
+      <!-- Stats du héros -->
+      <section>
+        <div class="hd-section-title">STATISTIQUES</div>
+        <div class="hero-stats-section" id="hero-detail-stats"></div>
+      </section>
+
+      <!-- Slots d'équipement -->
+      <section>
+        <div class="hd-section-title">ÉQUIPEMENT</div>
+        <div class="equip-slots" id="hero-equip-slots"></div>
+      </section>
+
+      <!-- Inventaire filtré (items équipables) -->
+      <section>
+        <div class="hd-section-title">INVENTAIRE DISPONIBLE</div>
+        <div class="equip-grid" id="hero-inventory-grid"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ========== ÉCRAN : MISSIONS ========== -->
+  <div id="s-missions" class="scr">
+    <div class="sh">
+      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
+      <div class="st">MISSIONS</div>
+      <span></span>
+    </div>
+
+    <div class="missions-body">
+      <section class="missions-section">
+        <h3 class="missions-section-title">Quêtes Principales</h3>
+        <div id="missions-main-list"></div>
+      </section>
+      <section class="missions-section">
+        <h3 class="missions-section-title">Missions Quotidiennes</h3>
+        <p class="daily-reset-label" id="daily-reset-info"></p>
+        <div id="missions-daily-list"></div>
+      </section>
+    </div>
+  </div>
+
+</div><!-- #phone -->
+
+<!-- ========== SCRIPTS ========== -->
+<script src="js/data.js"></script>
+<script src="js/state.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

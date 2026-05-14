@@ -1,0 +1,57 @@
+/* ============================================
+   AELINDRA · css/variables.css
+   Tokens de design - modifier ici pour tout changer
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  /* Arrière-plans */
+  --bg:     #07090e;
+  --p:      #0d1320;
+  --p2:     #111925;
+
+  /* Bordures */
+  --b:      #1c2a3a;
+  --b2:     #243444;
+
+  /* Couleurs principales */
+  --gold:   #c8a84b;
+  --gold2:  #7a5820;
+  --orb:    #3a8aee;
+  --orb2:   #1a4a8a;
+
+  /* Texte */
+  --text:   #c8d4e0;
+  --dim:    #5a6a7a;
+  --dim2:   #3a4a5a;
+
+  /* Raretés */
+  --common:    #3a9a4a;
+  --rare:      #3a6aaa;
+  --epic:      #7a3aaa;
+  --legendary: #c87a20;
+
+  /* Statuts */
+  --green: #3a9a5a;
+  --red:   #aa3a3a;
+  --hp:    #3a8a4a;
+  --mp:    #4a6aaa;
+
+  /* Typographie */
+  --font-title: 'Cinzel', serif;
+  --font-body:  'Crimson Pro', serif;
+
+  /* Taille de base mobile */
+  --phone-w: 360px;
+  --phone-h: 640px;
+
+  /* Espacements */
+  --gap-xs: 4px;
+  --gap-sm: 6px;
+  --gap-md: 10px;
+  --gap-lg: 16px;
+  --radius: 4px;
+  --radius-sm: 2px;
+  --radius-pill: 20px;
+}

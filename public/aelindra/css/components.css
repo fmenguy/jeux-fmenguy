@@ -1,0 +1,230 @@
+/* ============================================
+   AELINDRA · css/components.css
+   Composants réutilisables
+   ============================================ */
+
+/* ---- HEADER PARTAGÉ ---- */
+.sh {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--b);
+  flex-shrink: 0;
+}
+.st {
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  flex: 1;
+}
+
+/* ---- BOUTON RETOUR ---- */
+.bk {
+  background: transparent;
+  border: 1px solid var(--b2);
+  color: var(--dim);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-family: var(--font-title);
+  font-size: 9px;
+  border-radius: var(--radius-sm);
+  transition: border-color .15s, color .15s;
+}
+.bk:hover { border-color: var(--gold2); color: var(--gold); }
+
+/* ---- MONNAIES ---- */
+.scurr {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--p);
+  border: 1px solid var(--b);
+  border-radius: 10px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.curr {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--p);
+  border: 1px solid var(--b);
+  border-radius: 12px;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ---- BOUTONS GÉNÉRIQUES ---- */
+.btn-gold {
+  font-family: var(--font-title);
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 7px 16px;
+  background: linear-gradient(90deg, var(--gold2), var(--gold));
+  color: #000;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  transition: filter .15s;
+}
+.btn-gold:hover { filter: brightness(1.1); }
+.btn-gold:disabled { background: #1a2535; color: var(--dim); cursor: not-allowed; filter: none; }
+
+.btn-outline {
+  font-family: var(--font-title);
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--b2);
+  color: var(--dim);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: border-color .15s, color .15s;
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ---- CARTES GÉNÉRIQUES ---- */
+.card {
+  background: var(--p);
+  border: 1px solid var(--b);
+  border-radius: var(--radius);
+  padding: var(--gap-md) 12px;
+  transition: border-color .15s;
+}
+.card:hover { border-color: var(--b2); }
+.card.card-highlight { border-color: var(--gold2) !important; background: rgba(200,168,75,.03) !important; }
+
+/* Barre de rareté en haut d'une carte */
+.rarity-bar { height: 2px; width: 100%; }
+
+/* ---- BARRE DE PROGRESSION ---- */
+.bar-wrap { display: flex; align-items: center; gap: 6px; }
+.bar-bg {
+  flex: 1;
+  height: 3px;
+  background: #08111c;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--b);
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .4s ease;
+}
+
+/* ---- BARRE HP / MP ---- */
+.hp-bar { height: 3px; background: #0a1018; border-radius: 2px; overflow: hidden; position: absolute; bottom: 2px; left: 3px; right: 3px; }
+.hp-fill { height: 100%; background: var(--hp); border-radius: 2px; transition: width .3s; }
+
+/* ---- TAGS / BADGES ---- */
+.tag {
+  font-size: 7px;
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  letter-spacing: .5px;
+}
+.tag-tuto     { background: rgba(200,168,75,.15); color: #eecc66; border: 1px solid rgba(200,168,75,.3); }
+.tag-floor    { background: rgba(58,106,170,.12); color: #88aaee; border: 1px solid rgba(58,106,170,.2); }
+.tag-locked   { background: rgba(90,106,122,.1);  color: var(--dim); border: 1px solid var(--b); }
+.tag-reward   { background: rgba(58,154,74,.1);   color: #88ccaa; border: 1px solid rgba(58,154,74,.2); }
+
+.badge-new    { background: #c84a3a; color: #fff; font-size: 7px; padding: 1px 5px; border-radius: 8px; letter-spacing: .5px; }
+.badge-rarity { font-size: 6px; letter-spacing: 1px; padding: 2px 5px; font-weight: 700; }
+
+/* ---- RARITY PILLS ---- */
+.rp { font-size: 8px; padding: 2px 7px; border-radius: 10px; }
+.rp-c  { background: rgba(58,154,74,.1);  color: #6acc8a; border: 1px solid rgba(58,154,74,.2); }
+.rp-r  { background: rgba(58,106,170,.1); color: #88aaee; border: 1px solid rgba(58,106,170,.2); }
+.rp-e  { background: rgba(122,58,170,.1); color: #b888ee; border: 1px solid rgba(122,58,170,.2); }
+.rp-l  { background: rgba(200,122,32,.1); color: #eeaa44; border: 1px solid rgba(200,122,32,.2); }
+
+/* ---- TOAST ---- */
+.toast {
+  position: absolute;
+  bottom: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--p);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  z-index: 200;
+  opacity: 0;
+  transition: opacity .2s;
+  pointer-events: none;
+}
+.toast.on { opacity: 1; }
+
+/* ---- OVERLAYS ---- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.88);
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.on { display: flex; }
+
+.modal-box {
+  background: var(--p);
+  border: 1px solid var(--b2);
+  border-radius: var(--radius);
+  padding: 18px;
+  width: 280px;
+  max-height: 80%;
+  overflow-y: auto;
+}
+
+/* ---- HERO CHIP (mini-affichage dans la team strip) ---- */
+.hchip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--p);
+  border: 1px solid var(--b);
+  border-radius: var(--radius-sm);
+  padding: 4px 7px 4px 5px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  transition: border-color .15s;
+}
+.hchip:hover { border-color: var(--b2); }
+
+/* ---- PORTRAIT HÉROS ---- */
+.hero-portrait {
+  background: #08111c;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--b2);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.hero-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+.hero-portrait .upload-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 5;
+}
