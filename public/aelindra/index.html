@@ -151,29 +151,30 @@
     </div>
 
     <div class="combat-main">
-      <!-- Panneau gauche : unité sélectionnée + actions -->
-      <div class="combat-left">
-        <div style="height:90px;background:#08111c;display:flex;align-items:center;justify-content:center;font-size:40px;border-bottom:1px solid var(--b)" id="sel-portrait">🧝</div>
-        <div style="padding:8px 10px;flex:1;display:flex;flex-direction:column;gap:6px;overflow:hidden">
-          <div style="font-size:10px;color:var(--gold);letter-spacing:.5px" id="sel-name">Aucun</div>
-          <div style="font-size:8px;color:var(--dim);font-family:var(--font-body)" id="sel-stats"></div>
-          <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
-            <button class="btn-outline" style="font-size:9px;text-align:left;padding:5px 8px" onclick="setCombatAction('move')"   id="btn-move">⚡ Déplacer (1 PA)</button>
-            <button class="btn-outline" style="font-size:9px;text-align:left;padding:5px 8px" onclick="setCombatAction('attack')" id="btn-attack">⚔ Attaquer (2 PA)</button>
-            <button class="btn-outline" style="font-size:9px;text-align:left;padding:5px 8px" onclick="setCombatAction('spell')"  id="btn-spell">✨ Sort (2 PA)</button>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:3px;margin-top:6px;border-top:1px solid var(--b);padding-top:5px" id="ability-btns"></div>
-        </div>
-      </div>
-
-      <!-- Grille de combat -->
+      <!-- Grille de combat (3×8) -->
       <div class="combat-grid-wrap">
         <div id="combat-grid"></div>
       </div>
 
-      <!-- Journal -->
+      <!-- Panneau bas : unité sélectionnée + actions + compétences -->
+      <div class="combat-panel">
+        <div class="combat-panel-row">
+          <div class="sel-portrait" id="sel-portrait">🧝</div>
+          <div class="sel-info">
+            <div class="sel-name-line" id="sel-name">Aucun</div>
+            <div class="sel-stats-line" id="sel-stats"></div>
+          </div>
+        </div>
+        <div class="combat-actions">
+          <button onclick="setCombatAction('move')"   id="btn-move">⚡ Dépl. (1)</button>
+          <button onclick="setCombatAction('attack')" id="btn-attack">⚔ Att. (2)</button>
+          <button onclick="setCombatAction('spell')"  id="btn-spell">✨ Sort (2)</button>
+        </div>
+        <div id="ability-btns"></div>
+      </div>
+
+      <!-- Journal (masqué sur mobile, conservé pour combatLog) -->
       <div class="combat-log">
-        <div class="log-title">JOURNAL</div>
         <div class="log-entries" id="combat-log-entries"></div>
       </div>
     </div>
