@@ -3,179 +3,226 @@
    Écran 08 : Détail d'un héros (stats + équipement)
    ============================================ */
 
+import type { Hero, Item } from '../data/types';
+import type { InventoryEntry } from '../state/types';
+import type { EquipSlot } from '../logic/equipment';
+import { getItemSlot } from '../logic/equipment';
 import { Icon } from '../components/Icons';
 import { ScrHeader } from '../components/ScrHeader';
+import { specToIcon } from '../components/specToIcon';
 
-interface StatDelta {
-  value: number;
-  delta?: number;
-}
+/* ---- helpers ---- */
 
-interface EquipSlot {
-  id: 'head' | 'body' | 'weapon' | 'offhand';
-  label: string;
-  icon: string;
-  item: { nm: string; bonus: string } | null;
-  emptyLabel?: string;
-}
-
-interface InventoryCard {
-  name: string;
-  bonus: string;
-  rarity: string;
-}
-
-interface MockHeroDetail {
-  name: string;
-  firstName: string;
-  lastName: string;
-  classLabel: string;
-  raceDesc: string;
-  icon: string;
-  rarity: string;
-  level: number;
-  rangeLabel: string;
-  stats: {
-    hp: StatDelta;
-    mp: StatDelta;
-    atk: StatDelta;
-    mag: StatDelta;
-    def: StatDelta;
-    res: StatDelta;
-    vit: StatDelta;
-    crit: StatDelta;
-  };
-  equip: EquipSlot[];
-  inventory: InventoryCard[];
-}
-
-const MOCK_HERO: MockHeroDetail = {
-  name: 'SYLVARA BRASIER',
-  firstName: 'Sylvara',
-  lastName: 'Brasier',
-  classLabel: 'MAGE OFFENSIF',
-  raceDesc: 'Elfe · spécialiste du feu',
-  icon: 'mage',
-  rarity: 'epic',
-  level: 5,
-  rangeLabel: 'Portée 1 – 3',
-  stats: {
-    hp:   { value: 85 },
-    mp:   { value: 148, delta: 12 },
-    atk:  { value: 12 },
-    mag:  { value: 47,  delta: 8 },
-    def:  { value: 26 },
-    res:  { value: 80,  delta: 5 },
-    vit:  { value: 70 },
-    crit: { value: 11 },
-  },
-  equip: [
-    { id: 'head',    label: 'TÊTE',    icon: 'head',    item: null,                                    emptyLabel: '— libre —' },
-    { id: 'body',    label: 'CORPS',   icon: 'body',    item: { nm: 'Robe de Sylve',        bonus: '+8 RES · +4 MAG' } },
-    { id: 'weapon',  label: 'ARME',    icon: 'weapon',  item: { nm: 'Bâton Rouge de Feu',   bonus: '+13 MAG · portée 1-3' } },
-    { id: 'offhand', label: 'SECOND.', icon: 'offhand', item: null,                                    emptyLabel: 'bâton à deux mains' },
-  ],
-  inventory: [
-    { name: 'Capuche tressée', bonus: '+6 RES',  rarity: 'rare' },
-    { name: "Grimoire d'Ash",  bonus: '+18 MAG', rarity: 'epic' },
-  ],
+const RARITY_LABEL: Record<string, string> = {
+  common: 'COMMUN',
+  rare: 'RARE',
+  epic: 'ÉPIQUE',
+  legendary: 'LÉGENDAIRE',
 };
 
-function renderStatValue(stat: StatDelta, suffix = ''): React.ReactNode {
-  return (
-    <>
-      {stat.value}{suffix}
-      {stat.delta != null && <span className="delta">+{stat.delta}</span>}
-    </>
-  );
+const SLOT_META: Record<EquipSlot, { label: string; icon: string; empty: string }> = {
+  head:    { label: 'TÊTE',    icon: 'head',    empty: 'libre' },
+  body:    { label: 'CORPS',   icon: 'body',    empty: 'libre' },
+  weapon:  { label: 'ARME',    icon: 'weapon',  empty: 'non équipé' },
+  offhand: { label: 'SECOND.', icon: 'offhand', empty: 'non équipé' },
+};
+
+const EQUIP_SLOTS: EquipSlot[] = ['weapon', 'body', 'head', 'offhand'];
+
+function resolveItem(id: string | null, allItems: Item[]): Item | null {
+  if (!id) return null;
+  return allItems.find(it => it.id === id) ?? null;
 }
+
+/* ---- props ---- */
 
 interface HeroDetailProps {
-  hero?: MockHeroDetail;
+  hero?: Hero;
+  inventory?: InventoryEntry[];
+  allItems?: Item[];
   onBack?: () => void;
-  onUnequip?: (slot: string) => void;
+  onEquip?: (itemId: string) => void;
+  onUnequip?: (slot: EquipSlot) => void;
 }
 
-export function HeroDetail({ hero = MOCK_HERO, onBack, onUnequip }: HeroDetailProps) {
+/* ---- composant ---- */
+
+export function HeroDetail({
+  hero,
+  inventory = [],
+  allItems = [],
+  onBack,
+  onEquip,
+  onUnequip,
+}: HeroDetailProps) {
+  /* Héros de fallback minimal quand aucun n'est passé */
+  if (!hero) {
+    return (
+      <div className="scr on" id="s-hero-detail">
+        <ScrHeader title="HÉROS" onBack={onBack} />
+        <div className="hero-detail-body">
+          <p style={{ padding: '2rem', textAlign: 'center', opacity: 0.5 }}>
+            Aucun héros sélectionné.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const level = hero.level ?? 1;
+  const iconId = specToIcon(hero.spec);
+  const rarityLabel = RARITY_LABEL[hero.rarity] ?? hero.rarity.toUpperCase();
+
+  /* Stats */
+  const bs = hero.baseStats;
+  const rangeLabel = bs.range != null ? `Portée ${bs.range}` : 'Portée CAC';
+
+  /* Items équipables dans l'inventaire (weapon, body, head, offhand — pas les consommables) */
+  const equippableInInventory = inventory.filter(entry => {
+    const item = resolveItem(entry.itemId, allItems);
+    if (!item) return false;
+    return getItemSlot(item) !== null;
+  });
+
   return (
     <div className="scr on" id="s-hero-detail">
-      <ScrHeader title={hero.name} onBack={onBack} />
+      <ScrHeader title={hero.name.toUpperCase()} onBack={onBack} />
       <div className="hero-detail-body">
+
+        {/* ---- En-tête héros ---- */}
         <div className="hero-hero">
           <div className={`hero-portrait hero-portrait--framed rarity--${hero.rarity}`}>
-            <div style={{ color: 'var(--gold-hi)' }}>
-              <Icon id={hero.icon} className="ico" style={{ width: 44, height: 44 }} />
-            </div>
-            <span className="hp-lv">LV.{hero.level}</span>
+            {hero.imagePath ? (
+              <img
+                src={hero.imagePath}
+                alt={hero.name}
+                style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 4 }}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div style={{ color: 'var(--gold-hi)' }}>
+                <Icon id={iconId} className="ico" style={{ width: 44, height: 44 }} />
+              </div>
+            )}
+            <span className="hp-lv">LV.{level}</span>
           </div>
           <div className="hh-info">
             <div className="hh-name">
-              {hero.firstName}
+              {hero.name.split(' ')[0]}
               <br />
-              {hero.lastName}
+              {hero.name.split(' ').slice(1).join(' ')}
             </div>
             <div className="hh-class">
-              <Icon id={hero.icon} className="ico" /> {hero.classLabel}
+              <Icon id={iconId} className="ico" /> {hero.class.toUpperCase()}
             </div>
-            <div className="hh-race">{hero.raceDesc}</div>
+            <div className="hh-race">{hero.race} · {hero.spec}</div>
             <div className="hh-rarity-row">
-              <span className="rp rp-e">ÉPIQUE</span>
-              <span className="tag tag-floor">{hero.rangeLabel}</span>
+              <span className={`rp rp-${hero.rarity[0]}`}>{rarityLabel}</span>
+              <span className="tag tag-floor">{rangeLabel}</span>
             </div>
           </div>
         </div>
 
+        {/* ---- Statistiques ---- */}
         <section>
           <div className="hd-section-title">STATISTIQUES</div>
           <div className="hero-stats-section">
-            <div className="stat-row"><span className="k">PV</span>   <span className="v">{renderStatValue(hero.stats.hp)}</span></div>
-            <div className="stat-row"><span className="k">PM</span>   <span className="v">{renderStatValue(hero.stats.mp)}</span></div>
-            <div className="stat-row"><span className="k">ATK</span>  <span className="v">{renderStatValue(hero.stats.atk)}</span></div>
-            <div className="stat-row"><span className="k">MAG</span>  <span className="v">{renderStatValue(hero.stats.mag)}</span></div>
-            <div className="stat-row"><span className="k">DEF</span>  <span className="v">{renderStatValue(hero.stats.def)}</span></div>
-            <div className="stat-row"><span className="k">RES</span>  <span className="v">{renderStatValue(hero.stats.res)}</span></div>
-            <div className="stat-row"><span className="k">VIT</span>  <span className="v">{renderStatValue(hero.stats.vit)}</span></div>
-            <div className="stat-row"><span className="k">CRIT</span> <span className="v">{renderStatValue(hero.stats.crit, '%')}</span></div>
+            <div className="stat-row"><span className="k">PV</span>   <span className="v">{bs.hp}</span></div>
+            <div className="stat-row"><span className="k">PM</span>   <span className="v">{bs.mp}</span></div>
+            <div className="stat-row"><span className="k">ATK</span>  <span className="v">{bs.atk}</span></div>
+            <div className="stat-row"><span className="k">MAG</span>  <span className="v">{bs.mag}</span></div>
+            <div className="stat-row"><span className="k">DEF</span>  <span className="v">{bs.def}</span></div>
+            <div className="stat-row"><span className="k">RES</span>  <span className="v">{bs.res}</span></div>
+            <div className="stat-row"><span className="k">VIT</span>  <span className="v">{bs.vit}</span></div>
+            <div className="stat-row"><span className="k">CRIT</span> <span className="v">{bs.crit}%</span></div>
           </div>
         </section>
 
+        {/* ---- Équipement ---- */}
         <section>
           <div className="hd-section-title">ÉQUIPEMENT</div>
           <div className="equip-slots">
-            {hero.equip.map(slot => (
-              <div key={slot.id} className="equip-slot">
-                <div className="slot-icon">
-                  <Icon id={slot.icon} />
+            {EQUIP_SLOTS.map(slot => {
+              const meta = SLOT_META[slot];
+              const equippedId = hero.equipped?.[slot] ?? null;
+              const item = resolveItem(equippedId, allItems);
+
+              return (
+                <div key={slot} className="equip-slot">
+                  <div className="slot-icon">
+                    <Icon id={meta.icon} />
+                  </div>
+                  <span className="slot-label">{meta.label}</span>
+                  {item ? (
+                    <>
+                      <div className="slot-item">
+                        <div className="nm">{item.emoji} {item.name}</div>
+                        <div className="bonus">{item.stat}</div>
+                      </div>
+                      <button onClick={() => onUnequip?.(slot)}>RETIRER</button>
+                    </>
+                  ) : equippedId ? (
+                    /* Slot occupé par un item natif du héros (arme de départ, etc.) */
+                    <>
+                      <div className="slot-item">
+                        <div className="nm">
+                          {slot === 'weapon' && hero.weapon ? `${hero.weapon.emoji} ${hero.weapon.name}` : equippedId}
+                        </div>
+                        <div className="bonus">
+                          {slot === 'weapon' && hero.weapon
+                            ? (hero.weapon.atk ? `+${hero.weapon.atk} ATK` : hero.weapon.mag ? `+${hero.weapon.mag} MAG` : '')
+                            : ''}
+                          {slot === 'offhand' && hero.offhand
+                            ? `${hero.offhand.emoji} ${hero.offhand.name}`
+                            : ''}
+                        </div>
+                      </div>
+                      <button onClick={() => onUnequip?.(slot)}>RETIRER</button>
+                    </>
+                  ) : (
+                    <div className="slot-item empty">{meta.empty}</div>
+                  )}
                 </div>
-                <span className="slot-label">{slot.label}</span>
-                {slot.item ? (
-                  <>
-                    <div className="slot-item">
-                      <div className="nm">{slot.item.nm}</div>
-                      <div className="bonus">{slot.item.bonus}</div>
-                    </div>
-                    <button onClick={() => onUnequip?.(slot.id)}>RETIRER</button>
-                  </>
-                ) : (
-                  <div className="slot-item empty">{slot.emptyLabel}</div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
+        {/* ---- Inventaire équipable ---- */}
         <section>
           <div className="hd-section-title">INVENTAIRE</div>
-          <div className="equip-grid">
-            {hero.inventory.map((card, i) => (
-              <div key={i} className={`equip-item-card rarity rarity--${card.rarity}`}>
-                <div className="rarity-bar"></div>
-                <div className="item-name">{card.name}</div>
-                <div className="item-bonus">{card.bonus}</div>
-              </div>
-            ))}
-          </div>
+          {equippableInInventory.length === 0 ? (
+            <div className="equip-grid">
+              <p style={{ opacity: 0.5, fontSize: '0.8rem', padding: '0.5rem 0' }}>
+                Aucun équipement disponible.
+              </p>
+            </div>
+          ) : (
+            <div className="equip-grid">
+              {equippableInInventory.map(entry => {
+                const item = resolveItem(entry.itemId, allItems)!;
+                return (
+                  <div
+                    key={entry.itemId}
+                    className={`equip-item-card rarity rarity--${item.rarity}`}
+                    onClick={() => onEquip?.(entry.itemId)}
+                    style={{ cursor: onEquip ? 'pointer' : 'default' }}
+                  >
+                    <div className="rarity-bar" />
+                    <div className="item-name">{item.emoji} {item.name}</div>
+                    <div className="item-bonus">{item.stat}</div>
+                    {entry.quantity > 1 && (
+                      <div className="item-qty">×{entry.quantity}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
+
       </div>
     </div>
   );

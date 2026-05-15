@@ -7,26 +7,13 @@ import { GameProvider, useGameState, useDispatch } from './state/GameContext';
 import {
   Splash, Dungeons, Gouffre, Combat,
   Market, Guild, Heroes, HeroDetail, Missions,
+  DungeonFloors,
 } from './screens';
 import type { ScreenId } from './state/types';
-import { TUTO_FLOORS, FLOOR_ENEMY_CONFIGS, POST_DUNGEON_FLOORS } from './data/dungeons';
+import { TUTO_FLOORS, FLOOR_ENEMY_CONFIGS, POST_DUNGEON_FLOORS, DUNGEONS_META } from './data/dungeons';
+import { MARKET_ITEMS } from './data/items';
 import type { EquipSlot } from './logic/equipment';
-
-function specToIcon(spec: string | undefined): string {
-  switch (spec) {
-    case 'guerrier': return 'warrior';
-    case 'archer':
-    case 'explorer': return 'archer';
-    case 'offensive': return 'mage';
-    case 'guardian': return 'guardian';
-    case 'spy': return 'spy';
-    case 'healer': return 'healer';
-    case 'monk': return 'monk';
-    case 'bard': return 'bard';
-    case 'entrave': return 'ensnarer';
-    default: return 'warrior';
-  }
-}
+import { specToIcon } from './components/specToIcon';
 
 function GameRouter() {
   const state = useGameState();
@@ -102,24 +89,21 @@ function GameRouter() {
 
     case 'dungeon-floors': {
       const dungeonId = state.currentDungeonId;
-      const floors = dungeonId ? POST_DUNGEON_FLOORS[dungeonId] : [];
-      const cleared = dungeonId ? (state.dungeonProgress[dungeonId] ?? 0) : 0;
-      // Reuse Gouffre layout pour le moment, on ajustera si besoin
+      if (!dungeonId) return <Splash onNavigate={(s) => nav(s as ScreenId)} />;
+      const meta = DUNGEONS_META.find(m => m.id === dungeonId);
+      const floors = POST_DUNGEON_FLOORS[dungeonId] ?? [];
+      const cleared = state.dungeonProgress[dungeonId] ?? 0;
       return (
-        <Gouffre
-          floors={floors?.map((f, i) => ({
-            num: String(i + 1),
-            depth: f.depth ?? '',
-            name: f.name,
-            desc: f.desc ?? `${f.enemies?.length ?? 0} ennemis${f.isBoss ? ' · BOSS' : ''}`,
-            gift: null,
-            state: (i < cleared ? 'done' : i === cleared ? 'current' : 'locked') as 'done' | 'current' | 'locked',
-          }))}
+        <DungeonFloors
+          dungeonId={dungeonId}
+          dungeonName={meta?.name}
+          dungeonDescription={meta?.description}
+          dungeonDepth={meta?.depth}
+          floors={floors}
+          cleared={cleared}
           onBack={() => nav('dungeons')}
-          onEnterFloor={(floorNumStr: string) => {
-            if (!dungeonId) return;
-            const floorIdx = parseInt(floorNumStr, 10) - 1;
-            const floor = floors?.[floorIdx];
+          onEnterFloor={(floorIdx) => {
+            const floor = floors[floorIdx];
             if (!floor) return;
             dispatch({
               type: 'INIT_COMBAT',
@@ -144,12 +128,10 @@ function GameRouter() {
       return (
         <Market
           gold={state.gold}
+          items={MARKET_ITEMS}
+          inventory={state.inventory}
           onBack={() => nav('splash')}
-          onBuy={(itemName: string) => {
-            // Le screen retourne le nom de l'item, on cherche l'id
-            // Pour l'instant on suppose qu'on a besoin de chercher dans MARKET_ITEMS
-            dispatch({ type: 'BUY_ITEM', itemId: itemName, tab: 'armes' });
-          }}
+          onBuy={(itemId, tab) => dispatch({ type: 'BUY_ITEM', itemId, tab })}
         />
       );
 
@@ -175,21 +157,33 @@ function GameRouter() {
         />
       );
 
-    case 'hero-detail':
-      // TODO: adapter Hero vers MockHeroDetail (besoin equip/inventory/rangeLabel)
+    case 'hero-detail': {
+      const heroDetailId = state.currentHeroDetailId;
+      const heroDetail =
+        state.team.find(h => h.id === heroDetailId) ??
+        state.collection.find(h => h.id === heroDetailId);
+      const allItems = [
+        ...MARKET_ITEMS.armes,
+        ...MARKET_ITEMS.armures,
+        ...MARKET_ITEMS.potions,
+      ];
       return (
         <HeroDetail
+          hero={heroDetail}
+          inventory={state.inventory}
+          allItems={allItems}
           onBack={() => nav('heroes')}
-          onUnequip={(slot: string) => {
-            if (!state.currentHeroDetailId) return;
-            dispatch({
-              type: 'UNEQUIP_SLOT',
-              heroId: state.currentHeroDetailId,
-              slot: slot as EquipSlot,
-            });
+          onEquip={(itemId) => {
+            if (!heroDetailId) return;
+            dispatch({ type: 'EQUIP_ITEM', heroId: heroDetailId, itemId });
+          }}
+          onUnequip={(slot: EquipSlot) => {
+            if (!heroDetailId) return;
+            dispatch({ type: 'UNEQUIP_SLOT', heroId: heroDetailId, slot });
           }}
         />
       );
+    }
 
     case 'missions':
       return (

@@ -11,4 +11,5 @@ export { Market }     from './Market';
 export { Guild }      from './Guild';
 export { Heroes }     from './Heroes';
 export { HeroDetail } from './HeroDetail';
-export { Missions }   from './Missions';
+export { Missions }      from './Missions';
+export { DungeonFloors } from './DungeonFloors';
