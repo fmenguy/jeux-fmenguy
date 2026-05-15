@@ -494,7 +494,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'COMBAT_END':
-      return { ...state, combat: null };
+      // Retourne au hub principal après fin du combat (victoire ou abandon)
+      return { ...state, combat: null, currentScreen: 'splash' };
 
     // ----- Toast -----
     case 'SHOW_TOAST':
