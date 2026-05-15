@@ -126,6 +126,29 @@
 }
 .anim-critical { animation: heart-beat .9s ease infinite; }
 
+/* ---- Combat : flash de hit (tuile touchée) ---- */
+@keyframes tile-hit-flash {
+  0%, 100% { background: var(--p2); }
+  50%      { background: var(--red-deep); filter: brightness(1.6) saturate(1.4); }
+}
+.tile.is-hit { animation: tile-hit-flash .28s ease-out; }
+
+/* ---- Combat : tuile qui vient de bouger (léger bounce sur le glyphe) ---- */
+@keyframes tile-move-bounce {
+  0%   { transform: scale(.85); filter: brightness(1.4); }
+  60%  { transform: scale(1.12); filter: brightness(1.2) drop-shadow(0 0 6px var(--gold)); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+.tile.is-moved .unit-glyph { animation: tile-move-bounce .32s cubic-bezier(.22, 1, .36, 1); }
+
+/* ---- Combat : mort (fadeout + rotation) ---- */
+@keyframes unit-death-fade {
+  0%   { opacity: 1; transform: scale(1) rotate(0); }
+  60%  { opacity: .7; transform: scale(1.15) rotate(-12deg); filter: brightness(2) saturate(2); }
+  100% { opacity: 0; transform: scale(.4) rotate(180deg); }
+}
+.tile.is-dying .unit-glyph { animation: unit-death-fade .55s ease-out forwards; }
+
 /* ---- Apparition fluide d'écran ---- */
 @keyframes scr-fade {
   0%   { opacity: 0; transform: translateY(4px); }

@@ -17,6 +17,8 @@ import {
 } from '../logic/combat';
 import { ABILITIES } from '../data/abilities';
 import type { Ability } from '../data/types';
+import { useCombatFx } from '../audio/useCombatFx';
+import { isMuted, setMuted } from '../audio/sfx';
 
 /* ============================================
    Props
@@ -57,6 +59,15 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
   const state = useGameState();
   const dispatch = useDispatch();
   const combat = state.combat;
+
+  // Détection des changements de combat pour anims + sons
+  const { popups, fx } = useCombatFx(combat);
+  const [audioOff, setAudioOff] = React.useState<boolean>(() => isMuted());
+  const toggleAudio = () => {
+    const next = !audioOff;
+    setMuted(next);
+    setAudioOff(next);
+  };
 
   // Cas : aucun combat en cours
   if (!combat) {
@@ -152,6 +163,12 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
 
   const handleSetAction = (action: PendingAction | null) => {
     dispatch({ type: 'COMBAT_SET_ACTION', action });
+    // Petit feedback sonore selon le type d'action choisi
+    if (action?.type === 'spell' || action?.type === 'ability') {
+      void import('../audio/sfx').then(m => m.playSpell());
+    } else if (action?.type === 'attack') {
+      void import('../audio/sfx').then(m => m.playSwing());
+    }
   };
 
   const handleEndTurn = () => {
@@ -210,6 +227,15 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
           <span style={{ fontSize: 11, color: 'var(--ink-dim)' }}>
             Elfes {aliveElves} · Ennemis {aliveEnemies}
           </span>
+          <button
+            className="bk"
+            style={{ padding: '4px 7px', fontSize: 11, opacity: audioOff ? 0.5 : 1 }}
+            onClick={toggleAudio}
+            aria-label={audioOff ? 'Activer le son' : 'Couper le son'}
+            title={audioOff ? 'Son coupé' : 'Son activé'}
+          >
+            {audioOff ? '🔇' : '🔊'}
+          </button>
           <button
             className="bk"
             style={{ display: 'flex', alignItems: 'center', gap: 4 }}
@@ -292,6 +318,10 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
                   if (isAttackable) {
                     classes.push('attackable');
                   }
+                  // FX classes (hit flash, mouvement, mort)
+                  if (fx.hitIds.has(unit.instanceId))   classes.push('is-hit');
+                  if (fx.movedIds.has(unit.instanceId)) classes.push('is-moved');
+                  if (fx.dyingIds.has(unit.instanceId)) classes.push('is-dying');
 
                   const hpRatio = unit.maxHp > 0 ? Math.max(0, unit.hp / unit.maxHp) : 0;
                   const isSelected = selectedUnit?.instanceId === unit.instanceId;
@@ -353,6 +383,28 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
               }),
             )}
           </div>
+          {/* Popups de dégâts / soin flottants au-dessus de la grille */}
+          {popups.map(p => {
+            const gap = 2;
+            // Le grid est centré dans le wrap : on calcule l'offset depuis le centre
+            const gridW = gridCols * tileSize + (gridCols - 1) * gap;
+            const gridH = gridRows * tileSize + (gridRows - 1) * gap;
+            const left = `calc(50% - ${gridW / 2}px + ${p.x * (tileSize + gap) + tileSize / 2}px)`;
+            const top  = `calc(50% - ${gridH / 2}px + ${p.y * (tileSize + gap) + 6}px)`;
+            const cls = p.kind === 'heal' ? 'dmg-heal'
+                      : p.kind === 'crit' ? 'dmg-crit'
+                      : 'dmg-enemy';
+            const prefix = p.kind === 'heal' ? '+' : p.kind === 'crit' ? '✦ ' : '-';
+            return (
+              <span
+                key={p.id}
+                className={`dmg-number ${cls}`}
+                style={{ left, top, transform: 'translate(-50%, 0)' }}
+              >
+                {prefix}{p.amount}
+              </span>
+            );
+          })}
         </div>
 
         {/* Dock */}
