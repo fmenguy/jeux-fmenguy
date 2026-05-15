@@ -353,8 +353,16 @@ function renderFloors() {
 }
 
 function enterFloor(floorNum) {
-  if (!G.team.length) { showToast('Ton équipe est vide !'); return; }
   const tutoFloor = TUTO_FLOORS[floorNum - 1];
+  // Si équipe vide, donner le héros du palier AVANT le combat (sinon impossible d'entrer)
+  if (!G.team.length && tutoFloor?.heroGift) {
+    const gift = STARTER_HEROES.find(h => h.id === tutoFloor.heroGift);
+    if (gift) {
+      addToTeam(gift);
+      showToast(`${gift.name} rejoint ton équipe !`);
+    }
+  }
+  if (!G.team.length) { showToast('Ton équipe est vide !'); return; }
   const enemyCfg  = FLOOR_ENEMY_CONFIGS[floorNum];
   if (!tutoFloor || !enemyCfg) { simulateFloorClear(floorNum); return; }
 
