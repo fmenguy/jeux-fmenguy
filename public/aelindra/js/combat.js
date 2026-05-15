@@ -3,8 +3,8 @@
    Moteur de combat au tour par tour
    ============================================ */
 
-const GRID_COLS = 7;
-const GRID_ROWS = 7;
+const GRID_COLS = 3;
+const GRID_ROWS = 8;
 
 // ============================================
 // INITIALISATION DU COMBAT
@@ -12,7 +12,7 @@ const GRID_ROWS = 7;
 
 function initCombat(floorConfig) {
   const units = [];
-  const spawnPositions = [{x:1,y:6},{x:3,y:6},{x:4,y:6},{x:5,y:6}];
+  const spawnPositions = [{x:0,y:7},{x:1,y:7},{x:2,y:7},{x:1,y:6}];
 
   G.team.forEach((hero, i) => {
     const stats = calcStats(hero).total;
@@ -678,14 +678,21 @@ function updatePanelLeft() {
   const statsEl  = document.getElementById('sel-stats');
 
   if (!sel) {
-    if (portrait) portrait.textContent = '🧝';
+    if (portrait) portrait.innerHTML = '🧝';
     if (nameEl)   nameEl.textContent = 'Aucun';
     if (statsEl)  statsEl.textContent = '';
     renderAbilityButtons([]);
     return;
   }
 
-  if (portrait) portrait.textContent = sel.emoji || '🧝';
+  const heroData = G.team.find(h => h.id === sel.heroId) || G.collection.find(h => h.id === sel.heroId);
+  if (portrait) {
+    if (heroData?.imagePath) {
+      portrait.innerHTML = `<img src="${heroData.imagePath}" alt="${sel.name}" onerror="this.replaceWith(document.createTextNode('${sel.emoji || '🧝'}'))">`;
+    } else {
+      portrait.innerHTML = sel.emoji || '🧝';
+    }
+  }
   if (nameEl)   nameEl.textContent = sel.name;
   if (statsEl)  statsEl.textContent = `PV ${sel.hp}/${sel.maxHp}  PA ${sel.ap}/${sel.maxAp}  PM ${sel.mp || 0}/${sel.maxMp || 0}`;
 
