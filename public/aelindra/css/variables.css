@@ -1,57 +1,160 @@
 /* ============================================
    AELINDRA · css/variables.css
-   Tokens de design - modifier ici pour tout changer
+   Tokens de design — Souterrain Mystique (par défaut)
+   Variantes via [data-theme="sylvan"] et [data-theme="twilight"]
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 :root {
-  /* Arrière-plans */
-  --bg:     #07090e;
-  --p:      #0d1320;
-  --p2:     #111925;
+  /* ============================
+     PALETTE — Souterrain Mystique
+     Profondeurs de cristal et lueurs runiques.
+     ============================ */
+  --bg:        #0a0814;
+  --bg-soft:   #0f0c1a;
+  --p:         #15111f;
+  --p2:        #1c172a;
+  --p3:        #251e36;
 
   /* Bordures */
-  --b:      #1c2a3a;
-  --b2:     #243444;
+  --b:         #29223a;
+  --b2:        #3a2e52;
+  --b-warm:    #4a3a2a;    /* tranche dorée fine */
+  --b-cool:    #2a3d52;    /* tranche runique froide */
 
-  /* Couleurs principales */
-  --gold:   #c8a84b;
-  --gold2:  #7a5820;
-  --orb:    #3a8aee;
-  --orb2:   #1a4a8a;
+  /* Or elfique — patiné, légèrement froid */
+  --gold:      #d4b370;
+  --gold-hi:   #ecd190;
+  --gold-dim:  #8a7340;
+  --gold-deep: #5a4520;
+
+  /* Lueur runique (bioluminescence) — accent secondaire */
+  --rune:      #8ec5d4;
+  --rune-hi:   #b8e0eb;
+  --rune-dim:  #4a6b78;
+  --rune-deep: #1e3540;
 
   /* Texte */
-  --text:   #c8d4e0;
-  --dim:    #5a6a7a;
-  --dim2:   #3a4a5a;
-
-  /* Raretés */
-  --common:    #3a9a4a;
-  --rare:      #3a6aaa;
-  --epic:      #7a3aaa;
-  --legendary: #c87a20;
+  --text:      #e4dccd;
+  --text-hi:   #f5eed8;
+  --dim:       #9c93a8;
+  --dim2:      #6a6276;
+  --mute:      #44405a;
 
   /* Statuts */
-  --green: #3a9a5a;
-  --red:   #aa3a3a;
-  --hp:    #3a8a4a;
-  --mp:    #4a6aaa;
+  --hp:        #6dba6a;
+  --hp-deep:   #2a5a2f;
+  --mp:        #6a8fd4;
+  --mp-deep:   #2a3a6a;
+  --red:       #c85a4a;
+  --red-deep:  #6a2a20;
+  --green:     #6dba6a;
+
+  /* Raretés (matériaux) */
+  --r-common:    #a07a4a;   /* bronze patiné */
+  --r-common-hi: #c89a64;
+  --r-rare:      #b8c4cc;   /* argent poli */
+  --r-rare-hi:   #d8e0e6;
+  --r-epic:      #a888d4;   /* améthyste */
+  --r-epic-hi:   #c8a8f0;
+  --r-legend:    #e0b550;   /* or gravé */
+  --r-legend-hi: #f5d680;
 
   /* Typographie */
   --font-title: 'Cinzel', serif;
-  --font-body:  'Crimson Pro', serif;
+  --font-deco:  'Cinzel Decorative', 'Cinzel', serif;
+  --font-body:  'Crimson Pro', Georgia, serif;
 
-  /* Taille de base mobile */
-  --phone-w: 360px;
-  --phone-h: 640px;
+  /* Format mobile */
+  --phone-w:   360px;
+  --phone-h:   640px;
 
   /* Espacements */
   --gap-xs: 4px;
   --gap-sm: 6px;
   --gap-md: 10px;
   --gap-lg: 16px;
-  --radius: 4px;
-  --radius-sm: 2px;
-  --radius-pill: 20px;
+  --gap-xl: 24px;
+
+  /* Rayons */
+  --radius:      3px;
+  --radius-sm:   2px;
+  --radius-md:   6px;
+  --radius-pill: 999px;
+
+  /* Ombres et lueurs */
+  --glow-gold: 0 0 12px rgba(212, 179, 112, .25);
+  --glow-rune: 0 0 14px rgba(142, 197, 212, .35);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, .02) inset, 0 2px 8px rgba(0, 0, 0, .4);
+  --shadow-deep: 0 10px 30px rgba(0, 0, 0, .55);
+
+  /* Textures / ornements (SVG inline) */
+  --noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.78 0 0 0 0 0.6 0 0 0 .08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ============================
+   VARIANTE — Sylvain Ancien
+   Vert mousse, écorce, or patiné
+   ============================ */
+[data-theme="sylvan"] {
+  --bg:        #0c1410;
+  --bg-soft:   #11191490;
+  --p:         #16201a;
+  --p2:        #1d2a22;
+  --p3:        #28372d;
+
+  --b:         #283a30;
+  --b2:        #3d5544;
+  --b-warm:    #4a3a22;
+  --b-cool:    #2a4438;
+
+  --gold:      #c9a85a;
+  --gold-hi:   #e6c980;
+  --gold-dim:  #7a6730;
+  --gold-deep: #4a3818;
+
+  --rune:      #8ed09a;
+  --rune-hi:   #b8e8c4;
+  --rune-dim:  #4a7858;
+  --rune-deep: #1e3d28;
+
+  --text:      #dfd8c0;
+  --text-hi:   #f0e8cc;
+  --dim:       #8fa091;
+  --dim2:      #5c6e60;
+  --mute:      #3a4c40;
+}
+
+/* ============================
+   VARIANTE — Crépuscule Nocturne
+   Bleu profond + or stellaire (raffinement du thème actuel)
+   ============================ */
+[data-theme="twilight"] {
+  --bg:        #060a14;
+  --bg-soft:   #0a1020;
+  --p:         #0e1424;
+  --p2:        #131b2e;
+  --p3:        #1c2540;
+
+  --b:         #1f2a44;
+  --b2:        #2c3c5c;
+  --b-warm:    #3a2e1c;
+  --b-cool:    #1c3a5a;
+
+  --gold:      #d8c070;
+  --gold-hi:   #f0db90;
+  --gold-dim:  #8a7440;
+  --gold-deep: #5a4818;
+
+  --rune:      #7aa8e6;
+  --rune-hi:   #a8c8f0;
+  --rune-dim:  #3d5a80;
+  --rune-deep: #1a2a44;
+
+  --text:      #d8d8e6;
+  --text-hi:   #ecedf6;
+  --dim:       #8e96aa;
+  --dim2:      #5a627a;
+  --mute:      #3a4258;
 }

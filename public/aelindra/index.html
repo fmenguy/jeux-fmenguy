@@ -2,283 +2,392 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#07090e">
-  <title>Aelindra · Chroniques des Profondeurs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aelindra · Design Showcase</title>
+
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/screens.css">
   <link rel="stylesheet" href="css/animations.css">
+
+  <style>
+    /* ===== Demo-only : .phone-frame (équivalent #phone, multi-instance) ===== */
+    html, body { background: #f0eee9; height: 100%; overflow: hidden; }
+    body { display: block; }
+
+    .phone-frame {
+      width: 360px;
+      height: 640px;
+      position: relative;
+      overflow: hidden;
+      color: var(--text);
+      font-family: var(--font-title);
+      background:
+        radial-gradient(120% 60% at 50% 0%,
+          color-mix(in oklab, var(--rune) 5%, transparent) 0%,
+          transparent 55%),
+        radial-gradient(80% 50% at 50% 100%,
+          color-mix(in oklab, var(--gold) 4%, transparent) 0%,
+          transparent 60%),
+        var(--bg);
+      border: 1px solid var(--b);
+      border-radius: 3px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.18);
+      isolation: isolate;
+      -webkit-font-smoothing: antialiased;
+    }
+    .phone-frame::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--noise);
+      opacity: .35;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .phone-frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(0,0,0,.42) 100%);
+      pointer-events: none;
+      z-index: 101;
+    }
+    /* Le `.scr.on` à l'intérieur d'un .phone-frame doit s'absoluer dessus */
+    .phone-frame .scr {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Scrollbars subtiles */
+    .phone-frame *::-webkit-scrollbar { width: 3px; }
+    .phone-frame *::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
+
+    /* ===== Système & Composants — sections additionnelles ===== */
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      padding: 16px;
+      background: var(--bg);
+      border: 1px solid var(--b);
+      border-radius: 3px;
+      width: 100%;
+      max-width: 720px;
+    }
+    .swatch {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: 'Crimson Pro', serif;
+      font-size: 11px;
+      color: var(--text);
+    }
+    .swatch .chip {
+      width: 100%;
+      height: 64px;
+      border-radius: 2px;
+      border: 1px solid var(--b2);
+    }
+    .swatch .nm {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: .15em;
+      color: var(--gold-dim);
+    }
+    .swatch .hex { color: var(--dim); font-style: italic; font-size: 10px; }
+
+    .components-row {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px;
+      background: var(--bg);
+      border: 1px solid var(--b);
+      border-radius: 3px;
+      width: 720px;
+    }
+    .components-row > .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .components-row .lbl-row {
+      width: 100px;
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: .25em;
+      color: var(--gold-dim);
+    }
+
+    .icons-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
+      padding: 18px;
+      background: var(--bg);
+      border: 1px solid var(--b);
+      border-radius: 3px;
+      width: 720px;
+    }
+    .icon-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      color: var(--gold);
+    }
+    .icon-cell .ico { width: 28px; height: 28px; }
+    .icon-cell .nm {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      color: var(--dim);
+      letter-spacing: .1em;
+    }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 </head>
+
 <body>
+  <div id="root"></div>
 
-<div id="phone">
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="icons.jsx"></script>
+  <script type="text/babel" src="screens.jsx"></script>
 
-  <!-- ========== OVERLAYS GLOBAUX ========== -->
+  <script type="text/babel">
+    const Ico = window.Ico;
 
-  <!-- Nom du joueur -->
-  <div class="overlay name-overlay" id="name-overlay">
-    <div class="name-box">
-      <label>NOM DU JOUEUR</label>
-      <input class="name-input" id="name-input" type="text" maxlength="16" placeholder="Ton nom d'aventurier...">
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:0">
-        <button class="btn-outline" onclick="$('name-overlay').classList.remove('on')">ANNULER</button>
-        <button class="btn-gold" onclick="savePlayerName()">CONFIRMER</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Résultat Gacha -->
-  <div class="result-modal" id="res-modal">
-    <div class="result-title" id="res-modal-title">INVOCATION</div>
-    <div class="result-cards" id="res-modal-cards"></div>
-    <button class="btn-outline" style="margin-top:14px;padding:9px 28px;letter-spacing:2px;font-size:10px"
-      onclick="$('res-modal').classList.remove('on')">FERMER</button>
-  </div>
-
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
-
-  <!-- ========== ÉCRAN : ACCUEIL ========== -->
-  <div id="s-splash" class="scr on">
-    <div class="topbar">
-      <div class="pname-wrap" onclick="openNameEdit()">
-        <div class="pav" id="pav">A</div>
-        <span id="pnm" style="font-size:11px;letter-spacing:.5px">Aventurier</span>
-        <span style="font-size:9px;color:var(--dim);margin-left:1px">✎</span>
-      </div>
-      <div class="currs">
-        <div class="curr">
-          <span style="color:var(--gold)">◈</span>
-          <span style="color:var(--gold)" id="gs">120</span>
+    // Helper : un téléphone qui rend une scène donnée, dans un thème optionnel
+    function Phone({ theme, children }) {
+      return (
+        <div className="phone-frame" data-theme={theme}>
+          {children}
         </div>
-        <div class="curr">
-          <span style="color:var(--orb)">◆</span>
-          <span style="color:var(--orb)" id="os">15</span>
+      );
+    }
+
+    function PaletteSwatches() {
+      const tokens = [
+        { nm: "bg",     v: "var(--bg)" },
+        { nm: "p2",     v: "var(--p2)" },
+        { nm: "b2",     v: "var(--b2)" },
+        { nm: "gold",   v: "var(--gold)" },
+        { nm: "rune",   v: "var(--rune)" },
+        { nm: "text",   v: "var(--text)" },
+        { nm: "common", v: "var(--r-common)" },
+        { nm: "rare",   v: "var(--r-rare)" },
+        { nm: "epic",   v: "var(--r-epic)" },
+        { nm: "legend", v: "var(--r-legend)" },
+        { nm: "hp",     v: "var(--hp)" },
+        { nm: "mp",     v: "var(--mp)" },
+      ];
+      return (
+        <div className="swatch-grid">
+          {tokens.map(t => (
+            <div className="swatch" key={t.nm}>
+              <div className="chip" style={{ background: t.v }}></div>
+              <span className="nm">{t.nm.toUpperCase()}</span>
+            </div>
+          ))}
         </div>
-      </div>
-    </div>
+      );
+    }
 
-    <div class="logo-zone">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-        <div class="deco-line"></div>
-        <span style="font-size:12px;color:var(--gold2)">✦</span>
-        <div class="deco-line"></div>
-      </div>
-      <div class="logo-title">AELINDRA</div>
-      <div class="logo-sub">CHRONIQUES DES PROFONDEURS</div>
-    </div>
+    function ComponentsShowcase() {
+      return (
+        <div className="components-row">
+          <div className="row">
+            <span className="lbl-row">BOUTONS</span>
+            <button className="btn-gold">CONFIRMER</button>
+            <button className="btn-outline">ANNULER</button>
+            <button className="btn-outline is-rune">EXAMINER</button>
+            <button className="btn-ghost">PASSER</button>
+            <button className="bk"><Ico id="back" className="ico" /> RETOUR</button>
+            <button className="btn-gold" disabled>DÉSACTIVÉ</button>
+          </div>
 
-    <div class="team-strip">
-      <div class="strip-lbl">ÉQUIPE ACTIVE</div>
-      <div class="team-row" id="team-row"></div>
-    </div>
+          <div className="row">
+            <span className="lbl-row">MONNAIES</span>
+            <span className="curr curr--gold"><Ico id="coin" className="ico sym sym--gold" /><span className="val">320</span></span>
+            <span className="curr curr--orb"><Ico id="orb" className="ico sym sym--orb" /><span className="val">64</span></span>
+            <span className="curr"><Ico id="potion" className="ico" /><span className="val">3</span></span>
+          </div>
 
-    <div class="hub-grid">
-      <div class="hb hb-acc" onclick="goScreen('dungeons')">
-        <div class="hb-icon">🏰</div>
-        <div class="hb-name">DONJONS</div>
-        <div class="hb-desc">Missions et exploration des profondeurs</div>
-        <div class="hb-bdg badge-new" id="tutbdg">TUTO</div>
-      </div>
-      <div class="hb" onclick="goScreen('guild')">
-        <div class="hb-icon">⚔️</div>
-        <div class="hb-name">GUILDE</div>
-        <div class="hb-desc">Invoquer de nouveaux aventuriers</div>
-      </div>
-      <div class="hb" onclick="goScreen('market')">
-        <div class="hb-icon">🏪</div>
-        <div class="hb-name">MARCHÉ</div>
-        <div class="hb-desc">Armes et armures · Or uniquement</div>
-      </div>
-      <div class="hb" onclick="goScreen('heroes')">
-        <div class="hb-icon">📖</div>
-        <div class="hb-name">ÉQUIPE</div>
-        <div class="hb-desc">Gérer et équiper tes héros</div>
-      </div>
-      <div class="hb" onclick="goScreen('missions')">
-        <div class="hb-icon">📋</div>
-        <div class="hb-name">MISSIONS</div>
-        <div class="hb-desc">Quêtes principales et défis quotidiens</div>
-      </div>
-    </div>
-  </div>
+          <div className="row">
+            <span className="lbl-row">RARETÉS</span>
+            <span className="rp rp-c">COMMUN</span>
+            <span className="rp rp-r">RARE</span>
+            <span className="rp rp-e">ÉPIQUE</span>
+            <span className="rp rp-l">LÉGENDAIRE</span>
+          </div>
 
-  <!-- ========== ÉCRAN : DONJONS ========== -->
-  <div id="s-dungeons" class="scr">
-    <div class="sh">
-      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
-      <div class="st">DONJONS</div>
-      <div class="scurr">
-        <span style="color:var(--gold);font-size:9px">◈</span>
-        <span style="color:var(--gold)" id="gd">120</span>
-      </div>
-    </div>
-    <div class="dlist" id="dlist"></div>
-  </div>
+          <div className="row">
+            <span className="lbl-row">TAGS</span>
+            <span className="tag tag-tuto">TUTORIEL</span>
+            <span className="tag tag-floor">PORTÉE 4</span>
+            <span className="tag tag-reward">+30 ORBES</span>
+            <span className="tag tag-locked">VERROUILLÉ</span>
+            <span className="tag tag-done">COMPLÉTÉ</span>
+            <span className="badge-new">NOUVEAU</span>
+          </div>
 
-  <!-- ========== ÉCRAN : DONJON (ÉTAGES POST-TUTO) ========== -->
-  <div id="s-dungeon-floors" class="scr">
-    <div class="sh">
-      <button class="bk" onclick="goScreen('dungeons')">← RETOUR</button>
-      <div class="st" id="dungeon-floors-title">DONJON</div>
-    </div>
-    <div id="dungeon-floors-desc" style="padding:7px 12px 8px;border-bottom:1px solid var(--b);flex-shrink:0;font-size:9px;color:var(--dim);font-family:var(--font-body);line-height:1.5"></div>
-    <div id="dungeon-floors-wrap" style="overflow-y:auto;flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:8px"></div>
-  </div>
+          <div className="row">
+            <span className="lbl-row">BARRES</span>
+            <div className="bar-wrap" style={{ flex: 1 }}>
+              <span className="lbl" style={{ color: "var(--hp)" }}>PV</span>
+              <div className="bar bar--hp"><div className="fill" style={{ width: "72%" }}></div></div>
+              <span className="val t-body">108 / 150</span>
+            </div>
+          </div>
+          <div className="row">
+            <span className="lbl-row" style={{ opacity: 0 }}>—</span>
+            <div className="bar-wrap" style={{ flex: 1 }}>
+              <span className="lbl" style={{ color: "var(--mp)" }}>PM</span>
+              <div className="bar bar--mp"><div className="fill" style={{ width: "44%" }}></div></div>
+              <span className="val t-body">22 / 50</span>
+            </div>
+          </div>
+          <div className="row">
+            <span className="lbl-row" style={{ opacity: 0 }}>—</span>
+            <div className="bar-wrap" style={{ flex: 1 }}>
+              <span className="lbl" style={{ color: "var(--rune)" }}>XP</span>
+              <div className="bar bar--rune"><div className="fill" style={{ width: "30%" }}></div></div>
+              <span className="val t-body">320 / 1080</span>
+            </div>
+          </div>
 
-  <!-- ========== ÉCRAN : GOUFFRE (TUTO) ========== -->
-  <div id="s-gouffre" class="scr">
-    <div class="sh">
-      <button class="bk" onclick="goScreen('dungeons')">← RETOUR</button>
-      <div class="st">LE GOUFFRE DES ORIGINES</div>
-    </div>
-    <div style="padding:7px 12px 8px;border-bottom:1px solid var(--b);flex-shrink:0;font-size:9px;color:var(--dim);font-family:var(--font-body);line-height:1.5">
-      5 paliers dans les profondeurs · Un héros offert à chaque descente · Débloque les autres donjons
-    </div>
-    <div class="fw" id="fw"></div>
-  </div>
-
-  <!-- ========== ÉCRAN : COMBAT ========== -->
-  <div id="s-combat" class="scr">
-    <div class="combat-topbar">
-      <div style="font-size:10px;color:var(--gold);letter-spacing:2px" id="combat-turn-info">TOUR 1 · PHASE ELFES</div>
-      <div style="font-size:10px;color:var(--dim)" id="combat-alive">Elfes: 0 · Ennemis: 0</div>
-      <button class="bk" onclick="endElfTurn()" id="end-turn-btn">FIN →</button>
-    </div>
-
-    <div class="combat-main">
-      <!-- Grille de combat (3×8) -->
-      <div class="combat-grid-wrap">
-        <div id="combat-grid"></div>
-      </div>
-
-      <!-- Panneau bas : unité sélectionnée + actions + compétences -->
-      <div class="combat-panel">
-        <div class="combat-panel-row">
-          <div class="sel-portrait" id="sel-portrait">🧝</div>
-          <div class="sel-info">
-            <div class="sel-name-line" id="sel-name">Aucun</div>
-            <div class="sel-stats-line" id="sel-stats"></div>
+          <div className="row" style={{ alignItems: "stretch", gap: 10 }}>
+            <span className="lbl-row" style={{ alignSelf: "center" }}>SÉPARATEURS</span>
+            <div style={{ flex: 1 }}>
+              <div className="divider-rune"><span className="line"></span><span className="glyph">✦</span><span className="line"></span></div>
+              <div className="divider-rune rune-cool"><span className="line"></span><span className="glyph">◆</span><span className="line"></span></div>
+            </div>
           </div>
         </div>
-        <div class="combat-actions">
-          <button onclick="setCombatAction('move')"   id="btn-move">⚡ Dépl. (1)</button>
-          <button onclick="setCombatAction('attack')" id="btn-attack">⚔ Att. (2)</button>
-          <button onclick="setCombatAction('spell')"  id="btn-spell">✨ Sort (2)</button>
+      );
+    }
+
+    function IconsShowcase() {
+      const ids = [
+        "sigil", "dungeon", "guild", "market", "team", "missions", "warrior", "archer",
+        "mage", "guardian", "spy", "healer", "monk", "bard", "ensnarer", "coin",
+        "orb", "move", "attack", "spell", "head", "body", "weapon", "offhand",
+        "back", "check", "gift", "lock", "info", "star", "potion", "rune", "time", "edit", "target", "end",
+      ];
+      return (
+        <div className="icons-grid">
+          {ids.map(id => (
+            <div className="icon-cell" key={id}>
+              <Ico id={id} className="ico" />
+              <span className="nm">{id.toUpperCase()}</span>
+            </div>
+          ))}
         </div>
-        <div id="ability-btns"></div>
-      </div>
+      );
+    }
 
-      <!-- Journal (masqué sur mobile, conservé pour combatLog) -->
-      <div class="combat-log">
-        <div class="log-entries" id="combat-log-entries"></div>
-      </div>
-    </div>
+    function App() {
+      return (
+        <>
+          {window.ICON_DEFS}
+          <DesignCanvas>
+            {/* ============================================
+                SECTION 1 · ÉCRANS · DIRECTION PRINCIPALE
+                ============================================ */}
+            <DCSection id="screens-main"
+              title="Écrans · Souterrain Mystique"
+              subtitle="Direction principale — palette violette/cristal + or patiné. Tous les écrans à 360 × 640."
+            >
+              <DCArtboard id="splash" label="01 · Hub" width={360} height={640}>
+                <Phone><ScrSplash /></Phone>
+              </DCArtboard>
 
-    <div class="combat-bottom" id="combat-hint">Sélectionnez une unité elfique pour commencer.</div>
-  </div>
+              <DCArtboard id="dungeons" label="02 · Donjons" width={360} height={640}>
+                <Phone><ScrDungeons /></Phone>
+              </DCArtboard>
 
-  <!-- ========== ÉCRAN : MARCHÉ ========== -->
-  <div id="s-market" class="scr">
-    <div class="sh">
-      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
-      <div class="st">MARCHÉ</div>
-      <div class="scurr">
-        <span style="color:var(--gold);font-size:9px">◈</span>
-        <span style="color:var(--gold)" id="gm">120</span>
-      </div>
-    </div>
-    <div class="mkt-tabs">
-      <button class="mkt-tab on" onclick="switchMarketTab('armes',this)">ARMES</button>
-      <button class="mkt-tab"    onclick="switchMarketTab('armures',this)">ARMURES</button>
-      <button class="mkt-tab"    onclick="switchMarketTab('potions',this)">POTIONS</button>
-    </div>
-    <div class="mkt-body" id="mkt-body"></div>
-  </div>
+              <DCArtboard id="gouffre" label="03 · Gouffre" width={360} height={640}>
+                <Phone><ScrGouffre /></Phone>
+              </DCArtboard>
 
-  <!-- ========== ÉCRAN : GUILDE ========== -->
-  <div id="s-guild" class="scr">
-    <div class="sh">
-      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
-      <div class="st">GUILDE DES AVENTURIERS</div>
-      <div class="scurr">
-        <span style="color:var(--orb);font-size:9px">◆</span>
-        <span style="color:var(--orb)" id="og">15</span>
-      </div>
-    </div>
-    <div class="guild-body" id="guild-body"></div>
-  </div>
+              <DCArtboard id="combat" label="04 · Combat · 5×8" width={360} height={640}>
+                <Phone><ScrCombat cols={5} rows={8} tileSize={44} /></Phone>
+              </DCArtboard>
 
-  <!-- ========== ÉCRAN : ÉQUIPE ========== -->
-  <div id="s-heroes" class="scr">
-    <div class="sh">
-      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
-      <div class="st">TON ÉQUIPE</div>
-    </div>
-    <div id="heroes-list" style="flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px"></div>
-  </div>
+              <DCArtboard id="combat-4x7" label="04b · Combat · 4×7 (plus lâche)" width={360} height={640}>
+                <Phone><ScrCombat cols={4} rows={7} tileSize={54} /></Phone>
+              </DCArtboard>
 
-  <!-- ========== ÉCRAN : DÉTAIL HÉROS ========== -->
-  <div id="s-hero-detail" class="scr">
-    <div class="sh">
-      <button class="bk" onclick="goScreen('heroes')">← RETOUR</button>
-      <div class="st" id="hero-detail-name">Héros</div>
-    </div>
+              <DCArtboard id="combat-6x9" label="04c · Combat · 6×9 (plus tactique)" width={360} height={640}>
+                <Phone><ScrCombat cols={6} rows={9} tileSize={36} /></Phone>
+              </DCArtboard>
 
-    <div class="hero-detail-body">
-      <!-- Stats du héros -->
-      <section>
-        <div class="hd-section-title">STATISTIQUES</div>
-        <div class="hero-stats-section" id="hero-detail-stats"></div>
-      </section>
+              <DCArtboard id="market" label="05 · Marché" width={360} height={640}>
+                <Phone><ScrMarche /></Phone>
+              </DCArtboard>
 
-      <!-- Slots d'équipement -->
-      <section>
-        <div class="hd-section-title">ÉQUIPEMENT</div>
-        <div class="equip-slots" id="hero-equip-slots"></div>
-      </section>
+              <DCArtboard id="guild" label="06 · Guilde" width={360} height={640}>
+                <Phone><ScrGuilde /></Phone>
+              </DCArtboard>
 
-      <!-- Inventaire filtré (items équipables) -->
-      <section>
-        <div class="hd-section-title">INVENTAIRE DISPONIBLE</div>
-        <div class="equip-grid" id="hero-inventory-grid"></div>
-      </section>
-    </div>
-  </div>
+              <DCArtboard id="heroes" label="07 · Équipe" width={360} height={640}>
+                <Phone><ScrHeroes /></Phone>
+              </DCArtboard>
 
-  <!-- ========== ÉCRAN : MISSIONS ========== -->
-  <div id="s-missions" class="scr">
-    <div class="sh">
-      <button class="bk" onclick="goScreen('splash')">← RETOUR</button>
-      <div class="st">MISSIONS</div>
-      <span></span>
-    </div>
+              <DCArtboard id="heroDetail" label="08 · Détail Héros" width={360} height={640}>
+                <Phone><ScrHeroDetail /></Phone>
+              </DCArtboard>
 
-    <div class="missions-body">
-      <section class="missions-section">
-        <h3 class="missions-section-title">Quêtes Principales</h3>
-        <div id="missions-main-list"></div>
-      </section>
-      <section class="missions-section">
-        <h3 class="missions-section-title">Missions Quotidiennes</h3>
-        <p class="daily-reset-label" id="daily-reset-info"></p>
-        <div id="missions-daily-list"></div>
-      </section>
-    </div>
-  </div>
+              <DCArtboard id="missions" label="09 · Missions" width={360} height={640}>
+                <Phone><ScrMissions /></Phone>
+              </DCArtboard>
+            </DCSection>
 
-</div><!-- #phone -->
+            {/* ============================================
+                SECTION 2 · SYSTÈME & COMPOSANTS
+                ============================================ */}
+            <DCSection id="tokens"
+              title="Tokens · Palette principale"
+              subtitle="Couleurs définies dans css/variables.css. Les autres ambiances rebindent les mêmes tokens."
+            >
+              <DCArtboard id="palette" label="Palette" width={720} height={260}>
+                <PaletteSwatches />
+              </DCArtboard>
+            </DCSection>
 
-<!-- ========== SCRIPTS ========== -->
-<script src="js/data.js"></script>
-<script src="js/state.js"></script>
-<script src="js/combat.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/main.js"></script>
+            <DCSection id="components"
+              title="Composants"
+              subtitle="Boutons, monnaies, raretés, tags, barres, séparateurs runiques."
+            >
+              <DCArtboard id="components-card" label="Composants UI" width={720} height={520}>
+                <ComponentsShowcase />
+              </DCArtboard>
+            </DCSection>
 
+            <DCSection id="icons"
+              title="Iconographie runique"
+              subtitle="33 glyphes SVG monolinéaires, taille fluide via font-size · stroke = currentColor."
+            >
+              <DCArtboard id="icons-card" label="Glyphes" width={720} height={420}>
+                <IconsShowcase />
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
 </html>
