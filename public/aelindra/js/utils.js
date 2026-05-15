@@ -645,7 +645,7 @@ function renderCombat() {
 
   updateCombatHUD();
 
-  grid.style.gridTemplateColumns = `repeat(${GRID_COLS}, 72px)`;
+  grid.style.gridTemplateColumns = `repeat(${GRID_COLS}, 48px)`;
   grid.innerHTML = '';
 
   const sel = G.combat.selected ? G.combat.units.find(u => u.instanceId === G.combat.selected) : null;
@@ -688,12 +688,7 @@ function renderCombat() {
 
       const unit = getUnitAt(x, y);
       if (unit) {
-        const heroData = unit.heroId ? (G.team.find(h => h.id === unit.heroId) || G.collection.find(h => h.id === unit.heroId)) : null;
-        if (heroData?.imagePath) {
-          tile.innerHTML = `<img class="unit-portrait" src="${heroData.imagePath}" alt="${unit.name}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${unit.emoji}',style:'font-size:24px'}))">`;
-        } else {
-          tile.innerHTML = `<span style="font-size:24px">${unit.emoji}</span>`;
-        }
+        tile.innerHTML = `<span style="font-size:20px">${unit.emoji}</span>`;
         const hpPct = Math.round(unit.hp / unit.maxHp * 100);
         tile.innerHTML += `<div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>`;
 

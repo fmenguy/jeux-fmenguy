@@ -1,6 +1,6 @@
 /* ============================================
    AELINDRA · css/base.css
-   Reset, layout global, phone frame
+   Reset, frame mobile, fond, scrollbars
    ============================================ */
 
 *, *::before, *::after {
@@ -8,47 +8,80 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html, body {
   height: 100%;
-  background: #0a0a0a;
+  background: #050308;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-title);
   color: var(--text);
   overflow: hidden;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
-/* ---- Phone frame (mobile 9:16) ---- */
+/* ---- Phone frame ---- */
 #phone {
   width: var(--phone-w);
   height: var(--phone-h);
-  background: var(--bg);
+  background:
+    radial-gradient(120% 60% at 50% 0%,
+      color-mix(in oklab, var(--rune) 5%, transparent) 0%,
+      transparent 55%),
+    radial-gradient(80% 50% at 50% 100%,
+      color-mix(in oklab, var(--gold) 4%, transparent) 0%,
+      transparent 60%),
+    var(--bg);
   position: relative;
   overflow: hidden;
   border: 1px solid var(--b);
   border-radius: var(--radius);
+  color: var(--text);
+  box-shadow: var(--shadow-deep);
+  isolation: isolate;
 }
 
-/* Sur vrai mobile : plein écran, sans bordure ni arrondi */
+/* Grain texturé subtil sur tout le frame */
+#phone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--noise);
+  opacity: .35;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Vignette intérieure très subtile (focus visuel) */
+#phone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(0,0,0,.45) 100%);
+  pointer-events: none;
+  z-index: 101;
+}
+
 @media (max-width: 480px) {
   html, body {
     display: block;
     overflow: hidden;
   }
-
   #phone {
     width: 100vw;
     height: 100vh;
-    height: 100dvh; /* hauteur dynamique, tient compte de la barre Android */
+    height: 100dvh;
     border: none;
     border-radius: 0;
+    box-shadow: none;
   }
 }
 
-/* Écrans hauts mais pas assez larges (portrait serré) */
 @media (max-height: 660px) and (min-width: 481px) {
   :root {
     --phone-h: calc(100vh - 20px);
@@ -56,28 +89,49 @@ html, body {
   }
 }
 
-/* ---- Écrans ---- */
+/* ---- Écrans (toujours empilés, .on visible) ---- */
 .scr {
   position: absolute;
   inset: 0;
   display: none;
   flex-direction: column;
   overflow: hidden;
+  z-index: 1;
 }
-.scr.on {
-  display: flex;
-}
+.scr.on { display: flex; }
 
-/* ---- Scrollbars fines ---- */
-::-webkit-scrollbar { width: 3px; }
+/* ---- Scrollbars discrètes ---- */
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
+::-webkit-scrollbar-thumb {
+  background: var(--b2);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+/* ---- Sélection texte ---- */
+::selection {
+  background: color-mix(in oklab, var(--gold) 40%, transparent);
+  color: var(--text-hi);
+}
 
 /* ---- Utilitaires ---- */
 .sr-only {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: 1px; height: 1px;
   overflow: hidden;
-  clip: rect(0,0,0,0);
+  clip: rect(0, 0, 0, 0);
 }
+
+/* Petits utilitaires de typo souvent réutilisés */
+.t-gold  { color: var(--gold); }
+.t-rune  { color: var(--rune); }
+.t-dim   { color: var(--dim); }
+.t-faint { color: var(--dim2); }
+.t-body  { font-family: var(--font-body); }
+.t-deco  { font-family: var(--font-deco); }
+
+/* Espacement de lettres "titre" elfique */
+.tracked   { letter-spacing: .15em; }
+.tracked-2 { letter-spacing: .25em; }
+.tracked-3 { letter-spacing: .35em; }

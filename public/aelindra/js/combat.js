@@ -678,21 +678,14 @@ function updatePanelLeft() {
   const statsEl  = document.getElementById('sel-stats');
 
   if (!sel) {
-    if (portrait) portrait.innerHTML = '🧝';
+    if (portrait) portrait.textContent = '🧝';
     if (nameEl)   nameEl.textContent = 'Aucun';
     if (statsEl)  statsEl.textContent = '';
     renderAbilityButtons([]);
     return;
   }
 
-  const heroData = G.team.find(h => h.id === sel.heroId) || G.collection.find(h => h.id === sel.heroId);
-  if (portrait) {
-    if (heroData?.imagePath) {
-      portrait.innerHTML = `<img src="${heroData.imagePath}" alt="${sel.name}" onerror="this.replaceWith(document.createTextNode('${sel.emoji || '🧝'}'))">`;
-    } else {
-      portrait.innerHTML = sel.emoji || '🧝';
-    }
-  }
+  if (portrait) portrait.textContent = sel.emoji || '🧝';
   if (nameEl)   nameEl.textContent = sel.name;
   if (statsEl)  statsEl.textContent = `PV ${sel.hp}/${sel.maxHp}  PA ${sel.ap}/${sel.maxAp}  PM ${sel.mp || 0}/${sel.maxMp || 0}`;
 
