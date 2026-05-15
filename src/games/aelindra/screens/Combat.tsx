@@ -308,17 +308,23 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
                           ))}
                         </div>
                       )}
-                      <div className="unit-glyph">
-                        {isElf && unit.imagePath ? (
-                          <img
-                            src={unit.imagePath}
-                            alt={unit.name}
-                            style={{ width: '80%', height: '80%', objectFit: 'contain' }}
-                          />
-                        ) : isElf ? (
-                          <Icon id={specToIcon(unit.spec)} />
-                        ) : (
+                      <div
+                        className="unit-glyph"
+                        style={isElf && unit.imagePath ? {
+                          backgroundImage: `url("${unit.imagePath}")`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center top',
+                          width: '100%',
+                          height: '100%',
+                          margin: 0,
+                          borderRadius: 'var(--radius-sm)',
+                        } : undefined}
+                      >
+                        {!isElf && (
                           <span style={{ fontSize: 24 }}>{unit.emoji}</span>
+                        )}
+                        {isElf && !unit.imagePath && (
+                          <Icon id={specToIcon(unit.spec)} />
                         )}
                       </div>
                       <div className="tile-hp">
