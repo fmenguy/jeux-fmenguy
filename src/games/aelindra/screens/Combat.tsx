@@ -63,6 +63,93 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
   // Détection des changements de combat pour anims + sons
   const { popups, fx } = useCombatFx(combat);
   const [audioOff, setAudioOff] = React.useState<boolean>(() => isMuted());
+
+  // --- T2 : état visuel ---
+  const [hoveredTile, setHoveredTile] = React.useState<{ x: number; y: number } | null>(null);
+  const [phaseBanner, setPhaseBanner] = React.useState<{ label: string; team: 'elf' | 'enemy' } | null>(null);
+  interface CombatParticle { id: number; left: string; top: string; dx: number; dy: number; variant: 'spark' }
+  const [particles, setParticles] = React.useState<CombatParticle[]>([]);
+  const [tooltip, setTooltip] = React.useState<string | null>(null);
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const gridRef = React.useRef<HTMLDivElement>(null);
+  const prevPhaseRef = React.useRef<string | null>(null);
+  const particleCounterRef = React.useRef(0);
+
+  // Bandeau de phase
+  React.useEffect(() => {
+    if (!combat) return;
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = combat.phase;
+    if (prev !== null && prev !== combat.phase) {
+      const label = combat.phase === 'elf' ? 'PHASE ELFES' : 'PHASE ENNEMIE';
+      setPhaseBanner({ label, team: combat.phase });
+      const t = setTimeout(() => setPhaseBanner(null), 900);
+      return () => clearTimeout(t);
+    }
+  }, [combat?.phase]); // eslint-disable-line
+
+  // Screen shake sur coup
+  React.useEffect(() => {
+    if (fx.hitIds.size === 0 || !wrapRef.current) return;
+    const cls = fx.critIds.size > 0 ? 'is-shaking-big' : 'is-shaking';
+    const el = wrapRef.current;
+    el.classList.add(cls);
+    const t = setTimeout(() => el.classList.remove(cls), 500);
+    return () => clearTimeout(t);
+  }, [fx.hitIds]); // eslint-disable-line
+
+  // Cinématique zoom sur crit/kill
+  React.useEffect(() => {
+    if (fx.critIds.size === 0 || !gridRef.current || !combat) return;
+    const grid = gridRef.current;
+    const firstId = [...fx.critIds][0];
+    const unit = combat.units.find(u => u.instanceId === firstId);
+    if (unit) {
+      const tw = 40;
+      const cx = unit.pos.x * tw + tw / 2;
+      const cy = unit.pos.y * tw + tw / 2;
+      grid.style.setProperty('--cin-x', `${cx}px`);
+      grid.style.setProperty('--cin-y', `${cy}px`);
+    }
+    grid.classList.add('is-cinematic');
+    const t = setTimeout(() => grid.classList.remove('is-cinematic'), 650);
+    return () => clearTimeout(t);
+  }, [fx.critIds]); // eslint-disable-line
+
+  // Particules sur impact
+  React.useEffect(() => {
+    if (fx.hitIds.size === 0 || !combat) return;
+    const tw = tileSize + 2;
+    const gw = gridCols * tw;
+    const gh = gridRows * tw;
+    const newP: CombatParticle[] = [];
+    fx.hitIds.forEach(id => {
+      const unit = combat.units.find(u => u.instanceId === id);
+      if (!unit) return;
+      const count = fx.critIds.has(id) ? 10 : 5;
+      for (let i = 0; i < count; i++) {
+        const ang = (i / count) * Math.PI * 2 + Math.random() * .5;
+        const dist = 15 + Math.random() * 20;
+        newP.push({
+          id: ++particleCounterRef.current,
+          left: `calc(50% - ${gw / 2}px + ${unit.pos.x * tw + tw / 2}px)`,
+          top: `calc(50% - ${gh / 2}px + ${unit.pos.y * tw + tw / 2}px)`,
+          dx: Math.cos(ang) * dist,
+          dy: Math.sin(ang) * dist,
+          variant: 'spark',
+        });
+      }
+    });
+    if (newP.length > 0) {
+      setParticles(p => [...p, ...newP]);
+      const ids = new Set(newP.map(x => x.id));
+      setTimeout(() => setParticles(p => p.filter(x => !ids.has(x.id))), 850);
+    }
+  }, [fx.hitIds]); // eslint-disable-line
+  // Dimensions de la grille (avant l'early return pour les closures useEffect)
+  const gridCols = cols ?? combat?.gridCols ?? 3;
+  const gridRows = rows ?? combat?.gridRows ?? 8;
+
   const toggleAudio = () => {
     const next = !audioOff;
     setMuted(next);
@@ -90,9 +177,6 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
     );
   }
 
-  const gridCols = cols ?? combat.gridCols;
-  const gridRows = rows ?? combat.gridRows;
-
   // Construction tiles[y][x]
   const tilesByPos: (Unit | null)[][] = React.useMemo(() => {
     const grid: (Unit | null)[][] = Array.from({ length: gridRows }, () =>
@@ -112,21 +196,43 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
     : null;
 
   // Calcul des zones de portée (cases atteignables / cibles attaquables)
-  const { reachableSet, attackableSet } = React.useMemo(() => {
-    const r = new Set<string>();
-    const a = new Set<string>();
-    if (!selectedUnit || !combat.pendingAction) {
-      return { reachableSet: r, attackableSet: a };
+  const overlays = React.useMemo(() => {
+    const reachableSet = new Set<string>();
+    const attackableSet = new Set<string>(); // ennemis réellement attaquables
+    const attackRangeSet = new Set<string>(); // toutes les cases à portée d'attaque
+    const healSet = new Set<string>();        // alliés soignables
+    const aoeSet = new Set<string>();         // preview AoE sur hover
+    const ambientSet = new Set<string>();     // portée ambiente (pas d'action choisie)
+
+    if (!selectedUnit) return { reachableSet, attackableSet, attackRangeSet, healSet, aoeSet, ambientSet };
+
+    const addAttackRange = () => {
+      for (let y = 0; y < combat.gridRows; y++) {
+        for (let x = 0; x < combat.gridCols; x++) {
+          const d = Math.abs(selectedUnit.pos.x - x) + Math.abs(selectedUnit.pos.y - y);
+          if (d > 0 && d <= selectedUnit.range) attackRangeSet.add(`${x},${y}`);
+        }
+      }
+    };
+
+    if (!combat.pendingAction) {
+      // Ambient : cases de déplacement en fond quand unité sélectionnée sans action
+      for (const t of getReachableTiles(combat, selectedUnit)) {
+        ambientSet.add(`${t.x},${t.y}`);
+      }
+      return { reachableSet, attackableSet, attackRangeSet, healSet, aoeSet, ambientSet };
     }
+
     const pa = combat.pendingAction;
 
     if (pa.type === 'move') {
       for (const t of getReachableTiles(combat, selectedUnit)) {
-        r.add(`${t.x},${t.y}`);
+        reachableSet.add(`${t.x},${t.y}`);
       }
     } else if (pa.type === 'attack' || pa.type === 'spell') {
+      addAttackRange();
       for (const t of getAttackableTargets(combat, selectedUnit)) {
-        a.add(`${t.pos.x},${t.pos.y}`);
+        attackableSet.add(`${t.pos.x},${t.pos.y}`);
       }
     } else if (pa.type === 'ability') {
       const ability = ABILITIES[pa.abilityId];
@@ -135,30 +241,72 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
         if (tags.includes('heal')) {
           for (const u of combat.units) {
             if (u.team === selectedUnit.team && u.hp > 0) {
-              a.add(`${u.pos.x},${u.pos.y}`);
+              healSet.add(`${u.pos.x},${u.pos.y}`);
             }
           }
         } else if (tags.includes('mobility')) {
           for (const t of getReachableTiles(combat, selectedUnit, 5)) {
-            r.add(`${t.x},${t.y}`);
+            reachableSet.add(`${t.x},${t.y}`);
           }
         } else if (tags.includes('buff_def')) {
-          a.add(`${selectedUnit.pos.x},${selectedUnit.pos.y}`);
-        } else {
-          // damage_phys / damage_mag / aoe / autres : cibles ennemies à portée
+          attackableSet.add(`${selectedUnit.pos.x},${selectedUnit.pos.y}`);
+        } else if (tags.includes('aoe') || tags.includes('dmg')) {
+          // Portée d'attaque + preview AoE sur la case survolée
+          addAttackRange();
+          if (hoveredTile) {
+            for (let dy = -2; dy <= 2; dy++) {
+              for (let dx = -2; dx <= 2; dx++) {
+                if (Math.abs(dx) + Math.abs(dy) <= 2) {
+                  const tx = hoveredTile.x + dx;
+                  const ty = hoveredTile.y + dy;
+                  if (tx >= 0 && tx < combat.gridCols && ty >= 0 && ty < combat.gridRows) {
+                    aoeSet.add(`${tx},${ty}`);
+                  }
+                }
+              }
+            }
+          }
           for (const t of getAttackableTargets(combat, selectedUnit)) {
-            a.add(`${t.pos.x},${t.pos.y}`);
+            attackableSet.add(`${t.pos.x},${t.pos.y}`);
+          }
+        } else {
+          addAttackRange();
+          for (const t of getAttackableTargets(combat, selectedUnit)) {
+            attackableSet.add(`${t.pos.x},${t.pos.y}`);
           }
         }
       }
     }
-    return { reachableSet: r, attackableSet: a };
-  }, [combat, selectedUnit]);
+    return { reachableSet, attackableSet, attackRangeSet, healSet, aoeSet, ambientSet };
+  }, [combat, selectedUnit, hoveredTile]);
 
   // ---- Handlers ----
   const handleTileClick = (x: number, y: number) => {
     if (combat.phase !== 'elf' || combat.isOver) return;
     dispatch({ type: 'COMBAT_TILE_CLICK', x, y });
+  };
+
+  const handleTileHover = (x: number, y: number) => {
+    setHoveredTile({ x, y });
+    // Tooltip de preview dégâts sur cible attaquable
+    if (selectedUnit && overlays.attackableSet.has(`${x},${y}`)) {
+      const target = combat.units.find(u => u.hp > 0 && u.pos.x === x && u.pos.y === y);
+      if (target && selectedUnit.team !== target.team) {
+        const kind = combat.pendingAction?.type === 'spell' ? 'spell' : 'attack';
+        const raw = kind === 'spell' ? selectedUnit.mag : selectedUnit.atk;
+        const resist = kind === 'spell' ? target.res : target.def;
+        const preview = Math.max(1, Math.round(raw * (1 - resist / (resist + 100))));
+        const critPct = selectedUnit.crit ?? 0;
+        setTooltip(`~${preview} dmg · ${critPct}% crit`);
+        return;
+      }
+    }
+    setTooltip(null);
+  };
+
+  const handleTileLeave = () => {
+    setHoveredTile(null);
+    setTooltip(null);
   };
 
   const handleSetAction = (action: PendingAction | null) => {
@@ -287,9 +435,10 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
 
       {/* Main : grille + dock */}
       <div className="combat-main">
-        <div className="combat-grid-wrap">
+        <div className="combat-grid-wrap" ref={wrapRef}>
           <div
             id="combat-grid"
+            ref={gridRef}
             style={{ gridTemplateColumns: `repeat(${gridCols}, ${tileSize}px)` }}
           >
             {tilesByPos.flatMap((row, y) =>
@@ -298,10 +447,18 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
                 const classes = ['tile'];
                 if (y >= gridRows - 2) classes.push('zone-elf');
 
-                const isReachable = reachableSet.has(key);
-                const isAttackable = attackableSet.has(key);
+                const isReachable  = overlays.reachableSet.has(key);
+                const isAttackable = overlays.attackableSet.has(key);
+                const isAttackRange = overlays.attackRangeSet.has(key);
+                const isHealRange  = overlays.healSet.has(key);
+                const isAoE        = overlays.aoeSet.has(key);
+                const isAmbient    = overlays.ambientSet.has(key);
 
                 if (isReachable && !unit) classes.push('reachable');
+                if (isAmbient && !unit)   classes.push('ambient-reach');
+                if (isAttackRange && !unit) classes.push('attack-range');
+                if (isHealRange)            classes.push('heal-range');
+                if (isAoE)                  classes.push('aoe-preview');
 
                 let content: React.ReactNode = null;
                 if (unit) {
@@ -312,22 +469,18 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
                   } else {
                     classes.push('unit-enemy');
                   }
-                  if (selectedUnit?.instanceId === unit.instanceId) {
-                    classes.push('selected-unit');
-                  }
-                  if (isAttackable) {
-                    classes.push('attackable');
-                  }
-                  // FX classes (hit flash, mouvement, mort)
+                  const isSelected = selectedUnit?.instanceId === unit.instanceId;
+                  if (isSelected)    classes.push('selected-unit');
+                  if (isAttackable)  classes.push('attackable');
                   if (fx.hitIds.has(unit.instanceId))   classes.push('is-hit');
                   if (fx.movedIds.has(unit.instanceId)) classes.push('is-moved');
                   if (fx.dyingIds.has(unit.instanceId)) classes.push('is-dying');
 
                   const hpRatio = unit.maxHp > 0 ? Math.max(0, unit.hp / unit.maxHp) : 0;
-                  const isSelected = selectedUnit?.instanceId === unit.instanceId;
 
                   content = (
                     <>
+                      {isSelected && <div className="unit-chevron" />}
                       {isSelected && (
                         <div className="ap-dots">
                           {Array.from({ length: unit.maxAp }).map((_, i) => (
@@ -374,6 +527,8 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
                     key={key}
                     className={classes.join(' ')}
                     onClick={() => handleTileClick(x, y)}
+                    onMouseEnter={() => handleTileHover(x, y)}
+                    onMouseLeave={handleTileLeave}
                     role="button"
                     tabIndex={0}
                   >
@@ -386,7 +541,6 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
           {/* Popups de dégâts / soin flottants au-dessus de la grille */}
           {popups.map(p => {
             const gap = 2;
-            // Le grid est centré dans le wrap : on calcule l'offset depuis le centre
             const gridW = gridCols * tileSize + (gridCols - 1) * gap;
             const gridH = gridRows * tileSize + (gridRows - 1) * gap;
             const left = `calc(50% - ${gridW / 2}px + ${p.x * (tileSize + gap) + tileSize / 2}px)`;
@@ -405,6 +559,47 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
               </span>
             );
           })}
+          {/* Particules de combat */}
+          {particles.map(p => (
+            <div
+              key={p.id}
+              className={`combat-particle ${p.variant}`}
+              style={{
+                left: p.left,
+                top: p.top,
+                ['--pdx' as string]: `${p.dx}px`,
+                ['--pdy' as string]: `${p.dy}px`,
+              }}
+            />
+          ))}
+          {/* Tooltip preview dégâts */}
+          {tooltip && hoveredTile && (
+            <div style={{
+              position: 'absolute',
+              left: `calc(50% - ${(gridCols * (tileSize + 2)) / 2}px + ${hoveredTile.x * (tileSize + 2) + tileSize / 2}px)`,
+              top: `calc(50% - ${(gridRows * (tileSize + 2)) / 2}px + ${hoveredTile.y * (tileSize + 2) - 18}px)`,
+              transform: 'translateX(-50%)',
+              background: 'rgba(8,6,20,0.92)',
+              border: '1px solid color-mix(in oklab, var(--gold) 35%, transparent)',
+              borderRadius: '3px',
+              padding: '2px 6px',
+              fontSize: 10,
+              color: 'var(--ink)',
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              zIndex: 50,
+            }}>
+              {tooltip}
+            </div>
+          )}
+          {/* Bandeau de phase */}
+          {phaseBanner && (
+            <div className="phase-banner">
+              <div className={`phase-banner-inner ${phaseBanner.team}`}>
+                {phaseBanner.label}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dock */}

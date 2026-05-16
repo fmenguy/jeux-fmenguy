@@ -23,6 +23,7 @@ export interface UnitFxState {
   hitIds: Set<string>;     // instanceIds qui viennent d'etre touches (flash)
   movedIds: Set<string>;   // instanceIds qui viennent de bouger (bounce)
   dyingIds: Set<string>;   // instanceIds qui meurent (fadeout)
+  critIds: Set<string>;    // instanceIds touches par un coup > 25% maxHp ou tues
 }
 
 interface FxOutput {
@@ -46,6 +47,7 @@ export function useCombatFx(combat: CombatState | null): FxOutput {
     hitIds: new Set(),
     movedIds: new Set(),
     dyingIds: new Set(),
+    critIds: new Set(),
   });
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export function useCombatFx(combat: CombatState | null): FxOutput {
     const hitIds = new Set<string>();
     const movedIds = new Set<string>();
     const dyingIds = new Set<string>();
+    const critIds = new Set<string>();
     let anyHit = false;
     let anyMove = false;
     let anyHeal = false;
@@ -71,18 +74,21 @@ export function useCombatFx(combat: CombatState | null): FxOutput {
       // Degats
       if (u.hp < old.hp) {
         const dmg = old.hp - u.hp;
+        const isBig = old.maxHp > 0 && dmg >= old.maxHp * 0.25;
         newPopups.push({
           id: ++popupCounter,
           x: u.pos.x,
           y: u.pos.y,
           amount: dmg,
-          kind: 'damage',
+          kind: isBig ? 'crit' : 'damage',
         });
         hitIds.add(u.instanceId);
+        if (isBig) critIds.add(u.instanceId);
         anyHit = true;
         // Mort
         if (u.hp <= 0 && old.hp > 0) {
           dyingIds.add(u.instanceId);
+          critIds.add(u.instanceId); // kill = toujours cinematique
           anyDeath = true;
         }
       }
@@ -125,9 +131,9 @@ export function useCombatFx(combat: CombatState | null): FxOutput {
 
     // Mise a jour des classes FX (reset apres l'animation)
     if (hitIds.size || movedIds.size || dyingIds.size) {
-      setFx({ hitIds, movedIds, dyingIds });
+      setFx({ hitIds, movedIds, dyingIds, critIds });
       setTimeout(() => {
-        setFx({ hitIds: new Set(), movedIds: new Set(), dyingIds: new Set() });
+        setFx({ hitIds: new Set(), movedIds: new Set(), dyingIds: new Set(), critIds: new Set() });
       }, 400);
     }
 
