@@ -220,7 +220,7 @@ export function Combat({ cols, rows, tileSize = 72, onEnd }: CombatProps) {
       {/* Top bar */}
       <div className="combat-topbar">
         <div className="combat-turn-info">
-          <span className="turn-n">{turnRoman}</span> TUR {combat.turn}
+          TOUR <span className="turn-n">{turnRoman}</span>
         </div>
         <div className="combat-phase">{phaseLabel}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

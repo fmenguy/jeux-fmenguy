@@ -5,6 +5,29 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
 ---
 
+## [2026-05-16]
+
+### Ajouté — Aelindra
+- **Cinématique d'invocation Guild** : machine d'états animée (`idle → charging → bursting → revealing`), orbe qui charge, anneau de burst coloré selon la rareté, flash blanc, shake, flip de carte au reveal avec halo et sparks radiaux
+- **Mini-cartes ×10** : rangée de cartes animées (`mini-pop`) pour les 9 autres résultats du tirage groupé
+- **Sons Web Audio** (zéro fichier) : coup d'épée, flèche, boule de feu, sort, soin, mort, victoire, défaite, charge d'orbe, invocation par rareté (commun → légendaire)
+- **PWA** : service worker activé en dev (`devOptions.enabled: true`)
+
+### Modifié — Aelindra
+- **Guild.tsx** : converti en composant smart (`useGameState` / `useDispatch` directs, plus de props externes)
+- **Icônes d'invocation** : `emoji` texte remplacé par icônes SVG (`specToIcon`) dans la modal de résultats
+- **Suppression de tous les mocks** : `MOCK_*` retirés de Missions, Splash, Dungeons, Heroes, Gouffre — remplacés par état réel ou empty state
+- **Combat HUD** : typo "TUR" corrigée → "TOUR"
+- **CSS mobile** : overrides typographie au breakpoint 720px (descriptions, labels, tap targets 44px)
+- **Variables CSS** : contraste `--dim`/`--dim2` amélioré, tokens de couleur d'animation par rareté ajoutés
+- **Animations CSS** : keyframes cinématique guilde (`orb-charge`, `burst-expand`, `guild-flash`, `card-flip-in`, `halo-pulse`, `spark-out`, `mini-pop`, `rune-ring`)
+
+### Corrigé — Aelindra
+- Invocations : les orbes étaient débités mais aucun héros n'apparaissait — résolu via `lastPullResults` dans le store
+- `sfx.ts` : bug `[392, 523], [392, 523].forEach` → `[392, 523].forEach` (erreur TS2695)
+
+---
+
 ## [2026-04-20]
 
 ### Ajouté
