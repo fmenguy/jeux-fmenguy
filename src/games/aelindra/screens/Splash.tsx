@@ -6,7 +6,7 @@
 import { Icon } from '../components/Icons';
 import { TopBar } from '../components/TopBar';
 
-interface MockHero {
+interface HeroChip {
   id: string;
   name: string;
   icon: string;
@@ -14,15 +14,8 @@ interface MockHero {
   lv: number;
 }
 
-const MOCK_HEROES: MockHero[] = [
-  { id: 'dain',  name: 'Daïn Piedlor',    icon: 'warrior',  rarity: 'rare',   lv: 4 },
-  { id: 'aeris', name: 'Aeris Ventpâle',  icon: 'archer',   rarity: 'common', lv: 3 },
-  { id: 'sylva', name: 'Sylvara Brasier', icon: 'mage',     rarity: 'epic',   lv: 5 },
-  { id: 'borin', name: 'Borin Rempart',   icon: 'guardian', rarity: 'rare',   lv: 4 },
-];
-
 interface SplashProps {
-  heroes?: MockHero[];
+  heroes?: HeroChip[];
   playerName?: string;
   playerInitial?: string;
   gold?: number;
@@ -31,11 +24,11 @@ interface SplashProps {
 }
 
 export function Splash({
-  heroes = MOCK_HEROES,
-  playerName = 'Aldwyn',
+  heroes = [],
+  playerName = 'Aventurier',
   playerInitial = 'A',
-  gold = 320,
-  orbs = 64,
+  gold = 0,
+  orbs = 0,
   onNavigate,
 }: SplashProps) {
   return (
@@ -58,19 +51,25 @@ export function Splash({
       <div className="team-strip">
         <div className="strip-lbl">ÉQUIPE ACTIVE</div>
         <div className="team-row">
-          {heroes.map(h => (
-            <div key={h.id} className={`hchip rarity--${h.rarity}`}>
-              <div className={`hero-portrait hero-portrait--framed rarity--${h.rarity} hp`}>
-                <div style={{ color: 'var(--gold-hi)' }}>
-                  <Icon id={h.icon} className="ico" style={{ width: 18, height: 18 }} />
+          {heroes.length === 0 ? (
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--dim)', fontStyle: 'italic' }}>
+              Aucun héros — explore le Gouffre pour en recruter.
+            </span>
+          ) : (
+            heroes.map(h => (
+              <div key={h.id} className={`hchip rarity--${h.rarity}`}>
+                <div className={`hero-portrait hero-portrait--framed rarity--${h.rarity} hp`}>
+                  <div style={{ color: 'var(--gold-hi)' }}>
+                    <Icon id={h.icon} className="ico" style={{ width: 18, height: 18 }} />
+                  </div>
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="nm">{h.name.split(' ')[0]}</div>
+                  <div className="lv">LV.{h.lv}</div>
                 </div>
               </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="nm">{h.name.split(' ')[0]}</div>
-                <div className="lv">LV.{h.lv}</div>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

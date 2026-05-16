@@ -20,6 +20,16 @@ import { specToIcon } from './components/specToIcon';
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 function toRoman(n: number): string { return ROMAN[n - 1] ?? String(n); }
 
+function dailyResetLabel(): string {
+  const now = new Date();
+  const midnight = new Date();
+  midnight.setHours(24, 0, 0, 0);
+  const diff = midnight.getTime() - now.getTime();
+  const h = Math.floor(diff / 3_600_000);
+  const m = Math.floor((diff % 3_600_000) / 60_000);
+  return `Reset dans ${h}h ${String(m).padStart(2, '0')}m`;
+}
+
 function GameRouter() {
   const state = useGameState();
   const dispatch = useDispatch();
@@ -28,7 +38,7 @@ function GameRouter() {
   const nav = (screen: ScreenId) => dispatch({ type: 'NAVIGATE', screen });
 
   // Adapte Hero[] vers le shape attendu par les composants UI
-  const teamForUi = state.team.map(h => ({
+  const heroToUi = (h: typeof state.team[number]) => ({
     id: h.id,
     name: h.name,
     icon: specToIcon(h.spec),
@@ -38,7 +48,10 @@ function GameRouter() {
     mp: { c: h.baseStats?.mp ?? 30,  m: h.baseStats?.mp ?? 30  },
     class: h.class,
     race: h.race,
-  }));
+  });
+
+  const teamForUi = state.team.map(heroToUi);
+  const collectionForUi = state.collection.map(heroToUi);
 
   switch (currentScreen) {
     case 'splash':
@@ -217,6 +230,7 @@ function GameRouter() {
       return (
         <Heroes
           heroes={teamForUi}
+          collectionHeroes={collectionForUi}
           onBack={() => nav('splash')}
           onSelectHero={(heroId: string) =>
             dispatch({ type: 'OPEN_HERO_DETAIL', heroId })
@@ -274,6 +288,7 @@ function GameRouter() {
         <Missions
           mainMissions={MAIN_MISSIONS.map(buildEntry)}
           dailyMissions={DAILY_MISSIONS.map(buildEntry)}
+          dailyResetLabel={dailyResetLabel()}
           onBack={() => nav('splash')}
           onClaim={(missionName: string) => {
             // Le composant retourne le nom, on cherche l'id

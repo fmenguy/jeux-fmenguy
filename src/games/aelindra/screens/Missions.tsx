@@ -17,62 +17,6 @@ interface MissionEntry {
   state: 'claimable' | 'claimed' | 'active';
 }
 
-const MOCK_MAIN_MISSIONS: MissionEntry[] = [
-  {
-    name: 'Première Victoire',
-    reward: '+30',
-    rewardBonus: '×3 bonus',
-    desc: 'Remporte un combat dans le Gouffre.',
-    progress: 1,
-    current: 1,
-    total: 1,
-    state: 'claimable',
-  },
-  {
-    name: 'Équipe Diversifiée',
-    reward: '+50',
-    rewardBonus: '×5 bonus',
-    desc: 'Compose une équipe avec 3 classes différentes.',
-    progress: 0.66,
-    current: 2,
-    total: 3,
-    state: 'active',
-  },
-  {
-    name: 'Héros Recruté',
-    reward: '+20',
-    rewardBonus: undefined,
-    desc: 'Invoque ton premier aventurier à la guilde.',
-    progress: 1,
-    current: 1,
-    total: 1,
-    state: 'claimed',
-  },
-];
-
-const MOCK_DAILY_MISSIONS: MissionEntry[] = [
-  {
-    name: 'Combat Quotidien',
-    reward: '+8',
-    rewardBonus: undefined,
-    desc: "Termine un combat aujourd'hui.",
-    progress: 0,
-    current: 0,
-    total: 1,
-    state: 'active',
-  },
-  {
-    name: 'Connexion',
-    reward: '+5',
-    rewardBonus: undefined,
-    desc: 'Te connecter au royaume.',
-    progress: 1,
-    current: 1,
-    total: 1,
-    state: 'claimable',
-  },
-];
-
 interface MissionsProps {
   mainMissions?: MissionEntry[];
   dailyMissions?: MissionEntry[];
@@ -82,9 +26,9 @@ interface MissionsProps {
 }
 
 export function Missions({
-  mainMissions = MOCK_MAIN_MISSIONS,
-  dailyMissions = MOCK_DAILY_MISSIONS,
-  dailyResetLabel = 'Reset dans 06h 23m',
+  mainMissions = [],
+  dailyMissions = [],
+  dailyResetLabel = '',
   onBack,
   onClaim,
 }: MissionsProps) {
@@ -135,10 +79,12 @@ export function Missions({
 
         <section>
           <h3 className="missions-section-title">MISSIONS QUOTIDIENNES</h3>
-          <p className="daily-reset-label">
-            <Icon id="time" className="ico" style={{ marginRight: 4, color: 'var(--rune)' }} />
-            {dailyResetLabel}
-          </p>
+          {dailyResetLabel && (
+            <p className="daily-reset-label">
+              <Icon id="time" className="ico" style={{ marginRight: 4, color: 'var(--rune)' }} />
+              {dailyResetLabel}
+            </p>
+          )}
           <div>{dailyMissions.map((m, i) => renderMission(m, i))}</div>
         </section>
       </div>

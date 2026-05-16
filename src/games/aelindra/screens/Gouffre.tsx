@@ -15,56 +15,13 @@ interface FloorEntry {
   state: 'done' | 'current' | 'locked';
 }
 
-const MOCK_FLOORS: FloorEntry[] = [
-  {
-    num: 'I',
-    depth: '0 m',
-    name: 'Entrée',
-    desc: 'Premiers pas dans le gouffre. Apprends les déplacements et le corps-à-corps.',
-    gift: 'Daïn Piedlor · Guerrier Nain',
-    state: 'done',
-  },
-  {
-    num: 'II',
-    depth: '-50 m',
-    name: 'Galerie',
-    desc: 'Une coursive étroite. La portée et le positionnement prennent leur sens.',
-    gift: 'Aeris Ventpâle · Archère Elfe',
-    state: 'done',
-  },
-  {
-    num: 'III',
-    depth: '-120 m',
-    name: 'Caverne',
-    desc: 'Cristaux runiques. Découvre la magie offensive et les résistances.',
-    gift: 'Sylvara Brasier · Mage Offensif',
-    state: 'done',
-  },
-  {
-    num: 'IV',
-    depth: '-200 m',
-    name: 'Salle du Titan',
-    desc: 'Une chambre voûtée. Apprends à tenir une ligne, à protéger.',
-    gift: 'Borin Rempart · Protecteur',
-    state: 'current',
-  },
-  {
-    num: 'V',
-    depth: '-300 m',
-    name: 'Coeur',
-    desc: 'Le palier final. Les quatre classes en synergie.',
-    gift: null,
-    state: 'locked',
-  },
-];
-
 interface GouffreProps {
   floors?: FloorEntry[];
   onBack?: () => void;
   onEnterFloor?: (floorNum: string) => void;
 }
 
-export function Gouffre({ floors = MOCK_FLOORS, onBack, onEnterFloor }: GouffreProps) {
+export function Gouffre({ floors = [], onBack, onEnterFloor }: GouffreProps) {
   return (
     <div className="scr on" id="s-gouffre">
       <ScrHeader title="LE GOUFFRE DES ORIGINES" onBack={onBack} />
