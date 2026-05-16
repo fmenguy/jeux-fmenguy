@@ -29,6 +29,7 @@ export type GameAction =
 
   // Gacha
   | { type: 'PERFORM_PULLS'; count: 1 | 10 }
+  | { type: 'CLEAR_PULL_RESULTS' }
 
   // Marché
   | { type: 'BUY_ITEM'; itemId: string; tab: 'armes' | 'armures' | 'potions' }

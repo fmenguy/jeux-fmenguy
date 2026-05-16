@@ -191,16 +191,27 @@ function GameRouter() {
         />
       );
 
-    case 'guild':
+    case 'guild': {
+      const allHeroes = [...state.team, ...state.collection];
+      const rosterSlots = Array.from({ length: 24 }, (_, i) => {
+        const h = allHeroes[i];
+        return h ? { i: specToIcon(h.spec), r: h.rarity } : { i: null, r: null };
+      });
       return (
         <Guild
           orbs={state.orbs}
           pityCount={state.pity}
+          rosterSlots={rosterSlots}
+          rosterFilled={allHeroes.length}
+          rosterTotal={24}
+          lastPullResults={state.lastPullResults}
           onBack={() => nav('splash')}
           onPull1={() => dispatch({ type: 'PERFORM_PULLS', count: 1 })}
           onPull10={() => dispatch({ type: 'PERFORM_PULLS', count: 10 })}
+          onCloseResults={() => dispatch({ type: 'CLEAR_PULL_RESULTS' })}
         />
       );
+    }
 
     case 'heroes':
       return (
