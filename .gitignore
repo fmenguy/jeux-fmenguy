@@ -33,3 +33,7 @@ deploy.log
 
 # Claude Code : ignore tout sauf les sub-agents partages versionnes
 .claude/*
+
+# Assets sources bruts (packs Kenney non renommés — exports dans public/)
+src/games/aelindra/audio/kenney_*/
+dev-dist/

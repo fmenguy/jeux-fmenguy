@@ -22,6 +22,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 - **Variables CSS** : contraste `--dim`/`--dim2` amélioré, tokens de couleur d'animation par rareté ajoutés
 - **Animations CSS** : keyframes cinématique guilde (`orb-charge`, `burst-expand`, `guild-flash`, `card-flip-in`, `halo-pulse`, `spark-out`, `mini-pop`, `rune-ring`)
 
+### Sons — Aelindra
+- **sfx.ts** réécrit : pool HTML5 Audio (4 instances/son), variation de pitch ±7%, anti-spam 40ms, persistance localStorage
+- **34 fichiers Kenney CC0** copiés dans `public/games/aelindra/sfx/` : combat (épée×3, impacts×4, arc×2, mort×2, victoire, défaite), sorts (feu, glace, soin, buff, dash), guilde (charge orbe×2, pop/épique/légendaire, flip×2), UI (click, back, or)
+
 ### Corrigé — Aelindra
 - Invocations : les orbes étaient débités mais aucun héros n'apparaissait — résolu via `lastPullResults` dans le store
 - `sfx.ts` : bug `[392, 523], [392, 523].forEach` → `[392, 523].forEach` (erreur TS2695)
