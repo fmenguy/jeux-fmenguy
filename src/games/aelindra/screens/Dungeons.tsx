@@ -17,46 +17,6 @@ interface DungeonEntry {
   state: 'tut' | 'open' | 'locked';
 }
 
-const MOCK_DUNGEONS: DungeonEntry[] = [
-  {
-    name: 'Le Gouffre des Origines',
-    desc: 'Cinq paliers dans les profondeurs. Un héros offert à chaque descente.',
-    tag: 'tag-tuto',
-    tagText: 'TUTORIEL',
-    new: true,
-    icon: 'dungeon',
-    floor: 'Palier IV',
-    state: 'tut',
-  },
-  {
-    name: 'Forêt Maudite',
-    desc: '8 étages · Ennemis sylvestres. Requiert Palier I du Gouffre.',
-    tag: 'tag-floor',
-    tagText: '8 ÉTAGES',
-    icon: 'rune',
-    floor: '0 / 8',
-    state: 'open',
-  },
-  {
-    name: 'Mines de Fer Noir',
-    desc: '10 étages · Golems et créatures de pierre. Palier II requis.',
-    tag: 'tag-floor',
-    tagText: '10 ÉTAGES',
-    icon: 'rune',
-    floor: '—',
-    state: 'open',
-  },
-  {
-    name: 'Tour des Ombres',
-    desc: '12 étages · Nécromanciens. Palier III requis.',
-    tag: 'tag-locked',
-    tagText: 'VERROUILLÉ',
-    icon: 'lock',
-    floor: '—',
-    state: 'locked',
-  },
-];
-
 interface DungeonsProps {
   dungeons?: DungeonEntry[];
   gold?: number;
@@ -65,8 +25,8 @@ interface DungeonsProps {
 }
 
 export function Dungeons({
-  dungeons = MOCK_DUNGEONS,
-  gold = 320,
+  dungeons = [],
+  gold = 0,
   onBack,
   onEnterDungeon,
 }: DungeonsProps) {

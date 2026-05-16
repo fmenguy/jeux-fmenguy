@@ -1497,6 +1497,22 @@
   flex-direction: column;
   gap: 8px;
 }
+.heroes-section-lbl {
+  font-family: var(--font-title);
+  font-size: 9px;
+  letter-spacing: .3em;
+  color: var(--dim2);
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.heroes-section-lbl::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--gold) 20%, transparent), transparent);
+}
 .hero-row {
   background: linear-gradient(180deg, var(--p2), var(--p));
   border: 1px solid var(--b);
