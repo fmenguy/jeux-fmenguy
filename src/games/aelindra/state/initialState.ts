@@ -36,4 +36,5 @@ export const initialState: GameState = {
   combat: null,
   toast: null,
   lastPullResults: null,
+  authUser: null,
 };

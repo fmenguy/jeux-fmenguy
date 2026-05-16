@@ -6,7 +6,7 @@
 import type { Hero, Floor } from '../data/types';
 import type { PendingAction } from '../logic/combat';
 import type { EquipSlot } from '../logic/equipment';
-import type { GameState, ScreenId } from './types';
+import type { GameState, ScreenId, AuthUser } from './types';
 
 export type GameAction =
   // Profil / navigation
@@ -59,6 +59,9 @@ export type GameAction =
   // Toast
   | { type: 'SHOW_TOAST'; msg: string }
   | { type: 'HIDE_TOAST' }
+
+  // Auth
+  | { type: 'SET_AUTH_USER'; user: AuthUser | null }
 
   // Persistence
   | { type: 'LOAD_STATE'; state: GameState }

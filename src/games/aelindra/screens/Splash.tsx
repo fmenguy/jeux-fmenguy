@@ -16,24 +16,13 @@ interface HeroChip {
 
 interface SplashProps {
   heroes?: HeroChip[];
-  playerName?: string;
-  playerInitial?: string;
-  gold?: number;
-  orbs?: number;
   onNavigate?: (screen: string) => void;
 }
 
-export function Splash({
-  heroes = [],
-  playerName = 'Aventurier',
-  playerInitial = 'A',
-  gold = 0,
-  orbs = 0,
-  onNavigate,
-}: SplashProps) {
+export function Splash({ heroes = [], onNavigate }: SplashProps) {
   return (
     <div className="scr on" id="s-splash">
-      <TopBar name={playerName} initial={playerInitial} gold={gold} orb={orbs} />
+      <TopBar />
 
       <div className="logo-zone">
         <div className="logo-sigil">

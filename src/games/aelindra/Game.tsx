@@ -57,10 +57,6 @@ function GameRouter() {
       return (
         <Splash
           heroes={teamForUi}
-          playerName={state.playerName}
-          playerInitial={state.playerName[0]?.toUpperCase() ?? 'A'}
-          gold={state.gold}
-          orbs={state.orbs}
           onNavigate={(screen) => nav(screen as ScreenId)}
         />
       );

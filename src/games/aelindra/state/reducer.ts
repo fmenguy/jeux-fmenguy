@@ -542,6 +542,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'HIDE_TOAST':
       return { ...state, toast: null };
 
+    // ----- Auth -----
+    case 'SET_AUTH_USER':
+      return { ...state, authUser: action.user };
+
     // ----- Persistence -----
     case 'LOAD_STATE':
       return action.state;

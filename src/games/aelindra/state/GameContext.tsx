@@ -18,6 +18,9 @@ import type { GameAction } from './actions';
 import { gameReducer } from './reducer';
 import { initialState } from './initialState';
 import { loadSavedState, saveState } from './persistence';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { uploadSave, downloadSave } from '../auth/cloudSync';
 
 interface GameContextValue {
   state: GameState;
@@ -56,6 +59,70 @@ export function GameProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     dispatch({ type: 'RESET_DAILY_MISSIONS' });
   }, []);
+
+  // --- Auth Firebase : écoute la connexion/déconnexion ---
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const authUser = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        };
+        dispatch({ type: 'SET_AUTH_USER', user: authUser });
+
+        // Charge le save cloud et l'applique s'il existe
+        try {
+          const cloudSave = await downloadSave(user.uid);
+          if (cloudSave) {
+            dispatch({
+              type: 'LOAD_STATE',
+              state: {
+                ...initialState,
+                ...cloudSave,
+                authUser,
+                currentScreen: 'splash',
+                combat: null,
+                toast: null,
+                lastPullResults: null,
+              },
+            });
+          }
+        } catch (e) {
+          console.warn('[aelindra] cloud load failed', e);
+        }
+      } else {
+        dispatch({ type: 'SET_AUTH_USER', user: null });
+      }
+    });
+    return unsub;
+  }, []);
+
+  // --- Sync cloud (debounced 2s) quand l'utilisateur est connecté ---
+  const cloudSyncTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!state.authUser?.uid || state.combat) return;
+    if (cloudSyncTimer.current !== null) clearTimeout(cloudSyncTimer.current);
+    cloudSyncTimer.current = window.setTimeout(() => {
+      uploadSave(state.authUser!.uid, {
+        playerName: state.playerName,
+        gold: state.gold,
+        orbs: state.orbs,
+        tutoFloor: state.tutoFloor,
+        tutoComplete: state.tutoComplete,
+        dungeonProgress: state.dungeonProgress,
+        team: state.team,
+        collection: state.collection,
+        inventory: state.inventory,
+        pity: state.pity,
+        missionProgress: state.missionProgress,
+      }).catch((e: unknown) => console.warn('[aelindra] cloud sync failed', e));
+    }, 2000);
+    return () => {
+      if (cloudSyncTimer.current !== null) clearTimeout(cloudSyncTimer.current);
+    };
+  }, [state]);
 
   // --- Auto-clear du toast après la durée ---
   useEffect(() => {
