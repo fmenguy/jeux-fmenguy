@@ -6,6 +6,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Arcade FM · Jeux & Expériences</title>
+  <script is:inline>
+    (function() {
+      var t = localStorage.getItem('theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -21,11 +27,58 @@
       --violet:    #7c5cbf;
       --violet-glow: rgba(124,92,191,0.25);
       --text:      #e8e0d0;
+      --text-strong: #f0e8d8;
+      --text-strong-violet: #d8d0e8;
+      --text-strong-wip: #f0e0c0;
       --muted:     #7a8090;
       --tag-full:  #1a2d1a;
       --tag-full-c:#4ade80;
       --tag-mini:  #1a1a2d;
       --tag-mini-c:#818cf8;
+      --tag-soon-bg: #2d1f0a;
+      --tag-soon-c:  #f59e0b;
+      --grid-line: rgba(212,160,23,0.03);
+      --card-shadow: 0 16px 40px rgba(0,0,0,0.5);
+      --banner-fda:     radial-gradient(ellipse at 60% 40%, #3a2a10 0%, #1a1205 100%);
+      --banner-eryndor: radial-gradient(ellipse at 40% 60%, #1a1030 0%, #0d0818 100%);
+      --banner-orbique: radial-gradient(ellipse at 50% 50%, #0c1e30 0%, #060d18 100%);
+      --banner-aelindra-base: #0a0814;
+      --banner-aelindra-vignette: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(0,0,0,0.45) 100%);
+      --aelindra-name-grad: linear-gradient(180deg, #ecd190 0%, #d4b370 55%, #8a7340 100%);
+      --aelindra-sub-c: #6a6276;
+      --header-title-grad: linear-gradient(135deg, var(--gold) 0%, #f5d060 50%, var(--gold-dim) 100%);
+    }
+
+    [data-theme="light"] {
+      --bg:        #f5f0eb;
+      --surface:   #faf7f4;
+      --surface2:  #ede7e0;
+      --border:    rgba(120, 80, 40, 0.14);
+      --gold:      #b8800f;
+      --gold-dim:  #8a5f08;
+      --violet:    #6a4ab0;
+      --violet-glow: rgba(106,74,176,0.18);
+      --text:      #2c1e10;
+      --text-strong: #1a1208;
+      --text-strong-violet: #2a1f4a;
+      --text-strong-wip: #4a3208;
+      --muted:     #6b5744;
+      --tag-full:  #e2f4e2;
+      --tag-full-c:#1e7a3a;
+      --tag-mini:  #e7e7f5;
+      --tag-mini-c:#4c52cc;
+      --tag-soon-bg: #fbf0d8;
+      --tag-soon-c:  #9a6608;
+      --grid-line: rgba(184,128,15,0.05);
+      --card-shadow: 0 16px 40px rgba(120,80,40,0.18);
+      --banner-fda:     radial-gradient(ellipse at 60% 40%, #f5e4c2 0%, #e8d4a8 100%);
+      --banner-eryndor: radial-gradient(ellipse at 40% 60%, #e8dcf2 0%, #d8cce8 100%);
+      --banner-orbique: radial-gradient(ellipse at 50% 50%, #d8e8f4 0%, #c2d6e8 100%);
+      --banner-aelindra-base: #ece2d4;
+      --banner-aelindra-vignette: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(120,80,40,0.10) 100%);
+      --aelindra-name-grad: linear-gradient(180deg, #8a5f08 0%, #a07810 55%, #6a4a08 100%);
+      --aelindra-sub-c: #8a7a60;
+      --header-title-grad: linear-gradient(135deg, #b8800f 0%, #8a5f08 50%, #6a4808 100%);
     }
 
     html { scroll-behavior: smooth; }
@@ -36,17 +89,44 @@
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: 0;
       background-image:
-        linear-gradient(rgba(212,160,23,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(212,160,23,0.03) 1px, transparent 1px);
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
       background-size: 60px 60px;
       pointer-events: none;
     }
+
+    .theme-toggle {
+      position: absolute;
+      top: 1.4rem;
+      right: 1.8rem;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      z-index: 11;
+    }
+    .theme-toggle:hover {
+      color: var(--gold);
+      border-color: var(--gold-dim);
+      background: var(--surface2);
+    }
+    .theme-toggle__icon--light { display: none; }
+    [data-theme="light"] .theme-toggle__icon--dark { display: none; }
+    [data-theme="light"] .theme-toggle__icon--light { display: block; }
 
     header {
       position: relative; z-index: 10;
@@ -69,7 +149,7 @@
       font-size: clamp(2rem, 5vw, 3.5rem);
       font-weight: 900;
       letter-spacing: 0.12em;
-      background: linear-gradient(135deg, var(--gold) 0%, #f5d060 50%, var(--gold-dim) 100%);
+      background: var(--header-title-grad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -131,12 +211,12 @@
 
     .card-featured:hover {
       transform: translateY(-4px);
-      box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--gold-dim);
+      box-shadow: var(--card-shadow), 0 0 0 1px var(--gold-dim);
       border-color: var(--gold-dim);
     }
 
     .card-featured--violet:hover {
-      box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--violet);
+      box-shadow: var(--card-shadow), 0 0 0 1px var(--violet);
       border-color: var(--violet);
     }
 
@@ -166,10 +246,10 @@
     }
 
     .card-banner--fda {
-      background: radial-gradient(ellipse at 60% 40%, #3a2a10 0%, #1a1205 100%);
+      background: var(--banner-fda);
     }
     .card-banner--eryndor {
-      background: radial-gradient(ellipse at 40% 60%, #1a1030 0%, #0d0818 100%);
+      background: var(--banner-eryndor);
     }
 
     .card-banner img {
@@ -185,8 +265,8 @@
     .card-banner--fda .card-banner-icon { color: var(--gold); }
     .card-banner--eryndor .card-banner-icon { color: #a78bfa; }
     .card-banner--orbique .card-banner-icon { color: #38bdf8; }
-    .card-banner--orbique { background: radial-gradient(ellipse at 50% 50%, #0c1e30 0%, #060d18 100%); }
-    .card-featured--cyan:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px #38bdf8; border-color: #38bdf8; }
+    .card-banner--orbique { background: var(--banner-orbique); }
+    .card-featured--cyan:hover { box-shadow: var(--card-shadow), 0 0 0 1px #38bdf8; border-color: #38bdf8; }
     .card-featured--cyan::before { background: linear-gradient(90deg, transparent, #38bdf8, transparent); }
     .card-featured--cyan .card-cta { color: #38bdf8; }
 
@@ -194,13 +274,13 @@
       background:
         radial-gradient(120% 60% at 50% 0%, rgba(142,197,212,0.08) 0%, transparent 55%),
         radial-gradient(80% 50% at 50% 100%, rgba(212,179,112,0.10) 0%, transparent 60%),
-        #0a0814;
+        var(--banner-aelindra-base);
       position: relative;
     }
     .card-banner--aelindra::after {
       content: '';
       position: absolute; inset: 0;
-      background: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(0,0,0,0.45) 100%);
+      background: var(--banner-aelindra-vignette);
       pointer-events: none;
     }
     .aelindra-wordmark {
@@ -213,7 +293,7 @@
     }
     .aelindra-star {
       font-size: 0.85rem;
-      color: #d4b370;
+      color: var(--gold);
       opacity: 0.9;
       filter: drop-shadow(0 0 6px rgba(212,179,112,0.5));
       letter-spacing: 0;
@@ -224,7 +304,7 @@
       font-size: clamp(1.8rem, 4.5vw, 2.6rem);
       letter-spacing: 0.32em;
       padding-left: 0.32em;
-      background: linear-gradient(180deg, #ecd190 0%, #d4b370 55%, #8a7340 100%);
+      background: var(--aelindra-name-grad);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -235,12 +315,12 @@
       font-family: 'Cinzel', serif;
       font-size: 0.62rem;
       letter-spacing: 0.45em;
-      color: #6a6276;
+      color: var(--aelindra-sub-c);
       padding-left: 0.45em;
     }
     .card-featured--aelindra:hover {
-      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 0 1px #d4b370;
-      border-color: #d4b370;
+      box-shadow: var(--card-shadow), 0 0 0 1px var(--gold);
+      border-color: var(--gold);
     }
     .card-featured--aelindra::before {
       background: linear-gradient(90deg, transparent, #d4b370, transparent);
@@ -278,8 +358,8 @@
       border: 1px solid rgba(129,140,248,0.2);
     }
     .card-tag--soon {
-      background: #2d1f0a;
-      color: #f59e0b;
+      background: var(--tag-soon-bg);
+      color: var(--tag-soon-c);
       border: 1px solid rgba(245,158,11,0.25);
     }
     .card-tag::before { content: '●'; font-size: 0.5rem; }
@@ -288,7 +368,7 @@
       font-family: 'Cinzel', serif;
       font-size: 1.3rem;
       font-weight: 700;
-      color: #f0e8d8;
+      color: var(--text-strong);
       line-height: 1.2;
     }
 
@@ -372,7 +452,7 @@
       font-family: 'Cinzel', serif;
       font-size: 1.05rem;
       font-weight: 700;
-      color: #f0e0c0;
+      color: var(--text-strong-wip);
     }
     .card-wip-subtitle {
       font-size: 0.7rem;
@@ -413,7 +493,7 @@
       font-family: 'Cinzel', serif;
       font-size: 1.25rem;
       font-weight: 700;
-      color: #f0e0c0;
+      color: var(--text-strong-wip);
       letter-spacing: 0.04em;
     }
     .dev-card-status {
@@ -527,7 +607,7 @@
       font-family: 'Cinzel', serif;
       font-size: 0.95rem;
       font-weight: 700;
-      color: #d8d0e8;
+      color: var(--text-strong-violet);
     }
 
     .card-mini-desc {
@@ -559,6 +639,15 @@
 
 <header>
   <a class="site-back" href="https://fmenguy.fr">fmenguy.fr</a>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Changer de thème" title="Changer de thème">
+    <svg class="theme-toggle__icon theme-toggle__icon--dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v1m0 16v1m-8-9H3m18 0h-1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707"/>
+      <circle cx="12" cy="12" r="4"/>
+    </svg>
+    <svg class="theme-toggle__icon theme-toggle__icon--light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
   <div class="header-title">Arcade FM</div>
   <div class="header-sub">Jeux &amp; expériences web</div>
 </header>
@@ -686,6 +775,19 @@
 <footer>
   <p>Des projets de <a href="https://fmenguy.fr">François Menguy</a></p>
 </footer>
+
+<script is:inline>
+  (function() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+  })();
+</script>
 
 </body>
 </html>
