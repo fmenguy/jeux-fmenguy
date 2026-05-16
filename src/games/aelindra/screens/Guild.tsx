@@ -5,26 +5,12 @@
 
 import { Icon } from '../components/Icons';
 import { ScrHeader } from '../components/ScrHeader';
+import type { PullResult } from '../logic/gacha';
 
 interface RosterSlot {
   i: string | null;
   r: string | null;
 }
-
-const MOCK_ROSTER: RosterSlot[] = [
-  { i: 'warrior',  r: 'rare' },
-  { i: 'archer',   r: 'common' },
-  { i: 'mage',     r: 'epic' },
-  { i: 'guardian', r: 'rare' },
-  { i: 'spy',      r: 'epic' },
-  { i: 'healer',   r: 'rare' },
-  { i: 'archer',   r: 'legendary' },
-  { i: 'warrior',  r: 'common' },
-  { i: 'mage',     r: 'epic' },
-  { i: null, r: null },
-  { i: null, r: null },
-  { i: null, r: null },
-];
 
 interface GuildProps {
   orbs?: number;
@@ -33,26 +19,44 @@ interface GuildProps {
   rosterSlots?: RosterSlot[];
   rosterFilled?: number;
   rosterTotal?: number;
+  lastPullResults?: PullResult[] | null;
   onBack?: () => void;
   onPull1?: () => void;
   onPull10?: () => void;
+  onCloseResults?: () => void;
 }
 
+const RARITY_COLOR: Record<string, string> = {
+  common:    'var(--r-common)',
+  rare:      'var(--r-rare)',
+  epic:      'var(--r-epic)',
+  legendary: 'var(--r-legend)',
+};
+
 export function Guild({
-  orbs = 64,
-  pityCount = 23,
+  orbs = 0,
+  pityCount = 0,
   pityMax = 50,
-  rosterSlots = MOCK_ROSTER,
-  rosterFilled = 9,
+  rosterSlots = [],
+  rosterFilled = 0,
   rosterTotal = 24,
+  lastPullResults = null,
   onBack,
   onPull1,
   onPull10,
+  onCloseResults,
 }: GuildProps) {
   const pityPercent = Math.round((pityCount / pityMax) * 100);
+  const showModal = lastPullResults !== null && lastPullResults.length > 0;
+
+  // Complète jusqu'à rosterTotal slots
+  const slots: RosterSlot[] = [
+    ...rosterSlots,
+    ...Array.from({ length: Math.max(0, rosterTotal - rosterSlots.length) }, () => ({ i: null, r: null })),
+  ].slice(0, rosterTotal);
 
   return (
-    <div className="scr on" id="s-guild">
+    <div className="scr on" id="s-guild" style={{ position: 'relative' }}>
       <ScrHeader title="GUILDE DES AVENTURIERS" orb={orbs} onBack={onBack} />
       <div className="guild-body">
         <div className="guild-info">
@@ -103,7 +107,7 @@ export function Guild({
             PANTHÉON · {rosterFilled} / {rosterTotal}
           </div>
           <div className="roster-grid">
-            {rosterSlots.map((p, i) => (
+            {slots.map((p, i) => (
               <div key={i} className="roster-hero">
                 <div
                   className={`roster-port ${p.r ? `rarity rarity--${p.r}` : ''}`}
@@ -122,6 +126,39 @@ export function Guild({
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Modal résultats d'invocation */}
+      <div
+        className={`result-modal${showModal ? ' on' : ''}`}
+        onClick={onCloseResults}
+      >
+        <div className="result-title">INVOCATION</div>
+        <div className="result-cards" onClick={e => e.stopPropagation()}>
+          {lastPullResults?.map((r, i) => (
+            <div
+              key={i}
+              className="result-card"
+              style={{ borderColor: RARITY_COLOR[r.hero.rarity] ?? 'var(--b)' }}
+            >
+              <div
+                className="result-card-img"
+                style={{ ['--r' as string]: RARITY_COLOR[r.hero.rarity] ?? 'var(--gold)' }}
+              >
+                <span style={{ fontSize: 28 }}>{r.hero.emoji ?? '⚔️'}</span>
+                {r.isNew && <span className="result-card-new">NOUVEAU</span>}
+              </div>
+              <div className="result-card-meta">
+                {r.hero.name}
+                <br />
+                <span style={{ color: 'var(--dim)', fontSize: '0.9em' }}>{r.hero.class}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button className="guild-modal-close" onClick={onCloseResults}>
+          CONTINUER
+        </button>
       </div>
     </div>
   );

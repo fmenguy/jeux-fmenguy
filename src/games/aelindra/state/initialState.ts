@@ -35,4 +35,5 @@ export const initialState: GameState = {
   currentHeroDetailId: null,
   combat: null,
   toast: null,
+  lastPullResults: null,
 };

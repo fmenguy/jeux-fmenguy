@@ -6,6 +6,7 @@
 import type { Hero } from '../data/types';
 import type { CombatState } from '../logic/combat';
 import type { MissionProgress } from '../logic/missions';
+import type { PullResult } from '../logic/gacha';
 
 export type ScreenId =
   | 'splash'
@@ -65,6 +66,9 @@ export interface GameState {
 
   // Toast / overlay
   toast: ToastState | null;
+
+  // Résultats du dernier tirage (affiché dans le modal Guild)
+  lastPullResults: PullResult[] | null;
 }
 
 /**

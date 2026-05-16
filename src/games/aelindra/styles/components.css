@@ -290,10 +290,10 @@
 /* Pills rareté (texte) */
 .rp {
   font-family: var(--font-title);
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: .25em;
-  padding: 2px 7px;
+  letter-spacing: .2em;
+  padding: 3px 9px;
   border-radius: var(--radius-pill);
   border: 1px solid;
   text-transform: uppercase;

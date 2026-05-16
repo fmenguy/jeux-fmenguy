@@ -236,18 +236,27 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
+      const newNames = results.filter(r => r.isNew).map(r => r.hero.name);
+      const toastMsg = newNames.length > 0
+        ? `${results.length} invocation${results.length > 1 ? 's' : ''} · ${newNames.length} nouveau${newNames.length > 1 ? 'x' : ''} : ${newNames.slice(0, 3).join(', ')}${newNames.length > 3 ? '…' : ''}`
+        : `${results.length} invocation${results.length > 1 ? 's' : ''} · Tous déjà dans ton panthéon`;
+
       let next: GameState = {
         ...state,
         orbs: state.orbs - cost,
         pity: newPity,
         collection: nextCollection,
+        lastPullResults: results,
       };
 
       next = bumpMission(next, 'm2', action.count);
       next = bumpMission(next, 'd2', 1);
 
-      return next;
+      return pushToast(next, toastMsg);
     }
+
+    case 'CLEAR_PULL_RESULTS':
+      return { ...state, lastPullResults: null };
 
     // ----- Marché -----
     case 'BUY_ITEM': {
