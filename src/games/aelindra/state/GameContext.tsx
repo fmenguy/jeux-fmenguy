@@ -75,12 +75,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
         // Charge le save cloud et l'applique s'il existe
         try {
           const cloudSave = await downloadSave(user.uid);
+          // Nom par défaut = displayName Google si pas encore de pseudo personnalisé
+          const defaultName = user.displayName?.split(' ')[0] ?? 'Aventurier';
+          const playerName = cloudSave?.playerName && cloudSave.playerName !== 'Aventurier'
+            ? cloudSave.playerName
+            : defaultName;
           if (cloudSave) {
             dispatch({
               type: 'LOAD_STATE',
               state: {
                 ...initialState,
                 ...cloudSave,
+                playerName,
                 authUser,
                 currentScreen: 'splash',
                 combat: null,
@@ -88,6 +94,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
                 lastPullResults: null,
               },
             });
+          } else {
+            // Première connexion : pas encore de save cloud, on prend juste le prénom
+            dispatch({ type: 'SET_PLAYER_NAME', name: defaultName });
           }
         } catch (e) {
           console.warn('[aelindra] cloud load failed', e);
