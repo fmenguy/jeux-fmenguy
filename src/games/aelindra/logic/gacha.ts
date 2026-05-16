@@ -15,6 +15,10 @@ export const PITY_THRESHOLD = 50;
 export interface PullResult {
   hero: Hero;
   isNew: boolean;
+  isDuplicate?: boolean;
+  xpGained?: number;
+  leveledUp?: boolean;
+  newLevel?: number;
 }
 
 /**

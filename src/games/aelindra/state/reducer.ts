@@ -13,7 +13,9 @@ import {
   performPulls,
   PULL_COST_1,
   PULL_COST_10,
+  type PullResult,
 } from '../logic/gacha';
+import { addXpPure } from '../logic/xp';
 import {
   equipItemPure,
   unequipSlotPure,
@@ -227,26 +229,53 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ownedIds(state),
       );
 
-      let nextCollection = [...state.collection];
-      const owned = ownedIds(state);
-      for (const r of results) {
-        if (!owned.has(r.hero.id)) {
+      const DUP_XP: Record<string, number> = {
+        common: 200, rare: 500, epic: 2000, legendary: 8000,
+      };
+
+      // Map mutable des héros possédés pour appliquer l'XP des doublons
+      const ownedMap = new Map<string, Hero>();
+      state.collection.forEach(h => ownedMap.set(h.id, h));
+      state.team.forEach(h => ownedMap.set(h.id, h));
+
+      const enriched: PullResult[] = results.map(r => {
+        const existing = ownedMap.get(r.hero.id);
+        if (!existing) return { ...r, isDuplicate: false };
+        const xpGained = DUP_XP[r.hero.rarity] ?? 200;
+        const updated = addXpPure(existing, xpGained);
+        ownedMap.set(r.hero.id, updated.hero);
+        return {
+          ...r,
+          isDuplicate: true,
+          xpGained,
+          leveledUp: updated.leveledUp,
+          newLevel: updated.newLevel,
+        };
+      });
+
+      // Reconstruction collection + team avec XP/level mis à jour
+      const nextCollection: Hero[] = state.collection.map(h => ownedMap.get(h.id) ?? h);
+      const nextTeam: Hero[] = state.team.map(h => ownedMap.get(h.id) ?? h);
+
+      // Nouveaux héros poussés en fin de collection (ordre = ordre d'invocation → tri 'recent')
+      for (const r of enriched) {
+        if (!r.isDuplicate) {
           nextCollection.push({ ...r.hero, level: 1, xp: 0 });
-          owned.add(r.hero.id);
         }
       }
 
-      const newNames = results.filter(r => r.isNew).map(r => r.hero.name);
+      const newNames = enriched.filter(r => !r.isDuplicate).map(r => r.hero.name);
       const toastMsg = newNames.length > 0
-        ? `${results.length} invocation${results.length > 1 ? 's' : ''} · ${newNames.length} nouveau${newNames.length > 1 ? 'x' : ''} : ${newNames.slice(0, 3).join(', ')}${newNames.length > 3 ? '…' : ''}`
-        : `${results.length} invocation${results.length > 1 ? 's' : ''} · Tous déjà dans ton panthéon`;
+        ? `${enriched.length} invocation${enriched.length > 1 ? 's' : ''} · ${newNames.length} nouveau${newNames.length > 1 ? 'x' : ''} : ${newNames.slice(0, 3).join(', ')}${newNames.length > 3 ? '…' : ''}`
+        : `${enriched.length} invocation${enriched.length > 1 ? 's' : ''} · Tous déjà dans ton panthéon`;
 
       let next: GameState = {
         ...state,
         orbs: state.orbs - cost,
         pity: newPity,
         collection: nextCollection,
-        lastPullResults: results,
+        team: nextTeam,
+        lastPullResults: enriched,
       };
 
       next = bumpMission(next, 'm2', action.count);

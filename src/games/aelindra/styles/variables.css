@@ -38,8 +38,8 @@
   /* Texte */
   --text:      #e4dccd;
   --text-hi:   #f5eed8;
-  --dim:       #9c93a8;
-  --dim2:      #6a6276;
+  --dim:       #aaa3b5;   /* +luminance pour meilleur contraste mobile */
+  --dim2:      #7a7288;
   --mute:      #44405a;
 
   /* Statuts */
@@ -60,6 +60,12 @@
   --r-epic-hi:   #c8a8f0;
   --r-legend:    #e0b550;   /* or gravé */
   --r-legend-hi: #f5d680;
+
+  /* Couleurs d'animation rareté (guild cinématique) */
+  --rarity-common:    oklch(0.70 0.04 240);
+  --rarity-rare:      oklch(0.68 0.16 240);
+  --rarity-epic:      oklch(0.65 0.20 300);
+  --rarity-legendary: oklch(0.78 0.18 80);
 
   /* Typographie */
   --font-title: 'Cinzel', serif;
