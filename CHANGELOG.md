@@ -5,6 +5,32 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
 ---
 
+## [2026-05-16] — 16h43
+
+### Ajouté — Aelindra (combat T1 + T2)
+- **Portée d'attaque visible** : toutes les cases dans la portée de l'unité s'affichent en orange au clic « Attaquer / Sort », même si elles sont vides — les ennemis attaquables pulsent en rouge
+- **Portée ambiante** : cases de déplacement en bleu pâle dès qu'une unité est sélectionnée, sans attendre le choix d'action
+- **Soin en vert** : les abilities `heal` affichent les alliés soignables en vert (était rouge par erreur)
+- **Preview AoE** : hover d'une case en mode ability → diamant orange de rayon 2 centré sur le curseur
+- **Tooltip dégâts** : survol d'un ennemi attaquable → `~X dmg · Y% crit` (formule déterministe)
+- **Grille isométrique légère** : `rotateX(8°)` + `perspective 1000px` sur la grille, tuiles avec gradient top/bottom pour simuler la profondeur
+- **Screen shake** : 350ms sur coup normal, 450ms (amplitude ×2) sur crit/kill
+- **Zoom cinématique 600ms** sur crit ou kill (>25 % du maxHP ou mort) : scale 1→1.22→1.22→1, centré sur la cible, non-bloquant
+- **Recul de la cible** : `translateX/Y 5px` + easing spring sur `.unit-glyph` à l'impact
+- **Particules DOM** : 5 (coup) ou 10 (crit) particules étincelle en étoile autour de l'impact, auto-nettoyées à 850ms
+- **Popup crit améliorée** : 20px, dorée avec glow, animation dédiée `dmg-float-crit`
+- **Bandeau de phase** : sweep horizontal « PHASE ELFES » / « PHASE ENNEMIE » à chaque changement de phase (900ms)
+- **Chevron flottant** : triangle doré pulsant au-dessus de l'unité sélectionnée
+- **Barre de PV animée** : `transition width 0.4s ease-out` sur les barres de toutes les unités
+
+### Modifié — Aelindra
+- **`useCombatFx`** : détecte les coups critiques (>25 % maxHP ou kill) → expose `critIds` dans `UnitFxState`
+- **`Combat.tsx`** : overlay useMemo refactorisé en objet multi-sets (`reachableSet`, `attackableSet`, `attackRangeSet`, `healSet`, `aoeSet`, `ambientSet`) + hover handlers + states T2
+- **`animations.css`** : +8 keyframes combat (`screen-shake`, `screen-shake-big`, `cinematic-zoom`, `unit-recoil`, `pulse-attack`, `pulse-heal`, `phase-sweep`, `combat-spark`, `chevron-float`, `dmg-float-crit`)
+- **`screens.css`** : +perspective isométrique, classes `.ambient-reach`, `.attack-range`, `.heal-range`, `.aoe-preview`, `.phase-banner`, `.combat-particle`
+
+---
+
 ## [2026-05-16]
 
 ### Ajouté — Aelindra

@@ -255,3 +255,161 @@
   transform: scale(.35);
   opacity: 0;
 }
+
+/* ============================================
+   COMBAT · effets visuels T2
+   ============================================ */
+
+/* ---- Portée d'attaque : pulse ---- */
+@keyframes pulse-attack {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50%       { opacity: .75; filter: brightness(1.35); }
+}
+
+/* ---- Portée de soin : pulse vert ---- */
+@keyframes pulse-heal {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .7; filter: brightness(1.25); }
+}
+
+/* ---- Screen shake (coup normal) ---- */
+@keyframes screen-shake {
+  0%,100% { transform: rotateX(8deg) translate(0,0); }
+  15%     { transform: rotateX(8deg) translate(-3px,1px); }
+  30%     { transform: rotateX(8deg) translate(3px,-1px); }
+  50%     { transform: rotateX(8deg) translate(-2px,1px); }
+  70%     { transform: rotateX(8deg) translate(2px,-1px); }
+  85%     { transform: rotateX(8deg) translate(-1px,0); }
+}
+.combat-grid-wrap.is-shaking #combat-grid {
+  animation: screen-shake .35s ease-out;
+}
+
+/* ---- Screen shake (crit / kill) ---- */
+@keyframes screen-shake-big {
+  0%,100% { transform: rotateX(8deg) translate(0,0); }
+  10%     { transform: rotateX(8deg) translate(-6px,3px); }
+  22%     { transform: rotateX(8deg) translate(7px,-3px); }
+  35%     { transform: rotateX(8deg) translate(-5px,2px); }
+  48%     { transform: rotateX(8deg) translate(6px,-2px); }
+  62%     { transform: rotateX(8deg) translate(-4px,2px); }
+  75%     { transform: rotateX(8deg) translate(3px,-1px); }
+  88%     { transform: rotateX(8deg) translate(-1px,0); }
+}
+.combat-grid-wrap.is-shaking-big #combat-grid {
+  animation: screen-shake-big .45s ease-out;
+}
+
+/* ---- Cinématique crit/kill : zoom 600ms ---- */
+@keyframes cinematic-zoom {
+  0%   { transform: rotateX(8deg) scale(1); }
+  30%  { transform: rotateX(8deg) scale(1.22); }
+  72%  { transform: rotateX(8deg) scale(1.22); }
+  100% { transform: rotateX(8deg) scale(1); }
+}
+#combat-grid.is-cinematic {
+  animation: cinematic-zoom .6s cubic-bezier(.4,0,.6,1) forwards;
+  transform-origin: var(--cin-x, 50%) var(--cin-y, 50%);
+}
+
+/* ---- Recul de l'unité touchée ---- */
+@keyframes unit-recoil {
+  0%   { transform: translate(0,0); }
+  30%  { transform: translate(var(--rx, 5px), var(--ry, -2px)); }
+  100% { transform: translate(0,0); }
+}
+.tile.is-hit .unit-glyph {
+  animation: unit-recoil .28s cubic-bezier(.5,0,.5,1.5);
+  --rx: 5px; --ry: -2px;
+}
+.tile.is-hit.unit-enemy .unit-glyph { --rx: -5px; }
+
+/* ---- Popup dégâts crit (plus grand, doré) ---- */
+@keyframes dmg-float-crit {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(.4); }
+  18%  { opacity: 1; transform: translate(-50%, -14px) scale(1.45); }
+  45%  { transform: translate(-50%, -22px) scale(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -60px) scale(.9); }
+}
+.dmg-number.dmg-crit {
+  font-size: 20px !important;
+  color: var(--gold-hi) !important;
+  text-shadow: 0 0 10px color-mix(in oklab, var(--gold) 70%, transparent), 0 2px 4px rgba(0,0,0,.8) !important;
+  animation: dmg-float-crit 1.3s ease-out forwards !important;
+}
+
+/* ---- Bandeau de phase ---- */
+@keyframes phase-sweep {
+  0%   { transform: translateX(-105%); opacity: 0; }
+  18%  { transform: translateX(0); opacity: 1; }
+  72%  { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(105%); opacity: 0; }
+}
+.phase-banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 40;
+  overflow: hidden;
+}
+.phase-banner-inner {
+  width: 100%;
+  padding: 11px 20px;
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--p) 92%, transparent) 18%,
+    color-mix(in oklab, var(--p) 96%, transparent) 50%,
+    color-mix(in oklab, var(--p) 92%, transparent) 82%,
+    transparent 100%);
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  animation: phase-sweep .9s ease-in-out forwards;
+}
+.phase-banner-inner.elf   { color: var(--gold-hi); border-color: color-mix(in oklab, var(--gold) 50%, transparent); }
+.phase-banner-inner.enemy { color: #e07070; border-color: color-mix(in oklab, var(--red) 50%, transparent); }
+
+/* ---- Particules de combat (DOM) ---- */
+@keyframes combat-spark {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--pdx,20px), var(--pdy,-30px)) scale(.1); opacity: 0; }
+}
+.combat-particle {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 30;
+  animation: combat-spark .75s ease-out forwards;
+}
+.combat-particle.spark { background: var(--gold-hi); box-shadow: 0 0 5px var(--gold); }
+.combat-particle.fire  { background: #e07040; box-shadow: 0 0 7px #c05020; }
+.combat-particle.ice   { background: #80c8e8; box-shadow: 0 0 5px #5090b0; }
+.combat-particle.heal  { background: var(--hp); box-shadow: 0 0 5px #40a060; }
+
+/* ---- Chevron au-dessus de l'unité active ---- */
+@keyframes chevron-float {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-3px); }
+}
+.unit-chevron {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid var(--gold-hi);
+  filter: drop-shadow(0 0 4px var(--gold));
+  animation: chevron-float 1.2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+}
