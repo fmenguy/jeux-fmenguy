@@ -56,6 +56,7 @@ function HeroRow({ h, isNew, actionLabel, actionDisabled, onSelect, onAction }: 
   const cap   = xpToNext(lv);
   const xpPct = Math.min(100, (xp / cap) * 100);
   const icon  = specToIcon(h.spec);
+  const [imgOk, setImgOk] = useState(true);
 
   return (
     <div
