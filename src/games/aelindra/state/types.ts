@@ -30,6 +30,13 @@ export interface ToastState {
   ts: number;
 }
 
+export interface AuthUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+}
+
 export interface GameState {
   // Profil joueur
   playerName: string;
@@ -69,6 +76,9 @@ export interface GameState {
 
   // Résultats du dernier tirage (affiché dans le modal Guild)
   lastPullResults: PullResult[] | null;
+
+  // Utilisateur connecté (transient — non persisté)
+  authUser: AuthUser | null;
 }
 
 /**
