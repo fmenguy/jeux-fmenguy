@@ -32,6 +32,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{html,css,js,png,jpg,jpeg,svg,webp,woff2,ttf}'],
+        globIgnores: ['**/stratageme/**', '**/fda/**', '**/orbique/**', '**/ecosim/**', '**/eryndor/**', '**/conway/**', '**/zentel/**'],
         navigateFallback: '/aelindra/',
         navigateFallbackDenylist: [/^\/(?!aelindra)/],
         runtimeCaching: [
