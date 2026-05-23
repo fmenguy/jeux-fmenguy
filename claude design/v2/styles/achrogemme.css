@@ -1,0 +1,1796 @@
+/* ============================================================
+   Achrogemme — feuille de style unique
+   À fusionner dans src/games/achrogemme/styles/stratageme.css
+   ------------------------------------------------------------
+   Sections :
+     1. Tokens (couleurs, typo, ombres, rayons, durées)
+     2. Reset léger + fond bois
+     3. Carte (anatomie, raretés, cadres)
+     4. Plateau (3 Marches, slots, champions)
+     5. Bandeau synergies (chips dorées)
+     6. Animations de combat
+     7. Écran d'intro
+     8. Variantes mobile (< 1100px)
+   ============================================================ */
+
+/* ---------- 1. Tokens ---------- */
+:root {
+  /* Polices : Cinzel pour titres médiévaux, Inter pour texte courant */
+  --ach-font-title: "Cinzel", "EB Garamond", Georgia, serif;
+  --ach-font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --ach-font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Bois patiné chaud, dorures, parchemin
+     (éclairci par rapport à v1 : on sort de la "cave humide",
+      on entre dans la "taverne dorée") */
+  --ach-wood-deep:    oklch(0.30 0.035 65);   /* fond plateau */
+  --ach-wood-base:    oklch(0.38 0.040 68);   /* zones */
+  --ach-wood-mid:     oklch(0.46 0.045 70);   /* slots */
+  --ach-wood-light:   oklch(0.56 0.050 72);   /* highlights */
+  --ach-wood-edge:    oklch(0.20 0.025 58);   /* lignes sombres */
+
+  --ach-gold:         oklch(0.80 0.135 82);
+  --ach-gold-soft:    oklch(0.72 0.12 80);
+  --ach-gold-dim:     oklch(0.58 0.10 78);
+  --ach-gold-bright:  oklch(0.88 0.13 88);
+
+  --ach-parch:        oklch(0.88 0.035 80);   /* corps de carte */
+  --ach-parch-mid:    oklch(0.78 0.045 75);
+  --ach-parch-deep:   oklch(0.62 0.05 70);
+  --ach-parch-ink:    oklch(0.22 0.02 60);    /* texte sur parchemin */
+
+  --ach-teal:         oklch(0.66 0.10 200);
+  --ach-teal-soft:    oklch(0.50 0.09 200);
+  --ach-teal-bright:  oklch(0.80 0.10 205);
+
+  /* Classes / Marches : palette elfique (pas de rouge vif) */
+  --ach-sylvestre:        oklch(0.58 0.11 148);  /* vert mousse */
+  --ach-sylvestre-bright: oklch(0.74 0.13 145);
+  --ach-sylvestre-deep:   oklch(0.38 0.08 148);
+
+  --ach-arcanique:        oklch(0.72 0.08 218);  /* cyan glacier */
+  --ach-arcanique-bright: oklch(0.84 0.07 218);
+  --ach-arcanique-deep:   oklch(0.48 0.08 220);
+
+  --ach-rempart:          oklch(0.60 0.12 60);   /* ocre cuivre */
+  --ach-rempart-bright:   oklch(0.74 0.12 65);
+  --ach-rempart-deep:     oklch(0.40 0.09 55);
+
+  /* Cristal Tome 2 : touche SF discrète pour Sylvie, Galdor, Naelia, Sandara */
+  --ach-crystal:          oklch(0.75 0.09 265);
+  --ach-crystal-bright:   oklch(0.88 0.08 265);
+
+  /* Stats */
+  --ach-atq:    oklch(0.78 0.13 55);   /* lame ambrée */
+  --ach-pv:     oklch(0.62 0.18 25);   /* cœur rubis (non agressif) */
+  --ach-gemme:  var(--ach-teal-bright);
+
+  /* Géométrie */
+  --ach-radius-card: 14px;
+  --ach-radius-chip: 999px;
+  --ach-radius-slot: 10px;
+
+  /* Ombres */
+  --ach-shadow-card: 0 1px 0 oklch(1 0 0 / 0.06) inset,
+                     0 -1px 0 oklch(0 0 0 / 0.4) inset,
+                     0 8px 22px oklch(0 0 0 / 0.45),
+                     0 2px 4px oklch(0 0 0 / 0.35);
+  --ach-shadow-slot: inset 0 0 0 1px oklch(0 0 0 / 0.45),
+                     inset 0 2px 8px oklch(0 0 0 / 0.55);
+  --ach-shadow-gold: 0 0 0 1px var(--ach-gold-soft) inset,
+                     0 0 14px oklch(0.80 0.13 82 / 0.35);
+
+  /* Animations */
+  --ach-dur-fast:  140ms;
+  --ach-dur:       260ms;
+  --ach-dur-slow:  520ms;
+  --ach-ease:      cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ach-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ach-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Densité d'animation, pilotable par les Tweaks (0 / 0.5 / 1) */
+  --ach-anim-density: 1;
+}
+
+/* Thème clair, optionnel (Tweaks) */
+.ach-theme-light {
+  --ach-wood-deep:    oklch(0.92 0.02 80);
+  --ach-wood-base:    oklch(0.88 0.025 78);
+  --ach-wood-mid:     oklch(0.82 0.03 76);
+  --ach-wood-light:   oklch(0.74 0.04 72);
+  --ach-wood-edge:    oklch(0.62 0.04 70);
+  --ach-shadow-card:  0 1px 0 oklch(1 0 0 / 0.5) inset,
+                      0 -1px 0 oklch(0 0 0 / 0.05) inset,
+                      0 6px 20px oklch(0 0 0 / 0.12),
+                      0 1px 3px oklch(0 0 0 / 0.10);
+  --ach-shadow-slot:  inset 0 0 0 1px oklch(0 0 0 / 0.18),
+                      inset 0 2px 6px oklch(0 0 0 / 0.10);
+}
+
+/* ---------- 2. Reset + fond ---------- */
+.achrogemme,
+.achrogemme * {
+  box-sizing: border-box;
+}
+.achrogemme {
+  font-family: var(--ach-font-body);
+  color: var(--ach-parch);
+  background: var(--ach-wood-deep);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,
+      oklch(0.46 0.05 70 / 0.55),
+      transparent 60%),
+    radial-gradient(ellipse at 50% 100%,
+      oklch(0.22 0.025 55 / 0.7),
+      transparent 60%),
+    /* veines de bois plus chaudes */
+    repeating-linear-gradient(
+      92deg,
+      oklch(0.30 0.035 62) 0px,
+      oklch(0.34 0.040 66) 2px,
+      oklch(0.28 0.030 60) 5px,
+      oklch(0.33 0.038 65) 8px
+    );
+  background-blend-mode: normal, normal, multiply;
+  min-height: 100%;
+}
+
+/* Texture grain réutilisable (filtre SVG inline data-uri) */
+.ach-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+}
+
+/* ============================================================
+   3. CARTE
+   ------------------------------------------------------------
+   Structure DOM attendue (voir Card.jsx) :
+     .ach-card[data-rarity][data-class][data-frame]
+       .ach-card__halo (rendu uniquement si légendaire)
+       .ach-card__frame
+         .ach-card__top
+           .ach-card__cost
+           .ach-card__atk
+           .ach-card__hp
+         .ach-card__art
+         .ach-card__name
+         .ach-card__text
+         .ach-card__footer
+         .ach-card__gemmod  (optionnel, ±Gemmes max)
+   ============================================================ */
+
+.ach-card {
+  --card-w: 240px;
+  --card-h: 340px;
+  position: relative;
+  width: var(--card-w);
+  height: var(--card-h);
+  font-family: var(--ach-font-body);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* --- Cadre extérieur, varie selon la rareté --- */
+.ach-card__frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--ach-radius-card);
+  background:
+    linear-gradient(180deg,
+      oklch(0.38 0.04 65) 0%,
+      oklch(0.30 0.035 62) 50%,
+      oklch(0.24 0.03 58) 100%);
+  box-shadow: var(--ach-shadow-card);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 8px;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* Bordure de classe (vert, cyan, ocre cuivre) */
+.ach-card[data-class="sylvestre"] .ach-card__frame {
+  box-shadow: var(--ach-shadow-card),
+              inset 0 0 0 1.5px var(--ach-sylvestre-deep);
+}
+.ach-card[data-class="arcanique"] .ach-card__frame {
+  box-shadow: var(--ach-shadow-card),
+              inset 0 0 0 1.5px var(--ach-arcanique-deep);
+}
+.ach-card[data-class="rempart"] .ach-card__frame {
+  box-shadow: var(--ach-shadow-card),
+              inset 0 0 0 1.5px var(--ach-rempart-deep);
+}
+
+/* --- Variantes de cadre (A sobre, B sylvestre, C runique) --- */
+
+/* A : sobre médiéval, défaut. Coins biseautés discrets. */
+.ach-card[data-frame="sobre"] .ach-card__frame::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: calc(var(--ach-radius-card) - 4px);
+  border: 0.5px solid oklch(0 0 0 / 0.35);
+  pointer-events: none;
+}
+
+/* B : végétal elfique, vrilles aux coins */
+.ach-card[data-frame="vegetal"] .ach-card__frame::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: calc(var(--ach-radius-card) - 4px);
+  border: 0.5px solid oklch(0 0 0 / 0.35);
+  pointer-events: none;
+}
+.ach-card[data-frame="vegetal"] .ach-card__corner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  color: var(--ach-gold-soft);
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 1;
+}
+.ach-card[data-frame="vegetal"] .ach-card__corner--tl { top: 2px; left: 2px; }
+.ach-card[data-frame="vegetal"] .ach-card__corner--tr { top: 2px; right: 2px; transform: scaleX(-1); }
+.ach-card[data-frame="vegetal"] .ach-card__corner--bl { bottom: 2px; left: 2px; transform: scaleY(-1); }
+.ach-card[data-frame="vegetal"] .ach-card__corner--br { bottom: 2px; right: 2px; transform: scale(-1, -1); }
+
+/* C : runique, lignes hexagonales + gravure */
+.ach-card[data-frame="runique"] .ach-card__frame {
+  background:
+    linear-gradient(180deg,
+      oklch(0.32 0.035 62) 0%,
+      oklch(0.24 0.03 58) 100%),
+    radial-gradient(ellipse 80% 40% at 50% 0%,
+      var(--ach-teal-soft) 0%, transparent 70%);
+  background-blend-mode: multiply, normal;
+}
+.ach-card[data-frame="runique"] .ach-card__frame::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: calc(var(--ach-radius-card) - 6px);
+  border: 0.5px solid var(--ach-teal-soft);
+  opacity: 0.45;
+  pointer-events: none;
+}
+.ach-card[data-frame="runique"] .ach-card__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%,
+      transparent 0,
+      transparent 60%,
+      oklch(0 0 0 / 0.4) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- Raretés --- */
+
+/* Commune : juste le cadre */
+.ach-card[data-rarity="commune"] .ach-card__frame {
+  /* défaut */
+}
+
+/* Rare : liseré argenté + double trait sur le nom */
+.ach-card[data-rarity="rare"] .ach-card__frame {
+  background:
+    linear-gradient(180deg,
+      oklch(0.40 0.038 65) 0%,
+      oklch(0.32 0.035 62) 50%,
+      oklch(0.26 0.03 58) 100%);
+}
+.ach-card[data-rarity="rare"] .ach-card__frame::before {
+  border-color: oklch(0.78 0.02 70 / 0.55) !important;
+}
+
+/* Légendaire : halo doré, couronne, entrelacs, fond texturé */
+.ach-card[data-rarity="legendaire"] .ach-card__halo {
+  position: absolute;
+  inset: -6px;
+  border-radius: calc(var(--ach-radius-card) + 4px);
+  background:
+    radial-gradient(ellipse at 50% 50%,
+      var(--ach-gold) 0%,
+      var(--ach-gold-soft) 30%,
+      transparent 70%);
+  filter: blur(8px);
+  opacity: calc(0.55 * var(--ach-anim-density));
+  z-index: -1;
+  animation: ach-halo-pulse 3.6s ease-in-out infinite;
+}
+@keyframes ach-halo-pulse {
+  0%, 100% { opacity: calc(0.40 * var(--ach-anim-density)); transform: scale(1); }
+  50%      { opacity: calc(0.70 * var(--ach-anim-density)); transform: scale(1.03); }
+}
+
+.ach-card[data-rarity="legendaire"] .ach-card__frame {
+  background:
+    linear-gradient(180deg,
+      oklch(0.36 0.045 70) 0%,
+      oklch(0.28 0.04 65) 50%,
+      oklch(0.22 0.03 60) 100%);
+  box-shadow:
+    var(--ach-shadow-card),
+    inset 0 0 0 1.5px var(--ach-gold-soft),
+    0 0 24px oklch(0.80 0.13 82 / 0.30);
+}
+.ach-card[data-rarity="legendaire"] .ach-card__frame::before {
+  border-color: var(--ach-gold-soft) !important;
+  inset: 4px;
+  border-width: 0.5px;
+  background:
+    radial-gradient(ellipse 60% 24% at 50% 100%,
+      oklch(0.80 0.13 82 / 0.15) 0%,
+      transparent 80%);
+}
+/* Coins ornés (entrelacs elfiques) sur les légendaires */
+.ach-card[data-rarity="legendaire"] .ach-card__entrelac {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  color: var(--ach-gold-bright);
+  pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 0 4px oklch(0.80 0.13 82 / 0.50));
+}
+.ach-card[data-rarity="legendaire"] .ach-card__entrelac--tl { top: 0; left: 0; }
+.ach-card[data-rarity="legendaire"] .ach-card__entrelac--tr { top: 0; right: 0; transform: scaleX(-1); }
+.ach-card[data-rarity="legendaire"] .ach-card__entrelac--bl { bottom: 0; left: 0; transform: scaleY(-1); }
+.ach-card[data-rarity="legendaire"] .ach-card__entrelac--br { bottom: 0; right: 0; transform: scale(-1, -1); }
+
+/* Légendaire Tome 2 : touche cristal énergétique discrète */
+.ach-card[data-rarity="legendaire"][data-saga="tome2"] .ach-card__halo {
+  background:
+    radial-gradient(ellipse at 50% 50%,
+      var(--ach-gold) 0%,
+      var(--ach-crystal) 35%,
+      transparent 75%);
+}
+.ach-card[data-rarity="legendaire"][data-saga="tome2"] .ach-card__crystal-marker {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  width: 8px;
+  height: 28px;
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      var(--ach-crystal-bright) 50%,
+      transparent 100%);
+  opacity: calc(0.85 * var(--ach-anim-density));
+  filter: blur(0.5px);
+  z-index: 2;
+  pointer-events: none;
+  animation: ach-crystal-shimmer 4s ease-in-out infinite;
+}
+.ach-card[data-rarity="legendaire"][data-saga="tome2"] .ach-card__crystal-marker:nth-of-type(2) {
+  left: auto;
+  right: 4px;
+  animation-delay: 1.2s;
+}
+@keyframes ach-crystal-shimmer {
+  0%, 100% { opacity: 0.3; transform: translateY(-50%) scaleY(0.9); }
+  50%      { opacity: 0.95; transform: translateY(-50%) scaleY(1.1); }
+}
+
+/* --- Anatomie : top stats --- */
+.ach-card__top {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 0;
+  z-index: 2;
+}
+
+.ach-card__cost {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  font-family: var(--ach-font-title);
+  font-weight: 700;
+  font-size: 18px;
+  color: oklch(0.18 0.02 240);
+  background:
+    radial-gradient(circle at 35% 30%,
+      var(--ach-teal-bright) 0%,
+      var(--ach-teal) 60%,
+      var(--ach-teal-soft) 100%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  box-shadow:
+    0 0 0 1px oklch(0 0 0 / 0.4),
+    0 2px 6px oklch(0 0 0 / 0.5),
+    inset 0 1px 2px oklch(1 0 0 / 0.4);
+  text-shadow: 0 1px 0 oklch(1 0 0 / 0.35);
+}
+
+.ach-card__stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  grid-column: 3;
+}
+
+.ach-card__atk,
+.ach-card__hp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 5px;
+  background: oklch(0.16 0.02 55 / 0.85);
+  border-radius: var(--ach-radius-chip);
+  border: 0.5px solid oklch(0 0 0 / 0.6);
+  font-family: var(--ach-font-title);
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.ach-card__atk { color: var(--ach-atq); }
+.ach-card__hp  { color: var(--ach-pv); }
+.ach-card__atk svg,
+.ach-card__hp svg { width: 13px; height: 13px; }
+
+/* Badge ±Gemmes max */
+.ach-card__gemmod {
+  position: absolute;
+  bottom: 36px;
+  left: -8px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-family: var(--ach-font-title);
+  font-weight: 700;
+  font-size: 12px;
+  color: oklch(0.16 0.02 240);
+  background:
+    radial-gradient(circle at 35% 30%,
+      oklch(0.86 0.12 145) 0%,
+      oklch(0.66 0.13 145) 100%);
+  clip-path: polygon(50% 0%, 100% 38%, 80% 100%, 20% 100%, 0% 38%);
+  filter: drop-shadow(0 2px 4px oklch(0 0 0 / 0.5));
+  z-index: 3;
+}
+.ach-card__gemmod[data-sign="-"] {
+  background:
+    radial-gradient(circle at 35% 30%,
+      oklch(0.78 0.16 30) 0%,
+      oklch(0.55 0.16 28) 100%);
+  color: oklch(0.18 0.02 30);
+}
+.ach-card__gemmod-label {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--ach-font-body);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ach-gold-soft);
+  white-space: nowrap;
+}
+
+/* --- Illustration --- */
+.ach-card__art {
+  position: relative;
+  margin: 6px 0 0;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  border-radius: 6px;
+  background:
+    /* placeholder rayé monospace */
+    repeating-linear-gradient(
+      45deg,
+      oklch(0.20 0.02 55) 0px,
+      oklch(0.20 0.02 55) 6px,
+      oklch(0.24 0.025 58) 6px,
+      oklch(0.24 0.025 58) 12px);
+  box-shadow:
+    inset 0 0 0 1px oklch(0 0 0 / 0.6),
+    inset 0 2px 6px oklch(0 0 0 / 0.6);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+.ach-card__art-glyph {
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px oklch(0 0 0 / 0.6));
+  z-index: 1;
+}
+.ach-card__art-placeholder {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-family: var(--ach-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  color: oklch(0.62 0.04 70 / 0.65);
+  text-transform: uppercase;
+}
+.ach-card__art-halo {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 55%,
+      oklch(0.7 0.10 200 / 0.25) 0%,
+      transparent 60%);
+}
+/* Image d'illustration fournie (futur, voir card.art) */
+.ach-card__art-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  z-index: 0;
+}
+.ach-card[data-class="sylvestre"] .ach-card__art-halo {
+  background: radial-gradient(circle at 50% 55%,
+    oklch(0.7 0.12 145 / 0.30) 0%, transparent 60%);
+}
+.ach-card[data-class="arcanique"] .ach-card__art-halo {
+  background: radial-gradient(circle at 50% 55%,
+    oklch(0.78 0.08 220 / 0.30) 0%, transparent 60%);
+}
+.ach-card[data-class="rempart"] .ach-card__art-halo {
+  background: radial-gradient(circle at 50% 55%,
+    oklch(0.7 0.12 60 / 0.30) 0%, transparent 60%);
+}
+
+/* --- Bandeau du nom --- */
+.ach-card__name {
+  margin: 8px -4px 0;
+  padding: 4px 10px;
+  position: relative;
+  font-family: var(--ach-font-title);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: center;
+  color: var(--ach-gold-bright);
+  letter-spacing: 0.02em;
+  background:
+    linear-gradient(180deg,
+      oklch(0.20 0.02 60) 0%,
+      oklch(0.14 0.015 55) 100%);
+  border-top: 0.5px solid var(--ach-gold-dim);
+  border-bottom: 0.5px solid var(--ach-gold-dim);
+  text-shadow: 0 1px 0 oklch(0 0 0 / 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  z-index: 2;
+}
+.ach-card__crown {
+  font-size: 11px;
+  line-height: 1;
+  filter: drop-shadow(0 0 3px oklch(0.85 0.13 85 / 0.6));
+}
+
+/* --- Texte d'effet --- */
+.ach-card__text {
+  flex: 1;
+  margin: 6px 0 0;
+  padding: 4px 6px;
+  font-family: var(--ach-font-body);
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--ach-parch);
+  text-align: center;
+  text-wrap: pretty;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.ach-card__text strong {
+  color: var(--ach-gold);
+  font-weight: 600;
+}
+
+/* --- Pied : faction · classe --- */
+.ach-card__footer {
+  margin-top: 4px;
+  padding: 3px 6px 1px;
+  font-family: var(--ach-font-body);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ach-parch-deep);
+  text-align: center;
+  border-top: 0.5px solid oklch(0 0 0 / 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  z-index: 2;
+}
+.ach-card__footer-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--ach-gold-dim);
+}
+
+/* Coloration de classe sur le footer */
+.ach-card[data-class="sylvestre"] .ach-card__footer { color: var(--ach-sylvestre-bright); }
+.ach-card[data-class="arcanique"] .ach-card__footer { color: var(--ach-arcanique-bright); }
+.ach-card[data-class="rempart"]   .ach-card__footer { color: var(--ach-rempart-bright); }
+
+/* Carte SORT : pas de stats ATQ/PV, parchemin différent */
+.ach-card[data-type="sort"] .ach-card__stats { visibility: hidden; }
+.ach-card[data-type="sort"] .ach-card__art {
+  background:
+    radial-gradient(circle at 50% 50%,
+      oklch(0.30 0.04 65) 0%,
+      oklch(0.18 0.02 55) 100%);
+}
+.ach-card[data-type="sort"] .ach-card__name {
+  background:
+    linear-gradient(180deg,
+      oklch(0.22 0.03 200) 0%,
+      oklch(0.14 0.02 200) 100%);
+}
+
+/* Hover / interactif */
+.ach-card[data-interactive="1"] {
+  cursor: pointer;
+  transition: transform var(--ach-dur) var(--ach-ease-out);
+}
+.ach-card[data-interactive="1"]:hover {
+  transform: translateY(-6px);
+}
+
+/* Override de l'état data-playable global : on garde l'effet uniquement
+   sur les cartes en main (les unités posées restent en couleur). */
+.ach-card[data-onboard="1"][data-playable="0"] { filter: none; opacity: 1; }
+
+/* État joué (posé sur le plateau) : version ULTRA-compacte "jeton" */
+.ach-card[data-onboard="1"] {
+  --card-w: 108px;
+  --card-h: 72px;
+}
+.ach-card[data-onboard="1"] .ach-card__frame {
+  padding: 4px;
+  border-radius: 7px;
+  flex-direction: row;
+}
+.ach-card[data-onboard="1"] .ach-card__top {
+  position: absolute;
+  top: 3px; left: 3px; right: 3px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+.ach-card[data-onboard="1"] .ach-card__cost {
+  width: 20px; height: 20px; font-size: 10px;
+  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.55), 0 1px 2px oklch(0 0 0 / 0.6);
+}
+.ach-card[data-onboard="1"] .ach-card__stats {
+  flex-direction: row;
+  gap: 3px;
+}
+.ach-card[data-onboard="1"] .ach-card__atk,
+.ach-card[data-onboard="1"] .ach-card__hp {
+  font-size: 10px;
+  padding: 1px 4px 1px 2px;
+  gap: 2px;
+  line-height: 1;
+}
+.ach-card[data-onboard="1"] .ach-card__atk svg,
+.ach-card[data-onboard="1"] .ach-card__hp svg { width: 8px; height: 8px; }
+.ach-card[data-onboard="1"] .ach-card__art {
+  position: absolute;
+  inset: 26px 6px 16px;
+  margin: 0;
+  aspect-ratio: auto;
+  background: none;
+  box-shadow: none;
+}
+.ach-card[data-onboard="1"] .ach-card__art-glyph { font-size: 24px; }
+.ach-card[data-onboard="1"] .ach-card__art-placeholder { display: none; }
+.ach-card[data-onboard="1"] .ach-card__name {
+  position: absolute;
+  bottom: 2px; left: 4px; right: 4px;
+  font-size: 8.5px;
+  padding: 1px 3px;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  background: oklch(0 0 0 / 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+.ach-card[data-onboard="1"] .ach-card__crown { font-size: 8px; }
+.ach-card[data-onboard="1"] .ach-card__entrelac { width: 16px; height: 16px; }
+.ach-card[data-onboard="1"] .ach-card__gemmod { display: none; }
+.ach-card[data-onboard="1"] .ach-card__text,
+.ach-card[data-onboard="1"] .ach-card__footer { display: none; }
+.ach-card[data-onboard="1"] .ach-card__crystal-marker {
+  width: 5px; height: 18px; top: 50%;
+}
+
+/* ============================================================
+   4. PLATEAU
+   ============================================================ */
+/* Stage : porte le container query pour que les descendants répondent
+   à la largeur du plateau et non au viewport de la page hôte. */
+.ach-board-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  container-type: inline-size;
+  container-name: ach-board;
+}
+
+.ach-board {
+  --board-pad: 12px;
+  --slot-w: 116px;
+  --slot-h: 78px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+  padding: var(--board-pad);
+  background: var(--ach-wood-deep);
+  background-image:
+    radial-gradient(ellipse at 50% 50%,
+      oklch(0.42 0.045 68 / 0.5) 0%,
+      transparent 75%),
+    repeating-linear-gradient(
+      92deg,
+      oklch(0.28 0.030 60) 0px,
+      oklch(0.34 0.038 65) 2px,
+      oklch(0.26 0.028 58) 5px,
+      oklch(0.32 0.035 63) 8px);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.ach-board__playzone {
+  grid-row: 1 / 4;
+  grid-column: 1;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  /* 1: champion ia | 2: syn ia | 3: heads | 4-6: slots ia | 7: rule
+     8-10: slots player | 11: syn player | 12: champion player | 13: main */
+  grid-template-rows:
+    auto auto auto repeat(3, var(--slot-h)) auto repeat(3, var(--slot-h)) auto auto auto;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Bandeau Champion + synergies + center rule + main = full width */
+.ach-board__champion-row,
+.ach-board__synergies,
+.ach-board__center-rule,
+.ach-board__hand {
+  grid-column: 1 / -1;
+}
+
+/* Background colored par colonne (Marche) : span vertical sur la zone slots */
+.ach-board__col-bg {
+  grid-column: var(--col);
+  grid-row: 3 / 11; /* depuis les heads jusqu'\u00e0 la derni\u00e8re rang\u00e9e slot joueur */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+  margin: 0 2px;
+}
+.ach-board__col-bg[data-class="sylvestre"] {
+  background:
+    linear-gradient(180deg,
+      oklch(0.46 0.10 148 / 0.20) 0%,
+      oklch(0.34 0.06 148 / 0.28) 100%);
+  border: 0.5px solid oklch(0.55 0.11 148 / 0.40);
+}
+.ach-board__col-bg[data-class="arcanique"] {
+  background:
+    linear-gradient(180deg,
+      oklch(0.46 0.08 218 / 0.20) 0%,
+      oklch(0.34 0.05 218 / 0.28) 100%);
+  border: 0.5px solid oklch(0.55 0.08 218 / 0.40);
+}
+.ach-board__col-bg[data-class="rempart"] {
+  background:
+    linear-gradient(180deg,
+      oklch(0.46 0.10 60 / 0.22) 0%,
+      oklch(0.32 0.06 60 / 0.30) 100%);
+  border: 0.5px solid oklch(0.55 0.10 60 / 0.40);
+}
+
+.ach-board__synergies {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 8px;
+  z-index: 5;
+  min-height: 26px;
+  align-items: center;
+}
+
+.ach-board__champion-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 12px;
+  background:
+    linear-gradient(180deg,
+      oklch(0.36 0.045 68) 0%,
+      oklch(0.26 0.030 60) 100%);
+  border: 0.5px solid oklch(0 0 0 / 0.55);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.08),
+    0 2px 6px oklch(0 0 0 / 0.35);
+  min-height: 60px;
+}
+
+/* Marches : layout par colonne, sans wrapper interne
+   (les slots sont des grid items directs du playzone) */
+.ach-board__marches-grid {
+  /* 3 colonnes Sylvestre / Arcanique / Rempart
+     Headers + 3 slots IA + 3 slots joueur */
+  display: contents;
+}
+.ach-board__col-head {
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ach-font-title);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 2px 0;
+  border-bottom: 0.5px solid oklch(0 0 0 / 0.4);
+}
+.ach-board__col-head[data-class="sylvestre"] { color: var(--ach-sylvestre-bright); }
+.ach-board__col-head[data-class="arcanique"] { color: var(--ach-arcanique-bright); }
+.ach-board__col-head[data-class="rempart"]   { color: var(--ach-rempart-bright); }
+
+.ach-board__marche {
+  display: none;
+}
+/* Nouveau layout : grille 3 colonnes (classes) × N rangées
+   les éléments full-width sont géré via grid-column:1/-1 ci-dessus.
+   Les anciens wrappers .ach-board__marches / .ach-board__marche
+   ne servent plus. */
+
+.ach-board__marche-head { display: none; }
+.ach-board__slots { display: none; }
+
+.ach-board__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  align-items: center;
+}
+
+.ach-slot {
+  position: relative;
+  width: var(--slot-w);
+  height: var(--slot-h);
+  border-radius: var(--ach-radius-slot);
+  background:
+    radial-gradient(circle at 50% 50%,
+      oklch(0.26 0.03 62) 0%,
+      oklch(0.18 0.022 56) 100%);
+  box-shadow: var(--ach-shadow-slot);
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  transition: box-shadow var(--ach-dur) var(--ach-ease);
+  z-index: 1;
+}
+.ach-slot[data-row="front"]  { /* rangée avant */ }
+.ach-slot[data-row="middle"] { /* milieu */ }
+.ach-slot[data-row="back"]   { /* arrière */ }
+
+.ach-slot[data-empty="1"]::after {
+  content: attr(data-row-label);
+  position: absolute;
+  font-family: var(--ach-font-body);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: oklch(0.6 0.04 70 / 0.4);
+  pointer-events: none;
+}
+
+.ach-slot[data-droptarget="1"] {
+  box-shadow:
+    inset 0 0 0 1.5px var(--ach-gold-bright),
+    var(--ach-shadow-slot),
+    0 0 16px oklch(0.80 0.13 82 / 0.45);
+  background:
+    radial-gradient(circle at 50% 50%,
+      oklch(0.30 0.04 70) 0%,
+      oklch(0.16 0.025 55) 100%);
+}
+
+.ach-board__center-rule {
+  height: 1px;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      var(--ach-gold-dim) 20%,
+      var(--ach-gold) 50%,
+      var(--ach-gold-dim) 80%,
+      transparent 100%);
+  opacity: 0.6;
+  margin: 2px 8px;
+  position: relative;
+}
+.ach-board__center-rule::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: var(--ach-gold);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--ach-gold-bright);
+}
+
+/* Main du joueur : cartes légèrement réduites pour rester dans le plateau */
+.ach-board__hand {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 4px 8px 6px;
+  min-height: 230px;
+  position: relative;
+}
+.ach-board__hand .ach-card {
+  --card-w: 170px;
+  --card-h: 234px;
+  transition: transform var(--ach-dur) var(--ach-ease-out),
+              filter var(--ach-dur) var(--ach-ease),
+              opacity var(--ach-dur) var(--ach-ease);
+}
+.ach-board__hand .ach-card .ach-card__cost { width: 30px; height: 30px; font-size: 14px; }
+.ach-board__hand .ach-card .ach-card__art-glyph { font-size: 34px; }
+.ach-board__hand .ach-card .ach-card__name { font-size: 10.5px; }
+.ach-board__hand .ach-card .ach-card__text { font-size: 9px; line-height: 1.3; }
+.ach-board__hand .ach-card .ach-card__footer { font-size: 8px; }
+.ach-board__hand .ach-card:not(:first-child) {
+  margin-left: -32px;
+}
+.ach-board__hand .ach-card:hover {
+  transform: translateY(-32px) scale(1.12);
+  z-index: 10;
+}
+
+/* JOUABLE : halo doré pulsé marqué */
+.ach-board__hand .ach-card[data-playable="1"] .ach-card__frame {
+  box-shadow:
+    var(--ach-shadow-card),
+    inset 0 0 0 1.5px var(--ach-gold-bright),
+    0 0 22px oklch(0.80 0.13 82 / 0.55);
+  animation: ach-playable-pulse 2.4s var(--ach-ease) infinite;
+}
+@keyframes ach-playable-pulse {
+  0%, 100% {
+    box-shadow:
+      var(--ach-shadow-card),
+      inset 0 0 0 1.5px var(--ach-gold-bright),
+      0 0 18px oklch(0.80 0.13 82 / 0.45);
+  }
+  50% {
+    box-shadow:
+      var(--ach-shadow-card),
+      inset 0 0 0 1.5px var(--ach-gold-bright),
+      0 0 32px oklch(0.85 0.14 84 / 0.85),
+      0 0 60px oklch(0.80 0.13 82 / 0.30);
+  }
+}
+
+/* NON-JOUABLE : très en retrait */
+.ach-board__hand .ach-card[data-playable="0"] {
+  filter: grayscale(0.7) brightness(0.55) saturate(0.7);
+  opacity: 0.4;
+}
+.ach-board__hand .ach-card[data-playable="0"]:hover {
+  filter: grayscale(0.5) brightness(0.7) saturate(0.85);
+  opacity: 0.7;
+  transform: translateY(-20px) scale(1.05);
+}
+
+/* Side panel */
+.ach-board__side {
+  grid-column: 2;
+  grid-row: 1 / 5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background:
+    linear-gradient(180deg,
+      oklch(0.22 0.03 60) 0%,
+      oklch(0.14 0.02 55) 100%);
+  border: 0.5px solid oklch(0 0 0 / 0.5);
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.ach-side__title {
+  font-family: var(--ach-font-title);
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ach-gold);
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 0.5px solid var(--ach-gold-dim);
+}
+
+.ach-side__turn {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--ach-font-body);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ach-parch-deep);
+}
+.ach-side__turn b {
+  font-family: var(--ach-font-title);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ach-gold-bright);
+  font-style: italic;
+}
+
+.ach-side__gemmes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  background: oklch(0 0 0 / 0.3);
+  border-radius: 8px;
+}
+.ach-gemme {
+  width: 16px;
+  height: 16px;
+  background:
+    radial-gradient(circle at 35% 30%,
+      var(--ach-teal-bright) 0%,
+      var(--ach-teal) 60%,
+      var(--ach-teal-soft) 100%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  box-shadow:
+    0 0 0 0.5px oklch(0 0 0 / 0.5),
+    0 0 4px oklch(0.6 0.10 200 / 0.6);
+}
+.ach-gemme[data-spent="1"] {
+  background: oklch(0.16 0.02 55);
+  box-shadow: 0 0 0 0.5px oklch(0 0 0 / 0.6);
+  opacity: 0.5;
+}
+
+.ach-side__log {
+  flex: 1;
+  overflow-y: auto;
+  background: oklch(0 0 0 / 0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: var(--ach-font-body);
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--ach-parch);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+}
+.ach-log-line { opacity: 0.85; }
+.ach-log-line--phase {
+  font-family: var(--ach-font-title);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ach-gold);
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 0.5px dashed var(--ach-gold-dim);
+}
+.ach-log-line--player { color: var(--ach-teal-bright); }
+.ach-log-line--ia { color: var(--ach-rempart-bright); }
+.ach-log-line--combat strong { color: var(--ach-atq); font-weight: 600; }
+
+.ach-side__btn {
+  appearance: none;
+  width: 100%;
+  padding: 10px 14px;
+  font-family: var(--ach-font-title);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: oklch(0.14 0.02 60);
+  background:
+    linear-gradient(180deg,
+      var(--ach-gold-bright) 0%,
+      var(--ach-gold) 60%,
+      var(--ach-gold-dim) 100%);
+  border: 0.5px solid var(--ach-gold-dim);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.5),
+    0 3px 8px oklch(0 0 0 / 0.4);
+  transition: transform var(--ach-dur-fast) var(--ach-ease),
+              filter var(--ach-dur-fast) var(--ach-ease);
+}
+.ach-side__btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+.ach-side__btn:active {
+  transform: translateY(0);
+  filter: brightness(0.96);
+}
+.ach-side__btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ach-side__btn--ghost {
+  background: oklch(0 0 0 / 0.3);
+  color: var(--ach-gold);
+  border-color: var(--ach-gold-dim);
+  letter-spacing: 0.12em;
+}
+
+/* --- Champion --- */
+.ach-champ {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.ach-champ__avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%,
+      oklch(0.50 0.06 70) 0%,
+      oklch(0.30 0.04 62) 100%);
+  box-shadow:
+    0 0 0 1.5px var(--ach-gold-soft),
+    0 0 12px oklch(0.80 0.13 82 / 0.30),
+    inset 0 2px 6px oklch(0 0 0 / 0.5);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Mana strip : rangée horizontale de jetons gemmes à côté du Champion */
+.ach-champ__mana {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  background: oklch(0 0 0 / 0.35);
+  border-radius: 999px;
+  border: 0.5px solid oklch(0 0 0 / 0.4);
+  box-shadow: inset 0 1px 2px oklch(0 0 0 / 0.4);
+  flex-shrink: 0;
+}
+.ach-champ__mana-gem {
+  width: 13px;
+  height: 13px;
+  background:
+    radial-gradient(circle at 35% 30%,
+      var(--ach-teal-bright) 0%,
+      var(--ach-teal) 60%,
+      var(--ach-teal-soft) 100%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  box-shadow:
+    0 0 0 0.5px oklch(0 0 0 / 0.55),
+    0 0 5px oklch(0.7 0.10 200 / 0.7);
+  transition: opacity var(--ach-dur) var(--ach-ease),
+              filter var(--ach-dur) var(--ach-ease);
+  animation: ach-mana-pulse 3s ease-in-out infinite;
+}
+.ach-champ__mana-gem[data-spent="1"] {
+  background:
+    radial-gradient(circle at 35% 30%,
+      oklch(0.32 0.02 60) 0%,
+      oklch(0.22 0.015 55) 100%);
+  box-shadow: 0 0 0 0.5px oklch(0 0 0 / 0.5);
+  opacity: 0.55;
+  animation: none;
+}
+@keyframes ach-mana-pulse {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.25); }
+}
+.ach-champ__mana-count {
+  font-family: var(--ach-font-title);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--ach-teal-bright);
+  margin-left: 4px;
+  letter-spacing: 0.05em;
+}
+.ach-champ[data-side="ia"] .ach-champ__mana-count { color: oklch(0.78 0.05 25); }
+.ach-champ[data-side="ia"] .ach-champ__avatar {
+  box-shadow:
+    0 0 0 1.5px var(--ach-sylvestre-bright),
+    0 0 12px oklch(0.7 0.12 145 / 0.40),
+    inset 0 2px 6px oklch(0 0 0 / 0.6);
+}
+.ach-champ__info {
+  flex: 1;
+  min-width: 0;
+}
+.ach-champ__name {
+  font-family: var(--ach-font-title);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--ach-gold-bright);
+  margin: 0 0 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ach-champ__name small {
+  font-family: var(--ach-font-body);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ach-parch-deep);
+}
+.ach-champ__hpbar {
+  height: 14px;
+  background: oklch(0 0 0 / 0.5);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+  border: 0.5px solid oklch(0 0 0 / 0.6);
+  box-shadow: inset 0 1px 3px oklch(0 0 0 / 0.5);
+}
+.ach-champ__hpfill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background:
+    linear-gradient(180deg,
+      oklch(0.72 0.18 25) 0%,
+      oklch(0.50 0.18 25) 100%);
+  border-radius: 999px;
+  transition: width var(--ach-dur-slow) var(--ach-ease-out);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.3);
+}
+.ach-champ__hpvalue {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ach-font-title);
+  font-weight: 700;
+  font-size: 10px;
+  color: oklch(0.98 0 0);
+  text-shadow: 0 1px 1px oklch(0 0 0 / 0.8);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+/* Popover de détail sur les unités posées (au hover) */
+.ach-slot { isolation: isolate; }
+.ach-slot__popover {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms var(--ach-ease-out), transform 180ms var(--ach-ease-out);
+  filter: drop-shadow(0 8px 22px oklch(0 0 0 / 0.6));
+}
+.ach-slot:hover .ach-slot__popover {
+  opacity: 1;
+}
+.ach-slot__popover[data-pop-side="right"] {
+  left: calc(100% + 10px);
+}
+.ach-slot__popover[data-pop-side="left"] {
+  right: calc(100% + 10px);
+}
+.ach-slot:hover .ach-slot__popover[data-pop-side="right"] {
+  transform: translateY(-50%) translateX(4px);
+}
+.ach-slot:hover .ach-slot__popover[data-pop-side="left"] {
+  transform: translateY(-50%) translateX(-4px);
+}
+
+/* Side panel : on supprime l'affichage redondant des gemmes
+   (la mana strip est maintenant dans le bandeau Champion) */
+.ach-side__gemmes { display: none; }
+
+/* ============================================================
+   5. SYNERGIES (chips)
+   ============================================================ */
+.ach-syn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 6px;
+  font-family: var(--ach-font-body);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  border-radius: var(--ach-radius-chip);
+  background: oklch(0.18 0.02 60 / 0.7);
+  border: 0.5px solid oklch(0 0 0 / 0.5);
+  color: var(--ach-parch-deep);
+  position: relative;
+}
+.ach-syn-chip__icon {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: oklch(0 0 0 / 0.5);
+  font-size: 10px;
+}
+.ach-syn-chip__count {
+  font-family: var(--ach-font-title);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.ach-syn-chip__count i {
+  font-style: normal;
+  opacity: 0.6;
+}
+.ach-syn-chip[data-active="1"] {
+  color: oklch(0.14 0.02 60);
+  background:
+    linear-gradient(180deg,
+      var(--ach-gold-bright) 0%,
+      var(--ach-gold) 100%);
+  border-color: var(--ach-gold-bright);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.2) inset,
+    0 0 10px oklch(0.80 0.13 82 / 0.45);
+}
+.ach-syn-chip[data-active="1"] .ach-syn-chip__icon {
+  background: oklch(0 0 0 / 0.25);
+}
+.ach-syn-chip[data-active="1"] .ach-syn-chip__count i {
+  opacity: 0.85;
+}
+
+/* ============================================================
+   6. ANIMATIONS DE COMBAT
+   ------------------------------------------------------------
+   Toutes les animations héritent de --ach-anim-density (0 / 0.5 / 1).
+   ============================================================ */
+
+/* Apparition d'une carte (pose) */
+@keyframes ach-card-enter {
+  0%   { opacity: 0; transform: translateY(-12px) scale(0.9) rotate(-2deg); }
+  60%  { opacity: 1; transform: translateY(0) scale(1.06); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ach-card[data-anim="enter"] {
+  animation: ach-card-enter calc(var(--ach-dur-slow) * var(--ach-anim-density))
+             var(--ach-ease-bounce) both;
+}
+
+/* Pioche slide-in depuis la main */
+@keyframes ach-card-draw {
+  0%   { opacity: 0; transform: translateY(40px) scale(0.85); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ach-card[data-anim="draw"] {
+  animation: ach-card-draw calc(var(--ach-dur) * var(--ach-anim-density))
+             var(--ach-ease-out) both;
+}
+
+/* Frappe : secousse + flash rouge */
+@keyframes ach-card-hit {
+  0%, 100% { transform: translate(0, 0); filter: none; }
+  20%      { transform: translate(-3px, 2px); filter: brightness(1.8) saturate(1.4) hue-rotate(-12deg); }
+  40%      { transform: translate(3px, -1px); filter: brightness(1.6); }
+  60%      { transform: translate(-2px, 1px); }
+  80%      { transform: translate(2px, 0); }
+}
+.ach-card[data-anim="hit"] {
+  animation: ach-card-hit calc(420ms * var(--ach-anim-density))
+             var(--ach-ease) both;
+}
+
+/* Soin : halo cyan */
+@keyframes ach-card-heal {
+  0%   { box-shadow: var(--ach-shadow-card); }
+  50%  { box-shadow: var(--ach-shadow-card),
+                     0 0 24px oklch(0.78 0.10 200 / 0.85),
+                     inset 0 0 0 2px var(--ach-teal-bright); }
+  100% { box-shadow: var(--ach-shadow-card); }
+}
+.ach-card[data-anim="heal"] .ach-card__frame {
+  animation: ach-card-heal calc(600ms * var(--ach-anim-density)) var(--ach-ease) both;
+}
+
+/* Mort : fade + chute */
+@keyframes ach-card-death {
+  0%   { opacity: 1; transform: rotate(0deg) translateY(0); filter: saturate(1); }
+  60%  { opacity: 0.6; transform: rotate(-6deg) translateY(10px); filter: saturate(0.4) brightness(0.6); }
+  100% { opacity: 0; transform: rotate(-12deg) translateY(40px); filter: saturate(0) brightness(0.3); }
+}
+.ach-card[data-anim="death"] {
+  animation: ach-card-death calc(620ms * var(--ach-anim-density)) var(--ach-ease) both;
+}
+
+/* Garde : pulse ocre */
+@keyframes ach-card-guard {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06);
+             filter: drop-shadow(0 0 10px oklch(0.7 0.13 60 / 0.7)); }
+}
+.ach-card[data-anim="guard"] {
+  animation: ach-card-guard 480ms var(--ach-ease) both;
+}
+
+/* Projectile fléche (Sylvestre, phase Tir) */
+.ach-arrow {
+  position: absolute;
+  width: 32px;
+  height: 4px;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      var(--ach-sylvestre-bright) 30%,
+      oklch(0.95 0.10 145) 100%);
+  border-radius: 2px;
+  filter: drop-shadow(0 0 6px var(--ach-sylvestre-bright));
+  pointer-events: none;
+  z-index: 50;
+  animation: ach-arrow-fly calc(420ms * var(--ach-anim-density)) var(--ach-ease-out) forwards;
+}
+@keyframes ach-arrow-fly {
+  0%   { opacity: 0; transform: scaleX(0.3); }
+  20%  { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+.ach-arrow::before {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 0 5px 7px;
+  border-color: transparent transparent transparent oklch(0.95 0.10 145);
+  filter: drop-shadow(0 0 4px var(--ach-sylvestre-bright));
+}
+
+/* Rune magique (Arcanique, phase Magie) */
+.ach-rune {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%,
+      var(--ach-arcanique-bright) 0%,
+      var(--ach-arcanique) 50%,
+      transparent 80%);
+  filter: blur(0.5px);
+  pointer-events: none;
+  z-index: 50;
+  animation: ach-rune-pulse calc(620ms * var(--ach-anim-density)) var(--ach-ease-out) forwards;
+}
+@keyframes ach-rune-pulse {
+  0%   { opacity: 0; transform: scale(0.3); }
+  30%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* Coup d'épée (Rempart / unités, phase Combat) */
+.ach-slash {
+  position: absolute;
+  width: 60px;
+  height: 4px;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      var(--ach-gold-bright) 50%,
+      transparent 100%);
+  filter: blur(1px) drop-shadow(0 0 8px var(--ach-gold-bright));
+  pointer-events: none;
+  z-index: 50;
+  transform-origin: left center;
+  animation: ach-slash-strike calc(360ms * var(--ach-anim-density)) var(--ach-ease) forwards;
+}
+@keyframes ach-slash-strike {
+  0%   { opacity: 0; transform: rotate(-30deg) scaleX(0.2); }
+  40%  { opacity: 1; transform: rotate(0deg) scaleX(1); }
+  100% { opacity: 0; transform: rotate(30deg) scaleX(1.2); }
+}
+
+/* Flash de phase courante (overlay très subtil) */
+.ach-phase-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at center,
+      oklch(0.8 0.12 var(--phase-hue, 200) / 0.18) 0%,
+      transparent 60%);
+  opacity: 0;
+  animation: ach-phase-in 700ms var(--ach-ease) forwards;
+}
+@keyframes ach-phase-in {
+  0%, 100% { opacity: 0; }
+  30%      { opacity: 1; }
+  70%      { opacity: 1; }
+}
+.ach-phase-flash__label {
+  font-family: var(--ach-font-title);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: oklch(0.95 0.05 var(--phase-hue, 200));
+  text-shadow:
+    0 0 12px oklch(0.7 0.12 var(--phase-hue, 200) / 0.8),
+    0 2px 8px oklch(0 0 0 / 0.7);
+  opacity: 0.95;
+}
+
+/* ============================================================
+   7. ÉCRAN D'INTRO
+   ============================================================ */
+.ach-intro {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--ach-wood-deep);
+  background-image:
+    radial-gradient(ellipse at 50% 40%,
+      oklch(0.35 0.05 65 / 0.5) 0%,
+      transparent 70%),
+    repeating-linear-gradient(
+      92deg,
+      oklch(0.14 0.018 50) 0px,
+      oklch(0.20 0.025 60) 2px,
+      oklch(0.12 0.015 48) 5px,
+      oklch(0.18 0.022 56) 8px);
+  overflow: hidden;
+  padding: 48px 32px;
+}
+.ach-intro__inner {
+  position: relative;
+  max-width: 720px;
+  text-align: center;
+  z-index: 2;
+}
+.ach-intro__sup {
+  font-family: var(--ach-font-body);
+  font-size: 12px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--ach-gold-soft);
+  margin-bottom: 24px;
+}
+.ach-intro__title {
+  font-family: var(--ach-font-title);
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0 0 12px;
+  color: var(--ach-gold-bright);
+  text-shadow:
+    0 0 24px oklch(0.80 0.13 82 / 0.40),
+    0 4px 12px oklch(0 0 0 / 0.8);
+  line-height: 1;
+}
+.ach-intro__title-orn {
+  display: inline-block;
+  margin: 0 14px;
+  font-size: 0.45em;
+  color: var(--ach-gold);
+  vertical-align: middle;
+  opacity: 0.8;
+}
+.ach-intro__subtitle {
+  font-family: var(--ach-font-title);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--ach-parch);
+  margin-bottom: 36px;
+  opacity: 0.92;
+}
+.ach-intro__lore {
+  background:
+    linear-gradient(180deg,
+      oklch(0.88 0.04 75) 0%,
+      oklch(0.78 0.05 70) 100%);
+  color: var(--ach-parch-ink);
+  padding: 24px 32px;
+  border-radius: 8px;
+  font-family: var(--ach-font-body);
+  font-size: 13.5px;
+  line-height: 1.7;
+  text-align: left;
+  max-width: 560px;
+  margin: 0 auto 32px;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.5),
+    0 2px 0 oklch(0 0 0 / 0.4),
+    0 12px 32px oklch(0 0 0 / 0.5);
+  position: relative;
+  font-style: italic;
+  text-wrap: pretty;
+}
+.ach-intro__lore::before,
+.ach-intro__lore::after {
+  content: "";
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background:
+    radial-gradient(circle at 30% 30%,
+      var(--ach-gold-bright) 0%,
+      var(--ach-gold-soft) 50%,
+      var(--ach-gold-dim) 100%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  box-shadow: 0 2px 4px oklch(0 0 0 / 0.5);
+}
+.ach-intro__lore::before { top: -18px; left: -18px; }
+.ach-intro__lore::after  { bottom: -18px; right: -18px; }
+
+.ach-intro__cta {
+  appearance: none;
+  font-family: var(--ach-font-title);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: oklch(0.14 0.02 60);
+  background:
+    linear-gradient(180deg,
+      var(--ach-gold-bright) 0%,
+      var(--ach-gold) 60%,
+      var(--ach-gold-dim) 100%);
+  border: 0.5px solid var(--ach-gold-dim);
+  border-radius: 10px;
+  padding: 16px 36px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.5),
+    0 4px 14px oklch(0.80 0.13 82 / 0.35),
+    0 6px 16px oklch(0 0 0 / 0.5);
+  transition: transform var(--ach-dur-fast) var(--ach-ease),
+              filter var(--ach-dur-fast) var(--ach-ease);
+}
+.ach-intro__cta:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+.ach-intro__cta:active {
+  transform: translateY(0);
+}
+.ach-intro__cta-sub {
+  display: block;
+  font-family: var(--ach-font-body);
+  font-style: italic;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: oklch(0.18 0.02 60 / 0.7);
+  margin-top: 4px;
+  text-transform: none;
+}
+
+/* Décor d'intro : gemmes flottantes en arrière-plan */
+.ach-intro__deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+.ach-intro__deco-gem {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background:
+    radial-gradient(circle at 35% 30%,
+      var(--ach-teal-bright) 0%,
+      var(--ach-teal) 60%,
+      transparent 100%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  opacity: 0.18;
+  animation: ach-gem-float 8s ease-in-out infinite;
+  filter: blur(0.5px);
+}
+@keyframes ach-gem-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-30px) rotate(180deg); }
+}
+
+/* ============================================================
+   8. MOBILE (< 1100px) : plateau en colonne unique
+   Container query scopée sur .ach-board (pas une media query)
+   pour répondre à la largeur réelle de l'artboard et non au
+   viewport de la page hôte.
+   ============================================================ */
+@container ach-board (max-width: 1100px) {
+  .ach-board {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    overflow-y: auto;
+  }
+  .ach-board__playzone { grid-row: 1; grid-column: 1; }
+  .ach-board__side {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+  .ach-board__side .ach-side__title { flex-basis: 100%; }
+  .ach-board__side .ach-side__log { flex-basis: 100%; min-height: 80px; }
+  .ach-board__marches {
+    grid-template-columns: 1fr;
+  }
+  .ach-board__slots {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
