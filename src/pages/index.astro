@@ -5,23 +5,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <title>Arcade FM · Jeux & Expériences</title>
   <script is:inline>
     (function() {
-      var t = localStorage.getItem('theme');
-      if (t) document.documentElement.setAttribute('data-theme', t);
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "REPLACE_WITH_YOUR_CF_TOKEN"}'></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #07090f;
-      --surface:   #0d1120;
-      --surface2:  #131829;
-      --border:    rgba(255,255,255,0.07);
+      --bg:        #181b2e;
+      --surface:   #232745;
+      --surface2:  #2c3155;
+      --border:    rgba(255,255,255,0.10);
       --gold:      #d4a017;
       --gold-dim:  #a07810;
       --violet:    #7c5cbf;
@@ -39,10 +41,10 @@
       --tag-soon-c:  #f59e0b;
       --grid-line: rgba(212,160,23,0.03);
       --card-shadow: 0 16px 40px rgba(0,0,0,0.5);
-      --banner-fda:     radial-gradient(ellipse at 60% 40%, #3a2a10 0%, #1a1205 100%);
-      --banner-eryndor: radial-gradient(ellipse at 40% 60%, #1a1030 0%, #0d0818 100%);
-      --banner-orbique: radial-gradient(ellipse at 50% 50%, #0c1e30 0%, #060d18 100%);
-      --banner-aelindra-base: #0a0814;
+      --banner-fda:     radial-gradient(ellipse at 60% 40%, #4a3818 0%, #2a1d0a 100%);
+      --banner-eryndor: radial-gradient(ellipse at 40% 60%, #2a2050 0%, #1a1430 100%);
+      --banner-orbique: radial-gradient(ellipse at 50% 50%, #1a3552 0%, #0e1d30 100%);
+      --banner-aelindra-base: #1a1828;
       --banner-aelindra-vignette: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(0,0,0,0.45) 100%);
       --aelindra-name-grad: linear-gradient(180deg, #ecd190 0%, #d4b370 55%, #8a7340 100%);
       --aelindra-sub-c: #6a6276;
@@ -102,10 +104,35 @@
       pointer-events: none;
     }
 
-    .theme-toggle {
+    .header-left {
       position: absolute;
       top: 1.4rem;
-      right: 1.8rem;
+      left: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 11;
+    }
+
+    .site-logo {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .site-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    .site-logo:hover { transform: translateY(-2px); }
+
+    .theme-toggle {
       width: 38px;
       height: 38px;
       border-radius: 10px;
@@ -117,7 +144,7 @@
       justify-content: center;
       cursor: pointer;
       transition: color 0.2s, border-color 0.2s, background 0.2s;
-      z-index: 11;
+      flex-shrink: 0;
     }
     .theme-toggle:hover {
       color: var(--gold);
@@ -135,16 +162,7 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .site-back {
-      position: absolute; top: 1.5rem; left: 2rem;
-      font-size: 0.78rem; color: var(--muted);
-      text-decoration: none; letter-spacing: 0.05em;
-      transition: color 0.2s;
-    }
-    .site-back:hover { color: var(--gold); }
-    .site-back::before { content: '← '; }
-
-    .header-title {
+.header-title {
       font-family: 'Cinzel', serif;
       font-size: clamp(2rem, 5vw, 3.5rem);
       font-weight: 900;
@@ -177,11 +195,13 @@
       letter-spacing: 0.3em;
       text-transform: uppercase;
       color: var(--muted);
+      margin-top: 3rem;
       margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
       gap: 1rem;
     }
+    .section-label:first-child { margin-top: 0; }
     .section-label::after {
       content: '';
       flex: 1;
@@ -523,6 +543,200 @@
     }
     .card-cta-link:hover .card-cta { gap: 0.7rem; }
 
+    /* === Boutons Jouer thématiques par jeu === */
+    .btn-game {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      align-self: flex-start;
+      margin-top: 0.9rem;
+      padding: 0.55rem 1.05rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background-clip: padding-box;
+      transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-game::after { content: '→'; transition: transform 0.2s ease; }
+    a:hover .btn-game::after,
+    .card-cta-link:hover .btn-game::after { transform: translateX(3px); }
+    a:hover .btn-game { transform: translateY(-1px); }
+
+    /* FDA · forge / or / braise */
+    .btn-game--fda {
+      color: #f5d97a;
+      background: linear-gradient(135deg, rgba(212,160,23,0.22), rgba(140,80,20,0.12));
+      border-color: rgba(212,160,23,0.50);
+      text-shadow: 0 0 8px rgba(212,160,23,0.35);
+    }
+    a:hover .btn-game--fda {
+      border-color: #d4a017;
+      box-shadow: 0 0 20px rgba(212,160,23,0.30), inset 0 0 14px rgba(212,160,23,0.10);
+    }
+    [data-theme="light"] .btn-game--fda {
+      color: #6a4808;
+      background: linear-gradient(135deg, rgba(212,160,23,0.18), rgba(184,128,15,0.10));
+      border-color: rgba(184,128,15,0.55);
+      text-shadow: none;
+    }
+    [data-theme="light"] a:hover .btn-game--fda {
+      box-shadow: 0 0 18px rgba(184,128,15,0.22);
+    }
+
+    /* Orbique · cyan luminescent */
+    .btn-game--orbique {
+      color: #7fdcff;
+      background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(30,100,180,0.10));
+      border-color: rgba(56,189,248,0.50);
+      text-shadow: 0 0 8px rgba(56,189,248,0.35);
+    }
+    a:hover .btn-game--orbique {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56,189,248,0.30), inset 0 0 14px rgba(56,189,248,0.10);
+    }
+    [data-theme="light"] .btn-game--orbique {
+      color: #0c5b8a;
+      background: linear-gradient(135deg, rgba(56,189,248,0.16), rgba(56,140,200,0.08));
+      border-color: rgba(56,140,200,0.55);
+      text-shadow: none;
+    }
+    [data-theme="light"] a:hover .btn-game--orbique {
+      box-shadow: 0 0 18px rgba(56,140,200,0.22);
+    }
+
+    /* Aelindra · sable, cuivre, lampe à huile */
+    .btn-game--aelindra {
+      color: #e8c980;
+      background: linear-gradient(135deg, rgba(212,179,112,0.22), rgba(120,80,40,0.12));
+      border-color: rgba(212,179,112,0.50);
+      text-shadow: 0 0 8px rgba(212,179,112,0.30);
+    }
+    a:hover .btn-game--aelindra {
+      border-color: #d4b370;
+      box-shadow: 0 0 18px rgba(212,179,112,0.30);
+    }
+    [data-theme="light"] .btn-game--aelindra {
+      color: #7a5018;
+      background: linear-gradient(135deg, rgba(212,179,112,0.20), rgba(160,120,60,0.10));
+      border-color: rgba(160,120,60,0.55);
+      text-shadow: none;
+    }
+
+    /* Zentel · arcane / violet */
+    .btn-game--zentel {
+      color: #c4a4ff;
+      background: linear-gradient(135deg, rgba(124,92,191,0.22), rgba(70,40,140,0.12));
+      border-color: rgba(168,124,255,0.50);
+      text-shadow: 0 0 8px rgba(168,124,255,0.40);
+    }
+    a:hover .btn-game--zentel {
+      border-color: #a78bfa;
+      box-shadow: 0 0 20px rgba(124,92,191,0.32);
+    }
+    [data-theme="light"] .btn-game--zentel {
+      color: #4a2a90;
+      background: linear-gradient(135deg, rgba(124,92,191,0.16), rgba(90,60,160,0.08));
+      border-color: rgba(106,74,176,0.55);
+      text-shadow: none;
+    }
+
+    /* EcoSim · feuille / nature */
+    .btn-game--ecosim {
+      color: #86efac;
+      background: linear-gradient(135deg, rgba(74,222,128,0.18), rgba(20,90,40,0.10));
+      border-color: rgba(74,222,128,0.50);
+      text-shadow: 0 0 8px rgba(74,222,128,0.30);
+    }
+    a:hover .btn-game--ecosim {
+      border-color: #4ade80;
+      box-shadow: 0 0 18px rgba(74,222,128,0.30);
+    }
+    [data-theme="light"] .btn-game--ecosim {
+      color: #1e6a35;
+      background: linear-gradient(135deg, rgba(74,222,128,0.18), rgba(30,122,58,0.10));
+      border-color: rgba(30,122,58,0.55);
+      text-shadow: none;
+    }
+
+    /* Conway · grille cellulaire monospace */
+    .btn-game--conway {
+      color: #e8e0d0;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      letter-spacing: 0.10em;
+      background-color: rgba(255,255,255,0.04);
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 6px 6px, 6px 6px;
+      border-color: rgba(232,224,208,0.35);
+    }
+    a:hover .btn-game--conway {
+      border-color: #e8e0d0;
+      box-shadow: 0 0 14px rgba(255,255,255,0.18);
+    }
+    [data-theme="light"] .btn-game--conway {
+      color: #2a1e10;
+      background-color: rgba(0,0,0,0.04);
+      background-image:
+        linear-gradient(rgba(0,0,0,0.10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.10) 1px, transparent 1px);
+      border-color: rgba(0,0,0,0.30);
+    }
+
+    /* Eryndor · duel violet × or */
+    .btn-game--eryndor {
+      color: #f0d97a;
+      background: linear-gradient(90deg, rgba(124,79,208,0.25) 0%, rgba(212,160,23,0.22) 100%);
+      border-color: rgba(180,130,200,0.50);
+      text-shadow: 0 0 8px rgba(212,160,23,0.30);
+    }
+    a:hover .btn-game--eryndor {
+      border-color: #b88be5;
+      box-shadow: 0 0 16px rgba(124,79,208,0.30), 0 0 10px rgba(212,160,23,0.20);
+    }
+    [data-theme="light"] .btn-game--eryndor {
+      color: #5a2e90;
+      background: linear-gradient(90deg, rgba(124,79,208,0.14) 0%, rgba(184,128,15,0.14) 100%);
+      border-color: rgba(124,79,208,0.50);
+      text-shadow: none;
+    }
+
+    /* Strates · roches stratifiées */
+    .btn-game--strates {
+      color: #e0cda0;
+      background-color: rgba(180,140,90,0.18);
+      background-image:
+        repeating-linear-gradient(180deg,
+          transparent 0,
+          transparent 4px,
+          rgba(255,255,255,0.05) 4px,
+          rgba(255,255,255,0.05) 5px);
+      border-color: rgba(200,170,120,0.50);
+      text-shadow: 0 0 8px rgba(212,160,90,0.30);
+    }
+    .card-cta-link:hover .btn-game--strates {
+      border-color: #c8a878;
+      box-shadow: 0 0 16px rgba(180,140,90,0.30);
+    }
+    [data-theme="light"] .btn-game--strates {
+      color: #6a4818;
+      background-color: rgba(180,140,90,0.16);
+      background-image:
+        repeating-linear-gradient(180deg,
+          transparent 0,
+          transparent 4px,
+          rgba(120,80,40,0.10) 4px,
+          rgba(120,80,40,0.10) 5px);
+      border-color: rgba(160,120,60,0.55);
+      text-shadow: none;
+    }
+
     .dev-progress {
       margin-top: 1.4rem;
       padding-top: 1.2rem;
@@ -699,6 +913,35 @@
     }
     .elf-btn--lore:hover .elf-btn-arrow { transform: translateX(3px); }
 
+    [data-theme="light"] .elf-btn--play {
+      color: var(--gold-dim);
+      border-color: rgba(184,128,15,0.45);
+      background: rgba(212,160,23,0.12);
+    }
+    [data-theme="light"] .elf-btn--play .card-cta { color: var(--gold-dim); }
+    [data-theme="light"] .elf-btn--play:hover {
+      border-color: var(--gold);
+      background: rgba(212,160,23,0.18);
+      box-shadow: 0 0 14px rgba(184,128,15,0.18);
+    }
+    [data-theme="light"] .elf-btn--lore {
+      color: #5a3a8a;
+      background:
+        linear-gradient(135deg, rgba(124,79,208,0.10) 0%, rgba(201,162,39,0.10) 60%, rgba(45,122,79,0.10) 100%);
+      border-color: rgba(124,79,208,0.40);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.5),
+        0 2px 8px rgba(120,80,40,0.10);
+    }
+    [data-theme="light"] .elf-btn--lore:hover {
+      border-color: #7c4fd0;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.6),
+        0 6px 18px rgba(124,79,208,0.20);
+    }
+    [data-theme="light"] .elf-btn-icon { color: #a8408a; filter: none; }
+    [data-theme="light"] .elf-btn-arrow { color: #7c4fd0; }
+
     .card-mini-header {
       display: flex;
       align-items: center;
@@ -749,16 +992,20 @@
 <body>
 
 <header>
-  <a class="site-back" href="https://fmenguy.fr">fmenguy.fr</a>
-  <button class="theme-toggle" id="theme-toggle" aria-label="Changer de thème" title="Changer de thème">
-    <svg class="theme-toggle__icon theme-toggle__icon--dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 3v1m0 16v1m-8-9H3m18 0h-1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707"/>
-      <circle cx="12" cy="12" r="4"/>
-    </svg>
-    <svg class="theme-toggle__icon theme-toggle__icon--light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-    </svg>
-  </button>
+  <div class="header-left">
+    <a class="site-logo" href="https://fmenguy.fr" aria-label="Retour sur fmenguy.fr" title="Retour sur fmenguy.fr">
+      <img src="/logo.png" alt="FM" width="42" height="42" />
+    </a>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Changer de thème" title="Changer de thème">
+      <svg class="theme-toggle__icon theme-toggle__icon--dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v1m0 16v1m-8-9H3m18 0h-1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707"/>
+        <circle cx="12" cy="12" r="4"/>
+      </svg>
+      <svg class="theme-toggle__icon theme-toggle__icon--light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
   <div class="header-title">Arcade FM</div>
   <div class="header-sub">Jeux &amp; expériences web</div>
 </header>
@@ -777,7 +1024,7 @@
         <span class="card-tag card-tag--full">Jeu complet</span>
         <div class="card-title">Forge des Âges</div>
         <div class="card-desc">Jeu de gestion médiéval au tour par tour. Gérez vos ressources, explorez la carte, forgez votre empire. Avec ambiance sonore et mode mobile.</div>
-        <span class="card-cta">Jouer</span>
+        <span class="btn-game btn-game--fda">Jouer</span>
       </div>
     </a>
 
@@ -789,7 +1036,7 @@
         <span class="card-tag card-tag--full">Jeu complet</span>
         <div class="card-title">Orbique</div>
         <div class="card-desc">Jeu d'exploration en salles thématiques. Particules, textures, puzzles et tutoriel intégré pour une expérience visuelle immersive.</div>
-        <span class="card-cta">Jouer</span>
+        <span class="btn-game btn-game--orbique">Jouer</span>
       </div>
     </a>
   </div>
@@ -803,6 +1050,7 @@
         <span class="card-mini-title">Aelindra</span>
       </div>
       <div class="card-mini-desc">POC d'un RPG tactique tour par tour pensé mobile. Constituez votre équipe, explorez des donjons, gacha et équipement. Installable comme app Android (PWA).</div>
+      <span class="btn-game btn-game--aelindra">Jouer</span>
     </a>
 
     <a class="card-mini" href="/zentel/">
@@ -811,6 +1059,7 @@
         <span class="card-mini-title">Zentel</span>
       </div>
       <div class="card-mini-desc">Expérimentation visuelle interactive générée avec p5.js.</div>
+      <span class="btn-game btn-game--zentel">Jouer</span>
     </a>
 
     <a class="card-mini" href="/ecosim/ecosystem.html">
@@ -819,6 +1068,7 @@
         <span class="card-mini-title">EcoSim</span>
       </div>
       <div class="card-mini-desc">Simulation d'écosystème. Créatures, nourriture, prédateurs, observez l'équilibre se construire.</div>
+      <span class="btn-game btn-game--ecosim">Jouer</span>
     </a>
 
     <a class="card-mini" href="/conway/">
@@ -827,6 +1077,7 @@
         <span class="card-mini-title">Jeu de la Vie</span>
       </div>
       <div class="card-mini-desc">Automate cellulaire de Conway. Tracez des patterns et regardez la vie émerger.</div>
+      <span class="btn-game btn-game--conway">Jouer</span>
     </a>
 
     <a class="card-mini" href="/eryndor/">
@@ -835,6 +1086,7 @@
         <span class="card-mini-title">Eryndor : Duel d'IA</span>
       </div>
       <div class="card-mini-desc">Simulation fantasy en mode spectateur. Deux agents IA s'affrontent à la tête des humains et des elfes.</div>
+      <span class="btn-game btn-game--eryndor">Jouer</span>
     </a>
 
   </div>
@@ -893,7 +1145,7 @@
       </p>
     </div>
     <a class="card-cta-link" href="https://strates.fmenguy.fr">
-      <span class="card-cta">Jouer</span>
+      <span class="btn-game btn-game--strates">Jouer</span>
     </a>
   </div>
 
