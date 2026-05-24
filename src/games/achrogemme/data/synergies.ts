@@ -39,6 +39,33 @@ export const SYNERGIES: SynergyDef[] = [
       { count: 3, text: '+5 PV max au Champion', apply: { kind: 'champion_pv_bonus', amount: 5 } },
     ],
   },
+  {
+    id: 'trinity_elfe',
+    name: 'Trinité Elfe',
+    on: { kind: 'trinity', value: 'elfe' },
+    description: "Un Archer, un Mage et un Guerrier elfes réunis débloquent l'Éclair du Roi Elfe.",
+    thresholds: [
+      { count: 1, text: 'Débloque Éclair du Roi Elfe', apply: { kind: 'unlock_elite_card', cardId: 'elite_eclair_elfe' } },
+    ],
+  },
+  {
+    id: 'trinity_nain',
+    name: 'Trinité Naine',
+    on: { kind: 'trinity', value: 'nain' },
+    description: "Un Archer, un Mage et un Guerrier nains réunis débloquent le Mortier des Forges.",
+    thresholds: [
+      { count: 1, text: 'Débloque Mortier des Forges', apply: { kind: 'unlock_elite_card', cardId: 'elite_mortier_nain' } },
+    ],
+  },
+  {
+    id: 'trinity_humain',
+    name: 'Trinité Humaine',
+    on: { kind: 'trinity', value: 'humain' },
+    description: "Un Archer, un Mage et un Guerrier humains réunis débloquent la Charge de la Couronne.",
+    thresholds: [
+      { count: 1, text: 'Débloque Charge de la Couronne', apply: { kind: 'unlock_elite_card', cardId: 'elite_charge_humaine' } },
+    ],
+  },
 ];
 
 export const SYNERGY_INDEX: Record<string, SynergyDef> = Object.fromEntries(

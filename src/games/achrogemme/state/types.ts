@@ -78,7 +78,8 @@ export type SortilegeEffect =
   | { kind: 'heal_champion'; amount: number }
   | { kind: 'damage_lane'; amount: number }
   | { kind: 'buff_atq_lane'; amount: number }
-  | { kind: 'kill_target' };
+  | { kind: 'kill_target' }
+  | { kind: 'damage_champion'; amount: number };
 
 export interface CardInstance {
   instId: string;
@@ -96,7 +97,7 @@ export interface CardInstance {
 export interface SynergyDef {
   id: string;
   name: string;
-  on: { kind: 'faction' | 'classe' | 'tag'; value: string };
+  on: { kind: 'faction' | 'classe' | 'tag' | 'trinity'; value: string };
   thresholds: SynergyThreshold[];
   description: string;
 }
@@ -113,7 +114,8 @@ export type SynergyApply =
   | { kind: 'pa_bonus'; amount: number }
   | { kind: 'champion_pv_bonus'; amount: number }
   | { kind: 'champion_heal_on_round'; amount: number }
-  | { kind: 'garde_to_matching' };
+  | { kind: 'garde_to_matching' }
+  | { kind: 'unlock_elite_card'; cardId: string };
 
 export interface ActiveSynergy {
   synergyId: string;
@@ -140,6 +142,7 @@ export interface PlayerState {
   discard: string[];
   lanes: LaneSlots;
   activeSynergies: ActiveSynergy[];
+  unlockedElites: string[];
 }
 
 export type LaneSlots = [

@@ -55,6 +55,7 @@ export function CardView({
 
   const isSpell = def.kind === 'sortilege';
   const isLegendary = def.rarity === 'legendaire';
+  const isElite = (def.tags ?? []).includes('elite');
   const factionLabel = def.faction ? FACTIONS[def.faction].name : null;
   const classeLabel = def.classe ? CLASSES[def.classe].name : null;
   const factionIcon = def.faction ? FACTION_GLYPH[def.faction] : '';
@@ -70,8 +71,9 @@ export function CardView({
 
   return (
     <div
-      className={`ach-card ${selected ? 'is-selected' : ''}`}
+      className={`ach-card ${selected ? 'is-selected' : ''} ${isElite ? 'is-elite' : ''}`}
       data-rarity={def.rarity}
+      data-elite={isElite ? '1' : '0'}
       data-class={def.classe ?? ''}
       data-frame={frame}
       data-type={isSpell ? 'sort' : 'unite'}
@@ -89,6 +91,9 @@ export function CardView({
           <div className="ach-card__crystal-marker" />
           <div className="ach-card__crystal-marker" />
         </>
+      )}
+      {isElite && (
+        <div className="ach-card__elite-badge" title="Carte Élite débloquée par une Trinité">★ Élite</div>
       )}
 
       <div className="ach-card__frame">

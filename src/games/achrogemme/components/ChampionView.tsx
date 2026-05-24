@@ -44,16 +44,19 @@ export function ChampionView({ player, side, isActive, accent = '' }: Props) {
         </div>
       </div>
       {gemMax > 0 && (
-        <div className="ach-champ__mana" title={`${remaining} Gemmes sur ${gemMax}`}>
-          {Array.from({ length: gemMax }).map((_, i) => (
-            <span
-              key={i}
-              className="ach-champ__mana-gem"
-              data-spent={i < gemSpent ? '1' : '0'}
-              style={{ animationDelay: `${i * 0.18}s` }}
-            />
-          ))}
-          <span className="ach-champ__mana-count">{remaining}/{gemMax}</span>
+        <div className="ach-champ__mana-block">
+          <div className="ach-champ__mana-label" title="Réserve de Gemmes">💎 Gemmes</div>
+          <div className="ach-champ__mana" title={`${remaining} Gemmes sur ${gemMax}`}>
+            {Array.from({ length: gemMax }).map((_, i) => (
+              <span
+                key={i}
+                className="ach-champ__mana-gem"
+                data-spent={i < gemSpent ? '1' : '0'}
+                style={{ animationDelay: `${i * 0.18}s` }}
+              />
+            ))}
+            <span className="ach-champ__mana-count">{remaining}<i className="ach-champ__mana-slash">/</i>{gemMax}</span>
+          </div>
         </div>
       )}
     </div>

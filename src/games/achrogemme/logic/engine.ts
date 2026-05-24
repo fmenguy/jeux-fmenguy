@@ -17,7 +17,6 @@ import {
   hasDoubleStrike,
   hasGarde,
   hasRiposte,
-  hasTir,
   paBonusOfBoard,
   passiveValue,
   pierceValue,
@@ -58,9 +57,9 @@ export function buildStarterDeck(): string[] {
     'syl_eclaireur', 'syl_eclaireur', 'syl_archer', 'syl_archer_exp',
     'syl_chasseresse', 'syl_rodeur', 'syl_druide', 'syl_lilia',
     'arc_novice', 'arc_apprenti', 'arc_sentinelle', 'arc_erudit',
-    'arc_meditant', 'arc_doyen', 'arc_aldarian',
-    'rem_milicien', 'rem_garde_nain', 'rem_marteau', 'rem_guerrier_fort',
-    'rem_maraudeur', 'rem_amelie', 'rem_throrin',
+    'arc_meditant', 'arc_runiste_nain', 'arc_doyen', 'arc_aldarian',
+    'rem_milicien', 'rem_garde_nain', 'rem_sentinelle_elfe', 'rem_marteau',
+    'rem_guerrier_fort', 'rem_maraudeur', 'rem_amelie', 'rem_throrin',
     'sort_souffle', 'sort_volee', 'sort_runes',
   ];
   return shuffle(ids);
@@ -87,6 +86,7 @@ function makePlayerState(championId: string): PlayerState {
     discard: [],
     lanes: emptyLanes(),
     activeSynergies: [],
+    unlockedElites: [],
   };
 }
 
@@ -219,6 +219,9 @@ export function playSortilege(
       if (u.pv <= 0) killUnit(state, other(side), target.lane, s);
     }
     pushLog(state, `${labelSide(side)} lance ${def.name} sur Marche adverse.`, 'sort');
+  } else if (eff.kind === 'damage_champion') {
+    applyDamageToChampion(state, other(side), eff.amount);
+    pushLog(state, `${labelSide(side)} lance ${def.name} (${eff.amount} dégâts directs au Champion adverse).`, 'sort');
   } else if (eff.kind === 'buff_atq_lane') {
     if (!target || target.kind !== 'own_lane') return { ok: false, reason: 'Cible une de tes Marches.' };
     for (const u of p.lanes[target.lane]) {
@@ -304,10 +307,10 @@ function applyChampionPvBonusFromSynergies(state: GameState) {
 
 export function resolveCombat(state: GameState) {
   for (const side of ['player', 'ai'] as Side[]) {
-    const sumTir = sumTirDamage(state[side]);
-    if (sumTir > 0) {
-      applyDamageToChampion(state, other(side), sumTir);
-      pushLog(state, `Phase Tir · ${labelSide(side)} : ${sumTir} dégât${sumTir > 1 ? 's' : ''} direct${sumTir > 1 ? 's' : ''} au Champion adverse.`, 'tir');
+    const piercing = sumPierceDamage(state[side]);
+    if (piercing > 0) {
+      applyDamageToChampion(state, other(side), piercing);
+      pushLog(state, `Phase Tir · ${labelSide(side)} : ${piercing} dégât${piercing > 1 ? 's' : ''} de perce direct${piercing > 1 ? 's' : ''} au Champion adverse.`, 'tir');
     }
   }
 
@@ -358,18 +361,14 @@ export function resolveCombat(state: GameState) {
   checkWinner(state);
 }
 
-function sumTirDamage(p: PlayerState): number {
+function sumPierceDamage(p: PlayerState): number {
   let total = 0;
   for (let l = 0; l < 3; l += 1) {
     for (let s = 0; s < 3; s += 1) {
       const u = p.lanes[l][s];
       if (!u) continue;
-      if (!hasTir(u)) continue;
-      if (hasCharge(u) || u.turnsOnBoard > 0) {
-        total += effectiveAtq(u, p);
-        total += pierceValue(u);
-        if (hasDoubleStrike(u)) total += effectiveAtq(u, p);
-      }
+      if (!hasCharge(u) && u.turnsOnBoard === 0) continue;
+      total += pierceValue(u);
     }
   }
   return total;
@@ -406,7 +405,6 @@ function sumLaneAtq(p: PlayerState, lane: LaneIndex, _withCharge: boolean): numb
   for (let s = 0; s < 3; s += 1) {
     const u = p.lanes[lane][s];
     if (!u) continue;
-    if (hasTir(u)) continue;
     if (!hasCharge(u) && u.turnsOnBoard === 0) continue;
     let a = effectiveAtq(u, p);
     if (hasDoubleStrike(u)) a *= 2;
@@ -477,8 +475,23 @@ export function beginTurn(state: GameState, side: Side) {
   const p = state[side];
   p.pa = p.paMax;
   drawTo(p, HAND_LIMIT);
+  grantUnlockedElites(state, side);
   state.active = side;
   state.phase = side === 'player' ? 'player' : 'ai';
+}
+
+function grantUnlockedElites(state: GameState, side: Side) {
+  const p = state[side];
+  for (const syn of p.activeSynergies) {
+    if (syn.applied.kind !== 'unlock_elite_card') continue;
+    const cardId = syn.applied.cardId;
+    if (p.unlockedElites.includes(cardId)) continue;
+    const def = CARD_INDEX[cardId];
+    if (!def) continue;
+    p.unlockedElites.push(cardId);
+    p.hand.push(makeInstance(def));
+    pushLog(state, `${labelSide(side)} : Trinité activée ! ${def.name} apparaît dans la main.`, 'sort');
+  }
 }
 
 export function endPlayerTurn(state: GameState) {
