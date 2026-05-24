@@ -28,15 +28,32 @@ function unitMatches(unit: CardInstance, on: { kind: string; value: string }): b
   return false;
 }
 
+function countTrinityFaction(p: PlayerState, faction: string): number {
+  let hasSylv = false, hasArc = false, hasRem = false;
+  for (const u of allBoardUnits(p)) {
+    const def = CARD_INDEX[u.defId];
+    if (!def || def.faction !== faction) continue;
+    if (def.classe === 'sylvestre') hasSylv = true;
+    else if (def.classe === 'arcanique') hasArc = true;
+    else if (def.classe === 'rempart') hasRem = true;
+  }
+  return (hasSylv && hasArc && hasRem) ? 1 : 0;
+}
+
 export function computeActiveSynergies(p: PlayerState): ActiveSynergy[] {
   const units = allBoardUnits(p);
   const out: ActiveSynergy[] = [];
   for (const syn of SYNERGIES) {
-    const matching = units.filter((u) => unitMatches(u, syn.on));
-    if (matching.length === 0) continue;
+    let matchCount = 0;
+    if (syn.on.kind === 'trinity') {
+      matchCount = countTrinityFaction(p, syn.on.value);
+    } else {
+      matchCount = units.filter((u) => unitMatches(u, syn.on)).length;
+    }
+    if (matchCount === 0) continue;
     let bestThreshold: number = 0;
     for (const t of syn.thresholds) {
-      if (matching.length >= t.count && t.count > bestThreshold) {
+      if (matchCount >= t.count && t.count > bestThreshold) {
         bestThreshold = t.count;
       }
     }

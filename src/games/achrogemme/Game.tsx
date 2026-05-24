@@ -19,6 +19,23 @@ import { CardView } from './components/CardView';
 import { ChampionView } from './components/ChampionView';
 import { SynergyBar } from './components/SynergyBar';
 import { IntroScreen } from './components/IntroScreen';
+import { Tutorial } from './components/Tutorial';
+import { OptionsMenu } from './components/OptionsMenu';
+
+const TUTO_STORAGE_KEY = 'achrogemme_tutorial_seen_v1';
+const PLAYER_NAME_STORAGE_KEY = 'achrogemme_player_name_v1';
+
+function readStoredName(): string | null {
+  if (typeof window === 'undefined') return null;
+  const v = localStorage.getItem(PLAYER_NAME_STORAGE_KEY);
+  return v && v.trim().length > 0 ? v : null;
+}
+
+function applyPlayerName(state: GameState, name: string | null) {
+  if (name) {
+    state.player.champion = { ...state.player.champion, name };
+  }
+}
 
 type Selection =
   | { kind: 'character'; instId: string; lane: LaneIndex }
@@ -45,11 +62,37 @@ export function Game() {
   const [state, setState] = useState<GameState | null>(null);
   const [selection, setSelection] = useState<Selection>(null);
   const [showLore, setShowLore] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [playerName, setPlayerName] = useState<string | null>(readStoredName);
 
   const start = useCallback(() => {
-    setState(createInitialState('sylvie'));
+    const initial = createInitialState('sylvie');
+    applyPlayerName(initial, readStoredName());
+    setState(initial);
     setSelection(null);
+    if (typeof window !== 'undefined' && !localStorage.getItem(TUTO_STORAGE_KEY)) {
+      setShowTutorial(true);
+    }
   }, []);
+
+  const closeTutorial = useCallback((name?: string) => {
+    setShowTutorial(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(TUTO_STORAGE_KEY, '1');
+      if (name) {
+        localStorage.setItem(PLAYER_NAME_STORAGE_KEY, name);
+        setPlayerName(name);
+        setState((prev) => {
+          if (!prev) return prev;
+          const next = structuredClone(prev) as GameState;
+          applyPlayerName(next, name);
+          return next;
+        });
+      }
+    }
+  }, []);
+
+  const openTutorial = useCallback(() => setShowTutorial(true), []);
 
   const apply = useCallback((mutator: (s: GameState) => void) => {
     setState((prev) => {
@@ -74,12 +117,46 @@ export function Game() {
     return () => clearTimeout(t);
   }, [state, apply]);
 
-  if (!state) return <IntroScreen onStart={start} />;
-
-  const handleEndTurn = () => {
+  const handleEndTurn = useCallback(() => {
+    if (!state || state.phase !== 'player' || state.winner) return;
     setSelection(null);
     apply((s) => endPlayerTurn(s));
-  };
+  }, [state, apply]);
+
+  const restart = useCallback(() => {
+    const fresh = createInitialState('sylvie');
+    applyPlayerName(fresh, playerName);
+    setState(fresh);
+    setSelection(null);
+  }, [playerName]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (showTutorial) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      const key = e.key.toLowerCase();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleEndTurn();
+      } else if (e.key === 'Escape') {
+        setSelection(null);
+      } else if (key === 'h') {
+        e.preventDefault();
+        setShowTutorial(true);
+      } else if (key === 'n') {
+        e.preventDefault();
+        restart();
+      } else if (key === 'l') {
+        e.preventDefault();
+        setShowLore((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showTutorial, handleEndTurn, restart]);
+
+  if (!state) return <IntroScreen onStart={start} />;
 
   const handleHandClick = (card: CardInstance) => {
     if (state.phase !== 'player') return;
@@ -149,8 +226,6 @@ export function Game() {
     }
   };
 
-  const restart = () => { setState(createInitialState('sylvie')); setSelection(null); };
-
   const renderSlot = (side: Side, lane: LaneIndex, slot: SlotIndex, gridRow: number, gridColumn: number) => {
     const u = state[side].lanes[lane][slot];
 
@@ -160,6 +235,9 @@ export function Game() {
       selection.lane === lane &&
       !u;
     const killTargetable = side === 'ai' && selection?.kind === 'sort_kill' && !!u;
+    const laneSlotTargetable =
+      (side === 'ai' && selection?.kind === 'sort_damage_lane') ||
+      (side === 'player' && selection?.kind === 'sort_buff_lane');
     const popSide = gridColumn === 3 ? 'left' : 'right';
 
     return (
@@ -169,12 +247,15 @@ export function Game() {
         data-row={ROW_TAG_BY_SLOT[slot]}
         data-row-label={ROW_LABEL_BY_SLOT[slot]}
         data-empty={u ? '0' : '1'}
-        data-droptarget={charSlotTargetable || killTargetable ? '1' : '0'}
+        data-droptarget={charSlotTargetable || killTargetable || laneSlotTargetable ? '1' : '0'}
         style={{ gridRow, gridColumn }}
         onClick={(e) => {
           if (charSlotTargetable || killTargetable) {
             e.stopPropagation();
             handleSlotClick(side, lane, slot);
+          } else if (laneSlotTargetable) {
+            e.stopPropagation();
+            handleLaneClick(side, lane);
           }
         }}
       >
@@ -328,16 +409,18 @@ export function Game() {
             )}
 
             <LogPanel state={state} />
-
-            <button
-              className="ach-side__btn-ghost-mini"
-              onClick={() => setShowLore((v) => !v)}
-            >
-              {showLore ? 'Masquer le lore' : 'Afficher le lore'}
-            </button>
           </div>
         </div>
       </div>
+
+      <OptionsMenu
+        onShowTutorial={openTutorial}
+        onToggleLore={() => setShowLore((v) => !v)}
+        onRestart={restart}
+        showLore={showLore}
+      />
+
+      {showTutorial && <Tutorial onClose={closeTutorial} />}
 
       {state.winner && <EndOverlay winner={state.winner} onRestart={restart} />}
     </div>
