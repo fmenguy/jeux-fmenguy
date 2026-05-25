@@ -22,6 +22,7 @@ import {
   pierceValue,
   effectsByTrigger,
 } from './effects';
+import { buildDeckFromCollection } from '../data/collection';
 import {
   computeActiveSynergies,
   refreshSynergies,
@@ -52,17 +53,28 @@ export function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+const AI_STARTER_DECK: string[] = [
+  'syl_eclaireur', 'syl_eclaireur', 'syl_archer', 'syl_archer_exp',
+  'syl_chasseresse', 'syl_rodeur', 'syl_druide',
+  'arc_novice', 'arc_apprenti', 'arc_sentinelle', 'arc_erudit',
+  'arc_meditant', 'arc_runiste_nain',
+  'rem_milicien', 'rem_garde_nain', 'rem_sentinelle_elfe', 'rem_marteau',
+  'rem_maraudeur',
+  'sort_souffle', 'sort_volee', 'sort_runes',
+];
+
+export function buildAiStarterDeck(): string[] {
+  return shuffle(AI_STARTER_DECK);
+}
+
+export function buildPlayerDeck(): string[] {
+  const fromColl = buildDeckFromCollection(28);
+  if (fromColl.length >= 12) return shuffle(fromColl);
+  return shuffle(AI_STARTER_DECK);
+}
+
 export function buildStarterDeck(): string[] {
-  const ids = [
-    'syl_eclaireur', 'syl_eclaireur', 'syl_archer', 'syl_archer_exp',
-    'syl_chasseresse', 'syl_rodeur', 'syl_druide', 'syl_lilia',
-    'arc_novice', 'arc_apprenti', 'arc_sentinelle', 'arc_erudit',
-    'arc_meditant', 'arc_runiste_nain', 'arc_doyen', 'arc_aldarian',
-    'rem_milicien', 'rem_garde_nain', 'rem_sentinelle_elfe', 'rem_marteau',
-    'rem_guerrier_fort', 'rem_maraudeur', 'rem_amelie', 'rem_throrin',
-    'sort_souffle', 'sort_volee', 'sort_runes',
-  ];
-  return shuffle(ids);
+  return buildAiStarterDeck();
 }
 
 function emptyLanes(): LaneSlots {
@@ -73,7 +85,7 @@ function emptyLanes(): LaneSlots {
   ];
 }
 
-function makePlayerState(championId: string): PlayerState {
+function makePlayerState(championId: string, isPlayer: boolean): PlayerState {
   const champion = CHAMPIONS[championId];
   return {
     champion,
@@ -81,7 +93,7 @@ function makePlayerState(championId: string): PlayerState {
     hpMax: STARTING_HP,
     paMax: 1,
     pa: 1,
-    deck: buildStarterDeck(),
+    deck: isPlayer ? buildPlayerDeck() : buildAiStarterDeck(),
     hand: [],
     discard: [],
     lanes: emptyLanes(),
@@ -91,8 +103,8 @@ function makePlayerState(championId: string): PlayerState {
 }
 
 export function createInitialState(opponentId: string = 'sylvie'): GameState {
-  const player = makePlayerState('joueur');
-  const ai = makePlayerState(opponentId);
+  const player = makePlayerState('joueur', true);
+  const ai = makePlayerState(opponentId, false);
   const state: GameState = {
     turn: 1,
     phase: 'player',

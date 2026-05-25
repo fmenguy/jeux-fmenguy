@@ -21,6 +21,10 @@ import { SynergyBar } from './components/SynergyBar';
 import { IntroScreen } from './components/IntroScreen';
 import { Tutorial } from './components/Tutorial';
 import { OptionsMenu } from './components/OptionsMenu';
+import { LoreScreen } from './components/LoreScreen';
+import { DeckBuilder } from './components/DeckBuilder';
+import { RewardScreen } from './components/RewardScreen';
+import { recordResult } from './data/collection';
 
 const TUTO_STORAGE_KEY = 'achrogemme_tutorial_seen_v1';
 const PLAYER_NAME_STORAGE_KEY = 'achrogemme_player_name_v1';
@@ -63,6 +67,10 @@ export function Game() {
   const [selection, setSelection] = useState<Selection>(null);
   const [showLore, setShowLore] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showCodex, setShowCodex] = useState(false);
+  const [showDeck, setShowDeck] = useState(false);
+  const [reward, setReward] = useState<{ victory: boolean } | null>(null);
+  const [resultRecorded, setResultRecorded] = useState(false);
   const [playerName, setPlayerName] = useState<string | null>(readStoredName);
 
   const start = useCallback(() => {
@@ -128,7 +136,17 @@ export function Game() {
     applyPlayerName(fresh, playerName);
     setState(fresh);
     setSelection(null);
+    setReward(null);
+    setResultRecorded(false);
   }, [playerName]);
+
+  useEffect(() => {
+    if (!state || !state.winner || resultRecorded) return;
+    const isVictory = state.winner === 'player';
+    recordResult(isVictory);
+    setResultRecorded(true);
+    setReward({ victory: isVictory });
+  }, [state, resultRecorded]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -150,6 +168,12 @@ export function Game() {
       } else if (key === 'l') {
         e.preventDefault();
         setShowLore((v) => !v);
+      } else if (key === 'c') {
+        e.preventDefault();
+        setShowCodex(true);
+      } else if (key === 'd') {
+        e.preventDefault();
+        setShowDeck(true);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -415,14 +439,24 @@ export function Game() {
 
       <OptionsMenu
         onShowTutorial={openTutorial}
+        onShowCodex={() => setShowCodex(true)}
+        onShowDeck={() => setShowDeck(true)}
         onToggleLore={() => setShowLore((v) => !v)}
         onRestart={restart}
         showLore={showLore}
       />
 
       {showTutorial && <Tutorial onClose={closeTutorial} />}
+      {showCodex && <LoreScreen onClose={() => setShowCodex(false)} />}
+      {showDeck && <DeckBuilder onClose={() => setShowDeck(false)} />}
+      {reward && (
+        <RewardScreen
+          victory={reward.victory}
+          onClose={() => setReward(null)}
+        />
+      )}
 
-      {state.winner && <EndOverlay winner={state.winner} onRestart={restart} />}
+      {state.winner && !reward && <EndOverlay winner={state.winner} onRestart={restart} />}
     </div>
   );
 }

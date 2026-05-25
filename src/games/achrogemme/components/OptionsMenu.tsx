@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 
 interface Props {
   onShowTutorial: () => void;
+  onShowCodex: () => void;
+  onShowDeck: () => void;
   onToggleLore: () => void;
   onRestart: () => void;
   showLore: boolean;
 }
 
-export function OptionsMenu({ onShowTutorial, onToggleLore, onRestart, showLore }: Props) {
+export function OptionsMenu({ onShowTutorial, onShowCodex, onShowDeck, onToggleLore, onRestart, showLore }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -37,9 +39,19 @@ export function OptionsMenu({ onShowTutorial, onToggleLore, onRestart, showLore 
             <span className="ach-options__label">Relire le tutoriel</span>
             <kbd className="ach-options__kbd">H</kbd>
           </button>
+          <button className="ach-options__item" onClick={() => { onShowCodex(); setOpen(false); }}>
+            <span className="ach-options__icon">📜</span>
+            <span className="ach-options__label">Codex / Personnages</span>
+            <kbd className="ach-options__kbd">C</kbd>
+          </button>
+          <button className="ach-options__item" onClick={() => { onShowDeck(); setOpen(false); }}>
+            <span className="ach-options__icon">🃏</span>
+            <span className="ach-options__label">Collection & Deck</span>
+            <kbd className="ach-options__kbd">D</kbd>
+          </button>
           <button className="ach-options__item" onClick={() => { onToggleLore(); setOpen(false); }}>
             <span className="ach-options__icon">✦</span>
-            <span className="ach-options__label">{showLore ? 'Masquer le lore' : 'Afficher le lore'}</span>
+            <span className="ach-options__label">{showLore ? 'Détails carte off' : 'Détails carte on'}</span>
             <kbd className="ach-options__kbd">L</kbd>
           </button>
           <button className="ach-options__item" onClick={() => { onRestart(); setOpen(false); }}>
