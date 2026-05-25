@@ -1,8 +1,19 @@
+/**
+ * Codex Achrogemme : biographies des personnages du roman.
+ *
+ * ⚠️ RÈGLE ABSOLUE : TOUT ce qui est ici doit provenir DIRECTEMENT du canon de
+ * l'auteur (page personnages du Tome 1, chapitres du Tome 2). Aucune extrapolation,
+ * aucune déduction implicite, aucune relation familiale non écrite explicitement.
+ *
+ * Source canon Tome 1 : C:/Users/François/Documents/BLOG/Histoires/histoire-elfes/src/pages/personnages.astro
+ * Source canon Tome 2 : C:/Users/François/Documents/BLOG/Histoires/histoire-elfes/src/content/tome2/*.md
+ */
+
 export interface LoreEntry {
   cardId: string;
   name: string;
   role: string;
-  faction: 'Elfe' | 'Humain' | 'Nain';
+  faction: string;
   saga: 'Tome 1' | 'Tome 2' | 'Avant le récit';
   glyph: string;
   bio: string[];
@@ -13,100 +24,107 @@ export const LORE: LoreEntry[] = [
   {
     cardId: 'syl_lilia',
     name: 'Lilia',
-    role: 'Exploratrice elfe',
+    role: 'Protagoniste, petite sœur, elfe exploratrice',
     faction: 'Elfe',
     saga: 'Tome 1',
-    glyph: '👸',
+    glyph: '🏹',
     bio: [
-      "Fille du roi Aldarian, princesse d'Achronia, mais elle s'ennuie ferme à la cour. Lilia préfère les forêts, l'arc, et les chevauchées de nuit.",
-      "Dans le Tome 2, elle s'embarque clandestinement à bord de l'Éclatmaris pour suivre Sylvie. Elle apprend les manières de Terre à coup de bourdes joyeuses.",
-      "Tante de Sylvie (sœur de sa mère Amélie), elle joue le rôle de grande sœur turbulente. Au Stratagème, elle pioche vite et tire vrai.",
-    ],
-    link: { label: 'Tome 1', url: 'https://elfes.fmenguy.fr/' },
-  },
-  {
-    cardId: 'arc_aldarian',
-    name: 'Aldarian',
-    role: 'Roi elfe d\'Achronia',
-    faction: 'Elfe',
-    saga: 'Tome 1',
-    glyph: '🧙',
-    bio: [
-      "Roi sage et patient du royaume d'Achronia. Lit dans les runes et les silences.",
-      "Père de Lilia, beau-père d'Amélie, grand-père de Sylvie. Veille sur les Trois Marches depuis sa tour.",
-      "Au Stratagème, ses sortilèges de soin lui permettent de durer là où les guerriers tombent.",
-    ],
-    link: { label: 'Tome 1', url: 'https://elfes.fmenguy.fr/' },
-  },
-  {
-    cardId: 'rem_throrin',
-    name: 'Throrin',
-    role: 'Roi des Nains',
-    faction: 'Nain',
-    saga: 'Tome 1',
-    glyph: '⚒',
-    bio: [
-      "Roi nain joyeux, forgeron émérite, qui rit fort et tape encore plus fort.",
-      "Allié de longue date d'Aldarian, il scelle l'alliance entre les Trois Marches contre les hordes orcs du Nord.",
-      "Au Stratagème, il combine Charge et Garde : il frappe dès qu'il entre et il encaisse pour les siens.",
+      "La véritable héroïne du Tome 1. Petite sœur curieuse et intrépide, Lilia rêve de découvrir le monde au-delà de la forêt elfique.",
+      "Sa quête des fragments d'héritage des elfes la mènera des grottes d'Achronia jusqu'aux lunes de Jupiter.",
+      "Cheveux verts, yeux bleus, armure légère en cuir et soie blanche ornée de motifs elfiques.",
+      "Apparition : chapitre 1, La grotte et le cristal. Âge : 8 ans elfes (11 humains) au début, 212 ans elfes (20 humains) à la fin du Tome 1.",
     ],
     link: { label: 'Tome 1', url: 'https://elfes.fmenguy.fr/' },
   },
   {
     cardId: 'rem_amelie',
     name: 'Amélie',
-    role: 'Guerrière en armure dorée',
-    faction: 'Humain',
+    role: 'Protagoniste, grande sœur, elfe d\'Achronia',
+    faction: 'Elfe',
     saga: 'Tome 1',
     glyph: '🛡️',
     bio: [
-      "Mère de Sylvie, épouse de Skarn. Humaine, mais devenue reine du cœur d'Aldarian après son union avec un humain de Terre.",
-      "Protectrice acharnée. Son armure dorée s'illumine quand sa famille est en danger.",
-      "Au Stratagème, elle frappe deux fois plus fort quand le Champion est en danger : +2 ATQ sous 15 PV.",
+      "Grande sœur de Lilia, Amélie est une elfe protectrice et courageuse.",
+      "Portant une imposante armure dorée, elle accompagne sa sœur depuis la première exploration des grottes de cristal.",
+      "Elle deviendra la mère de Sylvie avec Skarn, son mari humain. Grande, athlétique et intelligente, c'est le pilier de la famille.",
+      "Apparition : chapitre 1. Âge : 80 ans elfes (15 humains) au début, 284 ans elfes (21 humains) à la fin du Tome 1.",
     ],
     link: { label: 'Tome 1', url: 'https://elfes.fmenguy.fr/' },
   },
   {
     cardId: 'arc_sylvie',
     name: 'Sylvie',
-    role: 'Première haute-elfe métisse',
-    faction: 'Elfe',
+    role: 'Protagoniste, haute-elfe, fille d\'Amélie et Skarn',
+    faction: 'Haute-elfe',
     saga: 'Tome 2',
     glyph: '🧝‍♀️',
     bio: [
-      "Née de Skarn (humain de Terre) et Amélie (humaine adoptée par les Elfes), Sylvie est la première métisse haute-elfe de l'histoire d'Achronia.",
-      "Sa physiologie unique lui confère une régénération cellulaire impossible chez les autres elfes.",
-      "Dans le Tome 2, elle pilote l'Éclatmaris vers Proxima Centauri pour une mission qui durera neuf années.",
-      "Au Stratagème, elle se régénère seule et soigne son Champion à chaque tour. Elle joue ce jeu chaque soir à bord du vaisseau, en mémoire de son père.",
+      "Fille de l'humain Skarn et de l'elfe Amélie, Sylvie est la première haute-elfe métisse de deux mondes.",
+      "Née au chapitre 12 du Tome 1, elle grandit entre Achronia et Terrania.",
+      "Dotée d'un pouvoir de régénération rapide qui la rend quasi immortelle, son éveil magique au chapitre 13 marque un tournant dans l'histoire.",
+      "C'est elle qui portera le flambeau de l'aventure dans le Tome 2.",
     ],
-    link: { label: 'Tome 2', url: 'https://elfes.fmenguy.fr/tome2' },
+    link: { label: 'Tome 2', url: 'https://elfes.fmenguy.fr/tome2/' },
   },
   {
     cardId: 'rem_skarn',
     name: 'Skarn',
-    role: 'Géologue humain, père de Sylvie',
+    role: 'Allié, humain, mari d\'Amélie',
     faction: 'Humain',
-    saga: 'Avant le récit',
+    saga: 'Tome 1',
     glyph: '⚔',
     bio: [
-      "Géologue terrien venu sur Achronia par un portail dimensionnel. Tomba amoureux d'Amélie.",
-      "Pratiquait le Stratagème comme un maître. C'est lui qui apprit le jeu à Sylvie. Décédé peu avant le Tome 1.",
-      "Au Stratagème, sa carte porte sa devise : « Charge, et ne regarde pas en arrière. »",
+      "Skarn est un humain courageux qui tombera amoureux de l'elfe Amélie malgré la différence de longévité entre leurs espèces.",
+      "Père de Sylvie, il incarne le lien entre les mondes humain et elfique.",
+      "Il meurt de vieillesse, destin tragique mais naturel d'un humain dans un monde d'elfes (chapitre 17).",
+      "Skarn est aussi le pseudo de l'auteur dans le jeu Dofus, auquel il a joué pendant presque 20 ans (2004-2020). Un hommage intégré à l'histoire.",
+      "Apparition : chapitre 6, Conflits aux portes de la faille. Âge : 30 ans au début, 85 ans à la fin (décédé).",
     ],
-    link: { label: 'Tome 2', url: 'https://elfes.fmenguy.fr/tome2' },
+    link: { label: 'Tome 1', url: 'https://elfes.fmenguy.fr/' },
+  },
+  {
+    cardId: 'arc_aldarian',
+    name: 'Aldarian',
+    role: 'Allié, roi elfe d\'Achronia',
+    faction: 'Elfe',
+    saga: 'Tome 1',
+    glyph: '🧙',
+    bio: [
+      "Roi des elfes d'Achronia, Aldarian est un souverain sage et mesuré.",
+      "Il guide son peuple à travers les bouleversements causés par les failles dimensionnelles et la découverte des mondes parallèles.",
+      "Apparition : chapitre 9, Entre science et magie. Âge : 270 ans elfes (21 humains) au début, 351 ans elfes (23 humains) à la fin du Tome 1.",
+    ],
+    link: { label: 'Tome 1', url: 'https://elfes.fmenguy.fr/' },
+  },
+  {
+    cardId: 'rem_throrin',
+    name: 'Throrin',
+    role: 'Allié, roi des Nains d\'Achronia',
+    faction: 'Nain',
+    saga: 'Tome 1',
+    glyph: '⚒',
+    bio: [
+      "Roi des Nains d'Achronia, Throrin est un souverain chaleureux à la barbe luxuriante et aux yeux pétillants de malice.",
+      "Avant de monter sur le trône, il a longtemps parcouru les routes avec sa bande de guerriers, dont Dûrin, Bjorn et le magicien Eldor, qu'il garde à ses côtés.",
+      "Ami fidèle d'Amélie et de Lilia, il met les forges et les armées naines au service des alliances entre peuples, de la quête des fragments d'héritage jusqu'aux expéditions interdimensionnelles.",
+      "Apparition : chapitre 7, Le retour inattendu. Âge : 350 ans.",
+    ],
+    link: { label: 'Tome 1', url: 'https://elfes.fmenguy.fr/' },
   },
   {
     cardId: 'syl_galdor',
     name: 'Galdor',
-    role: 'Vieil ami elfe de Sylvie',
-    faction: 'Elfe',
+    role: 'Nain, technicien et bras droit de l\'équipage de l\'Éclatmaris',
+    faction: 'Nain',
     saga: 'Tome 2',
-    glyph: '🏹',
+    glyph: '⚒',
     bio: [
-      "Ranger elfe, complice fidèle de Sylvie depuis l'enfance.",
-      "Dans le Tome 2, il fait partie de l'équipage de l'Éclatmaris. Il assure les longues veilles et garde la salle d'équipage propre.",
-      "Au Stratagème, Galdor a une Perce 2 redoutable : il vise les points faibles.",
+      "Nain de courte taille à la crête noire au-dessus d'une barbe tressée, portant un gilet de cuir à rivets, un marteau court dans la main droite.",
+      "À sa ceinture, l'armature de communication longue portée qu'il a fabriquée lui-même (trois témoins rouges alignés).",
+      "Membre de l'équipage de l'Éclatmaris dans le Tome 2. Il ferme la marche dans les expéditions ; il compense ses jambes courtes en ne s'arrêtant jamais.",
+      "Il sent les choses qui se rapprochent avant que les yeux ne les voient.",
+      "⚠️ Note : sa carte dans Achrogemme est actuellement en classe Sylvestre, ce qui contredit le canon (Galdor est Nain et technicien). À corriger.",
     ],
-    link: { label: 'Tome 2', url: 'https://elfes.fmenguy.fr/tome2' },
+    link: { label: 'Tome 2 chapitre 4 · Sandara', url: 'https://elfes.fmenguy.fr/tome2/' },
   },
 ];

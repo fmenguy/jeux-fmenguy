@@ -32,11 +32,11 @@ export const SYNERGIES: SynergyDef[] = [
   },
   {
     id: 'royaute',
-    name: 'Couronnes d\'Achronia',
+    name: 'Alliance d\'Achronia',
     on: { kind: 'tag', value: 'royaute' },
-    description: "Les rois et reines réunis insufflent du courage.",
+    description: "Aldarian (roi elfe) et Throrin (roi nain) scellent l'alliance entre les peuples d'Achronia.",
     thresholds: [
-      { count: 3, text: '+5 PV max au Champion', apply: { kind: 'champion_pv_bonus', amount: 5 } },
+      { count: 2, text: '+5 PV max au Champion', apply: { kind: 'champion_pv_bonus', amount: 5 } },
     ],
   },
   {
