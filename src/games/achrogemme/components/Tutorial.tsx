@@ -84,7 +84,7 @@ const STEPS: Step[] = [
           <li><b>Peuple Elfe</b> (2) : +1 ATQ aux Elfes</li>
           <li><b>Clan Nain</b> (2) : +1 PV aux Nains</li>
           <li><b>Royaumes Humains</b> (3) : +1 Gemme max</li>
-          <li><b>Couronnes d'Achronia</b> (3 royaux) : +5 PV max au Champion</li>
+          <li><b>Alliance d'Achronia</b> (Aldarian + Throrin) : +5 PV max au Champion</li>
         </ul>
         <p>Compose ton board pour les déclencher.</p>
       </>
