@@ -98,8 +98,19 @@ export let maxWheatStorage = 0; // Stockage pour le blé
 export let maxFlourStorage = 0; // Stockage pour la farine
 export let bakeries = 0; // Nombre de boulangeries
 
-export let unlockedAges = ["Âge de Pierre"];
-export let currentAge = "Âge de Pierre";
+// Source unique des noms d'age. Ne JAMAIS retaper ces chaines ailleurs :
+// "Âge de l’Agriculture" porte une apostrophe courbe (U+2019), et une comparaison
+// avec l'apostrophe droite (U+0027) echoue silencieusement.
+export const AGE_STONE = "Âge de Pierre";
+export const AGE_METALS = "Âge des Métaux";
+export const AGE_FARMING = "Âge de l’Agriculture";
+export const AGE_CITIES = "Âge des Cités";
+
+// Population totale qui fait basculer les villages en cite.
+export const CITY_POPULATION_THRESHOLD = 500;
+
+export let unlockedAges = [AGE_STONE];
+export let currentAge = AGE_STONE;
 
 export const seasonNames = ["Printemps", "Été", "Automne", "Hiver"];
 export const seasonIcons = ["🌱", "☀️", "🍂", "❄️"];
@@ -554,7 +565,7 @@ export function craftStoneQuarry() {
 
 export function craftWarehouse() {
   if (!hasRoomForBuilding()) return { error: "Village plein ! Fonde un nouveau village pour construire." };
-  if (wood >= 50 && stone >= 20 && metals >= 5 && (discoveredMetals || currentAge === "Âge de l’Agriculture")) {
+  if (wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === AGE_FARMING)) {
     setWood(wood - 100);
     setStone(stone - 50);
     setMetals(metals - 10);
@@ -757,10 +768,10 @@ export function foundVillage() {
   setCurrentSeason(1);
 
   const totalPopulation = getTotalPopulation();
-  if (totalPopulation >= 500) {
+  if (totalPopulation >= CITY_POPULATION_THRESHOLD) {
     transformToCity();
   } else {
-    document.getElementById("narrative").textContent = `Village ${villages} fondé ! Population totale : ${totalPopulation}/1000.`;
+    document.getElementById("narrative").textContent = `Village ${villages} fondé ! Population totale : ${totalPopulation}/${CITY_POPULATION_THRESHOLD}.`;
   }
 }
 
@@ -1149,9 +1160,9 @@ export function transformToCity() {
 
   assignBuildingsToVillages();
 
-  updateAge("Âge des Cités");
+  updateAge(AGE_CITIES);
 
-  document.getElementById("narrative").textContent = "Votre population a atteint 1000 ! Vos villages se transforment en une ville. Bienvenue dans l’Âge des Cités !";
+  document.getElementById("narrative").textContent = `Votre population a atteint ${CITY_POPULATION_THRESHOLD} ! Vos villages se transforment en une ville. Bienvenue dans l’Âge des Cités !`;
 }
 
 export function initGame() {
