@@ -16,6 +16,7 @@ import {
   explorationActive, explorationTimer,
   villageFounded,
   villagesData, maxPopulationPerVillage, maxBuildingsPerVillage, getTotalPopulation,
+  AGE_STONE, AGE_METALS, AGE_FARMING,
 } from './forge-game.js';
 import { drawMap } from './forge-map.js';
 
@@ -168,13 +169,14 @@ export function updateDisplay() {
 
   const sawmillAfford = wood >= 30 && stone >= 15 && tinkers >= 1;
   const quarryAfford  = wood >= 30 && stone >= 15 && tinkers >= 1;
-  const warehouseAfford = wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === "Âge de l'Agriculture");
+  const warehouseAfford = wood >= 100 && stone >= 50 && metals >= 10 && (discoveredMetals || currentAge === AGE_FARMING);
   const wellAfford    = wood >= 10 && stone >= 5;
   const mineAfford    = wood >= 50 && stone >= 20 && tinkers >= 1 && miners >= (mines > 0 ? 25 : 0) && discoveredMetals;
   const workshopAfford = wood >= 20 && stone >= 10 && fibers >= 5 && discoveredFibers;
   const herbalistAfford = wood >= 15 && stone >= 5 && herbs >= 5 && discoveredHerbs;
   const wheatAfford   = wood >= 20 && stone >= 10 && herbs >= 5 && discoveredHerbs;
   const millAfford    = wood >= 50 && stone >= 20 && metals >= 5 && wheatFields > 0;
+  const bakeryAfford  = wood >= 50 && stone >= 20 && flour >= 5 && currentAge === AGE_FARMING;
 
   document.getElementById("craftSawmillBtn").disabled     = !sawmillAfford;
   document.getElementById("craftStoneQuarryBtn").disabled = !quarryAfford;
@@ -192,7 +194,9 @@ export function updateDisplay() {
   document.getElementById("craftHerbalistBtn").disabled = !herbalistAfford;
   document.getElementById("craftWheatFieldBtn").disabled = !wheatAfford;
   document.getElementById("craftMillBtn").disabled     = !millAfford;
+  document.getElementById("craftBakeryBtn").disabled   = !bakeryAfford;
 
+  _bReady('bakerySection',       bakeryAfford);
   _bReady('sawmillSection',      sawmillAfford);
   _bReady('stoneQuarrySection',  quarryAfford);
   _bReady('warehouseSection',    warehouseAfford);
@@ -220,28 +224,28 @@ export function updateDisplay() {
   const techBanner = document.getElementById("techBanner");
   const currentAgeDisplay = document.getElementById("currentAgeDisplay");
   techBanner.style.display = "block";
-  currentAgeDisplay.textContent = techUnlocked ? currentAge : "Âge de Pierre";
+  currentAgeDisplay.textContent = techUnlocked ? currentAge : AGE_STONE;
 
-  switch (techUnlocked ? currentAge : "Âge de Pierre") {
-    case "Âge de Pierre":
+  switch (techUnlocked ? currentAge : AGE_STONE) {
+    case AGE_STONE:
       techBanner.style.border = "1px solid #8c8c8c";
       break;
-    case "Âge des Métaux":
+    case AGE_METALS:
       techBanner.style.border = "1px solid #cd7f32";
       break;
-    case "Âge de l'Agriculture":
+    case AGE_FARMING:
       techBanner.style.border = "1px solid #4CAF50";
       break;
     default:
       techBanner.style.border = "1px solid #d4a017";
   }
 
-  if (currentAge !== "Âge de l'Agriculture" && wheatFields > 0) {
+  if (currentAge !== AGE_FARMING && wheatFields > 0) {
     document.getElementById("narrative").textContent =
-      "Construis des moulins et recrute des fermiers pour atteindre l'Âge de l'Agriculture !";
+      "Construis des moulins et recrute des fermiers pour atteindre l’Âge de l’Agriculture !";
   }
 
-  if (currentAge === "Âge de l'Agriculture" && flour < 5 && mills > 0) {
+  if (currentAge === AGE_FARMING && flour < 5 && mills > 0) {
     document.getElementById("narrative").textContent =
       "Produis plus de farine avec tes moulins pour construire une boulangerie !";
   }
@@ -249,15 +253,16 @@ export function updateDisplay() {
   document.getElementById("fibersSection").style.display = discoveredFibers ? "inline-block" : "none";
   document.getElementById("metalsSection").style.display = discoveredMetals ? "inline-block" : "none";
   document.getElementById("herbsSection").style.display = discoveredHerbs ? "inline-block" : "none";
-  document.getElementById("wheatSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
-  document.getElementById("flourSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
-  document.getElementById("breadSection").style.display = currentAge === "Âge de l'Agriculture" ? "inline-block" : "none";
+  document.getElementById("wheatSection").style.display = currentAge === AGE_FARMING ? "inline-block" : "none";
+  document.getElementById("flourSection").style.display = currentAge === AGE_FARMING ? "inline-block" : "none";
+  document.getElementById("breadSection").style.display = currentAge === AGE_FARMING ? "inline-block" : "none";
   document.getElementById("chiefSection").style.display = axes >= 25 && villagers >= 25 ? "grid" : "none";
   document.getElementById("tinkerSection").style.display = villageFounded ? "grid" : "none";
   document.getElementById("pickerSection").style.display = villagers >= 10 ? "grid" : "none";
   document.getElementById("hunterSection").style.display = villagers >= 20 ? "grid" : "none";
   document.getElementById("researcherSection").style.display = researchers > 0 ? "grid" : "none";
   document.getElementById("explorerSection").style.display = villageFounded && sawmills >= 1 && stoneQuarries >= 1 ? "grid" : "none";
+  document.getElementById("minerSection").style.display = mines > 0 ? "grid" : "none";
   document.getElementById("farmerSection").style.display = wheatFields > 0 ? "grid" : "none";
   document.getElementById("villageSection").style.display = chief >= 1 ? "grid" : "none";
   document.getElementById("pickaxeSection").style.display = sawmills >= 1 ? "grid" : "none";
@@ -271,9 +276,10 @@ export function updateDisplay() {
   document.getElementById("herbalistSection").style.display = discoveredHerbs ? "grid" : "none";
   document.getElementById("wheatFieldSection").style.display = discoveredHerbs ? "grid" : "none";
   document.getElementById("millSection").style.display = wheatFields > 0 ? "grid" : "none";
+  document.getElementById("bakerySection").style.display = mills > 0 ? "grid" : "none";
   document.getElementById("sawmillSection").style.display = tinkers >= 1 ? "grid" : "none";
   document.getElementById("stoneQuarrySection").style.display = tinkers >= 1 ? "grid" : "none";
-  document.getElementById("warehouseSection").style.display = discoveredMetals || currentAge === "Âge de l'Agriculture" ? "grid" : "none";
+  document.getElementById("warehouseSection").style.display = discoveredMetals || currentAge === AGE_FARMING ? "grid" : "none";
 
   const shardList = document.getElementById("shardEffectsList");
   if (shardList) {
