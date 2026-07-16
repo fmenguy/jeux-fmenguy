@@ -1,0 +1,381 @@
+---
+interface Change {
+  type: 'new' | 'improved' | 'fixed';
+  text: string;
+}
+
+interface Version {
+  version: string;
+  date: string;
+  title: string;
+  model: string;
+  tokens: string;
+  changes: Change[];
+}
+
+const changelog: Version[] = [
+  {
+    version: '1.0.0',
+    date: '2026-07-17',
+    title: 'Première version complète',
+    model: 'Claude Fable 5 (claude-fable-5) via Claude Code, + 1 sous-agent de synthèse du canon du roman',
+    tokens: '≈ 4 M de tokens cumulés (lecture + écriture, estimation de la session complète du 17 juillet)',
+    changes: [
+      { type: 'new', text: 'Mondes du duel tirés au sort : Achronia (soins +1, elfes +1 PV), Terrania (sortilèges +1 Gemme, humains +1 ATQ), Sandara (soins -1, nains +1 PV), avec ambiance visuelle du plateau par monde. Fidèle au canon : la magie elfique se nourrit du vivant.' },
+      { type: 'new', text: 'Trois adversaires jouables : Sylvie (facile, régénère blessée), Lilia (médium, ses tireurs gagnent Perce +1 et +1 ATQ), Skarn (difficile, 6 cartes en main, +1 Gemme max, placement défensif). Déblocage à 2 puis 5 victoires.' },
+      { type: 'new', text: '17 cartes canon ajoutées : Naelia, Kahor, Trago, Prêtresse de l\'eau, Erwan et Solène Castets, Eldor, Bjorn, Grimnir, Wulfric, Hargrek, Kazrak, KrotorK, Créature des grottes, et les sortilèges Résonance vélanthie, Nœud de Möbius inversé, L\'arc de Lilia.' },
+      { type: 'new', text: 'Glisser-déposer des cartes à la souris et au tactile (fantôme sous le doigt, cibles illuminées), en plus du clic.' },
+      { type: 'new', text: 'Édition manuelle du deck (12 à 28 cartes) dans une liste compacte : coût, titre, stats, effet, faction.' },
+      { type: 'improved', text: 'Cartes redessinées en planches de bois gravé (veinage, biseau sculpté) et gemmes en pierres taillées multicolores (émeraude, saphir, ambre, améthyste, rubis, turquoise).' },
+      { type: 'improved', text: 'Layout grand écran : chaque Marche devient une rangée avant / milieu / arrière, slots élargis, toutes les typographies agrandies. Tout tient à l\'écran sans défilement.' },
+      { type: 'improved', text: 'Skarn devient le héros le plus puissant du jeu (7 Gemmes, 5 ATQ / 7 PV, Charge + Frappe double) : c\'est l\'avatar du créateur, possesseur du plateau Achrogemme dans le roman.' },
+      { type: 'improved', text: 'Équilibrage validé par simulation : environ 1 500 parties automatiques, taux de victoire des IA mesurés à chaque itération (facile 58 %, médium 58 % avec un jeu plus fin, difficile 86 % contre un joueur aléatoire).' },
+      { type: 'fixed', text: 'La Riposte, affichée sur les cartes, n\'avait aucun effet dans le moteur : une unité frappée qui survit rend désormais ses dégâts.' },
+      { type: 'fixed', text: 'Le bonus +1 PV des synergies était purement visuel : il compte maintenant dans les combats et la survie des unités.' },
+      { type: 'fixed', text: 'L\'IA ne jouait jamais les sortilèges Élite débloqués par ses Trinités ; elle les joue, avec priorité au coup létal.' },
+      { type: 'fixed', text: 'Erreurs de canon corrigées : Amélie était marquée humaine (c\'est une elfe), Galdor était classé elfe sylvestre (c\'est un nain ingénieur).' },
+      { type: 'fixed', text: 'PV du Champion replafonnés à la perte d\'un bonus, fichiers morts supprimés du code.' },
+    ],
+  },
+  {
+    version: '0.0.4',
+    date: '2026-05-25',
+    title: 'Tutoriel, lore et synergies',
+    model: 'Claude via Claude Code (modèle non tracé à l\'époque)',
+    tokens: 'non mesuré',
+    changes: [
+      { type: 'new', text: 'Tutoriel interactif en plusieurs étapes, avec choix du nom de joueur.' },
+      { type: 'new', text: 'Synergies de faction (Peuple Elfe, Clan Nain, Royaumes Humains, Alliance d\'Achronia) et Trinités débloquant les cartes Élites.' },
+      { type: 'improved', text: 'Textes de lore alignés sur le roman.' },
+    ],
+  },
+  {
+    version: '0.0.3',
+    date: '2026-05-25',
+    title: 'Codex, Collection et récompenses',
+    model: 'Claude via Claude Code (modèle non tracé à l\'époque)',
+    tokens: 'non mesuré',
+    changes: [
+      { type: 'new', text: 'Codex des personnages du roman (biographies sourcées).' },
+      { type: 'new', text: 'Collection de cartes : victoires et défaites débloquent de nouvelles cartes.' },
+      { type: 'new', text: 'Écran de récompense en fin de partie et popovers de détail des synergies.' },
+    ],
+  },
+  {
+    version: '0.0.2',
+    date: '2026-05-24',
+    title: 'Refonte complète du combat',
+    model: 'Claude via Claude Code (modèle non tracé à l\'époque)',
+    tokens: 'non mesuré',
+    changes: [
+      { type: 'improved', text: 'Résolution du combat par Marche en phases : Tir (Perce), Combat, Magie, Morts.' },
+      { type: 'improved', text: 'Ordre d\'encaissement Garde → Avant → Milieu → Arrière, débordement sur le Champion.' },
+    ],
+  },
+  {
+    version: '0.0.1',
+    date: '2026-05-24',
+    title: 'Naissance du jeu',
+    model: 'Claude via Claude Code (modèle non tracé à l\'époque)',
+    tokens: 'non mesuré',
+    changes: [
+      { type: 'new', text: 'Première version jouable du jeu de cartes (alors nommé Stratagème, renommé Achrogemme comme le jeu diégétique de Skarn dans le roman).' },
+      { type: 'new', text: 'Trois Marches (Sylvestre, Arcanique, Rempart), Gemmes comme monnaie d\'invocation, duel contre Sylvie.' },
+    ],
+  },
+];
+
+const TYPE_LABEL: Record<string, string> = {
+  new: 'Nouveau',
+  improved: 'Amélioré',
+  fixed: 'Corrigé',
+};
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/achrogemme/favicon.svg" />
+  <title>Changelog · Achrogemme</title>
+  <script is:inline>
+    (function() {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #181b2e;
+      --surface: #232745;
+      --surface2: #2c3155;
+      --border: rgba(255,255,255,0.10);
+      --gold: #d4a017;
+      --gold-dim: #a07810;
+      --text: #e8e0d0;
+      --text-strong: #f0e8d8;
+      --muted: #7a8090;
+      --new-bg: #1a2d1a;  --new-c: #4ade80;
+      --imp-bg: #1a1a2d;  --imp-c: #818cf8;
+      --fix-bg: #2d1f0a;  --fix-c: #f59e0b;
+      --transp-bg: rgba(201,162,39,0.06);
+      --transp-border: rgba(201,162,39,0.25);
+    }
+    [data-theme="light"] {
+      --bg: #f5f0eb;
+      --surface: #faf7f4;
+      --surface2: #ede7e0;
+      --border: rgba(120, 80, 40, 0.14);
+      --gold: #b8800f;
+      --gold-dim: #8a5f08;
+      --text: #2c1e10;
+      --text-strong: #1a1208;
+      --muted: #6b5744;
+      --new-bg: #e2f4e2;  --new-c: #1e7a3a;
+      --imp-bg: #e7e7f5;  --imp-c: #4c52cc;
+      --fix-bg: #fbf0d8;  --fix-c: #9a6608;
+      --transp-bg: rgba(184,128,15,0.07);
+      --transp-border: rgba(184,128,15,0.30);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 2.5rem 1.5rem 1.8rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .back {
+      position: absolute;
+      top: 1.4rem;
+      left: 1.6rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .back:hover { color: var(--gold); }
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+    .sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2.5rem 1.2rem 5rem;
+    }
+
+    .intro {
+      background: var(--surface);
+      border: 1px solid var(--transp-border);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      margin-bottom: 2.5rem;
+      color: var(--text);
+    }
+    .intro b { color: var(--gold); }
+
+    .version {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1.6rem 1.4rem;
+      margin-bottom: 1.8rem;
+    }
+    .version--major {
+      border-color: var(--gold-dim);
+      box-shadow: 0 0 0 1px rgba(212,160,23,0.15), 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .version-head {
+      display: flex;
+      align-items: baseline;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .version-num {
+      font-family: 'Cinzel', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .version--major .version-num { font-size: 1.6rem; }
+    .version-date {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .version-title {
+      flex-basis: 100%;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-strong);
+      margin-top: -0.3rem;
+    }
+
+    ul.changes {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      margin-bottom: 1.1rem;
+    }
+    .change {
+      display: flex;
+      gap: 0.7rem;
+      align-items: flex-start;
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+    .badge {
+      flex-shrink: 0;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.18rem 0.5rem;
+      border-radius: 4px;
+      margin-top: 0.15rem;
+      min-width: 74px;
+      text-align: center;
+    }
+    .badge--new { background: var(--new-bg); color: var(--new-c); }
+    .badge--improved { background: var(--imp-bg); color: var(--imp-c); }
+    .badge--fixed { background: var(--fix-bg); color: var(--fix-c); }
+
+    .transparency {
+      background: var(--transp-bg);
+      border: 1px solid var(--transp-border);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .transparency-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.66rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.2rem;
+    }
+    .transparency b { color: var(--text-strong); font-weight: 600; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--gold); text-decoration: none; }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.2rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 8px;
+      color: var(--gold);
+      border: 1px solid rgba(212,160,23,0.4);
+      background: rgba(212,160,23,0.06);
+      transition: box-shadow 0.25s, border-color 0.25s;
+    }
+    .btn:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 16px rgba(212,160,23,0.2);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="/">← Arcade FM</a>
+  <h1>Achrogemme · Changelog</h1>
+  <div class="sub">Le journal des versions, en toute transparence</div>
+</header>
+
+<main>
+  <div class="intro">
+    Achrogemme est développé avec l'aide d'IA (Claude, via Claude Code), sous la direction de François (Wanda),
+    auteur du roman dont le jeu est tiré. Par <b>transparence</b>, chaque version indique le <b>modèle utilisé</b> et le
+    <b>coût en tokens</b> de son développement. Les coûts sont des estimations d'ordre de grandeur (tokens cumulés en
+    lecture et écriture sur la session de développement) ; avant la <b>v1.0.0</b>, ni le modèle ni le coût n'étaient
+    tracés, ces versions sont donc numérotées <b>0.0.x</b> et marquées « non mesuré ».
+  </div>
+
+  <div class="actions">
+    <a class="btn" href="/achrogemme/">Jouer à Achrogemme</a>
+    <a class="btn" href="https://elfes.fmenguy.fr" target="_blank" rel="noopener">Le roman</a>
+  </div>
+
+  {changelog.map((v) => (
+    <section class={`version ${v.version.startsWith('1.') ? 'version--major' : ''}`}>
+      <div class="version-head">
+        <span class="version-num">v{v.version}</span>
+        <span class="version-date">{v.date}</span>
+        <span class="version-title">{v.title}</span>
+      </div>
+      <ul class="changes">
+        {v.changes.map((c) => (
+          <li class="change">
+            <span class={`badge badge--${c.type}`}>{TYPE_LABEL[c.type]}</span>
+            <span>{c.text}</span>
+          </li>
+        ))}
+      </ul>
+      <div class="transparency">
+        <span class="transparency-label">Transparence IA</span>
+        <span><b>Modèle :</b> {v.model}</span>
+        <span><b>Coût :</b> {v.tokens}</span>
+      </div>
+    </section>
+  ))}
+</main>
+
+<footer>
+  <p>Un jeu de <a href="https://fmenguy.fr">François Menguy</a> · <a href="/achrogemme/">Jouer</a></p>
+</footer>
+
+</body>
+</html>

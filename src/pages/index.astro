@@ -913,6 +913,19 @@
     }
     .elf-btn--lore:hover .elf-btn-arrow { transform: translateX(3px); }
 
+    .elf-btn--changelog {
+      color: var(--tag-full-c);
+      border: 1px solid rgba(74,222,128,0.35);
+      background: rgba(74,222,128,0.05);
+    }
+    .elf-btn--changelog .elf-btn-arrow { color: var(--tag-full-c); }
+    .elf-btn--changelog:hover {
+      transform: translateY(-1px);
+      border-color: var(--tag-full-c);
+      box-shadow: 0 0 16px rgba(74,222,128,0.18);
+    }
+    .elf-btn--changelog:hover .elf-btn-arrow { transform: translateX(3px); }
+
     [data-theme="light"] .elf-btn--play {
       color: var(--gold-dim);
       border-color: rgba(184,128,15,0.45);
@@ -1092,18 +1105,18 @@
 
   </div>
 
-  <div class="section-label">Jeux en cours de développement</div>
+  <div class="section-label">Le jeu du roman</div>
 
   <div class="dev-card dev-card--elf">
     <div class="dev-card-head">
       <span class="dev-card-title">Achrogemme</span>
-      <span class="dev-card-status">En développement</span>
+      <span class="card-tag card-tag--full">v1.0 · Jeu complet</span>
     </div>
     <p>
-      Duel d'Achronia, solo contre Sylvie, tiré du <a class="inline" href="https://elfes.fmenguy.fr">roman illustré de l'Aventure des Sœurs Elfes</a>. Trois Marches gardent les frontières du royaume : la Sylvestre des bois, l'Arcanique des plaines, le Rempart des forteresses. Sur chacune, jusqu'à trois unités par côté (front · milieu · arrière) où les volontés se cristallisent en Gemmes.
+      Duel d'Achronia tiré du <a class="inline" href="https://elfes.fmenguy.fr">roman illustré de l'Aventure des Sœurs Elfes</a>. Trois Marches gardent les frontières du royaume : la Sylvestre des bois, l'Arcanique des plaines, le Rempart des forteresses. Sur chacune, jusqu'à trois unités par côté (avant · milieu · arrière) où les volontés se cristallisent en Gemmes.
     </p>
     <p>
-      Les Sylvestres tirent en direct, les Arcaniques soignent, les Guerriers du Rempart encaissent. Active les synergies de faction à 2, 3 ou 4 unités d'un même peuple, et abats le Champion adverse avant qu'il ne fasse tomber le tien.
+      Affronte Sylvie, Lilia puis Skarn sur un monde tiré au sort (Achronia, Terrania ou Sandara, chacun avec ses règles), active les synergies de faction, compose ton deck carte par carte, et abats le Champion adverse avant qu'il ne fasse tomber le tien.
     </p>
 
     <div class="elf-actions">
@@ -1115,8 +1128,15 @@
         <span class="elf-btn-label">Découvrir le roman</span>
         <span class="elf-btn-arrow">→</span>
       </a>
+      <a class="elf-btn elf-btn--changelog" href="/achrogemme/changelog/">
+        <span class="elf-btn-icon" style="color:#4ade80">✓</span>
+        <span class="elf-btn-label">Changelog</span>
+        <span class="elf-btn-arrow">→</span>
+      </a>
     </div>
   </div>
+
+  <div class="section-label">Jeux en cours de développement</div>
 
   <div class="dev-card">
     <div class="dev-card-head">
