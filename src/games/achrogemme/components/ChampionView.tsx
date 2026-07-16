@@ -16,9 +16,9 @@ const AVATAR_BY_CHAMPION: Record<string, string> = {
 
 const SUBTITLE_BY_CHAMPION: Record<string, string> = {
   joueur: 'Affinité libre',
-  sylvie: 'Élue, Tome 2',
-  lilia: 'Exploratrice elfe',
-  skarn: 'Maître du jeu, Tome 2',
+  sylvie: 'Haute-elfe · régénère blessée',
+  lilia: 'Légende vivante · Perce +1',
+  skarn: 'Maître de l\'Achrogemme',
 };
 
 export function ChampionView({ player, side, isActive, accent = '' }: Props) {
