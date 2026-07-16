@@ -426,7 +426,23 @@ export function Game() {
     }
   };
 
-  const renderSlot = (side: Side, lane: LaneIndex, slot: SlotIndex, gridRow: number, gridColumn: number) => {
+  const renderLaneSlots = (side: Side, lane: LaneIndex, laneIdx: number, gridRow: number) => {
+    // Côté IA : DOM en arrière→avant pour que la colonne mobile garde
+    // l'avant près de la ligne centrale ; le mode large inverse en CSS.
+    const order: SlotIndex[] = side === 'ai' ? [2, 1, 0] : [0, 1, 2];
+    return (
+      <div
+        key={`lane-${side}-${lane}`}
+        className="ach-lane-slots"
+        data-side={side}
+        style={{ gridRow, gridColumn: laneIdx + 1 }}
+      >
+        {order.map((s) => renderSlot(side, lane, s, laneIdx))}
+      </div>
+    );
+  };
+
+  const renderSlot = (side: Side, lane: LaneIndex, slot: SlotIndex, laneIdx: number) => {
     const u = state[side].lanes[lane][slot];
 
     const charSlotTargetable =
@@ -438,7 +454,7 @@ export function Game() {
     const laneSlotTargetable =
       (side === 'ai' && selection?.kind === 'sort_damage_lane') ||
       (side === 'player' && selection?.kind === 'sort_buff_lane');
-    const popSide = gridColumn === 3 ? 'left' : 'right';
+    const popSide = laneIdx === 2 ? 'left' : 'right';
 
     return (
       <div
@@ -452,7 +468,6 @@ export function Game() {
         data-row-label={ROW_LABEL_BY_SLOT[slot]}
         data-empty={u ? '0' : '1'}
         data-droptarget={charSlotTargetable || killTargetable || laneSlotTargetable ? '1' : '0'}
-        style={{ gridRow, gridColumn }}
         onClick={(e) => {
           if (charSlotTargetable || killTargetable) {
             e.stopPropagation();
@@ -541,25 +556,21 @@ export function Game() {
             })}
             {CLASSES_ORDER.map((lane, idx) => colHead(lane, idx + 1))}
 
-            {CLASSES_ORDER.map((lane, idx) => renderSlot('ai', lane, 2, 4, idx + 1))}
-            {CLASSES_ORDER.map((lane, idx) => renderSlot('ai', lane, 1, 5, idx + 1))}
-            {CLASSES_ORDER.map((lane, idx) => renderSlot('ai', lane, 0, 6, idx + 1))}
+            {CLASSES_ORDER.map((lane, idx) => renderLaneSlots('ai', lane, idx, 4))}
 
-            <div className="ach-board__center-rule" style={{ gridRow: 7, gridColumn: '1 / -1' }} />
+            <div className="ach-board__center-rule" style={{ gridRow: 5, gridColumn: '1 / -1' }} />
 
-            {CLASSES_ORDER.map((lane, idx) => renderSlot('player', lane, 0, 8, idx + 1))}
-            {CLASSES_ORDER.map((lane, idx) => renderSlot('player', lane, 1, 9, idx + 1))}
-            {CLASSES_ORDER.map((lane, idx) => renderSlot('player', lane, 2, 10, idx + 1))}
+            {CLASSES_ORDER.map((lane, idx) => renderLaneSlots('player', lane, idx, 6))}
 
-            <div style={{ gridRow: 11, gridColumn: '1 / -1' }}>
+            <div style={{ gridRow: 7, gridColumn: '1 / -1' }}>
               <SynergyBar state={state} side="player" />
             </div>
 
-            <div className="ach-board__champion-row" data-champ-side="player" style={{ gridRow: 12 }}>
+            <div className="ach-board__champion-row" data-champ-side="player" style={{ gridRow: 8 }}>
               <ChampionView player={state.player} side="player" isActive={state.phase === 'player'} accent="rempart" />
             </div>
 
-            <div className="ach-board__hand" style={{ gridRow: 13 }}>
+            <div className="ach-board__hand" style={{ gridRow: 9 }}>
               {state.player.hand.map((c) => {
                 const def = CARD_INDEX[c.defId];
                 const cost = def ? (def.kind === 'sortilege' ? sortilegeCost(state, def) : def.cost) : 0;

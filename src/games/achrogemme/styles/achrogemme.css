@@ -862,12 +862,25 @@ html, body {
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  /* 1: champion ia | 2: syn ia | 3: heads | 4-6: slots ia | 7: rule
-     8-10: slots player | 11: syn player | 12: champion player | 13: main */
-  grid-template-rows:
-    auto auto auto repeat(3, var(--slot-h)) auto repeat(3, var(--slot-h)) auto auto auto;
+  /* 1: champion ia | 2: syn ia | 3: heads | 4: marches ia | 5: rule
+     6: marches joueur | 7: syn joueur | 8: champion joueur | 9: main */
+  grid-template-rows: repeat(9, auto);
   gap: 4px;
   min-width: 0;
+}
+
+/* Conteneur des 3 slots d'une Marche pour un camp.
+   Colonne (avant près de la ligne centrale) par défaut ;
+   rangée horizontale sur les écrans larges (voir section 13). */
+.ach-lane-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  z-index: 1;
+  padding: 2px 0;
 }
 
 /* Bandeau Champion + synergies + center rule + main = full width */
@@ -881,7 +894,7 @@ html, body {
 /* Background colored par colonne (Marche) : span vertical sur la zone slots */
 .ach-board__col-bg {
   grid-column: var(--col);
-  grid-row: 3 / 11; /* depuis les heads jusqu'\u00e0 la derni\u00e8re rang\u00e9e slot joueur */
+  grid-row: 3 / 7; /* depuis les heads jusqu'\u00e0 la rang\u00e9e des Marches joueur */
   border-radius: 12px;
   pointer-events: none;
   z-index: 0;
@@ -3424,4 +3437,95 @@ html, body {
 .ach-slot[data-droptarget="1"] {
   outline: 2px dashed oklch(0.80 0.13 82 / 0.55);
   outline-offset: -3px;
+}
+
+/* ============================================================
+   13. Grands écrans — Marches horizontales et typographies élargies
+   Le plateau était pensé vertical (6 rangées de slots empilées) :
+   sur PC large, chaque Marche devient une rangée avant/milieu/arrière
+   et tout le lettrage monte d'un cran.
+   ============================================================ */
+@container ach-board (min-width: 1350px) {
+  .ach-board { grid-template-columns: 1fr 290px; }
+
+  /* Marches en rangée : 2 bandes de slots au lieu de 6 */
+  .ach-lane-slots {
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 8px;
+  }
+  .ach-lane-slots[data-side="ai"] { flex-direction: row-reverse; }
+  .ach-slot {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 210px;
+    height: clamp(104px, 7.6cqw, 148px);
+  }
+  .ach-slot .ach-card[data-onboard="1"] {
+    --card-w: 100%;
+    --card-h: 100%;
+  }
+  .ach-slot[data-empty="1"]::after { font-size: 11.5px; }
+
+  /* Cartes posées : lisibles sans loupe */
+  .ach-card[data-onboard="1"] .ach-card__cost { width: 26px; height: 26px; font-size: 13px; }
+  .ach-card[data-onboard="1"] .ach-card__atk,
+  .ach-card[data-onboard="1"] .ach-card__hp { font-size: 13px; padding: 2px 6px 2px 4px; }
+  .ach-card[data-onboard="1"] .ach-card__atk svg,
+  .ach-card[data-onboard="1"] .ach-card__hp svg { width: 11px; height: 11px; }
+  .ach-card[data-onboard="1"] .ach-card__name { font-size: 12px; padding: 2px 5px; bottom: 4px; }
+  .ach-card[data-onboard="1"] .ach-card__art { inset: 32px 8px 22px; }
+  .ach-card[data-onboard="1"] .ach-card__art-glyph { font-size: 36px; }
+
+  /* Têtes de colonnes et bandeau Champion */
+  .ach-board__col-head { font-size: 13.5px; padding: 5px 0; }
+  .ach-champ { min-height: 70px; }
+  .ach-champ__name { font-size: 17px; }
+  .ach-champ__name small { font-size: 10.5px; }
+  .ach-champ__hpvalue { font-size: 12px; }
+  .ach-champ__hpbar { height: 18px; }
+  .ach-champ__mana-gem { width: 16px; height: 16px; }
+  .ach-champ__mana-count { font-size: 13px; }
+  .ach-champ__mana-label { font-size: 11px; }
+
+  /* Chips de synergie */
+  .ach-syn-chip { font-size: 12px; padding: 4px 11px 4px 7px; }
+  .ach-syn-chip__icon { width: 18px; height: 18px; font-size: 12px; }
+
+  /* Colonne latérale */
+  .ach-side__title { font-size: 16px; }
+  .ach-side__turn { font-size: 12.5px; }
+  .ach-side__turn b { font-size: 26px; }
+  .ach-side__btn { font-size: 12.5px; }
+  .ach-side__log { font-size: 11.5px; }
+  .ach-world-chip__info b { font-size: 14px; }
+  .ach-world-chip__info small { font-size: 11px; }
+
+  /* Main : cartes un peu plus grandes */
+  .ach-board__hand { min-height: 260px; gap: 8px; }
+  .ach-board__hand .ach-card { --card-w: 188px; --card-h: 258px; }
+  .ach-board__hand .ach-card .ach-card__cost { width: 34px; height: 34px; font-size: 16px; }
+  .ach-board__hand .ach-card .ach-card__art-glyph { font-size: 38px; }
+  .ach-board__hand .ach-card .ach-card__name { font-size: 12px; }
+  .ach-board__hand .ach-card .ach-card__text { font-size: 10.5px; }
+  .ach-board__hand .ach-card .ach-card__footer { font-size: 9px; }
+}
+
+@container ach-board (min-width: 1700px) {
+  .ach-board { grid-template-columns: 1fr 330px; }
+  .ach-slot { max-width: 230px; height: clamp(120px, 7.6cqw, 160px); }
+  .ach-board__col-head { font-size: 15px; }
+  .ach-card[data-onboard="1"] .ach-card__name { font-size: 13.5px; }
+  .ach-card[data-onboard="1"] .ach-card__atk,
+  .ach-card[data-onboard="1"] .ach-card__hp { font-size: 14px; }
+  .ach-card[data-onboard="1"] .ach-card__art-glyph { font-size: 44px; }
+  .ach-champ__name { font-size: 19px; }
+  .ach-syn-chip { font-size: 13px; }
+  .ach-side__log { font-size: 12.5px; }
+  .ach-board__hand { min-height: 285px; }
+  .ach-board__hand .ach-card { --card-w: 205px; --card-h: 283px; }
+  .ach-board__hand .ach-card .ach-card__name { font-size: 13px; }
+  .ach-board__hand .ach-card .ach-card__text { font-size: 11px; }
 }
