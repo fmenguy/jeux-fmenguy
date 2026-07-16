@@ -190,18 +190,37 @@ html, body {
   flex-shrink: 0;
 }
 
-/* --- Cadre extérieur, varie selon la rareté --- */
+/* --- Cadre extérieur : planche de bois gravée, varie selon la rareté --- */
 .ach-card__frame {
   position: relative;
   width: 100%;
   height: 100%;
   border-radius: var(--ach-radius-card);
   background:
+    /* veinage fin du bois */
+    repeating-linear-gradient(93deg,
+      oklch(1 0 0 / 0.028) 0 2px,
+      transparent 2px 6px,
+      oklch(0 0 0 / 0.05) 6px 7px,
+      transparent 7px 13px),
+    repeating-linear-gradient(87deg,
+      oklch(0 0 0 / 0.045) 0 1px,
+      transparent 1px 9px),
+    /* nœuds du bois */
+    radial-gradient(ellipse 26px 9px at 22% 32%, oklch(0 0 0 / 0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 20px 7px at 78% 68%, oklch(0 0 0 / 0.08) 0%, transparent 70%),
+    /* planche */
     linear-gradient(180deg,
-      oklch(0.38 0.04 65) 0%,
-      oklch(0.30 0.035 62) 50%,
-      oklch(0.24 0.03 58) 100%);
-  box-shadow: var(--ach-shadow-card);
+      oklch(0.40 0.050 63) 0%,
+      oklch(0.32 0.045 60) 50%,
+      oklch(0.25 0.038 57) 100%);
+  box-shadow:
+    var(--ach-shadow-card),
+    /* biseau sculpté : lumière en haut, ombre en bas */
+    inset 0 1.5px 0 oklch(1 0 0 / 0.10),
+    inset 1px 0 0 oklch(1 0 0 / 0.05),
+    inset 0 -2px 0 oklch(0 0 0 / 0.35),
+    inset -1px 0 0 oklch(0 0 0 / 0.2);
   display: flex;
   flex-direction: column;
   padding: 10px 10px 8px;
@@ -258,15 +277,26 @@ html, body {
 .ach-card[data-frame="vegetal"] .ach-card__corner--bl { bottom: 2px; left: 2px; transform: scaleY(-1); }
 .ach-card[data-frame="vegetal"] .ach-card__corner--br { bottom: 2px; right: 2px; transform: scale(-1, -1); }
 
-/* C : runique, lignes hexagonales + gravure */
+/* C : runique, bois gravé + lueur de rune */
 .ach-card[data-frame="runique"] .ach-card__frame {
   background:
+    /* veinage fin du bois */
+    repeating-linear-gradient(93deg,
+      oklch(1 0 0 / 0.028) 0 2px,
+      transparent 2px 6px,
+      oklch(0 0 0 / 0.05) 6px 7px,
+      transparent 7px 13px),
+    repeating-linear-gradient(87deg,
+      oklch(0 0 0 / 0.045) 0 1px,
+      transparent 1px 9px),
+    /* lueur runique au sommet */
+    radial-gradient(ellipse 80% 34% at 50% 0%,
+      oklch(0.50 0.09 200 / 0.22) 0%, transparent 70%),
+    /* planche */
     linear-gradient(180deg,
-      oklch(0.32 0.035 62) 0%,
-      oklch(0.24 0.03 58) 100%),
-    radial-gradient(ellipse 80% 40% at 50% 0%,
-      var(--ach-teal-soft) 0%, transparent 70%);
-  background-blend-mode: multiply, normal;
+      oklch(0.37 0.048 62) 0%,
+      oklch(0.29 0.042 59) 55%,
+      oklch(0.23 0.035 56) 100%);
 }
 .ach-card[data-frame="runique"] .ach-card__frame::before {
   content: "";
@@ -297,13 +327,21 @@ html, body {
   /* défaut */
 }
 
-/* Rare : liseré argenté + double trait sur le nom */
+/* Rare : bois plus clair, liseré argenté */
 .ach-card[data-rarity="rare"] .ach-card__frame {
   background:
+    repeating-linear-gradient(93deg,
+      oklch(1 0 0 / 0.03) 0 2px,
+      transparent 2px 6px,
+      oklch(0 0 0 / 0.05) 6px 7px,
+      transparent 7px 13px),
+    repeating-linear-gradient(87deg,
+      oklch(0 0 0 / 0.045) 0 1px,
+      transparent 1px 9px),
     linear-gradient(180deg,
-      oklch(0.40 0.038 65) 0%,
-      oklch(0.32 0.035 62) 50%,
-      oklch(0.26 0.03 58) 100%);
+      oklch(0.42 0.042 65) 0%,
+      oklch(0.34 0.038 62) 50%,
+      oklch(0.27 0.032 58) 100%);
 }
 .ach-card[data-rarity="rare"] .ach-card__frame::before {
   border-color: oklch(0.78 0.02 70 / 0.55) !important;
@@ -331,13 +369,25 @@ html, body {
 
 .ach-card[data-rarity="legendaire"] .ach-card__frame {
   background:
+    repeating-linear-gradient(93deg,
+      oklch(1 0 0 / 0.03) 0 2px,
+      transparent 2px 6px,
+      oklch(0 0 0 / 0.05) 6px 7px,
+      transparent 7px 13px),
+    repeating-linear-gradient(87deg,
+      oklch(0 0 0 / 0.045) 0 1px,
+      transparent 1px 9px),
+    radial-gradient(ellipse 70% 30% at 50% 0%,
+      oklch(0.80 0.13 82 / 0.14) 0%, transparent 70%),
     linear-gradient(180deg,
-      oklch(0.36 0.045 70) 0%,
-      oklch(0.28 0.04 65) 50%,
-      oklch(0.22 0.03 60) 100%);
+      oklch(0.38 0.050 68) 0%,
+      oklch(0.30 0.044 64) 50%,
+      oklch(0.23 0.035 60) 100%);
   box-shadow:
     var(--ach-shadow-card),
     inset 0 0 0 1.5px var(--ach-gold-soft),
+    inset 0 1.5px 0 oklch(1 0 0 / 0.10),
+    inset 0 -2px 0 oklch(0 0 0 / 0.35),
     0 0 24px oklch(0.80 0.13 82 / 0.30);
 }
 .ach-card[data-rarity="legendaire"] .ach-card__frame::before {
@@ -410,6 +460,9 @@ html, body {
 }
 
 .ach-card__cost {
+  /* Gemme-pierre taillée : teinte selon la classe (--gem-h) */
+  --gem-h: 200;
+  --gem-c: 0.11;
   width: 38px;
   height: 38px;
   display: grid;
@@ -417,12 +470,20 @@ html, body {
   font-family: var(--ach-font-title);
   font-weight: 700;
   font-size: 18px;
-  color: oklch(0.18 0.02 240);
+  color: oklch(0.16 0.02 var(--gem-h));
   background:
-    radial-gradient(circle at 35% 30%,
-      var(--ach-teal-bright) 0%,
-      var(--ach-teal) 60%,
-      var(--ach-teal-soft) 100%);
+    /* facettes */
+    conic-gradient(from 220deg at 50% 42%,
+      oklch(0.82 var(--gem-c) var(--gem-h)) 0deg,
+      oklch(0.60 var(--gem-c) var(--gem-h)) 70deg,
+      oklch(0.74 var(--gem-c) var(--gem-h)) 130deg,
+      oklch(0.52 var(--gem-c) var(--gem-h)) 200deg,
+      oklch(0.70 var(--gem-c) var(--gem-h)) 270deg,
+      oklch(0.82 var(--gem-c) var(--gem-h)) 360deg),
+    radial-gradient(circle at 35% 28%,
+      oklch(0.92 calc(var(--gem-c) * 0.6) var(--gem-h)) 0%,
+      transparent 45%);
+  background-blend-mode: normal, screen;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   box-shadow:
     0 0 0 1px oklch(0 0 0 / 0.4),
@@ -430,6 +491,10 @@ html, body {
     inset 0 1px 2px oklch(1 0 0 / 0.4);
   text-shadow: 0 1px 0 oklch(1 0 0 / 0.35);
 }
+.ach-card[data-class="sylvestre"] .ach-card__cost { --gem-h: 148; --gem-c: 0.13; }
+.ach-card[data-class="arcanique"] .ach-card__cost { --gem-h: 235; --gem-c: 0.10; }
+.ach-card[data-class="rempart"] .ach-card__cost { --gem-h: 60; --gem-c: 0.12; }
+.ach-card[data-type="sort"] .ach-card__cost { --gem-h: 300; --gem-c: 0.12; }
 
 .ach-card__stats {
   display: flex;
@@ -1230,21 +1295,38 @@ html, body {
   flex-shrink: 0;
 }
 .ach-champ__mana-gem {
+  /* Pierres précieuses : chaque gemme a sa couleur (cycle de 6) */
+  --gem-h: 200;
+  --gem-c: 0.12;
   width: 13px;
   height: 13px;
   background:
-    radial-gradient(circle at 35% 30%,
-      var(--ach-teal-bright) 0%,
-      var(--ach-teal) 60%,
-      var(--ach-teal-soft) 100%);
+    conic-gradient(from 210deg at 50% 40%,
+      oklch(0.80 var(--gem-c) var(--gem-h)) 0deg,
+      oklch(0.58 var(--gem-c) var(--gem-h)) 80deg,
+      oklch(0.72 var(--gem-c) var(--gem-h)) 150deg,
+      oklch(0.50 var(--gem-c) var(--gem-h)) 220deg,
+      oklch(0.68 var(--gem-c) var(--gem-h)) 290deg,
+      oklch(0.80 var(--gem-c) var(--gem-h)) 360deg),
+    radial-gradient(circle at 35% 25%,
+      oklch(0.94 0.04 var(--gem-h)) 0%,
+      transparent 50%);
+  background-blend-mode: normal, screen;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   box-shadow:
     0 0 0 0.5px oklch(0 0 0 / 0.55),
-    0 0 5px oklch(0.7 0.10 200 / 0.7);
+    0 0 5px oklch(0.68 var(--gem-c) var(--gem-h) / 0.7);
   transition: opacity var(--ach-dur) var(--ach-ease),
               filter var(--ach-dur) var(--ach-ease);
   animation: ach-mana-pulse 3s ease-in-out infinite;
 }
+/* Émeraude, saphir, ambre, améthyste, rubis, turquoise */
+.ach-champ__mana-gem:nth-child(6n+1) { --gem-h: 150; --gem-c: 0.13; }
+.ach-champ__mana-gem:nth-child(6n+2) { --gem-h: 250; --gem-c: 0.12; }
+.ach-champ__mana-gem:nth-child(6n+3) { --gem-h: 75;  --gem-c: 0.13; }
+.ach-champ__mana-gem:nth-child(6n+4) { --gem-h: 305; --gem-c: 0.12; }
+.ach-champ__mana-gem:nth-child(6n+5) { --gem-h: 20;  --gem-c: 0.14; }
+.ach-champ__mana-gem:nth-child(6n+6) { --gem-h: 195; --gem-c: 0.11; }
 .ach-champ__mana-gem[data-spent="1"] {
   background:
     radial-gradient(circle at 35% 30%,
@@ -3129,28 +3211,174 @@ html, body {
 }
 
 /* ============================================================
-   11. Deck manuel — badges et états
+   11. Deck manuel — liste compacte (titre + effets)
    ============================================================ */
-.ach-deck-cell { cursor: pointer; }
-.ach-deck-cell.is-locked { cursor: default; }
-.ach-deck-cell.is-in-deck {
-  border-radius: calc(var(--ach-radius-card) + 3px);
-  box-shadow: 0 0 0 2px var(--ach-teal-bright), 0 0 16px oklch(0.80 0.10 205 / 0.35);
+.ach-deck-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 22px 16px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
-.ach-deck-cell-indeck {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 3;
+.ach-deck-group {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 10px 0 4px;
+  padding: 5px 10px;
+  font-family: var(--ach-font-title);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ach-gold-bright);
+  background: oklch(0.22 0.03 60 / 0.96);
+  border-bottom: 0.5px solid var(--ach-gold-dim);
+  border-radius: 6px 6px 0 0;
+}
+.ach-deck-group:first-child { margin-top: 0; }
+
+.ach-deck-row {
+  display: grid;
+  grid-template-columns: 34px minmax(150px, 200px) 84px 1fr 64px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid oklch(1 0 0 / 0.07);
+  background: oklch(0 0 0 / 0.22);
+  color: var(--ach-parch);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--ach-font-body);
+  transition: background var(--ach-dur-fast) var(--ach-ease),
+              border-color var(--ach-dur-fast) var(--ach-ease);
+}
+.ach-deck-row:hover:not(:disabled) {
+  background: oklch(0 0 0 / 0.36);
+  border-color: var(--ach-gold-dim);
+}
+.ach-deck-row.is-locked {
+  opacity: 0.45;
+  cursor: default;
+  filter: grayscale(0.6);
+}
+.ach-deck-row.is-in-deck {
+  border-color: var(--ach-teal-bright);
+  background: oklch(0.50 0.09 200 / 0.14);
+}
+
+.ach-deck-row__cost {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-family: var(--ach-font-title);
+  font-weight: 700;
+  font-size: 13px;
+  color: oklch(0.16 0.02 240);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: radial-gradient(circle at 35% 30%,
+    var(--ach-teal-bright) 0%, var(--ach-teal) 60%, var(--ach-teal-soft) 100%);
+}
+.ach-deck-row__cost[data-class="sylvestre"] {
+  background: radial-gradient(circle at 35% 30%,
+    oklch(0.80 0.14 148) 0%, oklch(0.62 0.13 148) 60%, oklch(0.44 0.10 148) 100%);
+}
+.ach-deck-row__cost[data-class="arcanique"] {
+  background: radial-gradient(circle at 35% 30%,
+    oklch(0.84 0.09 230) 0%, oklch(0.64 0.11 235) 60%, oklch(0.46 0.10 240) 100%);
+}
+.ach-deck-row__cost[data-class="rempart"] {
+  background: radial-gradient(circle at 35% 30%,
+    oklch(0.82 0.13 65) 0%, oklch(0.64 0.13 60) 60%, oklch(0.46 0.11 55) 100%);
+}
+.ach-deck-row__cost[data-class="sort"] {
+  background: radial-gradient(circle at 35% 30%,
+    oklch(0.80 0.12 300) 0%, oklch(0.60 0.13 300) 60%, oklch(0.44 0.11 300) 100%);
+}
+
+.ach-deck-row__id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ach-deck-row__name {
+  font-family: var(--ach-font-title);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ach-deck-row__crown { margin-right: 4px; font-size: 11px; }
+.ach-deck-row[data-rarity="commune"] .ach-deck-row__name { color: var(--ach-parch); }
+.ach-deck-row[data-rarity="rare"] .ach-deck-row__name { color: oklch(0.84 0.04 220); }
+.ach-deck-row[data-rarity="epique"] .ach-deck-row__name { color: oklch(0.80 0.13 300); }
+.ach-deck-row[data-rarity="legendaire"] .ach-deck-row__name { color: var(--ach-gold-bright); }
+.ach-deck-row__meta {
+  font-size: 10px;
+  color: var(--ach-parch-deep);
+}
+.ach-deck-row__meta i { font-style: normal; opacity: 0.8; }
+
+.ach-deck-row__stats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--ach-font-title);
+  font-weight: 700;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.ach-deck-row__atk { color: var(--ach-atq); display: inline-flex; align-items: center; gap: 3px; }
+.ach-deck-row__hp { color: var(--ach-pv); display: inline-flex; align-items: center; gap: 3px; }
+.ach-deck-row__atk svg, .ach-deck-row__hp svg { width: 11px; height: 11px; }
+.ach-deck-row__stats--sort { color: oklch(0.78 0.12 300); justify-content: center; width: 100%; }
+
+.ach-deck-row__text {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ach-parch-mid);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.ach-deck-row__state {
+  justify-self: end;
   font-family: var(--ach-font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 999px;
+  border: 1px solid oklch(1 0 0 / 0.14);
+  color: var(--ach-parch-mid);
+  background: oklch(0 0 0 / 0.3);
+  white-space: nowrap;
+}
+.ach-deck-row.is-in-deck .ach-deck-row__state {
   color: oklch(0.16 0.02 200);
   background: var(--ach-teal-bright);
-  box-shadow: 0 2px 8px oklch(0 0 0 / 0.4);
-  pointer-events: none;
+  border-color: var(--ach-teal-bright);
+}
+
+@media (max-width: 800px) {
+  .ach-deck-row {
+    grid-template-columns: 30px 1fr 70px;
+    grid-template-areas:
+      "cost id state"
+      "cost text text";
+    row-gap: 2px;
+  }
+  .ach-deck-row__cost { grid-area: cost; }
+  .ach-deck-row__id { grid-area: id; }
+  .ach-deck-row__stats { display: none; }
+  .ach-deck-row__text { grid-area: text; }
+  .ach-deck-row__state { grid-area: state; }
 }
 .ach-deck-footer {
   display: flex;
@@ -3167,3 +3395,33 @@ html, body {
 .ach-deck-saved { color: var(--ach-sylvestre-bright); }
 .ach-deck-stat[data-deck-count="low"] .ach-deck-stat-num { color: oklch(0.80 0.14 60); }
 .ach-deck-stat[data-deck-count="ok"] .ach-deck-stat-num { color: var(--ach-teal-bright); }
+
+/* ============================================================
+   12. Glisser-déposer des cartes
+   ============================================================ */
+.ach-handwrap {
+  display: contents;
+}
+.ach-board__hand .ach-card[data-interactive="1"] {
+  touch-action: none;
+  cursor: grab;
+}
+.ach-handwrap.is-drag-source .ach-card {
+  opacity: 0.35;
+  filter: grayscale(0.5) brightness(0.8);
+}
+.ach-drag-ghost {
+  position: fixed;
+  z-index: 300;
+  pointer-events: none;
+  transform: translate(-50%, -72%) scale(0.72) rotate(2.5deg);
+  transform-origin: center;
+  filter: drop-shadow(0 20px 32px oklch(0 0 0 / 0.55));
+  opacity: 0.96;
+}
+.ach-drag-ghost .ach-card { animation: none; }
+/* Cible de dépôt : renforce la pulsation existante pendant un drag */
+.ach-slot[data-droptarget="1"] {
+  outline: 2px dashed oklch(0.80 0.13 82 / 0.55);
+  outline-offset: -3px;
+}

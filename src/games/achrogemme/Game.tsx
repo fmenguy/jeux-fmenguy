@@ -92,6 +92,11 @@ export function Game() {
   const [opponentId, setOpponentId] = useState<string>('sylvie');
   const [animMap, setAnimMap] = useState<Record<string, CardAnim>>({});
   const prevStateRef = useRef<GameState | null>(null);
+  // Glisser-déposer : carte en cours de drag + fantôme qui suit le pointeur.
+  const [drag, setDrag] = useState<{ instId: string; defId: string } | null>(null);
+  const ghostRef = useRef<HTMLDivElement>(null);
+  const dragPosRef = useRef({ x: 0, y: 0 });
+  const didDragRef = useRef(false);
 
   const start = useCallback((oppId: string) => {
     const initial = createInitialState(oppId);
@@ -231,7 +236,128 @@ export function Game() {
 
   const world = WORLDS[state.world];
 
+  /** Sélection équivalente au clic, pour que les cibles s'illuminent pendant le drag. */
+  const selectionForDrag = (card: CardInstance): Selection => {
+    const def = CARD_INDEX[card.defId];
+    if (!def) return null;
+    if (def.kind === 'personnage') {
+      const lane = allowedLane(def);
+      return lane === null ? null : { kind: 'character', instId: card.instId, lane };
+    }
+    const sort = def.sortilege;
+    if (!sort) return null;
+    if (sort.kind === 'kill_target') return { kind: 'sort_kill', instId: card.instId };
+    if (sort.kind === 'damage_lane') return { kind: 'sort_damage_lane', instId: card.instId };
+    if (sort.kind === 'buff_atq_lane') return { kind: 'sort_buff_lane', instId: card.instId };
+    return null;
+  };
+
+  const positionGhost = (x: number, y: number) => {
+    dragPosRef.current = { x, y };
+    const g = ghostRef.current;
+    if (g) {
+      g.style.left = `${x}px`;
+      g.style.top = `${y}px`;
+    }
+  };
+
+  /** Résout le dépôt d'une carte selon l'élément sous le pointeur. */
+  const completeDrop = (card: CardInstance, x: number, y: number) => {
+    const def = CARD_INDEX[card.defId];
+    const el = typeof document !== 'undefined'
+      ? (document.elementFromPoint(x, y) as HTMLElement | null)
+      : null;
+    setDrag(null);
+    setSelection(null);
+    if (!def || !el) return;
+
+    const slotEl = el.closest('[data-slotinfo]') as HTMLElement | null;
+    const laneEl = slotEl ?? (el.closest('[data-laneinfo]') as HTMLElement | null);
+    const champEl = el.closest('[data-champ-side]') as HTMLElement | null;
+    const slotSide = slotEl?.dataset.side as Side | undefined;
+    const lane = laneEl ? (Number(laneEl.dataset.lane) as LaneIndex) : null;
+    const slot = slotEl ? (Number(slotEl.dataset.slot) as SlotIndex) : null;
+
+    if (def.kind === 'personnage') {
+      if (slotSide !== 'player' || lane === null || slot === null) return;
+      if (allowedLane(def) !== lane) return;
+      apply((s) => { playCharacter(s, 'player', card.instId, slot); });
+      return;
+    }
+
+    const sort = def.sortilege;
+    if (!sort) return;
+    if (sort.kind === 'kill_target') {
+      if (slotSide !== 'ai' || lane === null || slot === null) return;
+      apply((s) => { playSortilege(s, 'player', card.instId, { kind: 'enemy_unit', lane, slot }); });
+    } else if (sort.kind === 'damage_lane') {
+      if (lane === null || (slotSide && slotSide !== 'ai')) return;
+      apply((s) => { playSortilege(s, 'player', card.instId, { kind: 'enemy_lane', lane }); });
+    } else if (sort.kind === 'buff_atq_lane') {
+      if (lane === null || (slotSide && slotSide !== 'player')) return;
+      apply((s) => { playSortilege(s, 'player', card.instId, { kind: 'own_lane', lane }); });
+    } else if (sort.kind === 'damage_champion') {
+      if (champEl?.dataset.champSide !== 'ai') return;
+      apply((s) => { playSortilege(s, 'player', card.instId); });
+    } else {
+      // heal_champion, draw_cards, gain_pa_max : à déposer sur ton Champion.
+      if (champEl?.dataset.champSide !== 'player') return;
+      apply((s) => { playSortilege(s, 'player', card.instId); });
+    }
+  };
+
+  const onHandCardPointerDown = (card: CardInstance, e: React.PointerEvent) => {
+    if (state.phase !== 'player' || state.winner) return;
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    const def = CARD_INDEX[card.defId];
+    if (!def) return;
+    const cost = def.kind === 'sortilege' ? sortilegeCost(state, def) : def.cost;
+    if (state.player.pa < cost) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const pointerId = e.pointerId;
+    let activated = false;
+
+    const onMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      if (!activated) {
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 8) return;
+        activated = true;
+        didDragRef.current = true;
+        positionGhost(ev.clientX, ev.clientY);
+        setDrag({ instId: card.instId, defId: card.defId });
+        setSelection(selectionForDrag(card));
+      }
+      ev.preventDefault();
+      positionGhost(ev.clientX, ev.clientY);
+    };
+    const onUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      if (activated) completeDrop(card, ev.clientX, ev.clientY);
+    };
+    const onCancel = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      setDrag(null);
+      setSelection(null);
+    };
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  };
+
   const handleHandClick = (card: CardInstance) => {
+    // Un drag vient de se terminer : ne pas déclencher le clic par-dessus.
+    if (didDragRef.current) {
+      didDragRef.current = false;
+      return;
+    }
     if (state.phase !== 'player') return;
     const def = CARD_INDEX[card.defId];
     if (!def) return;
@@ -318,6 +444,10 @@ export function Game() {
       <div
         key={`${side}-${lane}-${slot}`}
         className="ach-slot"
+        data-slotinfo="1"
+        data-side={side}
+        data-lane={lane}
+        data-slot={slot}
         data-row={ROW_TAG_BY_SLOT[slot]}
         data-row-label={ROW_LABEL_BY_SLOT[slot]}
         data-empty={u ? '0' : '1'}
@@ -382,7 +512,7 @@ export function Game() {
       <div className="ach-board-stage">
         <div className="ach-board" style={{ ['--ach-anim-density' as string]: 1 }}>
           <div className="ach-board__playzone">
-            <div className="ach-board__champion-row" style={{ gridRow: 1 }}>
+            <div className="ach-board__champion-row" data-champ-side="ai" style={{ gridRow: 1 }}>
               <ChampionView player={state.ai} side="ai" isActive={state.phase === 'ai'} accent="sylvestre" />
             </div>
 
@@ -399,6 +529,8 @@ export function Game() {
                   key={`bg-${lane}`}
                   className={`ach-board__col-bg ${enemyLaneTargetable || ownLaneTargetable ? 'is-lane-target' : ''}`}
                   data-class={c}
+                  data-laneinfo="1"
+                  data-lane={lane}
                   style={{ ['--col' as string]: idx + 1, gridColumn: idx + 1 }}
                   onClick={() => {
                     if (enemyLaneTargetable) handleLaneClick('ai', lane);
@@ -423,7 +555,7 @@ export function Game() {
               <SynergyBar state={state} side="player" />
             </div>
 
-            <div className="ach-board__champion-row" style={{ gridRow: 12 }}>
+            <div className="ach-board__champion-row" data-champ-side="player" style={{ gridRow: 12 }}>
               <ChampionView player={state.player} side="player" isActive={state.phase === 'player'} accent="rempart" />
             </div>
 
@@ -433,18 +565,24 @@ export function Game() {
                 const cost = def ? (def.kind === 'sortilege' ? sortilegeCost(state, def) : def.cost) : 0;
                 const playable = state.phase === 'player' && def && state.player.pa >= cost;
                 const isSelected = !!(selection && 'instId' in selection && selection.instId === c.instId);
+                const isDragSource = drag?.instId === c.instId;
                 return (
-                  <CardView
+                  <div
                     key={c.instId}
-                    card={c}
-                    interactive
-                    playable={!!playable}
-                    selected={isSelected}
-                    disabled={!playable}
-                    showLore={showLore}
-                    costOverride={def && def.kind === 'sortilege' && cost !== def.cost ? cost : undefined}
-                    onClick={() => handleHandClick(c)}
-                  />
+                    className={`ach-handwrap ${isDragSource ? 'is-drag-source' : ''}`}
+                    onPointerDown={(e) => onHandCardPointerDown(c, e)}
+                  >
+                    <CardView
+                      card={c}
+                      interactive
+                      playable={!!playable}
+                      selected={isSelected}
+                      disabled={!playable}
+                      showLore={showLore}
+                      costOverride={def && def.kind === 'sortilege' && cost !== def.cost ? cost : undefined}
+                      onClick={() => handleHandClick(c)}
+                    />
+                  </div>
                 );
               })}
               {state.player.hand.length === 0 && <div className="ach-empty-hand">Main vide.</div>}
@@ -524,6 +662,20 @@ export function Game() {
           onClose={() => setReward(null)}
         />
       )}
+
+      {drag && (() => {
+        const dragCard = state.player.hand.find((c) => c.instId === drag.instId);
+        if (!dragCard) return null;
+        return (
+          <div
+            className="ach-drag-ghost"
+            ref={ghostRef}
+            style={{ left: dragPosRef.current.x, top: dragPosRef.current.y }}
+          >
+            <CardView card={dragCard} interactive={false} playable />
+          </div>
+        );
+      })()}
 
       {state.winner && !reward && (
         <EndOverlay
