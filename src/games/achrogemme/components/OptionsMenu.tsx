@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { CHAMPIONS, OPPONENT_ORDER, OPPONENT_UNLOCK_WINS } from '../data/champions';
+import { getStats } from '../data/collection';
 
 interface Props {
   onShowTutorial: () => void;
@@ -6,10 +8,15 @@ interface Props {
   onShowDeck: () => void;
   onToggleLore: () => void;
   onRestart: () => void;
+  onSelectOpponent: (id: string) => void;
+  currentOpponent: string;
   showLore: boolean;
 }
 
-export function OptionsMenu({ onShowTutorial, onShowCodex, onShowDeck, onToggleLore, onRestart, showLore }: Props) {
+export function OptionsMenu({
+  onShowTutorial, onShowCodex, onShowDeck, onToggleLore,
+  onRestart, onSelectOpponent, currentOpponent, showLore,
+}: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +35,8 @@ export function OptionsMenu({ onShowTutorial, onShowCodex, onShowDeck, onToggleL
       document.removeEventListener('keydown', onEsc);
     };
   }, [open]);
+
+  const wins = open ? getStats().wins : 0;
 
   return (
     <div className="ach-options" ref={rootRef}>
@@ -59,22 +68,35 @@ export function OptionsMenu({ onShowTutorial, onShowCodex, onShowDeck, onToggleL
             <span className="ach-options__label">Nouvelle partie</span>
             <kbd className="ach-options__kbd">N</kbd>
           </button>
-          <div className="ach-options__sep">Difficulté</div>
-          <button className="ach-options__diff is-active" type="button" disabled>
-            <span className="ach-options__diff-dot" data-tier="facile" />
-            <span className="ach-options__label">Sylvie · facile</span>
-            <span className="ach-options__diff-state">actif</span>
-          </button>
-          <button className="ach-options__diff" type="button" disabled title="À venir au Lot 3">
-            <span className="ach-options__diff-dot" data-tier="medium" />
-            <span className="ach-options__label">Lilia · médium</span>
-            <span className="ach-options__diff-state">à venir</span>
-          </button>
-          <button className="ach-options__diff" type="button" disabled title="À venir au Lot 4">
-            <span className="ach-options__diff-dot" data-tier="difficile" />
-            <span className="ach-options__label">Skarn · difficile</span>
-            <span className="ach-options__diff-state">à venir</span>
-          </button>
+          <div className="ach-options__sep">Adversaire</div>
+          {OPPONENT_ORDER.map((id) => {
+            const champ = CHAMPIONS[id];
+            const needed = OPPONENT_UNLOCK_WINS[id] ?? 0;
+            const locked = wins < needed;
+            const isCurrent = id === currentOpponent;
+            return (
+              <button
+                key={id}
+                className={`ach-options__diff ${isCurrent ? 'is-active' : ''}`}
+                type="button"
+                disabled={locked}
+                title={locked
+                  ? `Se débloque après ${needed} victoire${needed > 1 ? 's' : ''} (${wins}/${needed})`
+                  : `Nouvelle partie contre ${champ.name}`}
+                onClick={() => {
+                  if (locked || isCurrent) { setOpen(false); return; }
+                  onSelectOpponent(id);
+                  setOpen(false);
+                }}
+              >
+                <span className="ach-options__diff-dot" data-tier={champ.difficulty} />
+                <span className="ach-options__label">{champ.name} · {champ.difficulty}</span>
+                <span className="ach-options__diff-state">
+                  {isCurrent ? 'actif' : locked ? `🔒 ${wins}/${needed}` : 'jouer'}
+                </span>
+              </button>
+            );
+          })}
           <div className="ach-options__sep">Raccourcis</div>
           <div className="ach-options__shortcut">
             <span>Fin du tour</span>
