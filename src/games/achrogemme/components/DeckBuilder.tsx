@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { CARDS, CARD_INDEX } from '../data/cards';
+import { CARDS } from '../data/cards';
 import { CLASSES } from '../data/classes';
+import { FACTIONS } from '../data/factions';
 import {
   MAX_DECK_SIZE,
   MIN_DECK_SIZE,
@@ -12,29 +13,37 @@ import {
   getStats,
   saveDeck,
 } from '../data/collection';
-import { CardView } from './CardView';
-import type { CardInstance, ClasseId, Rarity } from '../state/types';
+import type { CardDef, ClasseId, Rarity } from '../state/types';
+import { IconSword, IconHeart } from './Icons';
 
 interface Props { onClose: () => void; }
 
-function makePreviewInstance(defId: string): CardInstance {
-  const def = CARD_INDEX[defId];
-  return {
-    instId: `preview_${defId}`,
-    defId,
-    pv: def?.pv ?? 0,
-    pvMax: def?.pv ?? 0,
-    atq: def?.atq ?? 0,
-    paBonus: def?.paBonus ?? 0,
-    turnsOnBoard: 0,
-    exhausted: false,
-    buffs: { atq: 0, pv: 0 },
-    tagsExtra: [],
-  };
-}
-
 type RarityFilter = 'all' | Rarity;
 type ClasseFilter = 'all' | ClasseId | 'sortilege';
+
+const CLASSE_GLYPH: Record<string, string> = {
+  sylvestre: '🏹',
+  arcanique: '✨',
+  rempart: '⚔',
+};
+
+const FACTION_GLYPH: Record<string, string> = {
+  elfe: '☘',
+  nain: '⚒',
+  humain: '🏰',
+  neutre: '◇',
+};
+
+const CLASSE_ORDER: Record<string, number> = {
+  sylvestre: 0,
+  arcanique: 1,
+  rempart: 2,
+};
+
+function sortKey(c: CardDef): [number, number, string] {
+  const group = c.kind === 'sortilege' ? 3 : CLASSE_ORDER[c.classe ?? ''] ?? 4;
+  return [group, c.cost, c.name];
+}
 
 export function DeckBuilder({ onClose }: Props) {
   const [classeFilter, setClasseFilter] = useState<ClasseFilter>('all');
@@ -77,20 +86,29 @@ export function DeckBuilder({ onClose }: Props) {
   };
 
   const filtered = useMemo(() => {
-    return CARDS.filter((c) => {
+    const list = CARDS.filter((c) => {
       if (classeFilter !== 'all') {
         if (classeFilter === 'sortilege') {
           if (c.kind !== 'sortilege') return false;
-        } else if (c.classe !== classeFilter) return false;
+        } else if (c.classe !== classeFilter || c.kind !== 'personnage') return false;
       }
       if (rarityFilter !== 'all' && c.rarity !== rarityFilter) return false;
       if (onlyOwned && !owned.has(c.id)) return false;
       if (onlyDeck && !deckSet.has(c.id)) return false;
       return true;
     });
+    return [...list].sort((a, b) => {
+      const ka = sortKey(a);
+      const kb = sortKey(b);
+      if (ka[0] !== kb[0]) return ka[0] - kb[0];
+      if (ka[1] !== kb[1]) return ka[1] - kb[1];
+      return ka[2].localeCompare(kb[2]);
+    });
   }, [classeFilter, rarityFilter, onlyOwned, onlyDeck, owned, deckSet]);
 
   const deckValid = deckIds.length >= MIN_DECK_SIZE;
+
+  let lastGroup = -1;
 
   return (
     <div className="ach-deck-overlay" role="dialog" aria-modal="true">
@@ -124,7 +142,7 @@ export function DeckBuilder({ onClose }: Props) {
         </div>
 
         <div className="ach-deck-hint">
-          Clique une carte possédée pour l'ajouter à ton deck ou l'en retirer, puis <b>Enregistrer</b>.
+          Clique une ligne possédée pour l'ajouter à ton deck ou l'en retirer, puis <b>Enregistrer</b>.
           <b> Victoire</b> : choisis 1 carte parmi 4 (chance de Légendaire). <b>Défaite</b> : 1 parmi 2 en consolation.
         </div>
 
@@ -155,23 +173,53 @@ export function DeckBuilder({ onClose }: Props) {
           </label>
         </div>
 
-        <div className="ach-deck-grid">
+        <div className="ach-deck-list">
           {filtered.map((c) => {
             const isOwned = owned.has(c.id);
             const inDeck = deckSet.has(c.id);
+            const group = sortKey(c)[0];
+            const showHeader = group !== lastGroup;
+            lastGroup = group;
+            const groupLabel = c.kind === 'sortilege'
+              ? '✦ Sortilèges'
+              : `${CLASSE_GLYPH[c.classe ?? '']} ${CLASSES[c.classe ?? 'sylvestre'].name}`;
             return (
-              <div
-                key={c.id}
-                className={`ach-deck-cell ${isOwned ? 'is-owned' : 'is-locked'} ${inDeck ? 'is-in-deck' : ''}`}
-                title={isOwned
-                  ? (inDeck ? `${c.name} · dans ton deck (clique pour retirer)` : `${c.name} · clique pour ajouter au deck`)
-                  : `Carte non possédée : ${CLASSES[c.classe ?? 'sylvestre']?.name ?? ''} · ${c.rarity}`}
-                onClick={() => toggleInDeck(c.id)}
-              >
-                <CardView card={makePreviewInstance(c.id)} interactive={false} playable />
-                {!isOwned && <div className="ach-deck-cell-lock">🔒 verrouillée</div>}
-                {isOwned && inDeck && <div className="ach-deck-cell-indeck">✓ deck</div>}
-              </div>
+              <FragmentRow key={c.id} showHeader={showHeader} groupLabel={groupLabel}>
+                <button
+                  type="button"
+                  className={`ach-deck-row ${isOwned ? 'is-owned' : 'is-locked'} ${inDeck ? 'is-in-deck' : ''}`}
+                  data-rarity={c.rarity}
+                  disabled={!isOwned}
+                  onClick={() => toggleInDeck(c.id)}
+                  title={isOwned
+                    ? (inDeck ? 'Dans ton deck · clique pour retirer' : 'Clique pour ajouter au deck')
+                    : 'Carte non possédée : gagne des duels pour la débloquer'}
+                >
+                  <span className="ach-deck-row__cost" data-class={c.classe ?? 'sort'}>{c.cost}</span>
+                  <span className="ach-deck-row__id">
+                    <span className="ach-deck-row__name">
+                      {c.rarity === 'legendaire' && <span className="ach-deck-row__crown">👑</span>}
+                      {c.name}
+                    </span>
+                    <span className="ach-deck-row__meta">
+                      {c.faction ? `${FACTION_GLYPH[c.faction]} ${FACTIONS[c.faction].name}` : '✦ Sortilège'}
+                      {c.saga && <i> · {c.saga === 'tome1' ? 'Tome 1' : 'Tome 2'}</i>}
+                    </span>
+                  </span>
+                  {c.kind === 'personnage' ? (
+                    <span className="ach-deck-row__stats">
+                      <span className="ach-deck-row__atk"><IconSword /> {c.atq}</span>
+                      <span className="ach-deck-row__hp"><IconHeart /> {c.pv}</span>
+                    </span>
+                  ) : (
+                    <span className="ach-deck-row__stats ach-deck-row__stats--sort">✦</span>
+                  )}
+                  <span className="ach-deck-row__text">{c.text}</span>
+                  <span className="ach-deck-row__state">
+                    {!isOwned ? '🔒' : inDeck ? '✓ deck' : '+'}
+                  </span>
+                </button>
+              </FragmentRow>
             );
           })}
         </div>
@@ -192,6 +240,15 @@ export function DeckBuilder({ onClose }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+function FragmentRow({ showHeader, groupLabel, children }: { showHeader: boolean; groupLabel: string; children: React.ReactNode }) {
+  return (
+    <>
+      {showHeader && <div className="ach-deck-group">{groupLabel}</div>}
+      {children}
+    </>
   );
 }
 

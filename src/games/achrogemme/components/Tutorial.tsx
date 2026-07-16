@@ -58,6 +58,7 @@ const STEPS: Step[] = [
           <li><b>👑</b> couronne sur les légendaires (personnages du roman)</li>
         </ul>
         <p>Les cartes <b>jouables</b> sont entourées d'un halo doré. Les <b>non-jouables</b> (coût trop élevé) sont assombries.</p>
+        <p>Pour jouer une carte : <b>clique-la puis clique sa cible</b>, ou <b>glisse-la directement</b> sur un emplacement, une Marche ou un Champion (souris et tactile).</p>
       </>
     ),
   },

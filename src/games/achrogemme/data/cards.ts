@@ -482,15 +482,18 @@ export const CARDS: CardDef[] = [
     kind: 'personnage',
     classe: 'rempart',
     faction: 'humain',
-    cost: 6,
+    cost: 7,
     atq: 5,
-    pv: 5,
+    pv: 7,
     rarity: 'legendaire',
     saga: 'tome2',
-    text: 'Charge. Humain courageux, époux d\'Amélie.',
-    lore: "Humain courageux qui tombe amoureux de l'elfe Amélie malgré la différence de longévité entre leurs espèces. Père de Sylvie. Meurt de vieillesse, destin tragique mais naturel d'un humain dans un monde d'elfes.",
+    text: 'Charge. Frappe double : ATQ x2 en combat. Le maître de l\'Achrogemme.',
+    lore: "Humain courageux qui tombe amoureux de l'elfe Amélie malgré la différence de longévité entre leurs espèces. Père de Sylvie, possesseur du plateau Achrogemme, pièce unique. Meurt de vieillesse, destin tragique mais naturel d'un humain dans un monde d'elfes.",
     tags: ['legendaire'],
-    effects: [{ trigger: 'passive', effect: { kind: 'charge' } }],
+    effects: [
+      { trigger: 'passive', effect: { kind: 'charge' } },
+      { trigger: 'passive', effect: { kind: 'double_strike' } },
+    ],
   },
 
   {
