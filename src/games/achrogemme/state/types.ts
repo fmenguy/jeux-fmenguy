@@ -4,6 +4,21 @@ export type SlotIndex = 0 | 1 | 2;
 
 export type ClasseId = 'sylvestre' | 'arcanique' | 'rempart';
 export type FactionId = 'elfe' | 'nain' | 'humain' | 'neutre';
+export type WorldId = 'achronia' | 'terrania' | 'sandara';
+
+export interface WorldDef {
+  id: WorldId;
+  name: string;
+  glyph: string;
+  tagline: string;
+  /** Modificateur sur les soins de la phase Magie (les deux camps). */
+  healMod: number;
+  /** Surcoût en Gemmes des sortilèges (monde sans magie). */
+  sortCostMod: number;
+  /** Bonus accordé à une faction "chez elle" sur ce monde. */
+  factionBonus: { faction: FactionId; atq: number; pv: number };
+  effectsText: string[];
+}
 
 export interface ClasseDef {
   id: ClasseId;
@@ -79,7 +94,9 @@ export type SortilegeEffect =
   | { kind: 'damage_lane'; amount: number }
   | { kind: 'buff_atq_lane'; amount: number }
   | { kind: 'kill_target' }
-  | { kind: 'damage_champion'; amount: number };
+  | { kind: 'damage_champion'; amount: number }
+  | { kind: 'draw_cards'; amount: number }
+  | { kind: 'gain_pa_max'; amount: number };
 
 export interface CardInstance {
   instId: string;
@@ -131,12 +148,26 @@ export interface ChampionDef {
   difficulty: 'facile' | 'medium' | 'difficile';
 }
 
+/** Profil de comportement pour l'IA d'un adversaire. */
+export interface AiProfile {
+  /** Score minimal d'une cible pour dépenser une Embuscade. */
+  killScoreMin: number;
+  /** Seuil de PV sous lequel l'IA cherche à se soigner. */
+  healBelow: number;
+  /** Taille de main visée en début de tour. */
+  handLimit: number;
+  /** L'IA place ses gardes face aux Marches menaçantes. */
+  smartPlacement: boolean;
+}
+
 export interface PlayerState {
   champion: ChampionDef;
   hp: number;
   hpMax: number;
   paMax: number;
   pa: number;
+  /** Bonus permanent de Gemmes max acquis via sortilèges. */
+  paMaxBonus: number;
   deck: string[];
   hand: CardInstance[];
   discard: string[];
@@ -170,6 +201,7 @@ export interface GameState {
   turn: number;
   phase: Phase;
   active: Side;
+  world: WorldId;
   player: PlayerState;
   ai: PlayerState;
   winner: Side | null;

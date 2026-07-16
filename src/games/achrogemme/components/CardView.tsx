@@ -21,6 +21,8 @@ interface Props {
   anim?: CardAnim;
   effectiveAtq?: number;
   effectivePvMax?: number;
+  /** Coût affiché s'il diffère du coût de base (monde sans magie). */
+  costOverride?: number;
 }
 
 const CLASSE_GLYPH: Record<ClasseId, string> = {
@@ -40,7 +42,7 @@ export function CardView({
   card, faceDown, selected, disabled, onClick,
   onBoard = false, interactive = true, playable = true,
   frame = 'runique', anim = null, showLore,
-  effectiveAtq, effectivePvMax,
+  effectiveAtq, effectivePvMax, costOverride,
 }: Props) {
   if (faceDown) {
     return (
@@ -116,7 +118,13 @@ export function CardView({
         )}
 
         <div className="ach-card__top">
-          <div className="ach-card__cost" title="Coût en Gemmes">{def.cost}</div>
+          <div
+            className="ach-card__cost"
+            data-modified={costOverride !== undefined && costOverride !== def.cost ? '1' : '0'}
+            title={costOverride !== undefined && costOverride !== def.cost ? 'Coût modifié par le monde du duel' : 'Coût en Gemmes'}
+          >
+            {costOverride ?? def.cost}
+          </div>
           <div />
           {!isSpell && (
             <div className="ach-card__stats">
