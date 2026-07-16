@@ -3,6 +3,10 @@ import type { Rarity } from '../state/types';
 
 const COLLECTION_KEY = 'achrogemme_collection_v1';
 const STATS_KEY = 'achrogemme_stats_v1';
+const DECK_KEY = 'achrogemme_deck_v1';
+
+export const MIN_DECK_SIZE = 12;
+export const MAX_DECK_SIZE = 28;
 
 export const RARITY_RANK: Record<Rarity, number> = {
   commune: 0,
@@ -26,7 +30,11 @@ export function getOwnedIds(): string[] {
   try {
     const parsed = JSON.parse(raw) as string[];
     if (!Array.isArray(parsed)) return initialOwnedIds();
-    return parsed.filter((id) => CARD_INDEX[id]);
+    // Les communes de base sont toujours acquises, même si la collection
+    // a été enregistrée avant l'ajout de nouvelles cartes.
+    const merged = new Set(parsed.filter((id) => CARD_INDEX[id]));
+    for (const id of initialOwnedIds()) merged.add(id);
+    return [...merged];
   } catch (e) {
     void e;
     return initialOwnedIds();
@@ -134,4 +142,31 @@ export function buildDeckFromCollection(maxSize: number = 27): string[] {
     return RARITY_RANK[rb] - RARITY_RANK[ra];
   });
   return sorted.slice(0, maxSize);
+}
+
+/** Deck construit à la main dans la Collection. Null si absent ou invalide. */
+export function getSavedDeck(): string[] | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(DECK_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as string[];
+    if (!Array.isArray(parsed)) return null;
+    const owned = new Set(getOwnedIds());
+    const valid = parsed.filter((id) => CARD_INDEX[id] && owned.has(id));
+    return valid.length >= MIN_DECK_SIZE ? valid.slice(0, MAX_DECK_SIZE) : null;
+  } catch (e) {
+    void e;
+    return null;
+  }
+}
+
+export function saveDeck(ids: string[]) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(DECK_KEY, JSON.stringify(ids.slice(0, MAX_DECK_SIZE)));
+}
+
+export function clearSavedDeck() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(DECK_KEY);
 }

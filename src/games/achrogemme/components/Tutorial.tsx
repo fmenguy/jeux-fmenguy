@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 
 interface Props { onClose: (playerName?: string) => void; }
 
 interface Step {
   title: string;
-  body: JSX.Element;
+  body: ReactNode;
 }
 
 const STEPS: Step[] = [
@@ -68,6 +69,7 @@ const STEPS: Step[] = [
         <ol>
           <li>🏹 <b>Tir (Perce)</b> : les unités avec <b>Perce X</b> infligent X dégâts directs au Champion adverse (en plus de leur combat)</li>
           <li>⚔ <b>Combat</b> : pour chaque Marche, somme ATQ allié vs ennemi. <b>Tes unités encaissent en premier</b>, dans l'ordre Garde → Avant → Milieu → Arrière. Seul le <b>débordement</b> touche ton Champion</li>
+          <li>🛡 <b>Riposte</b> : une unité avec Riposte qui est frappée et survit rend aussitôt ses dégâts</li>
           <li>✨ <b>Magie</b> : les Mages soignent ton Champion</li>
           <li>☠ <b>Morts</b> : les unités à 0 PV tombent</li>
         </ol>
@@ -102,6 +104,30 @@ const STEPS: Step[] = [
         </ul>
         <p>Au <b>prochain tour</b> après l'activation, une carte <span style={{color:'#c98aff'}}>Élite</span> (sortilège violet) apparaît dans ta main. Elle <b>ignore les unités adverses</b> et frappe direct le Champion.</p>
         <p>Une copie par partie. Une fois utilisée, elle est consommée.</p>
+      </>
+    ),
+  },
+  {
+    title: 'Les Mondes du duel',
+    body: (
+      <>
+        <p>Chaque partie se joue sur un <b>monde tiré au sort</b>, affiché à droite du plateau. La magie elfique se nourrit du vivant, et chaque monde change les règles :</p>
+        <ul>
+          <li>🌲 <b>Achronia</b> : les forêts nourrissent la magie. Soins +1, unités elfes +1 PV.</li>
+          <li>🏙 <b>Terrania</b> : le monde sans magie. Sortilèges +1 Gemme, unités humaines +1 ATQ.</li>
+          <li>🏜 <b>Sandara</b> : le désert. Rien où puiser : soins -1, unités naines +1 PV.</li>
+        </ul>
+        <p>Adapte ton deck au monde : un deck de soins souffre sur Sandara, un deck de sortilèges coûte cher sur Terrania.</p>
+      </>
+    ),
+  },
+  {
+    title: 'Trois adversaires',
+    body: (
+      <>
+        <p>Tu affrontes d'abord <b>Sylvie</b> (facile) : elle régénère 1 PV par tour, sang de haute-elfe oblige.</p>
+        <p>Tes victoires débloquent <b>Lilia</b> (médium, ses flèches gagnent Perce +1) puis <b>Skarn</b> (difficile, le maître de l'Achrogemme garde 6 cartes en main et anticipe).</p>
+        <p>Et dans <b>🃏 Collection & Deck</b>, tu peux désormais composer ton deck à la main : de 12 à 28 cartes parmi celles que tu possèdes.</p>
       </>
     ),
   },

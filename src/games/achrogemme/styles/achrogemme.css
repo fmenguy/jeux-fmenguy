@@ -1,6 +1,5 @@
 /* ============================================================
    Achrogemme — feuille de style unique
-   À fusionner dans src/games/achrogemme/styles/stratageme.css
    ------------------------------------------------------------
    Sections :
      1. Tokens (couleurs, typo, ombres, rayons, durées)
@@ -2963,3 +2962,208 @@ html, body {
     0 0 0 2px var(--ach-gold-bright),
     0 0 24px oklch(0.80 0.13 82 / 0.65);
 }
+
+/* ============================================================
+   9. Mondes du duel — ambiance du plateau par monde
+   ============================================================ */
+
+/* Achronia : les forêts d'Yseldra, bois chaud verdi */
+.ach-root[data-world="achronia"] {
+  --ach-wood-deep:  oklch(0.29 0.040 130);
+  --ach-wood-base:  oklch(0.36 0.045 125);
+  --ach-wood-mid:   oklch(0.44 0.050 120);
+  --ach-wood-light: oklch(0.54 0.055 115);
+  --ach-wood-edge:  oklch(0.19 0.030 130);
+}
+
+/* Terrania : acier et béton, monde sans magie */
+.ach-root[data-world="terrania"] {
+  --ach-wood-deep:  oklch(0.28 0.020 250);
+  --ach-wood-base:  oklch(0.35 0.022 248);
+  --ach-wood-mid:   oklch(0.43 0.025 245);
+  --ach-wood-light: oklch(0.53 0.028 242);
+  --ach-wood-edge:  oklch(0.18 0.015 250);
+}
+
+/* Sandara : le désert de Proxima, ocres écrasés de lumière */
+.ach-root[data-world="sandara"] {
+  --ach-wood-deep:  oklch(0.33 0.050 75);
+  --ach-wood-base:  oklch(0.42 0.060 78);
+  --ach-wood-mid:   oklch(0.51 0.065 80);
+  --ach-wood-light: oklch(0.62 0.070 82);
+  --ach-wood-edge:  oklch(0.22 0.035 70);
+}
+
+/* Chip du monde dans la colonne latérale */
+.ach-world-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: oklch(0 0 0 / 0.28);
+  border: 1px solid oklch(1 0 0 / 0.10);
+  cursor: help;
+}
+.ach-world-chip__glyph {
+  font-size: 20px;
+  filter: drop-shadow(0 1px 3px oklch(0 0 0 / 0.5));
+}
+.ach-world-chip__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ach-world-chip__info b {
+  font-family: var(--ach-font-title);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--ach-gold-bright);
+}
+.ach-world-chip__info small {
+  font-size: 10px;
+  line-height: 1.25;
+  color: var(--ach-parch-mid);
+}
+.ach-world-chip__pop {
+  display: none;
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 230px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: oklch(0.24 0.03 60 / 0.97);
+  border: 1px solid var(--ach-gold-dim);
+  box-shadow: 0 10px 26px oklch(0 0 0 / 0.55);
+  font-size: 11px;
+  color: var(--ach-parch);
+}
+.ach-world-chip__pop b {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ach-gold-bright);
+  font-family: var(--ach-font-title);
+}
+.ach-world-chip__pop ul {
+  margin: 0;
+  padding-left: 16px;
+}
+.ach-world-chip__pop li { margin: 3px 0; line-height: 1.35; }
+.ach-world-chip:hover .ach-world-chip__pop,
+.ach-world-chip:focus-within .ach-world-chip__pop {
+  display: block;
+}
+
+/* Coût de sortilège modifié par le monde */
+.ach-card__cost[data-modified="1"] {
+  color: oklch(0.86 0.16 60);
+  text-shadow: 0 0 8px oklch(0.75 0.16 55 / 0.7);
+}
+
+/* ============================================================
+   10. Intro — choix de l'adversaire
+   ============================================================ */
+.ach-intro__opponents {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 26px 0 10px;
+}
+.ach-intro__opp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 190px;
+  padding: 16px 14px 14px;
+  border-radius: 14px;
+  border: 1px solid oklch(1 0 0 / 0.14);
+  background: oklch(0 0 0 / 0.30);
+  color: var(--ach-parch);
+  cursor: pointer;
+  transition: transform var(--ach-dur) var(--ach-ease-out),
+              border-color var(--ach-dur) var(--ach-ease),
+              box-shadow var(--ach-dur) var(--ach-ease);
+}
+.ach-intro__opp:hover:not(:disabled) {
+  transform: translateY(-4px);
+  border-color: var(--ach-gold-soft);
+  box-shadow: 0 10px 30px oklch(0 0 0 / 0.5), 0 0 18px oklch(0.80 0.13 82 / 0.30);
+}
+.ach-intro__opp:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.6);
+}
+.ach-intro__opp-avatar {
+  font-size: 34px;
+  filter: drop-shadow(0 2px 6px oklch(0 0 0 / 0.55));
+}
+.ach-intro__opp-name {
+  font-family: var(--ach-font-title);
+  font-size: 17px;
+  letter-spacing: 0.05em;
+  color: var(--ach-gold-bright);
+}
+.ach-intro__opp-tier {
+  font-family: var(--ach-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: oklch(0 0 0 / 0.4);
+  border: 1px solid oklch(1 0 0 / 0.12);
+}
+.ach-intro__opp[data-tier="facile"] .ach-intro__opp-tier { color: var(--ach-sylvestre-bright); }
+.ach-intro__opp[data-tier="medium"] .ach-intro__opp-tier { color: var(--ach-gold-bright); }
+.ach-intro__opp[data-tier="difficile"] .ach-intro__opp-tier { color: var(--ach-rempart-bright); }
+.ach-intro__opp-desc {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ach-parch-mid);
+}
+
+/* ============================================================
+   11. Deck manuel — badges et états
+   ============================================================ */
+.ach-deck-cell { cursor: pointer; }
+.ach-deck-cell.is-locked { cursor: default; }
+.ach-deck-cell.is-in-deck {
+  border-radius: calc(var(--ach-radius-card) + 3px);
+  box-shadow: 0 0 0 2px var(--ach-teal-bright), 0 0 16px oklch(0.80 0.10 205 / 0.35);
+}
+.ach-deck-cell-indeck {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+  font-family: var(--ach-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: oklch(0.16 0.02 200);
+  background: var(--ach-teal-bright);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.4);
+  pointer-events: none;
+}
+.ach-deck-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ach-deck-footer-info {
+  flex: 1;
+  min-width: 160px;
+  font-size: 12px;
+}
+.ach-deck-warn { color: oklch(0.80 0.14 60); }
+.ach-deck-saved { color: var(--ach-sylvestre-bright); }
+.ach-deck-stat[data-deck-count="low"] .ach-deck-stat-num { color: oklch(0.80 0.14 60); }
+.ach-deck-stat[data-deck-count="ok"] .ach-deck-stat-num { color: var(--ach-teal-bright); }

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CardInstance, GameState, LaneIndex, Side, SlotIndex } from './state/types';
 import { CLASSES, LANE_TO_CLASSE } from './data/classes';
 import { CARD_INDEX } from './data/cards';
+import { WORLDS } from './data/worlds';
 import {
   allowedLane,
   beginAiTurn,
@@ -13,6 +14,7 @@ import {
   playCharacter,
   playSortilege,
   resolveCombat,
+  sortilegeCost,
 } from './logic/engine';
 import { runAiTurn } from './logic/ai/sylvie';
 import { CardView } from './components/CardView';
@@ -48,6 +50,8 @@ type Selection =
   | { kind: 'sort_buff_lane'; instId: string }
   | null;
 
+type CardAnim = 'enter' | 'hit' | 'heal';
+
 const ROW_LABEL_BY_SLOT: Record<SlotIndex, string> = {
   0: 'avant',
   1: 'milieu',
@@ -62,6 +66,19 @@ const ROW_TAG_BY_SLOT: Record<SlotIndex, 'front' | 'middle' | 'back'> = {
 
 const CLASSES_ORDER: LaneIndex[] = [0, 1, 2];
 
+function boardPvByInstId(state: GameState): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const side of ['player', 'ai'] as Side[]) {
+    for (let l = 0; l < 3; l += 1) {
+      for (let s = 0; s < 3; s += 1) {
+        const u = state[side].lanes[l][s];
+        if (u) map.set(u.instId, u.pv);
+      }
+    }
+  }
+  return map;
+}
+
 export function Game() {
   const [state, setState] = useState<GameState | null>(null);
   const [selection, setSelection] = useState<Selection>(null);
@@ -72,12 +89,18 @@ export function Game() {
   const [reward, setReward] = useState<{ victory: boolean } | null>(null);
   const [resultRecorded, setResultRecorded] = useState(false);
   const [playerName, setPlayerName] = useState<string | null>(readStoredName);
+  const [opponentId, setOpponentId] = useState<string>('sylvie');
+  const [animMap, setAnimMap] = useState<Record<string, CardAnim>>({});
+  const prevStateRef = useRef<GameState | null>(null);
 
-  const start = useCallback(() => {
-    const initial = createInitialState('sylvie');
+  const start = useCallback((oppId: string) => {
+    const initial = createInitialState(oppId);
     applyPlayerName(initial, readStoredName());
+    setOpponentId(oppId);
     setState(initial);
     setSelection(null);
+    setReward(null);
+    setResultRecorded(false);
     if (typeof window !== 'undefined' && !localStorage.getItem(TUTO_STORAGE_KEY)) {
       setShowTutorial(true);
     }
@@ -111,6 +134,28 @@ export function Game() {
     });
   }, []);
 
+  // Animations : compare l'état précédent et le nouveau pour marquer
+  // les unités touchées, soignées ou fraîchement posées.
+  useEffect(() => {
+    if (!state) { prevStateRef.current = null; return; }
+    const prev = prevStateRef.current;
+    prevStateRef.current = state;
+    if (!prev || prev === state) return;
+    const before = boardPvByInstId(prev);
+    const after = boardPvByInstId(state);
+    const anims: Record<string, CardAnim> = {};
+    for (const [instId, pv] of after) {
+      const old = before.get(instId);
+      if (old === undefined) anims[instId] = 'enter';
+      else if (pv < old) anims[instId] = 'hit';
+      else if (pv > old) anims[instId] = 'heal';
+    }
+    if (Object.keys(anims).length === 0) return;
+    setAnimMap(anims);
+    const t = setTimeout(() => setAnimMap({}), 700);
+    return () => clearTimeout(t);
+  }, [state]);
+
   useEffect(() => {
     if (!state) return;
     if (state.phase !== 'ai' || state.winner) return;
@@ -131,14 +176,16 @@ export function Game() {
     apply((s) => endPlayerTurn(s));
   }, [state, apply]);
 
-  const restart = useCallback(() => {
-    const fresh = createInitialState('sylvie');
+  const restart = useCallback((oppId?: string) => {
+    const chosen = oppId ?? opponentId;
+    const fresh = createInitialState(chosen);
     applyPlayerName(fresh, playerName);
+    setOpponentId(chosen);
     setState(fresh);
     setSelection(null);
     setReward(null);
     setResultRecorded(false);
-  }, [playerName]);
+  }, [playerName, opponentId]);
 
   useEffect(() => {
     if (!state || !state.winner || resultRecorded) return;
@@ -182,11 +229,14 @@ export function Game() {
 
   if (!state) return <IntroScreen onStart={start} />;
 
+  const world = WORLDS[state.world];
+
   const handleHandClick = (card: CardInstance) => {
     if (state.phase !== 'player') return;
     const def = CARD_INDEX[card.defId];
     if (!def) return;
-    if (state.player.pa < def.cost) return;
+    const cost = def.kind === 'sortilege' ? sortilegeCost(state, def) : def.cost;
+    if (state.player.pa < cost) return;
 
     if (def.kind === 'personnage') {
       const lane = allowedLane(def);
@@ -201,7 +251,7 @@ export function Game() {
 
     const sort = def.sortilege;
     if (!sort) return;
-    if (sort.kind === 'heal_champion') {
+    if (sort.kind === 'heal_champion' || sort.kind === 'draw_cards' || sort.kind === 'gain_pa_max' || sort.kind === 'damage_champion') {
       apply((s) => { playSortilege(s, 'player', card.instId); });
       setSelection(null);
       return;
@@ -290,8 +340,9 @@ export function Game() {
               onBoard
               interactive={false}
               playable
-              effectiveAtq={effectiveAtq(u, state[side])}
-              effectivePvMax={effectivePvMax(u, state[side])}
+              anim={animMap[u.instId] ?? null}
+              effectiveAtq={effectiveAtq(u, state[side], state.world)}
+              effectivePvMax={effectivePvMax(u, state[side], state.world)}
               showLore={showLore}
             />
             <div className="ach-slot__popover" data-pop-side={popSide}>
@@ -299,8 +350,8 @@ export function Game() {
                 card={u}
                 interactive={false}
                 playable
-                effectiveAtq={effectiveAtq(u, state[side])}
-                effectivePvMax={effectivePvMax(u, state[side])}
+                effectiveAtq={effectiveAtq(u, state[side], state.world)}
+                effectivePvMax={effectivePvMax(u, state[side], state.world)}
                 showLore={showLore}
               />
             </div>
@@ -326,7 +377,7 @@ export function Game() {
   };
 
   return (
-    <div className="ach-root">
+    <div className="ach-root" data-world={state.world}>
       <a className="ach-back-top" href="/" title="Retour Arcade FM">← Arcade FM</a>
       <div className="ach-board-stage">
         <div className="ach-board" style={{ ['--ach-anim-density' as string]: 1 }}>
@@ -379,7 +430,8 @@ export function Game() {
             <div className="ach-board__hand" style={{ gridRow: 13 }}>
               {state.player.hand.map((c) => {
                 const def = CARD_INDEX[c.defId];
-                const playable = state.phase === 'player' && def && state.player.pa >= def.cost;
+                const cost = def ? (def.kind === 'sortilege' ? sortilegeCost(state, def) : def.cost) : 0;
+                const playable = state.phase === 'player' && def && state.player.pa >= cost;
                 const isSelected = !!(selection && 'instId' in selection && selection.instId === c.instId);
                 return (
                   <CardView
@@ -390,6 +442,7 @@ export function Game() {
                     selected={isSelected}
                     disabled={!playable}
                     showLore={showLore}
+                    costOverride={def && def.kind === 'sortilege' && cost !== def.cost ? cost : undefined}
                     onClick={() => handleHandClick(c)}
                   />
                 );
@@ -400,6 +453,20 @@ export function Game() {
 
           <div className="ach-board__side">
             <div className="ach-side__title">Achrogemme</div>
+
+            <div className="ach-world-chip" title={world.effectsText.join(' · ')}>
+              <span className="ach-world-chip__glyph">{world.glyph}</span>
+              <span className="ach-world-chip__info">
+                <b>{world.name}</b>
+                <small>{world.tagline}</small>
+              </span>
+              <div className="ach-world-chip__pop">
+                <b>{world.glyph} {world.name}</b>
+                <ul>
+                  {world.effectsText.map((t, i) => <li key={i}>{t}</li>)}
+                </ul>
+              </div>
+            </div>
 
             <div className="ach-side__turn">
               <span>Tour</span>
@@ -416,7 +483,7 @@ export function Game() {
 
             <button
               className="ach-side__btn ach-side__btn--ghost"
-              onClick={restart}
+              onClick={() => restart()}
               disabled={state.phase === 'ai' && !state.winner}
             >
               Nouvelle partie
@@ -442,7 +509,9 @@ export function Game() {
         onShowCodex={() => setShowCodex(true)}
         onShowDeck={() => setShowDeck(true)}
         onToggleLore={() => setShowLore((v) => !v)}
-        onRestart={restart}
+        onRestart={() => restart()}
+        onSelectOpponent={(id) => restart(id)}
+        currentOpponent={opponentId}
         showLore={showLore}
       />
 
@@ -456,7 +525,13 @@ export function Game() {
         />
       )}
 
-      {state.winner && !reward && <EndOverlay winner={state.winner} onRestart={restart} />}
+      {state.winner && !reward && (
+        <EndOverlay
+          winner={state.winner}
+          opponentName={state.ai.champion.name}
+          onRestart={() => restart()}
+        />
+      )}
     </div>
   );
 }
@@ -486,15 +561,30 @@ function phaseTag(p: string): string {
   return '·';
 }
 
-function EndOverlay({ winner, onRestart }: { winner: 'player' | 'ai'; onRestart: () => void }) {
+const END_TEXTS: Record<string, { win: string; lose: string }> = {
+  sylvie: {
+    win: 'Sylvie pose ses cartes en souriant. Skarn aurait été fier.',
+    lose: 'Sylvie ramasse les cartes. Tu reprendras une partie.',
+  },
+  lilia: {
+    win: 'Lilia salue d\'un signe de tête. Peu de gens tiennent face à son arc.',
+    lose: 'Lilia range son deck sans un mot. La légende n\'est pas usurpée.',
+  },
+  skarn: {
+    win: 'Tu as battu le maître de l\'Achrogemme. Quelque part, Skarn sourit.',
+    lose: 'Le jeu de Skarn a toujours deux tours d\'avance. Rejoue, il t\'observe.',
+  },
+};
+
+function EndOverlay({ winner, opponentName, onRestart }: { winner: 'player' | 'ai'; opponentName: string; onRestart: () => void }) {
+  const key = opponentName.toLowerCase();
+  const texts = END_TEXTS[key] ?? END_TEXTS.sylvie;
   return (
     <div className="ach-end-overlay">
       <div className="ach-end-card">
         <div className="ach-end-title">{winner === 'player' ? 'Victoire' : 'Défaite'}</div>
         <p className="ach-end-text">
-          {winner === 'player'
-            ? "Sylvie pose ses cartes en souriant. Skarn aurait été fier."
-            : "Sylvie ramasse les cartes. Tu reprendras une partie."}
+          {winner === 'player' ? texts.win : texts.lose}
         </p>
         <button className="ach-side__btn" onClick={onRestart}>Rejouer</button>
       </div>
