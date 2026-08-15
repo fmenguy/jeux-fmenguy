@@ -216,6 +216,13 @@
       margin-bottom: 3.5rem;
     }
 
+    .top-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3.5rem;
+    }
+
     .card-featured {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -707,36 +714,6 @@
       text-shadow: none;
     }
 
-    /* Strates · roches stratifiées */
-    .btn-game--strates {
-      color: #e0cda0;
-      background-color: rgba(180,140,90,0.18);
-      background-image:
-        repeating-linear-gradient(180deg,
-          transparent 0,
-          transparent 4px,
-          rgba(255,255,255,0.05) 4px,
-          rgba(255,255,255,0.05) 5px);
-      border-color: rgba(200,170,120,0.50);
-      text-shadow: 0 0 8px rgba(212,160,90,0.30);
-    }
-    .card-cta-link:hover .btn-game--strates {
-      border-color: #c8a878;
-      box-shadow: 0 0 16px rgba(180,140,90,0.30);
-    }
-    [data-theme="light"] .btn-game--strates {
-      color: #6a4818;
-      background-color: rgba(180,140,90,0.16);
-      background-image:
-        repeating-linear-gradient(180deg,
-          transparent 0,
-          transparent 4px,
-          rgba(120,80,40,0.10) 4px,
-          rgba(120,80,40,0.10) 5px);
-      border-color: rgba(160,120,60,0.55);
-      text-shadow: none;
-    }
-
     .dev-progress {
       margin-top: 1.4rem;
       padding-top: 1.2rem;
@@ -752,10 +729,10 @@
     }
     .ages {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(8, 1fr);
       gap: 0.4rem;
       margin-bottom: 0.9rem;
-      max-width: 420px;
+      max-width: 480px;
     }
     .age {
       aspect-ratio: 1;
@@ -955,6 +932,134 @@
     [data-theme="light"] .elf-btn-icon { color: #a8408a; filter: none; }
     [data-theme="light"] .elf-btn-arrow { color: #7c4fd0; }
 
+    /* === Carte dev "Strates" : ambiance nuit voxel, strates de roche, lueur de feu de camp === */
+    .dev-card--strates {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid rgba(200,170,120,0.35);
+      background:
+        radial-gradient(ellipse at 50% 108%, rgba(245,158,11,0.22) 0%, rgba(245,158,11,0.09) 20%, transparent 48%),
+        repeating-linear-gradient(180deg,
+          rgba(255,255,255,0.035) 0px,
+          rgba(255,255,255,0.035) 2px,
+          transparent 2px,
+          transparent 12px),
+        linear-gradient(180deg, #0b0f22 0%, #131a34 45%, #1c2440 75%, #232a42 100%);
+    }
+    .dev-card--strates::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 12% 12%, rgba(255,255,255,0.85) 0, transparent 60%),
+        radial-gradient(1px 1px at 30% 22%, rgba(255,255,255,0.6) 0, transparent 60%),
+        radial-gradient(1px 1px at 52% 10%, rgba(255,255,255,0.75) 0, transparent 60%),
+        radial-gradient(1px 1px at 68% 26%, rgba(255,255,255,0.55) 0, transparent 60%),
+        radial-gradient(1px 1px at 82% 14%, rgba(255,255,255,0.8) 0, transparent 60%),
+        radial-gradient(1px 1px at 92% 30%, rgba(255,255,255,0.5) 0, transparent 60%),
+        radial-gradient(1px 1px at 20% 34%, rgba(255,255,255,0.4) 0, transparent 60%),
+        radial-gradient(1px 1px at 40% 6%, rgba(255,255,255,0.65) 0, transparent 60%);
+    }
+    .dev-card--strates::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, transparent, rgba(212,160,23,0.5), transparent) top left / 100% 2px no-repeat,
+        linear-gradient(135deg, rgba(212,160,23,0.45) 0 10px, transparent 10px) top left / 20px 20px no-repeat,
+        linear-gradient(-45deg, rgba(212,160,23,0.45) 0 10px, transparent 10px) bottom right / 20px 20px no-repeat;
+    }
+    .dev-card--strates > * {
+      position: relative;
+      z-index: 1;
+    }
+    .dev-card--strates .dev-card-title {
+      background: linear-gradient(135deg, #f0dca0 0%, #d4a017 55%, #8a6420 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .dev-card--strates p {
+      color: #d6ddef;
+    }
+    .dev-card--strates a.inline {
+      color: #f0c96a;
+      border-bottom: 1px solid rgba(212,160,23,0.35);
+    }
+    .dev-card--strates a.inline:hover { border-color: #f0c96a; }
+    .dev-card--strates .dev-progress {
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .dev-card--strates .dev-progress-label {
+      color: rgba(214,221,239,0.55);
+    }
+    .dev-card--strates .dev-progress-meta {
+      color: rgba(214,221,239,0.72);
+    }
+    .dev-card--strates .age:not(.done):not(.wip) {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(214,221,239,0.45);
+    }
+
+    .card-tag--strates {
+      background: rgba(212,160,23,0.14);
+      color: #eab84d;
+      border: 1px solid rgba(212,160,23,0.35);
+    }
+
+    .strates-actions {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 1.2rem;
+      padding-top: 1.1rem;
+      border-top: 1px solid rgba(212,160,23,0.18);
+    }
+    .strates-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.1rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      position: relative;
+    }
+    .strates-btn--play {
+      color: #eab84d;
+      border: 1px solid rgba(212,160,23,0.40);
+      background: rgba(212,160,23,0.08);
+      margin: 0;
+    }
+    .strates-btn--play .card-cta { margin: 0; color: #eab84d; }
+    .strates-btn--play:hover {
+      transform: translateY(-1px);
+      border-color: #eab84d;
+      box-shadow: 0 0 16px rgba(212,160,23,0.25);
+    }
+    .strates-btn--changelog {
+      color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.35);
+      background: rgba(74,222,128,0.06);
+    }
+    .strates-btn--changelog:hover {
+      transform: translateY(-1px);
+      border-color: #4ade80;
+      box-shadow: 0 0 16px rgba(74,222,128,0.22);
+    }
+    .strates-btn-icon { font-size: 0.95rem; }
+    .strates-btn-label { font-family: 'Cinzel', serif; font-weight: 700; }
+    .strates-btn-arrow { font-size: 0.9rem; transition: transform 0.2s ease; }
+    .strates-btn:hover .strates-btn-arrow { transform: translateX(3px); }
+
     .card-mini-header {
       display: flex;
       align-items: center;
@@ -1025,6 +1130,82 @@
 </header>
 
 <main>
+
+  <div class="section-label">À la une</div>
+  <div class="top-grid">
+
+    <div class="dev-card dev-card--strates">
+      <div class="dev-card-head">
+        <span class="dev-card-title">Strates</span>
+        <span class="card-tag card-tag--strates">Jouable en ligne</span>
+        <span class="dev-card-status">En développement actif</span>
+      </div>
+      <p>
+        Strates est un jeu de dieu voxel (Three.js) où une colonie de colons nommés traverse huit âges de civilisation, de la pierre jusqu'à l'espace, dans la lignée de <a class="inline" href="/fda/">Forge des Âges</a>.
+      </p>
+      <p>
+        Le joueur désigne le travail, les colons vivent leur vie (métiers, couples, familles, humeur), et la civilisation grandit sous ses yeux.
+      </p>
+
+      <div class="dev-progress">
+        <div class="dev-progress-label">Avancement</div>
+        <div class="ages">
+          <div class="age done" title="Âge I, Pierre">I</div>
+          <div class="age done" title="Âge II, Bronze">II</div>
+          <div class="age done" title="Âge III, Fer et Médiéval">III</div>
+          <div class="age done" title="Âge IV, Renaissance">IV</div>
+          <div class="age wip" title="Âge V, Industriel, en chantier">V</div>
+          <div class="age" title="Âge VI">VI</div>
+          <div class="age" title="Âge VII">VII</div>
+          <div class="age" title="Âge VIII">VIII</div>
+        </div>
+        <p class="dev-progress-meta">
+          Âges I à IV jouables en ligne (v1.2), vie sociale des colons livrée, âge V Industriel en chantier.
+        </p>
+      </div>
+
+      <div class="strates-actions">
+        <a class="card-cta-link strates-btn strates-btn--play" href="https://strates.fmenguy.fr">
+          <span class="card-cta">Jouer</span>
+        </a>
+        <a class="strates-btn strates-btn--changelog" href="https://strates.fmenguy.fr/docs/changelog.html">
+          <span class="strates-btn-icon" style="color:#4ade80">✓</span>
+          <span class="strates-btn-label">Changelog</span>
+          <span class="strates-btn-arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="dev-card dev-card--elf">
+      <div class="dev-card-head">
+        <span class="dev-card-title">Achrogemme</span>
+        <span class="card-tag card-tag--full">v1.0 · Jeu complet</span>
+      </div>
+      <p>
+        Duel d'Achronia tiré du <a class="inline" href="https://elfes.fmenguy.fr">roman illustré de l'Aventure des Sœurs Elfes</a>. Trois Marches gardent les frontières du royaume : la Sylvestre des bois, l'Arcanique des plaines, le Rempart des forteresses. Sur chacune, jusqu'à trois unités par côté (avant · milieu · arrière) où les volontés se cristallisent en Gemmes.
+      </p>
+      <p>
+        Affronte Sylvie, Lilia puis Skarn sur un monde tiré au sort (Achronia, Terrania ou Sandara, chacun avec ses règles), active les synergies de faction, compose ton deck carte par carte, et abats le Champion adverse avant qu'il ne fasse tomber le tien.
+      </p>
+
+      <div class="elf-actions">
+        <a class="card-cta-link elf-btn elf-btn--play" href="/achrogemme/">
+          <span class="card-cta">Jouer</span>
+        </a>
+        <a class="elf-btn elf-btn--lore" href="https://elfes.fmenguy.fr" target="_blank" rel="noopener">
+          <span class="elf-btn-icon">✦</span>
+          <span class="elf-btn-label">Découvrir le roman</span>
+          <span class="elf-btn-arrow">→</span>
+        </a>
+        <a class="elf-btn elf-btn--changelog" href="/achrogemme/changelog/">
+          <span class="elf-btn-icon" style="color:#4ade80">✓</span>
+          <span class="elf-btn-label">Changelog</span>
+          <span class="elf-btn-arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
 
   <div class="section-label">Jeux complets</div>
   <div class="featured-grid">
@@ -1103,71 +1284,6 @@
       <span class="btn-game btn-game--eryndor">Jouer</span>
     </a>
 
-  </div>
-
-  <div class="section-label">Le jeu du roman</div>
-
-  <div class="dev-card dev-card--elf">
-    <div class="dev-card-head">
-      <span class="dev-card-title">Achrogemme</span>
-      <span class="card-tag card-tag--full">v1.0 · Jeu complet</span>
-    </div>
-    <p>
-      Duel d'Achronia tiré du <a class="inline" href="https://elfes.fmenguy.fr">roman illustré de l'Aventure des Sœurs Elfes</a>. Trois Marches gardent les frontières du royaume : la Sylvestre des bois, l'Arcanique des plaines, le Rempart des forteresses. Sur chacune, jusqu'à trois unités par côté (avant · milieu · arrière) où les volontés se cristallisent en Gemmes.
-    </p>
-    <p>
-      Affronte Sylvie, Lilia puis Skarn sur un monde tiré au sort (Achronia, Terrania ou Sandara, chacun avec ses règles), active les synergies de faction, compose ton deck carte par carte, et abats le Champion adverse avant qu'il ne fasse tomber le tien.
-    </p>
-
-    <div class="elf-actions">
-      <a class="card-cta-link elf-btn elf-btn--play" href="/achrogemme/">
-        <span class="card-cta">Jouer</span>
-      </a>
-      <a class="elf-btn elf-btn--lore" href="https://elfes.fmenguy.fr" target="_blank" rel="noopener">
-        <span class="elf-btn-icon">✦</span>
-        <span class="elf-btn-label">Découvrir le roman</span>
-        <span class="elf-btn-arrow">→</span>
-      </a>
-      <a class="elf-btn elf-btn--changelog" href="/achrogemme/changelog/">
-        <span class="elf-btn-icon" style="color:#4ade80">✓</span>
-        <span class="elf-btn-label">Changelog</span>
-        <span class="elf-btn-arrow">→</span>
-      </a>
-    </div>
-  </div>
-
-  <div class="section-label">Jeux en cours de développement</div>
-
-  <div class="dev-card">
-    <div class="dev-card-head">
-      <span class="dev-card-title">Strates</span>
-      <span class="dev-card-status">En développement</span>
-    </div>
-    <p>
-      Jeu de simulation voxel inspiré de <a class="inline" href="/fda/">Forge des Âges</a>. Une colonie débarque sur une île et traverse sept âges de civilisation, de la pierre jusqu'à l'espace.
-    </p>
-    <p>
-      Le but du joueur, explorer le monde, accompagner ses colons, et atteindre le dernier âge.
-    </p>
-
-    <div class="dev-progress">
-      <div class="dev-progress-label">Avancement</div>
-      <div class="ages">
-        <div class="age done" title="Âge 1, Pierre, finalisé">I</div>
-        <div class="age wip" title="Âge 2, en cours">II</div>
-        <div class="age" title="Âge 3">III</div>
-        <div class="age" title="Âge 4">IV</div>
-        <div class="age" title="Âge 5">V</div>
-        <div class="age" title="Âge 6">VI</div>
-        <div class="age" title="Âge 7">VII</div>
-      </div>
-      <p class="dev-progress-meta">
-        Au <strong>10 mai 2026</strong>, deux mois de travail sur le projet. Âge 1 (Pierre) finalisé, âge 2 en cours.
-      </p>
-    </div>
-    <a class="card-cta-link" href="https://strates.fmenguy.fr">
-      <span class="btn-game btn-game--strates">Jouer</span>
-    </a>
   </div>
 
 </main>
