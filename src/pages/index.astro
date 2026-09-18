@@ -1011,13 +1011,108 @@
       border: 1px solid rgba(212,160,23,0.35);
     }
 
+    /* Deux versions jouables : la V2 est mise en avant, la V1 reste en secondaire */
+    .strates-versions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      align-items: start;
+      gap: 1rem;
+      margin-top: 1.4rem;
+      padding-top: 1.3rem;
+      border-top: 1px solid rgba(212,160,23,0.18);
+    }
+    .strates-version {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding: 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .strates-version:hover { transform: translateY(-2px); }
+    .strates-version-head {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+    .strates-version-arrow {
+      margin-left: auto;
+      font-size: 0.9rem;
+      transition: transform 0.2s ease;
+    }
+    .strates-version:hover .strates-version-arrow { transform: translateX(3px); }
+    .strates-version-desc {
+      font-size: 0.78rem;
+      line-height: 1.55;
+      letter-spacing: 0;
+    }
+
+    .strates-version--v2 {
+      color: #f7d98a;
+      border: 1px solid rgba(212,160,23,0.55);
+      background:
+        linear-gradient(160deg, rgba(212,160,23,0.22) 0%, rgba(212,160,23,0.06) 65%, transparent 100%),
+        rgba(11,15,34,0.45);
+      box-shadow: 0 6px 22px rgba(212,160,23,0.16);
+    }
+    .strates-version--v2:hover {
+      border-color: #f0c96a;
+      box-shadow: 0 8px 26px rgba(212,160,23,0.32);
+    }
+    .strates-version--v2 .strates-version-desc { color: rgba(247,217,138,0.85); }
+
+    .strates-badge {
+      position: absolute;
+      top: -0.6rem;
+      right: 0.9rem;
+      padding: 0.18rem 0.6rem;
+      border-radius: 999px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #1a1206;
+      background: linear-gradient(135deg, #f6dfa4 0%, #d4a017 100%);
+      border: 1px solid rgba(255,255,255,0.35);
+      box-shadow: 0 2px 10px rgba(212,160,23,0.45);
+    }
+
+    .strates-shot {
+      display: block;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(212,160,23,0.3);
+      background: #0b0f22;
+    }
+    .strates-shot img {
+      display: block;
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      object-position: center 42%;
+    }
+
+    .strates-version--v1 {
+      color: #cdd6e9;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.04);
+    }
+    .strates-version--v1:hover { border-color: rgba(255,255,255,0.38); }
+    .strates-version--v1 .strates-version-desc { color: rgba(214,221,239,0.7); }
+    .strates-version--v1 .strates-btn-icon { color: rgba(214,221,239,0.6); }
+
     .strates-actions {
       display: flex;
       gap: 0.8rem;
       flex-wrap: wrap;
-      margin-top: 1.2rem;
-      padding-top: 1.1rem;
-      border-top: 1px solid rgba(212,160,23,0.18);
+      margin-top: 1rem;
     }
     .strates-btn {
       display: inline-flex;
@@ -1032,18 +1127,6 @@
       border-radius: 6px;
       transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
       position: relative;
-    }
-    .strates-btn--play {
-      color: #eab84d;
-      border: 1px solid rgba(212,160,23,0.40);
-      background: rgba(212,160,23,0.08);
-      margin: 0;
-    }
-    .strates-btn--play .card-cta { margin: 0; color: #eab84d; }
-    .strates-btn--play:hover {
-      transform: translateY(-1px);
-      border-color: #eab84d;
-      box-shadow: 0 0 16px rgba(212,160,23,0.25);
     }
     .strates-btn--changelog {
       color: #4ade80;
@@ -1100,11 +1183,21 @@
     footer a { color: var(--gold); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
+    @media (max-width: 560px) {
+      .strates-versions { grid-template-columns: 1fr; gap: 1.1rem; }
+      .strates-shot img { height: 132px; }
+    }
+
     @media (max-width: 480px) {
       header { padding: 3.5rem 1rem 1.5rem; }
       .site-back { top: 1rem; left: 1rem; }
       main { padding: 2rem 1rem 4rem; }
       .card-banner { height: 120px; }
+      .dev-card { padding: 1.4rem 1.2rem 1.3rem; }
+      .strates-version { padding: 0.9rem; }
+      .strates-version-head { font-size: 0.82rem; letter-spacing: 0.08em; }
+      .strates-actions { width: 100%; }
+      .strates-btn { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -1137,7 +1230,7 @@
     <div class="dev-card dev-card--strates">
       <div class="dev-card-head">
         <span class="dev-card-title">Strates</span>
-        <span class="card-tag card-tag--strates">Jouable en ligne</span>
+        <span class="card-tag card-tag--strates">Deux versions jouables</span>
         <span class="dev-card-status">En développement actif</span>
       </div>
       <p>
@@ -1147,27 +1240,51 @@
         Le joueur désigne le travail, les colons vivent leur vie (métiers, couples, familles, humeur), et la civilisation grandit sous ses yeux.
       </p>
 
-      <div class="dev-progress">
-        <div class="dev-progress-label">Avancement</div>
+      <div class="dev-progress dev-progress--v1">
+        <div class="dev-progress-label">Avancement de la V1</div>
         <div class="ages">
-          <div class="age done" title="Âge I, Pierre">I</div>
-          <div class="age done" title="Âge II, Bronze">II</div>
-          <div class="age done" title="Âge III, Fer et Médiéval">III</div>
-          <div class="age done" title="Âge IV, Renaissance">IV</div>
-          <div class="age wip" title="Âge V, Industriel, en chantier">V</div>
-          <div class="age" title="Âge VI">VI</div>
-          <div class="age" title="Âge VII">VII</div>
-          <div class="age" title="Âge VIII">VIII</div>
+          <div class="age done" title="V1, âge I, Pierre">I</div>
+          <div class="age done" title="V1, âge II, Bronze">II</div>
+          <div class="age done" title="V1, âge III, Fer et Médiéval">III</div>
+          <div class="age done" title="V1, âge IV, Renaissance">IV</div>
+          <div class="age wip" title="V1, âge V, Industriel, en chantier">V</div>
+          <div class="age" title="V1, âge VI">VI</div>
+          <div class="age" title="V1, âge VII">VII</div>
+          <div class="age" title="V1, âge VIII">VIII</div>
         </div>
         <p class="dev-progress-meta">
-          Âges I à IV jouables en ligne (v1.2), vie sociale des colons livrée, âge V Industriel en chantier.
+          Cette frise est celle de la V1 (v1.2) : âges I à IV jouables, vie sociale des colons livrée, âge V Industriel en chantier. La V2 repart de l'âge de pierre et suit sa propre progression.
         </p>
       </div>
 
-      <div class="strates-actions">
-        <a class="card-cta-link strates-btn strates-btn--play" href="https://strates.fmenguy.fr">
-          <span class="card-cta">Jouer</span>
+      <div class="strates-versions">
+        <a class="strates-version strates-version--v2" href="https://strates.fmenguy.fr/v2/">
+          <span class="strates-badge">Nouveau</span>
+          <span class="strates-shot">
+            <img src="/images/strates-v2.webp" width="840" height="616" loading="lazy" decoding="async" alt="Capture de la V2 de Strates : l'île en relief vue de dessus avec la nouvelle interface">
+          </span>
+          <span class="strates-version-head">
+            <span class="strates-btn-icon">▶</span>
+            <span class="strates-version-title">Jouer la V2</span>
+            <span class="strates-version-arrow">→</span>
+          </span>
+          <span class="strates-version-desc">
+            Interface et prise en main entièrement refondues, île en relief, progression guidée par chapitres. La partie redémarre à l'âge de pierre.
+          </span>
         </a>
+        <a class="strates-version strates-version--v1" href="https://strates.fmenguy.fr">
+          <span class="strates-version-head">
+            <span class="strates-btn-icon">▶</span>
+            <span class="strates-version-title">Jouer la V1</span>
+            <span class="strates-version-arrow">→</span>
+          </span>
+          <span class="strates-version-desc">
+            La partie la plus avancée : âges I à IV jouables, âge V Industriel en chantier.
+          </span>
+        </a>
+      </div>
+
+      <div class="strates-actions">
         <a class="strates-btn strates-btn--changelog" href="https://strates.fmenguy.fr/docs/changelog.html">
           <span class="strates-btn-icon" style="color:#4ade80">✓</span>
           <span class="strates-btn-label">Changelog</span>
