@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Strates · Arbre des savoirs, deux pistes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #1b1914;
+    --panel: #221e18;
+    --line: rgba(237,227,204,0.12);
+    --text: #ede3cc;
+    --muted: rgba(237,227,204,0.62);
+    --gold: #d4a017;
+    --gold-soft: #f0c96a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+    line-height: 1.55;
+  }
+  a { color: var(--gold-soft); }
+
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 1.6rem 1rem 3rem; }
+
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem 1.2rem;
+    margin-bottom: 0.4rem;
+  }
+  h1 {
+    margin: 0;
+    font-family: Fraunces, Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
+  }
+  .tmp {
+    padding: 0.15rem 0.6rem;
+    border: 1px dashed rgba(212,160,23,0.6);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+  }
+  .nav { margin-left: auto; font-size: 0.85rem; display: flex; gap: 1rem; }
+  .nav a { text-decoration: none; border-bottom: 1px solid rgba(240,201,106,0.35); }
+  .nav a:hover { border-color: var(--gold-soft); }
+
+  .intro { max-width: 70ch; color: var(--muted); font-size: 0.95rem; margin: 0.4rem 0 1.4rem; }
+
+  .picks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+  }
+  .pick {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.9rem 1rem;
+    text-align: left;
+    font: inherit;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  }
+  .pick:hover { border-color: rgba(212,160,23,0.5); transform: translateY(-1px); }
+  .pick[aria-selected="true"] {
+    border-color: var(--gold);
+    background: linear-gradient(160deg, rgba(212,160,23,0.18) 0%, rgba(212,160,23,0.04) 70%), var(--panel);
+    box-shadow: 0 6px 22px rgba(212,160,23,0.14);
+  }
+  .pick-k {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+  }
+  .pick-n { font-family: Fraunces, Georgia, serif; font-size: 1.15rem; font-weight: 600; }
+  .pick-d { font-size: 0.8rem; color: var(--muted); }
+
+  .stage-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .stage-head strong { color: var(--text); font-weight: 600; }
+  .stage-head a { margin-left: auto; }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  .stage iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1366px;
+    height: 768px;
+    border: 0;
+    transform-origin: 0 0;
+  }
+
+  .how {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .mobile-note { display: none; }
+
+  @media (max-width: 760px) {
+    .nav { margin-left: 0; width: 100%; }
+    .mobile-note { display: block; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <h1>Strates · Arbre des savoirs</h1>
+    <span class="tmp">Page temporaire</span>
+    <nav class="nav">
+      <a href="/">Retour à l'Arcade</a>
+      <a href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/kanban.html">Suivi du chantier</a>
+    </nav>
+  </div>
+
+  <p class="intro">
+    Deux pistes pour le nouvel écran des technologies de la V2, à comparer avant de choisir.
+    Ce sont des maquettes jouables : on peut cliquer sur un savoir pour lire sa fiche, suivre ses prérequis
+    et le mettre en recherche. Les données sont celles du jeu, la partie est figée à l'âge du Bronze.
+  </p>
+
+  <div class="picks" role="tablist" aria-label="Choix de la maquette">
+    <button class="pick" role="tab" data-id="strates" data-src="Strates.dc.html">
+      <span class="pick-k">Piste A</span>
+      <span class="pick-n">Strates</span>
+      <span class="pick-d">Les âges empilés en couches comme des strates géologiques, une colonne par branche.</span>
+    </button>
+    <button class="pick" role="tab" data-id="spherier" data-src="Spherier.dc.html">
+      <span class="pick-k">Piste A, variante</span>
+      <span class="pick-n">Sphérier</span>
+      <span class="pick-d">Le même arbre en étoile autour du village, chaque branche part dans sa direction.</span>
+    </button>
+    <button class="pick" role="tab" data-id="alveoles" data-src="Alveoles.dc.html">
+      <span class="pick-k">Piste A, variante</span>
+      <span class="pick-n">Alvéoles</span>
+      <span class="pick-d">Les couches de la piste A, avec des savoirs regroupés en grappes d'hexagones.</span>
+    </button>
+    <button class="pick" role="tab" data-id="cadrans" data-src="Cadrans.dc.html">
+      <span class="pick-k">Piste B</span>
+      <span class="pick-n">Roue à quatre cadrans</span>
+      <span class="pick-d">Les âges en anneaux autour du village, les savoirs en quatre cadrans : Connaître, Bâtir, Produire, Nourrir.</span>
+    </button>
+  </div>
+
+  <div class="stage-head">
+    <span>Maquette affichée : <strong id="current-name">Strates</strong></span>
+    <a id="open-full" href="Strates.dc.html" target="_blank" rel="noopener">Ouvrir en grand ↗</a>
+  </div>
+
+  <div class="stage" id="stage">
+    <iframe id="frame" title="Maquette de l'arbre des savoirs" src="Strates.dc.html"></iframe>
+  </div>
+
+  <p class="how" id="how"></p>
+  <p class="how mobile-note">Les maquettes sont dessinées pour un écran d'ordinateur (1366 × 768). Sur téléphone, « Ouvrir en grand » donne une meilleure lecture.</p>
+
+</div>
+
+<script>
+  const HOW = {
+    strates: 'Glisser pour se déplacer, molette ou boutons + et − pour zoomer, clic sur un savoir pour ouvrir sa fiche.',
+    spherier: 'Glisser pour se déplacer, molette pour zoomer, survol d\'un savoir pour son état, clic pour sa fiche.',
+    alveoles: 'Glisser pour se déplacer, molette pour zoomer, survol d\'un savoir pour son état, clic pour sa fiche.',
+    cadrans: 'Clic ou molette vers l\'avant sur un cadran pour zoomer dessus, molette vers l\'arrière pour revenir à la vue d\'ensemble. Les onglets en bas de la carte changent de cadran.'
+  }
+  const W = 1366, H = 768
+  const stage = document.getElementById('stage')
+  const frame = document.getElementById('frame')
+  const picks = [...document.querySelectorAll('.pick')]
+  const nameEl = document.getElementById('current-name')
+  const fullEl = document.getElementById('open-full')
+  const howEl = document.getElementById('how')
+
+  function fit() {
+    const k = stage.clientWidth / W
+    frame.style.transform = 'scale(' + k + ')'
+    stage.style.height = Math.round(H * k) + 'px'
+  }
+
+  function show(id, push) {
+    const btn = picks.find(p => p.dataset.id === id) || picks[0]
+    picks.forEach(p => p.setAttribute('aria-selected', p === btn ? 'true' : 'false'))
+    if (!frame.src.endsWith(btn.dataset.src)) frame.src = btn.dataset.src
+    nameEl.textContent = btn.querySelector('.pick-n').textContent
+    fullEl.href = btn.dataset.src
+    howEl.textContent = HOW[btn.dataset.id]
+    if (push) history.replaceState(null, '', '#' + btn.dataset.id)
+  }
+
+  // La molette sert au zoom des maquettes : on empêche qu'elle fasse aussi défiler la page
+  frame.addEventListener('load', () => {
+    try { frame.contentWindow.addEventListener('wheel', e => e.preventDefault(), { passive: false }) } catch (e) {}
+  })
+
+  picks.forEach(p => p.addEventListener('click', () => show(p.dataset.id, true)))
+  window.addEventListener('resize', fit)
+  window.addEventListener('hashchange', () => show(location.hash.slice(1), false))
+  fit()
+  show(location.hash.slice(1), false)
+</script>
+</body>
+</html>
