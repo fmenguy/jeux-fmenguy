@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Arbre des savoirs, sphérier</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atlas.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#1b1914}
+</style>
+</helmet>
+<div class="at-root" style="width: {{W}}px; height: {{H}}px; font-family: Inter, system-ui, sans-serif; color: #ede3cc">
+<header class="hd" style="width: {{W}}px">
+<div class="hd-l">
+<h1 class="ttl">Savoirs</h1>
+<span class="age-chip">Âge du Bronze</span>
+</div>
+<div class="hd-r">
+<div class="rs"><span>Recherche</span><span class="rs-n">Écriture</span><span class="rs-bar"><span class="rs-fill" style="width: 60%"></span></span><span class="mono">60 %</span></div>
+<ul class="lg">
+<li><span class="sw sw-dispo"></span>Disponible</li>
+<li><span class="sw sw-encours"></span>En cours</li>
+<li><span class="sw sw-acquis"></span>Acquis</li>
+<li><span class="sw sw-verrou"></span>Verrouillé</li>
+</ul>
+</div>
+</header>
+<div class="map" style="left: 0px; top: 56px; width: {{mapW}}px; height: {{mapH}}px; cursor: {{cursor}}" onMouseDown="{{onDown}}" onMouseMove="{{onMove}}" onMouseUp="{{onUp}}" onMouseLeave="{{onLeave}}" onWheel="{{onWheel}}">
+<div class="world" style="transform: translate({{vx}}px, {{vy}}px) scale({{vz}}); width: {{cW}}px; height: {{cH}}px">
+<sc-for list="{{bands}}" as="b" hint-placeholder-count="5">
+<div class="{{b.cls}}" style="top: {{b.y}}px; height: {{b.h}}px; width: {{b.w}}px; {{b.bg}}">
+<div class="band-lab" style="width: {{b.labW}}px; height: {{b.h}}px">
+<span class="band-num">{{b.roman}}</span>
+<span class="band-name">{{b.name}}</span>
+<sc-if value="{{b.current}}" hint-placeholder-val="{{false}}"><span class="band-now">Âge actuel</span></sc-if>
+</div>
+</div>
+</sc-for>
+<sc-for list="{{cols}}" as="c" hint-placeholder-count="6">
+<div class="col-lab" style="left: {{c.x}}px; top: {{c.y}}px; width: {{c.w}}px"><span class="col-dot" style="background: {{c.color}}"></span>{{c.name}}</div>
+</sc-for>
+<sc-for list="{{links}}" as="l" hint-placeholder-count="0">
+<div class="{{l.cls}}" style="left: {{l.x}}px; top: {{l.y}}px; width: {{l.len}}px; transform: rotate({{l.ang}}deg)"></div>
+</sc-for>
+<sc-if value="{{hasHub}}" hint-placeholder-val="{{false}}">
+<div class="hub" style="left: {{hub.x}}px; top: {{hub.y}}px; transform: translate(-50%, -{{hub.half}}px)">
+<div class="hub-hex" style="width: {{hub.w}}px; height: {{hub.h}}px">
+<span class="hub-rim"></span>
+<span class="hub-fill"><span class="hub-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 L12 4 L20 11"></path><path d="M6 9.5 V20 H18 V9.5"></path><path d="M10 20 V14 H14 V20"></path></svg></span></span>
+</div>
+<span class="hub-lab">Village</span>
+</div>
+</sc-if>
+<sc-for list="{{clusters}}" as="c" hint-placeholder-count="0">
+<div class="{{c.cls}}" style="left: {{c.x}}px; top: {{c.y}}px">{{c.name}}<span class="mono">{{c.roman}}</span></div>
+</sc-for>
+<sc-for list="{{nodes}}" as="n" hint-placeholder-count="12">
+<button type="button" class="{{n.cls}}" style="left: {{n.x}}px; top: {{n.y}}px; width: {{n.w}}px; height: {{n.h}}px; opacity: {{n.op}}; color: {{n.gc}}" aria-label="{{n.aria}}" onClick="{{n.pick}}" onMouseEnter="{{n.enter}}" onMouseLeave="{{leave}}">
+<sc-if value="{{n.isHex}}" hint-placeholder-val="{{false}}">
+<span class="rim"></span>
+<span class="fill">
+<span class="prog" style="height: {{n.prog}}%"></span>
+<span class="ico">
+<sc-if value="{{n.gOutils}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9 Q12 2 20 9"></path><path d="M12 5.6 V21"></path></svg></sc-if>
+<sc-if value="{{n.gAgri}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 V5"></path><path d="M12 9 L9 6.5"></path><path d="M12 9 L15 6.5"></path><path d="M12 13 L9 10.5"></path><path d="M12 13 L15 10.5"></path><path d="M12 17 L9 14.5"></path><path d="M12 17 L15 14.5"></path></svg></sc-if>
+<sc-if value="{{n.gCons}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 L12 4 L20 11"></path><path d="M6 9.5 V20 H18 V9.5"></path><path d="M10 20 V14 H14 V20"></path></svg></sc-if>
+<sc-if value="{{n.gSav}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6 C10 4.5 7 4.5 4 5 V19 C7 18.5 10 18.5 12 20 C14 18.5 17 18.5 20 19 V5 C17 4.5 14 4.5 12 6 Z"></path><path d="M12 6 V20"></path></svg></sc-if>
+<sc-if value="{{n.gExp}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M15.5 8.5 L13.2 13.2 L8.5 15.5 L10.8 10.8 Z"></path></svg></sc-if>
+<sc-if value="{{n.gNoc}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.5 14.5 A7.5 7.5 0 1 1 9.5 5.5 A6 6 0 0 0 18.5 14.5 Z"></path></svg></sc-if>
+<sc-if value="{{n.gCheck}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5 L10 16.5 L18 8"></path></svg></sc-if>
+</span>
+</span>
+</sc-if>
+<sc-if value="{{n.isChip}}" hint-placeholder-val="{{true}}">
+<span class="dot"></span><span class="tx">{{n.name}}</span><span class="bar" style="width: {{n.prog}}%"></span>
+</sc-if>
+</button>
+</sc-for>
+<sc-if value="{{hasTip}}" hint-placeholder-val="{{false}}">
+<div class="tip" style="left: {{tip.x}}px; top: {{tip.y}}px"><span class="tip-n">{{tip.name}}</span><span class="tip-s">{{tip.state}}</span></div>
+</sc-if>
+</div>
+<sc-if value="{{hasAgeKey}}" hint-placeholder-val="{{false}}">
+<div class="akey">
+<sc-for list="{{ageKey}}" as="k" hint-placeholder-count="8"><span><span class="mono">{{k.roman}}</span>{{k.name}}</span></sc-for>
+</div>
+</sc-if>
+<div class="ctl">
+<button type="button" aria-label="Dézoomer" onClick="{{zoomOut}}" onMouseDown="{{stop}}">−</button>
+<button type="button" aria-label="Zoomer" onClick="{{zoomIn}}" onMouseDown="{{stop}}">+</button>
+<button type="button" class="txt" onClick="{{recenter}}" onMouseDown="{{stop}}">Recentrer</button>
+</div>
+</div>
+<aside class="fiche" style="left: {{mapW}}px; top: 56px; width: 300px; height: {{mapH}}px">
+<div class="fi-kick" style="color: {{fi.color}}">
+<span class="fi-ico">
+<sc-if value="{{fi.gOutils}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9 Q12 2 20 9"></path><path d="M12 5.6 V21"></path></svg></sc-if>
+<sc-if value="{{fi.gAgri}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 V5"></path><path d="M12 9 L9 6.5"></path><path d="M12 9 L15 6.5"></path><path d="M12 13 L9 10.5"></path><path d="M12 13 L15 10.5"></path><path d="M12 17 L9 14.5"></path><path d="M12 17 L15 14.5"></path></svg></sc-if>
+<sc-if value="{{fi.gCons}}" hint-placeholder-val="{{true}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 L12 4 L20 11"></path><path d="M6 9.5 V20 H18 V9.5"></path><path d="M10 20 V14 H14 V20"></path></svg></sc-if>
+<sc-if value="{{fi.gSav}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6 C10 4.5 7 4.5 4 5 V19 C7 18.5 10 18.5 12 20 C14 18.5 17 18.5 20 19 V5 C17 4.5 14 4.5 12 6 Z"></path><path d="M12 6 V20"></path></svg></sc-if>
+<sc-if value="{{fi.gExp}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M15.5 8.5 L13.2 13.2 L8.5 15.5 L10.8 10.8 Z"></path></svg></sc-if>
+<sc-if value="{{fi.gNoc}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.5 14.5 A7.5 7.5 0 1 1 9.5 5.5 A6 6 0 0 0 18.5 14.5 Z"></path></svg></sc-if>
+</span>
+<span>{{fi.branch}}</span>
+<span class="age">{{fi.age}}</span>
+</div>
+<h2 class="fi-name">{{fi.name}}</h2>
+<span class="{{fi.stateCls}}">{{fi.stateLabel}}</span>
+<div class="fi-cost"><span>Coût en recherche</span><span class="mono">{{fi.cost}}</span></div>
+<div class="fi-sec">Prérequis</div>
+<sc-if value="{{fi.noReq}}" hint-placeholder-val="{{false}}"><p class="fi-empty">Aucun, c’est un savoir de départ.</p></sc-if>
+<div class="fi-list">
+<sc-for list="{{fi.reqs}}" as="r" hint-placeholder-count="1">
+<button type="button" class="fi-link" onClick="{{r.pick}}"><span class="{{r.cls}}"></span><span class="fl-n">{{r.name}}</span><span class="fl-s">{{r.state}}</span></button>
+</sc-for>
+</div>
+<div class="fi-sec">Débloque</div>
+<sc-if value="{{fi.noUnlock}}" hint-placeholder-val="{{false}}"><p class="fi-empty">Rien pour l’instant.</p></sc-if>
+<div class="fi-list">
+<sc-for list="{{fi.unlocks}}" as="r" hint-placeholder-count="3">
+<button type="button" class="fi-link" onClick="{{r.pick}}"><span class="{{r.cls}}"></span><span class="fl-n">{{r.name}}</span><span class="fl-s">{{r.state}}</span></button>
+</sc-for>
+</div>
+<div class="fi-foot">
+<sc-if value="{{fi.isProg}}" hint-placeholder-val="{{false}}">
+<div class="fi-prog"><span>Progression</span><span class="rs-bar"><span class="rs-fill" style="width: {{fi.prog}}%"></span></span><span class="mono">{{fi.prog}} %</span></div>
+</sc-if>
+<sc-if value="{{fi.hasReason}}" hint-placeholder-val="{{false}}"><p class="fi-why">{{fi.reason}}</p></sc-if>
+<sc-if value="{{fi.canStart}}" hint-placeholder-val="{{true}}"><button type="button" class="{{fi.btnCls}}" onClick="{{queue}}">{{fi.btnLabel}}</button></sc-if>
+</div>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"direction":{"editor":"enum","options":["strates","spherier","alveoles"],"default":"spherier","section":"Direction"},"estompage":{"editor":"range","min":0,"max":1,"step":0.05,"default":0.55,"section":"Lecture"},"futurs":{"editor":"enum","options":["voilés","nom seul","visibles"],"default":"voilés","section":"Lecture"},"liens":{"editor":"enum","options":["sélection","tous"],"default":"sélection","section":"Lecture"},"matiere":{"editor":"boolean","default":true,"section":"Strates"},"alveole":{"editor":"int","min":12,"max":26,"default":17,"section":"Alvéoles"},"w":{"editor":null,"default":1366},"h":{"editor":null,"default":768},"$preview":{"width":1366,"height":768}}'>
+var SQ3 = Math.sqrt(3);
+var CUR = 2;
+var BR = [
+  { id: 'outils', name: 'Outils', color: '#aaa597' },
+  { id: 'agriculture', name: 'Agriculture', color: '#c9a14a' },
+  { id: 'construction', name: 'Construction', color: '#c47d47' },
+  { id: 'savoir', name: 'Savoir', color: '#86a0d4' },
+  { id: 'exploration', name: 'Exploration', color: '#62b096' },
+  { id: 'nocturne', name: 'Nocturne', color: '#9a9cd6' }
+];
+var BRI = {};
+BR.forEach(function (b, i) { BRI[b.id] = i; });
+var AGES = [
+  { n: 1, name: 'Pierre', long: 'Âge de pierre', roman: 'I', base: '#29251f', line: 'rgba(237,227,204,.05)' },
+  { n: 2, name: 'Bronze', long: 'Âge du Bronze', roman: 'II', base: '#2e241a', line: 'rgba(212,150,90,.10)' },
+  { n: 3, name: 'Fer et Médiéval', long: 'Fer et Médiéval', roman: 'III', base: '#232320', line: 'rgba(170,180,190,.07)' },
+  { n: 4, name: 'Renaissance', long: 'Renaissance', roman: 'IV', base: '#2b2519', line: 'rgba(212,184,112,.08)' },
+  { n: 5, name: 'Industriel', long: 'Âge industriel', roman: 'V', base: '#291f1b', line: 'rgba(190,100,80,.09)' },
+  { n: 6, name: 'Moderne', long: 'Âge moderne', roman: 'VI', base: '#242321', line: 'rgba(237,227,204,.04)' },
+  { n: 7, name: 'Atomique', long: 'Âge atomique', roman: 'VII', base: '#1f2420', line: 'rgba(140,190,150,.06)' },
+  { n: 8, name: 'Espace', long: 'Âge spatial', roman: 'VIII', base: '#1c1c23', line: 'rgba(150,150,210,.07)' }
+];
+var RAW = [
+  ['pick-stone', 'Pioche', 1, 'outils', '', 12],
+  ['axe-stone', 'Hache', 1, 'outils', '', 12],
+  ['bow-wood', 'Arc', 1, 'outils', '', 12],
+  ['gathering-improved', 'Cueillette améliorée', 1, 'agriculture', '', 10],
+  ['first-field', 'Premier champ', 1, 'agriculture', '', 15],
+  ['fire-mastery', 'Maîtrise du feu', 1, 'construction', '', 0],
+  ['big-house', 'Grosse maison', 1, 'construction', '', 12],
+  ['demolition', 'Démolition', 1, 'construction', 'big-house', 8],
+  ['basic-research', 'Recherche de base', 1, 'savoir', '', 0],
+  ['oral-tradition', 'Tradition orale', 1, 'savoir', 'fire-mastery', 0],
+  ['promontory', 'Promontoire', 1, 'nocturne', '', 0],
+  ['astronomy-1', 'Astronomie I', 1, 'nocturne', 'promontory', 12],
+  ['axe-bronze', 'Hache de bronze', 2, 'outils', 'axe-stone', 20],
+  ['pick-bronze', 'Pioche de bronze', 2, 'outils', 'pick-stone', 20],
+  ['arrow-bronze', 'Pointes de bronze', 2, 'outils', 'bow-wood', 18],
+  ['agriculture', 'Agriculture', 2, 'agriculture', 'first-field', 22],
+  ['granary', 'Grenier', 2, 'agriculture', 'agriculture', 20],
+  ['forge', 'Forge', 2, 'construction', 'big-house', 25],
+  ['paved-road', 'Route pavée', 2, 'construction', 'forge', 18],
+  ['writing', 'Écriture', 2, 'savoir', 'oral-tradition', 22],
+  ['calendrier', 'Calendrier', 2, 'savoir', 'writing', 15],
+  ['scouting', 'Éclaireur', 2, 'exploration', '', 8],
+  ['cartography', 'Cartographie', 2, 'exploration', 'scouting', 20],
+  ['pick-iron', 'Pioche de fer', 3, 'outils', 'pick-bronze', 30],
+  ['axe-iron', 'Hache de fer', 3, 'outils', 'axe-bronze|pick-iron', 25],
+  ['arrow-iron', 'Pointes de fer', 3, 'outils', 'arrow-bronze|pick-iron', 25],
+  ['windmill', 'Moulin à vent', 3, 'agriculture', 'granary', 30],
+  ['bakery', 'Four à pain', 3, 'agriculture', 'windmill', 35],
+  ['tavern', 'Taverne', 3, 'construction', 'paved-road', 30],
+  ['urbanisme', 'Urbanisme', 3, 'construction', 'paved-road', 25],
+  ['market', 'Marché', 3, 'savoir', 'writing', 30],
+  ['library', 'Bibliothèque', 3, 'savoir', 'calendrier', 35],
+  ['gouvernance', 'Gouvernance', 3, 'savoir', 'writing', 30],
+  ['navigation', 'Navigation', 3, 'exploration', 'cartography', 35],
+  ['astrologie', 'Astrologie', 3, 'nocturne', 'scouting', null],
+  ['alchimie', 'Alchimie', 3, 'nocturne', 'forge', null],
+  ['herboristerie-nocturne', 'Herboristerie nocturne', 3, 'nocturne', 'gathering-improved', null],
+  ['meditation', 'Méditation', 3, 'nocturne', 'writing', null],
+  ['papermaking', 'Papeterie', 4, 'savoir', 'writing', 45],
+  ['printing-press', 'Presse à imprimer', 4, 'savoir', 'papermaking', 60],
+  ['movable-type', 'Caractères mobiles', 4, 'outils', 'printing-press', 55],
+  ['glassmaking', 'Verrerie', 4, 'construction', 'forge', 40],
+  ['comptoir-marchand', 'Comptoir marchand', 4, 'construction', 'market', 50],
+  ['perspective-picturale', 'Perspective picturale', 4, 'construction', 'library|glassmaking', 55],
+  ['mecenat', 'Mécénat', 4, 'construction', 'perspective-picturale|comptoir-marchand', 70],
+  ['apothicairerie', 'Apothicairerie', 4, 'agriculture', 'herboristerie-nocturne', 45],
+  ['steam-engine', 'Machine à vapeur', 5, 'construction', 'mecenat', 75],
+  ['mass-production', 'Production de masse', 5, 'construction', 'steam-engine', 85],
+  ['railways', 'Chemins de fer', 5, 'construction', 'mass-production', 90],
+  ['industrialization', 'Industrialisation', 5, 'construction', 'railways|stock-exchange', 110],
+  ['advanced-metallurgy', 'Métallurgie avancée', 5, 'outils', 'steam-engine|pick-iron', 65],
+  ['silversmithing', 'Orfèvrerie', 5, 'outils', 'alchimie', 65],
+  ['scientific-method', 'Méthode scientifique', 5, 'savoir', 'library|movable-type', 70],
+  ['stock-exchange', "Bourse d'échange", 5, 'savoir', 'comptoir-marchand|mecenat', 80]
+];
+var TECHS = RAW.map(function (r) { return { id: r[0], name: r[1], a: r[2], b: r[3], r: r[4] ? r[4].split('|') : [], c: r[5] }; });
+var BYID = {};
+TECHS.forEach(function (t) { BYID[t.id] = t; });
+var ACQ = {};
+TECHS.forEach(function (t) { if (t.a === 1) ACQ[t.id] = true; });
+['axe-bronze', 'pick-bronze', 'scouting', 'agriculture'].forEach(function (id) { ACQ[id] = true; });
+var PROG = { writing: 60 };
+var STATE_LABEL = { acquis: 'Acquis', encours: 'En cours', dispo: 'Disponible', verrou: 'Verrouillé' };
+var DIRS = { E: [1, 0], NE: [1, -1], NW: [0, -1], W: [-1, 0], SW: [-1, 1], SE: [0, 1] };
+var SPOKE = { outils: 'E', construction: 'NE', savoir: 'NW', nocturne: 'W', exploration: 'SW', agriculture: 'SE' };
+var SLOTS = [[0, 0], [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
+
+function r1(n) { return Math.round(n * 10) / 10; }
+function stateOf(t) {
+  if (ACQ[t.id]) return 'acquis';
+  if (PROG[t.id] != null) return 'encours';
+  if (t.a <= CUR && t.r.every(function (id) { return ACQ[id]; })) return 'dispo';
+  return 'verrou';
+}
+function glyphs(branch, check) {
+  return { gOutils: !check && branch === 'outils', gAgri: !check && branch === 'agriculture', gCons: !check && branch === 'construction', gSav: !check && branch === 'savoir', gExp: !check && branch === 'exploration', gNoc: !check && branch === 'nocturne', gCheck: !!check };
+}
+function joinFr(list) {
+  if (list.length < 2) return list.join('');
+  return list.slice(0, -1).join(', ') + ' et ' + list[list.length - 1];
+}
+function groupCells(hide) {
+  var cells = {};
+  TECHS.forEach(function (t) { if (hide(t)) return; var k = t.a + ':' + t.b; (cells[k] = cells[k] || []).push(t); });
+  return cells;
+}
+function hexPx(q, r, s) { return [s * SQ3 * (q + r / 2), s * 1.5 * r]; }
+function clusterShape(n, s) {
+  var pts = SLOTS.slice(0, n).map(function (qr) { return hexPx(qr[0], qr[1], s); });
+  var hw = s * SQ3 / 2;
+  var xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+  return { pts: pts, minX: Math.min.apply(null, xs) - hw, maxX: Math.max.apply(null, xs) + hw, minY: Math.min.apply(null, ys) - s, maxY: Math.max.apply(null, ys) + s };
+}
+function hexBox(cx, cy, s) {
+  var w = s * SQ3 * 0.92, h = 2 * s * 0.92;
+  return { x: cx - w / 2, y: cy - h / 2, w: w, h: h, cx: cx, cy: cy };
+}
+function stackBands(bandH, labH) {
+  var contentH = labH + bandH.reduce(function (a, b) { return a + b; }, 0);
+  var bands = [], bottom = contentH - labH;
+  AGES.forEach(function (ag, i) { var top = bottom - bandH[i]; bands.push({ ag: ag, y: top, h: bandH[i] }); bottom = top; });
+  return { bands: bands, contentH: contentH };
+}
+function layoutStrates(mapW, hide) {
+  var gut = 132, pad = 16, labH = 40;
+  var colW = Math.max(150, (mapW - gut - pad * 2) / 6);
+  var perRow = Math.max(1, Math.min(3, Math.floor((colW - 8) / 158)));
+  var chipW = (colW - 16 - (perRow - 1) * 8) / perRow;
+  var cells = groupCells(hide);
+  var bandH = AGES.map(function (ag) {
+    var rows = 0;
+    BR.forEach(function (b) { var n = (cells[ag.n + ':' + b.id] || []).length; rows = Math.max(rows, Math.ceil(n / perRow)); });
+    return rows ? rows * 40 - 6 + 24 : 44;
+  });
+  var st = stackBands(bandH, labH), pos = {};
+  st.bands.forEach(function (bd) {
+    BR.forEach(function (b, bi) {
+      (cells[bd.ag.n + ':' + b.id] || []).forEach(function (t, j) {
+        var x = gut + pad + bi * colW + 8 + (j % perRow) * (chipW + 8);
+        var y = bd.y + 12 + Math.floor(j / perRow) * 40;
+        pos[t.id] = { x: x, y: y, w: chipW, h: 34, cx: x + chipW / 2, cy: y + 17 };
+      });
+    });
+  });
+  var contentW = gut + pad * 2 + colW * 6;
+  var cols = BR.map(function (b, bi) { return { name: b.name, color: b.color, x: gut + pad + bi * colW, y: st.contentH - labH, w: colW }; });
+  return { pos: pos, bands: st.bands, cols: cols, contentW: contentW, contentH: st.contentH, gut: gut };
+}
+function layoutAlveoles(mapW, s, hide) {
+  var gut = 132, pad = 16, labH = 40;
+  var colW = Math.max(110, (mapW - gut - pad * 2) / 6);
+  var cells = groupCells(hide);
+  var bandH = AGES.map(function (ag) {
+    var h = 0;
+    BR.forEach(function (b) { var n = (cells[ag.n + ':' + b.id] || []).length; if (n) { var c = clusterShape(n, s); h = Math.max(h, c.maxY - c.minY); } });
+    return h ? h + 30 : 44;
+  });
+  var st = stackBands(bandH, labH), pos = {};
+  st.bands.forEach(function (bd) {
+    BR.forEach(function (b, bi) {
+      var list = cells[bd.ag.n + ':' + b.id] || [];
+      if (!list.length) return;
+      var c = clusterShape(list.length, s);
+      var ox = gut + pad + bi * colW + colW / 2 - (c.minX + c.maxX) / 2;
+      var oy = bd.y + bd.h / 2 - (c.minY + c.maxY) / 2;
+      list.forEach(function (t, j) { pos[t.id] = hexBox(ox + c.pts[j][0], oy + c.pts[j][1], s); });
+    });
+  });
+  var contentW = gut + pad * 2 + colW * 6;
+  var cols = BR.map(function (b, bi) { return { name: b.name, color: b.color, x: gut + pad + bi * colW, y: st.contentH - labH, w: colW }; });
+  return { pos: pos, bands: st.bands, cols: cols, contentW: contentW, contentH: st.contentH, gut: gut };
+}
+function layoutSpherier(s, hide) {
+  var cells = groupCells(hide), pos = {}, clusters = [], spokes = [];
+  Object.keys(cells).forEach(function (k) {
+    var list = cells[k], t0 = list[0], d = DIRS[SPOKE[t0.b]], ring = 4 * t0.a;
+    var base = hexPx(d[0] * ring, d[1] * ring, s);
+    var c = clusterShape(list.length, s);
+    var ox = base[0] - (c.minX + c.maxX) / 2, oy = base[1] - (c.minY + c.maxY) / 2;
+    list.forEach(function (t, j) { pos[t.id] = hexBox(ox + c.pts[j][0], oy + c.pts[j][1], s); });
+    clusters.push({ name: BR[BRI[t0.b]].name, roman: AGES[t0.a - 1].roman, a: t0.a, x: base[0], y: base[1] + (c.maxY - c.minY) / 2 + 6 });
+    if (t0.a === 1) spokes.push({ x: base[0], y: base[1] });
+  });
+  var minX = -s * 2, maxX = s * 2, minY = -s * 2, maxY = s * 3;
+  Object.keys(pos).forEach(function (id) { var p = pos[id]; minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x + p.w); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y + p.h); });
+  clusters.forEach(function (c) { minX = Math.min(minX, c.x - 60); maxX = Math.max(maxX, c.x + 60); maxY = Math.max(maxY, c.y + 16); });
+  var pad = 80, dx = pad - minX, dy = pad - minY;
+  Object.keys(pos).forEach(function (id) { var p = pos[id]; p.x += dx; p.y += dy; p.cx += dx; p.cy += dy; });
+  clusters.forEach(function (c) { c.x += dx; c.y += dy; });
+  spokes.forEach(function (sp) { sp.x += dx; sp.y += dy; });
+  return { pos: pos, clusters: clusters, spokes: spokes, hub: { x: dx, y: dy, w: s * SQ3 * 1.7, h: s * 2 * 1.7 }, contentW: maxX - minX + pad * 2, contentH: maxY - minY + pad * 2 };
+}
+function defaultView(dir, L, mapW, mapH) {
+  if (dir === 'spherier') return { zoom: 1, tx: mapW / 2 - L.hub.x, ty: mapH / 2 - L.hub.y };
+  var z = Math.min(1, mapW / L.contentW, dir === 'alveoles' ? mapH / L.contentH : 1);
+  var tx = (mapW - L.contentW * z) / 2;
+  var ty = L.contentH * z <= mapH ? (mapH - L.contentH * z) / 2 : mapH - L.contentH * z;
+  return { zoom: z, tx: tx, ty: ty };
+}
+function seg(x1, y1, x2, y2, cls) {
+  var dx = x2 - x1, dy = y2 - y1;
+  return { x: r1(x1), y: r1(y1 - 1), len: r1(Math.hypot(dx, dy)), ang: r1(Math.atan2(dy, dx) * 180 / Math.PI), cls: cls };
+}
+
+class Component extends DCLogic {
+  constructor(...args) {
+    super(...args);
+    this.state = { sel: 'forge', hover: null, view: null, drag: null, queued: null };
+    this.moved = false;
+  }
+  pick(id) {
+    if (this.moved) { this.moved = false; return; }
+    this.setState({ sel: id });
+  }
+  zoomAt(v, mx, my, f) {
+    var z = Math.min(2.6, Math.max(0.3, v.zoom * f));
+    var wx = (mx - v.tx) / v.zoom, wy = (my - v.ty) / v.zoom;
+    this.setState({ view: { zoom: z, tx: mx - wx * z, ty: my - wy * z } });
+  }
+  renderVals() {
+    var self = this;
+    var P = this.props || {};
+    var S = this.state || {};
+    var dir = P.direction || 'strates';
+    var W = Number(P.w) || 1366, H = Number(P.h) || 768;
+    var fade = P.estompage == null ? 0.55 : Number(P.estompage);
+    var material = P.matiere == null ? true : (P.matiere === true || P.matiere === 'true');
+    var futures = P.futurs || 'voilés';
+    var s = Number(P.alveole) || (dir === 'alveoles' ? 18 : 17);
+    var linksMode = P.liens || (dir === 'spherier' ? 'tous' : 'sélection');
+    var mapW = W - 300, mapH = H - 56;
+    var hide = function (t) { return futures === 'nom seul' && t.a > CUR; };
+    var L = dir === 'spherier' ? layoutSpherier(s, hide) : dir === 'alveoles' ? layoutAlveoles(mapW, s, hide) : layoutStrates(mapW, hide);
+    var v = S.view || defaultView(dir, L, mapW, mapH);
+    var sel = S.sel || 'forge';
+
+    var nodes = TECHS.filter(function (t) { return L.pos[t.id]; }).map(function (t) {
+      var p = L.pos[t.id], st = stateOf(t), hex = dir !== 'strates';
+      var veil = futures === 'voilés' && t.a > CUR;
+      var op = st === 'acquis' ? Math.max(0.2, 1 - 0.75 * fade) : veil ? 0.42 : 1;
+      var gc = st === 'acquis' ? '#9a8f76' : st === 'verrou' ? '#6f6656' : BR[BRI[t.b]].color;
+      return Object.assign({
+        id: t.id, x: r1(p.x), y: r1(p.y), w: r1(p.w), h: r1(p.h), isHex: hex, isChip: !hex,
+        cls: 'node ' + (hex ? 'hx' : 'ch') + ' s-' + st + (sel === t.id ? ' sel' : ''),
+        op: r1(op * 100) / 100, gc: gc, name: t.name, prog: st === 'encours' ? PROG[t.id] : 0,
+        aria: t.name + ', ' + STATE_LABEL[st].toLowerCase(),
+        pick: function () { self.pick(t.id); },
+        enter: function () { if (self.state.hover !== t.id) self.setState({ hover: t.id }); }
+      }, glyphs(t.b, st === 'acquis'));
+    });
+
+    var links = [];
+    TECHS.forEach(function (t) {
+      t.r.forEach(function (rid) {
+        var a = L.pos[rid], b = L.pos[t.id];
+        if (!a || !b) return;
+        var isIn = t.id === sel, isOut = rid === sel;
+        if (linksMode !== 'tous' && !isIn && !isOut) return;
+        links.push(seg(a.cx, a.cy, b.cx, b.cy, 'ln' + (isIn ? ' in' : isOut ? ' out' : '')));
+      });
+    });
+    if (L.spokes) L.spokes.forEach(function (sp) { links.unshift(seg(L.hub.x, L.hub.y, sp.x, sp.y, 'ln spoke')); });
+
+    var bands = (L.bands || []).map(function (bd, i) {
+      var ag = bd.ag;
+      var bg = material
+        ? 'background-color: ' + ag.base + '; background-image: repeating-linear-gradient(180deg, transparent 0 15px, ' + ag.line + ' 15px 16px), repeating-linear-gradient(180deg, transparent 0 6px, rgba(0,0,0,.10) 6px 7px)'
+        : 'background-color: ' + (i % 2 ? '#1f1b16' : '#221e18');
+      return { y: r1(bd.y), h: r1(bd.h), w: r1(L.contentW), labW: L.gut, roman: ag.roman, name: ag.name, current: ag.n === CUR, cls: 'band' + (ag.n > CUR && futures !== 'visibles' ? ' veil' : ''), bg: bg };
+    });
+    var cols = (L.cols || []).map(function (c) { return { name: c.name, color: c.color, x: r1(c.x), y: r1(c.y), w: r1(c.w) }; });
+    var clusters = (L.clusters || []).map(function (c) { return { name: c.name, roman: c.roman, x: r1(c.x), y: r1(c.y), cls: 'cl-lab' + (futures === 'voilés' && c.a > CUR ? ' veil' : '') }; });
+
+    var tip = { x: 0, y: 0, name: '', state: '' };
+    var hasTip = false;
+    if (dir !== 'strates' && S.hover && L.pos[S.hover]) {
+      var hp = L.pos[S.hover], ht = BYID[S.hover], hs = stateOf(ht);
+      tip = { x: r1(hp.cx), y: r1(hp.y - 6), name: ht.name, state: STATE_LABEL[hs] + (hs === 'encours' ? ' · ' + PROG[ht.id] + ' %' : '') };
+      hasTip = true;
+    }
+
+    var ft = BYID[sel] || BYID.forge, fst = stateOf(ft);
+    var row = function (t) { var st = stateOf(t); return { name: t.name, state: STATE_LABEL[st], cls: 'mk s-' + st, pick: function () { self.setState({ sel: t.id }); } }; };
+    var reqs = ft.r.map(function (id) { return row(BYID[id]); });
+    var unlocks = TECHS.filter(function (t) { return t.r.indexOf(ft.id) >= 0; }).map(row);
+    var missing = ft.r.filter(function (id) { return !ACQ[id]; }).map(function (id) { return BYID[id].name; });
+    var reason = '';
+    if (fst === 'acquis') reason = 'Déjà acquis par le village.';
+    else if (fst === 'encours') reason = 'Les chercheurs y travaillent.';
+    else if (fst === 'verrou') {
+      var parts = [];
+      if (missing.length) parts.push('Il manque ' + joinFr(missing) + '.');
+      if (ft.a > CUR) parts.push('Accessible à partir de l’âge ' + AGES[ft.a - 1].name + '.');
+      reason = parts.join(' ');
+    }
+    var queued = S.queued === ft.id;
+    var fi = Object.assign({
+      name: ft.name, branch: BR[BRI[ft.b]].name, age: AGES[ft.a - 1].long, color: BR[BRI[ft.b]].color,
+      stateLabel: queued ? 'En file d’attente' : STATE_LABEL[fst], stateCls: 'badge s-' + fst,
+      cost: ft.c == null ? 'à définir' : ft.c + ' points', reqs: reqs, unlocks: unlocks,
+      noReq: !reqs.length, noUnlock: !unlocks.length, canStart: fst === 'dispo',
+      btnLabel: queued ? 'Retirer de la file' : 'Mettre en recherche', btnCls: queued ? 'btn ghost' : 'btn',
+      hasReason: !!reason, reason: reason, isProg: fst === 'encours', prog: PROG[ft.id] || 0
+    }, glyphs(ft.b, false));
+
+    return {
+      W: W, H: H, mapW: mapW, mapH: mapH,
+      vx: r1(v.tx), vy: r1(v.ty), vz: Math.round(v.zoom * 1000) / 1000, cW: r1(L.contentW), cH: r1(L.contentH),
+      cursor: S.drag ? 'grabbing' : 'grab',
+      bands: bands, cols: cols, links: links, nodes: nodes, clusters: clusters,
+      hasHub: !!L.hub, hub: L.hub ? { x: r1(L.hub.x), y: r1(L.hub.y), w: r1(L.hub.w), h: r1(L.hub.h), half: r1(L.hub.h / 2) } : { x: 0, y: 0, w: 0, h: 0, half: 0 },
+      hasTip: hasTip, tip: tip,
+      hasAgeKey: dir === 'spherier', ageKey: AGES.map(function (a) { return { roman: a.roman, name: a.name }; }),
+      fi: fi,
+      leave: function () { if (self.state.hover) self.setState({ hover: null }); },
+      stop: function (e) { e.stopPropagation(); },
+      onDown: function (e) {
+        if (e.button !== 0) return;
+        var r = e.currentTarget.getBoundingClientRect();
+        self.moved = false;
+        self.setState({ drag: { x: e.clientX, y: e.clientY, tx: v.tx, ty: v.ty, zoom: v.zoom, k: r.width / mapW || 1 } });
+      },
+      onMove: function (e) {
+        var d = self.state.drag;
+        if (!d) return;
+        var dx = (e.clientX - d.x) / d.k, dy = (e.clientY - d.y) / d.k;
+        if (!self.moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+        self.moved = true;
+        self.setState({ view: { zoom: d.zoom, tx: d.tx + dx, ty: d.ty + dy } });
+      },
+      onUp: function () { if (self.state.drag) self.setState({ drag: null }); },
+      onLeave: function () { self.setState({ drag: null, hover: null }); },
+      onWheel: function (e) {
+        var r = e.currentTarget.getBoundingClientRect(), k = r.width / mapW || 1;
+        self.zoomAt(v, (e.clientX - r.left) / k, (e.clientY - r.top) / k, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+      },
+      zoomIn: function () { self.zoomAt(v, mapW / 2, mapH / 2, 1.2); },
+      zoomOut: function () { self.zoomAt(v, mapW / 2, mapH / 2, 1 / 1.2); },
+      recenter: function () { self.setState({ view: null }); },
+      queue: function () { self.setState({ queued: self.state.queued === ft.id ? null : ft.id }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

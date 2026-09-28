@@ -32,7 +32,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{html,css,js,png,jpg,jpeg,svg,webp,woff2,ttf}'],
-        globIgnores: ['**/achrogemme/**', '**/stratageme/**', '**/fda/**', '**/orbique/**', '**/ecosim/**', '**/eryndor/**', '**/conway/**', '**/zentel/**', '**/images/strates-v2.webp'],
+        globIgnores: ['**/achrogemme/**', '**/stratageme/**', '**/fda/**', '**/orbique/**', '**/ecosim/**', '**/eryndor/**', '**/conway/**', '**/zentel/**', '**/strates-poc/**', '**/images/strates-v2.webp'],
         navigateFallback: '/aelindra/',
         navigateFallbackDenylist: [/^\/(?!aelindra)/],
         runtimeCaching: [

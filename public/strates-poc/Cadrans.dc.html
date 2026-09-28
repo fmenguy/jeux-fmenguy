@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Roue à quatre cadrans</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atlas.css">
+<link rel="stylesheet" href="cadrans.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#1b1914}
+</style>
+</helmet>
+<div class="at-root cd" style="width: 1366px; height: 768px; font-family: Inter, system-ui, sans-serif; color: #ede3cc">
+<header class="hd" style="width: 1366px">
+<div class="hd-l">
+<h1 class="ttl">Savoirs</h1>
+<span class="age-chip">Âge du Bronze</span>
+</div>
+<div class="hd-r">
+<div class="rs"><span>Recherche</span><span class="rs-n">Écriture</span><span class="rs-bar"><span class="rs-fill" style="width: 60%"></span></span><span class="mono">60 %</span></div>
+<ul class="lg">
+<li><span class="sw sw-dispo"></span>Disponible</li>
+<li><span class="sw sw-encours"></span>En cours</li>
+<li><span class="sw sw-acquis"></span>Acquis</li>
+<li><span class="sw sw-verrou"></span>Verrouillé</li>
+</ul>
+</div>
+</header>
+<div class="map" style="left: 0px; top: 56px; width: 1066px; height: 712px; cursor: {{cursor}}" onWheel="{{onWheel}}" onMouseDown="{{onDown}}" onMouseMove="{{onMove}}" onMouseUp="{{onUp}}" onMouseLeave="{{onUp}}">
+<div class="{{worldCls}}" style="transform: translate({{vx}}px, {{vy}}px) scale({{vz}}); width: {{cW}}px; height: {{cH}}px">
+<sc-for list="{{rings}}" as="r" hint-placeholder-count="8">
+<div class="{{r.cls}}" style="left: {{r.x}}px; top: {{r.y}}px; width: {{r.d}}px; height: {{r.d}}px; background: {{r.bg}}"></div>
+</sc-for>
+<sc-for list="{{hits}}" as="q" hint-placeholder-count="4">
+<button type="button" class="{{q.cls}}" style="left: {{q.x}}px; top: {{q.y}}px; width: {{q.s}}px; height: {{q.s}}px; {{q.radius}}" aria-label="{{q.aria}}" onClick="{{q.go}}"></button>
+</sc-for>
+<div class="axis" style="left: {{ax.vx}}px; top: {{ax.vy}}px; width: 26px; height: {{ax.len}}px"></div>
+<div class="axis" style="left: {{ax.hx}}px; top: {{ax.hy}}px; width: {{ax.len}}px; height: 26px"></div>
+<sc-for list="{{marks}}" as="m" hint-placeholder-count="0">
+<span class="{{m.cls}}" style="left: {{m.x}}px; top: {{m.y}}px">{{m.roman}}</span>
+</sc-for>
+<div class="hub-c" style="left: {{hub.x}}px; top: {{hub.y}}px; width: {{hub.d}}px; height: {{hub.d}}px">
+<span class="hub-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 L12 4 L20 11"></path><path d="M6 9.5 V20 H18 V9.5"></path><path d="M10 20 V14 H14 V20"></path></svg></span>
+<span class="hub-age">Âge du Bronze</span>
+</div>
+<sc-for list="{{titles}}" as="t" hint-placeholder-count="4">
+<button type="button" class="{{t.cls}}" style="left: {{t.x}}px; top: {{t.y}}px; width: 230px" onClick="{{t.go}}">
+<span class="qbar" style="background: {{t.color}}"></span>
+<span class="qname">{{t.name}}</span>
+<span class="qsub"><span class="mono">{{t.total}}</span> savoirs · <span class="mono">{{t.dispo}}</span> disponibles</span>
+</button>
+</sc-for>
+<sc-for list="{{links}}" as="l" hint-placeholder-count="0">
+<div class="{{l.cls}}" style="left: {{l.x}}px; top: {{l.y}}px; width: {{l.len}}px; transform: rotate({{l.ang}}deg)"></div>
+</sc-for>
+<sc-for list="{{nodes}}" as="n" hint-placeholder-count="12">
+<button type="button" class="{{n.cls}}" style="left: {{n.x}}px; top: {{n.y}}px; width: {{n.d}}px; height: {{n.d}}px; opacity: {{n.op}}; color: {{n.gc}}" aria-label="{{n.aria}}" onClick="{{n.pick}}" onMouseEnter="{{n.enter}}" onMouseLeave="{{leave}}">
+<span class="prog" style="height: {{n.prog}}%"></span>
+<span class="ico">
+<sc-if value="{{n.gOutils}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9 Q12 2 20 9"></path><path d="M12 5.6 V21"></path></svg></sc-if>
+<sc-if value="{{n.gAgri}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 V5"></path><path d="M12 9 L9 6.5"></path><path d="M12 9 L15 6.5"></path><path d="M12 13 L9 10.5"></path><path d="M12 13 L15 10.5"></path><path d="M12 17 L9 14.5"></path><path d="M12 17 L15 14.5"></path></svg></sc-if>
+<sc-if value="{{n.gCons}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 L12 4 L20 11"></path><path d="M6 9.5 V20 H18 V9.5"></path><path d="M10 20 V14 H14 V20"></path></svg></sc-if>
+<sc-if value="{{n.gSav}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6 C10 4.5 7 4.5 4 5 V19 C7 18.5 10 18.5 12 20 C14 18.5 17 18.5 20 19 V5 C17 4.5 14 4.5 12 6 Z"></path><path d="M12 6 V20"></path></svg></sc-if>
+<sc-if value="{{n.gExp}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M15.5 8.5 L13.2 13.2 L8.5 15.5 L10.8 10.8 Z"></path></svg></sc-if>
+<sc-if value="{{n.gNoc}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.5 14.5 A7.5 7.5 0 1 1 9.5 5.5 A6 6 0 0 0 18.5 14.5 Z"></path></svg></sc-if>
+<sc-if value="{{n.gCheck}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5 L10 16.5 L18 8"></path></svg></sc-if>
+</span>
+</button>
+</sc-for>
+<sc-for list="{{labels}}" as="b" hint-placeholder-count="0">
+<span class="{{b.cls}}" style="left: {{b.x}}px; top: {{b.y}}px; width: {{b.w}}px; opacity: {{b.op}}">{{b.name}}</span>
+</sc-for>
+<sc-for list="{{dims}}" as="q" hint-placeholder-count="0">
+<div class="qdim" style="left: {{q.x}}px; top: {{q.y}}px; width: {{q.s}}px; height: {{q.s}}px; {{q.radius}}"></div>
+</sc-for>
+<sc-if value="{{hasTip}}" hint-placeholder-val="{{false}}">
+<div class="tip" style="left: {{tip.x}}px; top: {{tip.y}}px"><span class="tip-n">{{tip.name}}</span><span class="tip-s">{{tip.state}}</span></div>
+</sc-if>
+</div>
+<div class="qtabs">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+<button type="button" class="{{t.cls}}" onClick="{{t.go}}"><sc-if value="{{t.hasDot}}" hint-placeholder-val="{{true}}"><span class="qd" style="background: {{t.color}}"></span></sc-if>{{t.name}}</button>
+</sc-for>
+</div>
+<p class="qhint">{{hint}}</p>
+</div>
+<aside class="fiche" style="left: 1066px; top: 56px; width: 300px; height: 712px">
+<div class="fi-kick" style="color: {{fi.color}}">
+<span class="fi-ico">
+<sc-if value="{{fi.gOutils}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9 Q12 2 20 9"></path><path d="M12 5.6 V21"></path></svg></sc-if>
+<sc-if value="{{fi.gAgri}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 V5"></path><path d="M12 9 L9 6.5"></path><path d="M12 9 L15 6.5"></path><path d="M12 13 L9 10.5"></path><path d="M12 13 L15 10.5"></path><path d="M12 17 L9 14.5"></path><path d="M12 17 L15 14.5"></path></svg></sc-if>
+<sc-if value="{{fi.gCons}}" hint-placeholder-val="{{true}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 L12 4 L20 11"></path><path d="M6 9.5 V20 H18 V9.5"></path><path d="M10 20 V14 H14 V20"></path></svg></sc-if>
+<sc-if value="{{fi.gSav}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6 C10 4.5 7 4.5 4 5 V19 C7 18.5 10 18.5 12 20 C14 18.5 17 18.5 20 19 V5 C17 4.5 14 4.5 12 6 Z"></path><path d="M12 6 V20"></path></svg></sc-if>
+<sc-if value="{{fi.gExp}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M15.5 8.5 L13.2 13.2 L8.5 15.5 L10.8 10.8 Z"></path></svg></sc-if>
+<sc-if value="{{fi.gNoc}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.5 14.5 A7.5 7.5 0 1 1 9.5 5.5 A6 6 0 0 0 18.5 14.5 Z"></path></svg></sc-if>
+</span>
+<span>{{fi.quad}}</span>
+<span class="age">{{fi.age}}</span>
+</div>
+<h2 class="fi-name">{{fi.name}}</h2>
+<span class="{{fi.stateCls}}">{{fi.stateLabel}}</span>
+<div class="fi-cost"><span>Coût en recherche</span><span class="mono">{{fi.cost}}</span></div>
+<div class="fi-sec">Prérequis</div>
+<sc-if value="{{fi.noReq}}" hint-placeholder-val="{{false}}"><p class="fi-empty">Aucun, c’est un savoir de départ.</p></sc-if>
+<div class="fi-list">
+<sc-for list="{{fi.reqs}}" as="r" hint-placeholder-count="1">
+<button type="button" class="fi-link" onClick="{{r.pick}}"><span class="{{r.cls}}"></span><span class="fl-n">{{r.name}}</span><span class="fl-s">{{r.state}}</span></button>
+</sc-for>
+</div>
+<div class="fi-sec">Débloque</div>
+<sc-if value="{{fi.noUnlock}}" hint-placeholder-val="{{false}}"><p class="fi-empty">Rien pour l’instant.</p></sc-if>
+<div class="fi-list">
+<sc-for list="{{fi.unlocks}}" as="r" hint-placeholder-count="3">
+<button type="button" class="fi-link" onClick="{{r.pick}}"><span class="{{r.cls}}"></span><span class="fl-n">{{r.name}}</span><span class="fl-s">{{r.state}}</span></button>
+</sc-for>
+</div>
+<div class="fi-foot">
+<sc-if value="{{fi.isProg}}" hint-placeholder-val="{{false}}">
+<div class="fi-prog"><span>Progression</span><span class="rs-bar"><span class="rs-fill" style="width: {{fi.prog}}%"></span></span><span class="mono">{{fi.prog}} %</span></div>
+</sc-if>
+<sc-if value="{{fi.hasReason}}" hint-placeholder-val="{{false}}"><p class="fi-why">{{fi.reason}}</p></sc-if>
+<sc-if value="{{fi.canStart}}" hint-placeholder-val="{{true}}"><button type="button" class="{{fi.btnCls}}" onClick="{{queue}}">{{fi.btnLabel}}</button></sc-if>
+</div>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1366,"height":768}}'>
+var CUR = 2;
+var BR = {
+  outils: { name: 'Outils', color: '#aaa597' },
+  agriculture: { name: 'Agriculture', color: '#c9a14a' },
+  construction: { name: 'Construction', color: '#c47d47' },
+  savoir: { name: 'Savoir', color: '#86a0d4' },
+  exploration: { name: 'Exploration', color: '#62b096' },
+  nocturne: { name: 'Nocturne', color: '#9a9cd6' }
+};
+var BRANCH_ORDER = ['savoir', 'exploration', 'nocturne', 'construction', 'outils', 'agriculture'];
+var AGES = [
+  { n: 1, name: 'Pierre', long: 'Âge de pierre', roman: 'I', base: '#29251f' },
+  { n: 2, name: 'Bronze', long: 'Âge du Bronze', roman: 'II', base: '#2e241a' },
+  { n: 3, name: 'Fer et Médiéval', long: 'Fer et Médiéval', roman: 'III', base: '#232320' },
+  { n: 4, name: 'Renaissance', long: 'Renaissance', roman: 'IV', base: '#2b2519' },
+  { n: 5, name: 'Industriel', long: 'Âge industriel', roman: 'V', base: '#291f1b' },
+  { n: 6, name: 'Moderne', long: 'Âge moderne', roman: 'VI', base: '#242321' },
+  { n: 7, name: 'Atomique', long: 'Âge atomique', roman: 'VII', base: '#1f2420' },
+  { n: 8, name: 'Espace', long: 'Âge spatial', roman: 'VIII', base: '#1c1c23' }
+];
+var QUADS = [
+  { id: 'connaitre', name: 'Connaître', color: '#86a0d4', sx: -1, sy: -1, a0: Math.PI, a1: 1.5 * Math.PI, corner: 'border-top-left-radius' },
+  { id: 'batir', name: 'Bâtir', color: '#c47d47', sx: 1, sy: -1, a0: -0.5 * Math.PI, a1: 0, corner: 'border-top-right-radius' },
+  { id: 'produire', name: 'Produire', color: '#aaa597', sx: 1, sy: 1, a0: 0, a1: 0.5 * Math.PI, corner: 'border-bottom-right-radius' },
+  { id: 'nourrir', name: 'Nourrir', color: '#c9a14a', sx: -1, sy: 1, a0: 0.5 * Math.PI, a1: Math.PI, corner: 'border-bottom-left-radius' }
+];
+var QI = {};
+QUADS.forEach(function (q) { QI[q.id] = q; });
+var RAW = [
+  ['pick-stone', 'Pioche', 1, 'outils', '', 12],
+  ['axe-stone', 'Hache', 1, 'outils', '', 12],
+  ['bow-wood', 'Arc', 1, 'outils', '', 12],
+  ['gathering-improved', 'Cueillette améliorée', 1, 'agriculture', '', 10],
+  ['first-field', 'Premier champ', 1, 'agriculture', '', 15],
+  ['fire-mastery', 'Maîtrise du feu', 1, 'construction', '', 0],
+  ['big-house', 'Grosse maison', 1, 'construction', '', 12],
+  ['demolition', 'Démolition', 1, 'construction', 'big-house', 8],
+  ['basic-research', 'Recherche de base', 1, 'savoir', '', 0],
+  ['oral-tradition', 'Tradition orale', 1, 'savoir', 'fire-mastery', 0],
+  ['promontory', 'Promontoire', 1, 'nocturne', '', 0],
+  ['astronomy-1', 'Astronomie I', 1, 'nocturne', 'promontory', 12],
+  ['axe-bronze', 'Hache de bronze', 2, 'outils', 'axe-stone', 20],
+  ['pick-bronze', 'Pioche de bronze', 2, 'outils', 'pick-stone', 20],
+  ['arrow-bronze', 'Pointes de bronze', 2, 'outils', 'bow-wood', 18],
+  ['agriculture', 'Agriculture', 2, 'agriculture', 'first-field', 22],
+  ['granary', 'Grenier', 2, 'agriculture', 'agriculture', 20],
+  ['forge', 'Forge', 2, 'construction', 'big-house', 25],
+  ['paved-road', 'Route pavée', 2, 'construction', 'forge', 18],
+  ['writing', 'Écriture', 2, 'savoir', 'oral-tradition', 22],
+  ['calendrier', 'Calendrier', 2, 'savoir', 'writing', 15],
+  ['scouting', 'Éclaireur', 2, 'exploration', '', 8],
+  ['cartography', 'Cartographie', 2, 'exploration', 'scouting', 20],
+  ['pick-iron', 'Pioche de fer', 3, 'outils', 'pick-bronze', 30],
+  ['axe-iron', 'Hache de fer', 3, 'outils', 'axe-bronze|pick-iron', 25],
+  ['arrow-iron', 'Pointes de fer', 3, 'outils', 'arrow-bronze|pick-iron', 25],
+  ['windmill', 'Moulin à vent', 3, 'agriculture', 'granary', 30],
+  ['bakery', 'Four à pain', 3, 'agriculture', 'windmill', 35],
+  ['tavern', 'Taverne', 3, 'construction', 'paved-road', 30],
+  ['urbanisme', 'Urbanisme', 3, 'construction', 'paved-road', 25],
+  ['market', 'Marché', 3, 'savoir', 'writing', 30],
+  ['library', 'Bibliothèque', 3, 'savoir', 'calendrier', 35],
+  ['gouvernance', 'Gouvernance', 3, 'savoir', 'writing', 30],
+  ['navigation', 'Navigation', 3, 'exploration', 'cartography', 35],
+  ['astrologie', 'Astrologie', 3, 'nocturne', 'scouting', null],
+  ['alchimie', 'Alchimie', 3, 'nocturne', 'forge', null],
+  ['herboristerie-nocturne', 'Herboristerie nocturne', 3, 'nocturne', 'gathering-improved', null],
+  ['meditation', 'Méditation', 3, 'nocturne', 'writing', null],
+  ['papermaking', 'Papeterie', 4, 'savoir', 'writing', 45],
+  ['printing-press', 'Presse à imprimer', 4, 'savoir', 'papermaking', 60],
+  ['movable-type', 'Caractères mobiles', 4, 'outils', 'printing-press', 55],
+  ['glassmaking', 'Verrerie', 4, 'construction', 'forge', 40],
+  ['comptoir-marchand', 'Comptoir marchand', 4, 'construction', 'market', 50],
+  ['perspective-picturale', 'Perspective picturale', 4, 'construction', 'library|glassmaking', 55],
+  ['mecenat', 'Mécénat', 4, 'construction', 'perspective-picturale|comptoir-marchand', 70],
+  ['apothicairerie', 'Apothicairerie', 4, 'agriculture', 'herboristerie-nocturne', 45],
+  ['steam-engine', 'Machine à vapeur', 5, 'construction', 'mecenat', 75],
+  ['mass-production', 'Production de masse', 5, 'construction', 'steam-engine', 85],
+  ['railways', 'Chemins de fer', 5, 'construction', 'mass-production', 90],
+  ['industrialization', 'Industrialisation', 5, 'construction', 'railways|stock-exchange', 110],
+  ['advanced-metallurgy', 'Métallurgie avancée', 5, 'outils', 'steam-engine|pick-iron', 65],
+  ['silversmithing', 'Orfèvrerie', 5, 'outils', 'alchimie', 65],
+  ['scientific-method', 'Méthode scientifique', 5, 'savoir', 'library|movable-type', 70],
+  ['stock-exchange', "Bourse d'échange", 5, 'savoir', 'comptoir-marchand|mecenat', 80]
+];
+var TECHS = RAW.map(function (r) { return { id: r[0], name: r[1], a: r[2], b: r[3], r: r[4] ? r[4].split('|') : [], c: r[5] }; });
+var BYID = {};
+TECHS.forEach(function (t) { BYID[t.id] = t; t.q = quadOf(t); });
+var ACQ = {};
+TECHS.forEach(function (t) { if (t.a === 1) ACQ[t.id] = true; });
+['axe-bronze', 'pick-bronze', 'scouting', 'agriculture'].forEach(function (id) { ACQ[id] = true; });
+var PROG = { writing: 60 };
+var STATE_LABEL = { acquis: 'Acquis', encours: 'En cours', dispo: 'Disponible', verrou: 'Verrouillé' };
+
+var HUB = 110, BUB = 24, MAP_W = 1066, MAP_H = 712, FOCUS_ZOOM = 1.1;
+var RIN = [], ROUT = [];
+(function () { var r = HUB; AGES.forEach(function (ag) { RIN.push(r); r += ag.n <= 5 ? 96 : 40; ROUT.push(r); }); })();
+var RMAX = ROUT[ROUT.length - 1];
+var CX = RMAX + 250, CY = RMAX + 70;
+var WORLD_W = CX * 2, WORLD_H = CY * 2;
+
+function quadOf(t) {
+  if (t.b === 'construction') return 'batir';
+  if (t.b === 'outils') return 'produire';
+  if (t.b === 'agriculture' || t.id === 'herboristerie-nocturne') return 'nourrir';
+  return 'connaitre';
+}
+function r1(n) { return Math.round(n * 10) / 10; }
+function stateOf(t) {
+  if (ACQ[t.id]) return 'acquis';
+  if (PROG[t.id] != null) return 'encours';
+  if (t.a <= CUR && t.r.every(function (id) { return ACQ[id]; })) return 'dispo';
+  return 'verrou';
+}
+function glyphs(branch, check) {
+  return { gOutils: !check && branch === 'outils', gAgri: !check && branch === 'agriculture', gCons: !check && branch === 'construction', gSav: !check && branch === 'savoir', gExp: !check && branch === 'exploration', gNoc: !check && branch === 'nocturne', gCheck: !!check };
+}
+function joinFr(list) {
+  if (list.length < 2) return list.join('');
+  return list.slice(0, -1).join(', ') + ' et ' + list[list.length - 1];
+}
+function seg(x1, y1, x2, y2, cls) {
+  var dx = x2 - x1, dy = y2 - y1;
+  return { x: r1(x1), y: r1(y1 - 1), len: r1(Math.hypot(dx, dy)), ang: r1(Math.atan2(dy, dx) * 180 / Math.PI), cls: cls };
+}
+var POS = {};
+(function () {
+  QUADS.forEach(function (q) {
+    AGES.forEach(function (ag, ai) {
+      var list = TECHS.filter(function (t) { return t.q === q.id && t.a === ag.n; });
+      list.sort(function (x, y) { return BRANCH_ORDER.indexOf(x.b) - BRANCH_ORDER.indexOf(y.b); });
+      if (!list.length) return;
+      var rm = (RIN[ai] + ROUT[ai]) / 2;
+      var m = (13 + BUB / 2 + 14) / rm;
+      var span = q.a1 - q.a0 - 2 * m;
+      list.forEach(function (t, i) {
+        var th = q.a0 + m + (i + 0.5) * span / list.length;
+        POS[t.id] = { cx: CX + rm * Math.cos(th), cy: CY + rm * Math.sin(th) };
+      });
+    });
+  });
+})();
+function boxBox(a, b) { return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h; }
+function boxCircle(b, cx, cy, r) {
+  var nx = Math.max(b.x, Math.min(cx, b.x + b.w)), ny = Math.max(b.y, Math.min(cy, b.y + b.h));
+  return Math.hypot(nx - cx, ny - cy) < r;
+}
+function wrapName(t) {
+  var lines = [''];
+  t.split(' ').forEach(function (w) { var cand = (lines[lines.length - 1] + ' ' + w).trim(); if (cand.length * 6.4 <= 84) lines[lines.length - 1] = cand; else lines.push(w); });
+  return lines;
+}
+var LABEL_FAILS = 0;
+(function () {
+  var R = BUB / 2, g = 5;
+  var circles = TECHS.map(function (t) { return { x: POS[t.id].cx, y: POS[t.id].cy }; });
+  var axes = [{ x: CX - 14, y: CY - RMAX, w: 28, h: 2 * RMAX }, { x: CX - RMAX, y: CY - 14, w: 2 * RMAX, h: 28 }];
+  QUADS.forEach(function (q) {
+    var placed = [];
+    TECHS.filter(function (t) { return t.q === q.id; }).forEach(function (t) {
+      var p = POS[t.id], lines = wrapName(t.name);
+      var w = Math.max.apply(null, lines.map(function (s) { return s.length * 6.4; })) + 6, hgt = lines.length * 12.5 + 2, hw = w / 2, hh = hgt / 2, d = R * 0.7 + g;
+      var cands = [[0, R + g + hh], [0, -(R + g + hh)], [R + g + hw, 0], [-(R + g + hw), 0], [d + hw, d + hh], [-(d + hw), d + hh], [d + hw, -(d + hh)], [-(d + hw), -(d + hh)]];
+      var best = null;
+      for (var i = 0; i < cands.length && !best; i++) {
+        var box = { x: p.cx + cands[i][0] - hw, y: p.cy + cands[i][1] - hh, w: w, h: hgt };
+        if (circles.some(function (c) { return boxCircle(box, c.x, c.y, R + 3); })) continue;
+        if (placed.some(function (o) { return boxBox(box, o); })) continue;
+        if (axes.some(function (a) { return boxBox(box, a); })) continue;
+        if (boxCircle(box, CX, CY, HUB)) continue;
+        best = box;
+      }
+      if (!best) { LABEL_FAILS++; best = { x: p.cx - hw, y: p.cy + R + g, w: w, h: hgt }; }
+      placed.push(best);
+      p.lab = best;
+    });
+  });
+})();
+function overview() {
+  var z = Math.min(MAP_W / WORLD_W, MAP_H / (2 * RMAX + 60));
+  return { zoom: z, tx: MAP_W / 2 - CX * z, ty: MAP_H / 2 - CY * z };
+}
+function focusView(q, pan) {
+  var z = FOCUS_ZOOM;
+  var fx = CX + q.sx * RMAX * 0.32, fy = CY + q.sy * RMAX * 0.32;
+  return { zoom: z, tx: MAP_W / 2 - fx * z + (pan ? pan.x : 0), ty: MAP_H / 2 - fy * z + (pan ? pan.y : 0) };
+}
+
+class Component extends DCLogic {
+  constructor(...args) {
+    super(...args);
+    this.state = { sel: 'forge', focus: null, hover: null, queued: null, pan: null, drag: null };
+    this.moved = false;
+  }
+  renderVals() {
+    var self = this;
+    var S = this.state || {};
+    var focus = S.focus ? QI[S.focus] : null;
+    var v = focus ? focusView(focus, S.pan) : overview();
+    var sel = S.sel || 'forge';
+    var go = function (id) { return function () { if (self.moved) { self.moved = false; return; } if (self.state.focus !== id) self.setState({ focus: id, pan: null }); }; };
+
+    var rings = AGES.slice().reverse().map(function (ag) {
+      var r = ROUT[ag.n - 1];
+      return { x: r1(CX - r), y: r1(CY - r), d: r1(2 * r), bg: ag.base, cls: 'ring' + (ag.n === CUR ? ' cur' : '') };
+    });
+    var hits = QUADS.map(function (q) {
+      return { x: r1(q.sx > 0 ? CX : CX - RMAX), y: r1(q.sy > 0 ? CY : CY - RMAX), s: r1(RMAX), radius: q.corner + ': ' + r1(RMAX) + 'px', cls: 'qhit' + (focus && focus.id === q.id ? ' on' : ''), aria: 'Zoomer sur ' + q.name, go: go(q.id) };
+    });
+    var dims = focus ? QUADS.filter(function (q) { return q.id !== focus.id; }).map(function (q) {
+      return { x: r1(q.sx > 0 ? CX : CX - RMAX), y: r1(q.sy > 0 ? CY : CY - RMAX), s: r1(RMAX), radius: q.corner + ': ' + r1(RMAX) + 'px' };
+    }) : [];
+    var marks = [];
+    AGES.forEach(function (ag, ai) {
+      var rm = (RIN[ai] + ROUT[ai]) / 2, cls = 'amk' + (ag.n === CUR ? ' cur' : '');
+      [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(function (d) { marks.push({ x: r1(CX + d[0] * rm), y: r1(CY + d[1] * rm), roman: ag.roman, cls: cls }); });
+    });
+    var titles = QUADS.map(function (q) {
+      var list = TECHS.filter(function (t) { return t.q === q.id; });
+      var dispo = list.filter(function (t) { return stateOf(t) === 'dispo'; }).length;
+      return { name: q.name, color: q.color, total: list.length, dispo: dispo, x: r1(q.sx > 0 ? CX + RMAX + 36 : CX - RMAX - 36), y: r1(CY + q.sy * RMAX * 0.62), cls: 'qtitle' + (q.sx < 0 ? ' r' : ''), go: go(q.id) };
+    });
+    titles.forEach(function (t) { if (t.cls.indexOf(' r') >= 0) t.x = r1(t.x - 230); });
+
+    var nodes = TECHS.map(function (t) {
+      var p = POS[t.id], st = stateOf(t), veil = t.a > CUR;
+      var op = st === 'acquis' ? 0.55 : veil ? 0.5 : 1;
+      var gc = st === 'acquis' ? '#9a8f76' : st === 'verrou' ? '#6f6656' : BR[t.b].color;
+      return Object.assign({
+        x: r1(p.cx - BUB / 2), y: r1(p.cy - BUB / 2), d: BUB, op: op, gc: gc,
+        cls: 'bb s-' + st + (sel === t.id ? ' sel' : ''), prog: st === 'encours' ? PROG[t.id] : 0,
+        aria: t.name + ', ' + STATE_LABEL[st].toLowerCase(),
+        pick: function () { if (self.moved) { self.moved = false; return; } self.setState(self.state.focus === t.q ? { sel: t.id } : { sel: t.id, focus: t.q, pan: null }); },
+        enter: function () { if (self.state.hover !== t.id) self.setState({ hover: t.id }); }
+      }, glyphs(t.b, st === 'acquis'));
+    });
+    var labels = focus ? TECHS.filter(function (t) { return t.q === focus.id; }).map(function (t) {
+      var p = POS[t.id], st = stateOf(t);
+      return { x: r1(p.lab.x), y: r1(p.lab.y), w: r1(p.lab.w), name: t.name, op: st === 'acquis' ? 0.7 : t.a > CUR ? 0.6 : 1, cls: 'blab s-' + st + (sel === t.id ? ' sel' : '') };
+    }) : [];
+    var links = [];
+    TECHS.forEach(function (t) {
+      t.r.forEach(function (rid) {
+        var isIn = t.id === sel, isOut = rid === sel;
+        if (!isIn && !isOut) return;
+        var a = POS[rid], b = POS[t.id];
+        links.push(seg(a.cx, a.cy, b.cx, b.cy, 'ln ' + (isIn ? 'in' : 'out')));
+      });
+    });
+
+    var tip = { x: 0, y: 0, name: '', state: '' }, hasTip = false;
+    if (S.hover && POS[S.hover] && (!focus || BYID[S.hover].q !== focus.id)) {
+      var ht = BYID[S.hover], hs = stateOf(ht);
+      tip = { x: r1(POS[ht.id].cx), y: r1(POS[ht.id].cy - BUB / 2 - 6), name: ht.name, state: STATE_LABEL[hs] + (hs === 'encours' ? ' · ' + PROG[ht.id] + ' %' : '') };
+      hasTip = true;
+    }
+
+    var tabs = [{ name: 'Vue d’ensemble', hasDot: false, color: '', cls: focus ? '' : 'on', go: go(null) }].concat(QUADS.map(function (q) {
+      return { name: q.name, hasDot: true, color: q.color, cls: focus && focus.id === q.id ? 'on' : '', go: go(q.id) };
+    }));
+
+    var ft = BYID[sel], fst = stateOf(ft);
+    var row = function (t) { var st = stateOf(t); return { name: t.name, state: STATE_LABEL[st], cls: 'mk s-' + st, pick: function () { self.setState(self.state.focus === t.q ? { sel: t.id } : { sel: t.id, focus: t.q, pan: null }); } }; };
+    var reqs = ft.r.map(function (id) { return row(BYID[id]); });
+    var unlocks = TECHS.filter(function (t) { return t.r.indexOf(ft.id) >= 0; }).map(row);
+    var missing = ft.r.filter(function (id) { return !ACQ[id]; }).map(function (id) { return BYID[id].name; });
+    var reason = '';
+    if (fst === 'acquis') reason = 'Déjà acquis par le village.';
+    else if (fst === 'encours') reason = 'Les chercheurs y travaillent.';
+    else if (fst === 'verrou') {
+      var parts = [];
+      if (missing.length) parts.push('Il manque ' + joinFr(missing) + '.');
+      if (ft.a > CUR) parts.push('Accessible à partir de l’âge ' + AGES[ft.a - 1].name + '.');
+      reason = parts.join(' ');
+    }
+    var queued = S.queued === ft.id;
+    var fi = Object.assign({
+      name: ft.name, quad: QI[ft.q].name, age: AGES[ft.a - 1].long, color: QI[ft.q].color,
+      stateLabel: queued ? 'En file d’attente' : STATE_LABEL[fst], stateCls: 'badge s-' + fst,
+      cost: ft.c == null ? 'à définir' : ft.c + ' points', reqs: reqs, unlocks: unlocks,
+      noReq: !reqs.length, noUnlock: !unlocks.length, canStart: fst === 'dispo',
+      btnLabel: queued ? 'Retirer de la file' : 'Mettre en recherche', btnCls: queued ? 'btn ghost' : 'btn',
+      hasReason: !!reason, reason: reason, isProg: fst === 'encours', prog: PROG[ft.id] || 0
+    }, glyphs(ft.b, false));
+
+    return {
+      worldCls: S.drag ? 'world' : 'world anim', vx: r1(v.tx), vy: r1(v.ty), vz: Math.round(v.zoom * 1000) / 1000, cW: r1(WORLD_W), cH: r1(WORLD_H),
+      rings: rings, hits: hits, dims: dims, marks: marks, titles: titles, nodes: nodes, labels: labels, links: links,
+      ax: { vx: r1(CX - 13), vy: r1(CY - RMAX - 8), hx: r1(CX - RMAX - 8), hy: r1(CY - 13), len: r1(2 * RMAX + 16) },
+      hub: { x: r1(CX - HUB + 8), y: r1(CY - HUB + 8), d: r1(2 * HUB - 16) },
+      cursor: focus ? (S.drag ? 'grabbing' : 'grab') : 'default',
+      hasTip: hasTip, tip: tip, tabs: tabs, fi: fi,
+      hint: focus ? 'Glisser pour parcourir le cadran. Molette vers l’arrière pour revenir.' : 'Clic ou molette sur un cadran pour zoomer.',
+      leave: function () { if (self.state.hover) self.setState({ hover: null }); },
+      onWheel: function (e) {
+        if (e.deltaY > 0) { if (self.state.focus) self.setState({ focus: null, pan: null }); return; }
+        if (self.state.focus) return;
+        var r = e.currentTarget.getBoundingClientRect(), k = r.width / MAP_W || 1;
+        var wx = ((e.clientX - r.left) / k - v.tx) / v.zoom, wy = ((e.clientY - r.top) / k - v.ty) / v.zoom;
+        var q = QUADS.filter(function (x) { return x.sx === (wx >= CX ? 1 : -1) && x.sy === (wy >= CY ? 1 : -1); })[0];
+        self.setState({ focus: q.id, pan: null });
+      },
+      onDown: function (e) {
+        if (e.button !== 0 || !self.state.focus) return;
+        var r = e.currentTarget.getBoundingClientRect(), p = self.state.pan || { x: 0, y: 0 };
+        self.moved = false;
+        self.setState({ drag: { x: e.clientX, y: e.clientY, px: p.x, py: p.y, k: r.width / MAP_W || 1 } });
+      },
+      onMove: function (e) {
+        var d = self.state.drag;
+        if (!d) return;
+        var dx = (e.clientX - d.x) / d.k, dy = (e.clientY - d.y) / d.k;
+        if (!self.moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+        self.moved = true;
+        self.setState({ pan: { x: d.px + dx, y: d.py + dy } });
+      },
+      onUp: function () { if (self.state.drag) self.setState({ drag: null }); },
+      queue: function () { self.setState({ queued: self.state.queued === ft.id ? null : ft.id }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
