@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Strates · POC A, vue carte papier ancien</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Palette HUD jeu (mode dark "ardoise + or") */
+    --panel:#221e18; --panel-2:#2b261e;
+    --rule:#3d352a;
+    --ink:#ede3cc; --ink-2:#b9ad91; --ink-3:#7f7562;
+    --gold:#d4b870; --gold-2:#a88d4a;
+
+    /* Palette carte papier ancien */
+    --paper-1:#e8d9b3;    /* fond clair */
+    --paper-2:#d8c393;    /* fond moyen */
+    --paper-3:#b89c66;    /* contour, hachures */
+    --paper-ink:#5a4423;  /* encre brune */
+    --paper-ink-2:#3a2c14;
+    --paper-rule:#8a6f3e;
+
+    --bio-water:#7a8e9c;
+    --bio-water-deep:#5a6e7c;
+    --bio-sand:#d8c089;
+    --bio-grass:#a8b06a;
+    --bio-forest:#6c8050;
+    --bio-rock:#9a8a72;
+    --bio-snow:#e6dec8;
+
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"Inter",ui-sans-serif,system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--panel);color:var(--ink);font-family:var(--sans);min-height:100vh}
+
+  /* ===== Chrome HUD (sombre boisé + or) ===== */
+  .frame{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% 0%, #2a241c 0%, #1a1610 60%, #100d09 100%);
+    padding:18px 22px 22px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid var(--rule);
+    padding-bottom:10px;
+  }
+  .topbar h1{
+    margin:0;
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:18px;
+    letter-spacing:.02em;
+    color:var(--ink);
+  }
+  .topbar h1 em{
+    font-style:italic; color:var(--gold); font-weight:400;
+    font-size:.78em; margin-left:10px;
+  }
+  .topbar .meta{
+    font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--ink-3);
+  }
+  .topbar .meta b{ color:var(--gold-2); font-weight:500 }
+
+  /* ===== Cadre carte ===== */
+  .map-wrap{
+    flex:1;
+    position:relative;
+    border:1px solid var(--rule);
+    border-radius:4px;
+    background:var(--panel-2);
+    box-shadow:0 12px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(212,184,112,.05) inset;
+    padding:14px;
+    display:flex;
+    overflow:hidden;
+  }
+  .map-frame{
+    flex:1;
+    position:relative;
+    border-radius:2px;
+    overflow:hidden;
+    /* "moulure" or fine */
+    box-shadow:
+      0 0 0 1px rgba(212,184,112,.35),
+      0 0 0 4px rgba(0,0,0,.4),
+      0 0 0 5px rgba(212,184,112,.18);
+  }
+  canvas{
+    display:block; width:100%; height:100%;
+    image-rendering:auto;
+  }
+
+  /* Étiquette de coin */
+  .corner{
+    position:absolute;
+    pointer-events:none;
+    font-family:var(--serif); font-style:italic;
+    color:var(--paper-ink);
+    text-shadow:0 1px 0 rgba(255,255,255,.2);
+    z-index:5;
+  }
+  .corner.tl{ top:18px; left:22px; }
+  .corner.tr{ top:18px; right:22px; text-align:right; }
+  .corner.br{ bottom:18px; right:22px; text-align:right;}
+  .corner .big{ font-size:22px; display:block; line-height:1 }
+  .corner .small{ font-family:var(--mono); font-size:9px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--paper-rule); font-style:normal;
+    margin-top:4px;
+  }
+
+  /* Rose des vents */
+  .compass{
+    position:absolute; bottom:22px; left:22px; width:62px; height:62px;
+    z-index:5; opacity:.78;
+  }
+
+  /* Légende */
+  .legend{
+    position:absolute; bottom:18px; right:22px;
+    background:rgba(232,217,179,.92);
+    border:1px solid var(--paper-rule);
+    border-radius:2px;
+    padding:8px 10px 9px;
+    font-family:var(--serif);
+    font-size:11.5px;
+    color:var(--paper-ink);
+    z-index:5;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .legend h4{
+    margin:0 0 6px;
+    font-family:var(--mono); font-size:8.5px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--paper-rule);
+    font-weight:500;
+    border-bottom:1px solid var(--paper-rule);
+    padding-bottom:3px;
+  }
+  .legend ul{ list-style:none; margin:0; padding:0; }
+  .legend li{
+    display:flex; align-items:center; gap:7px;
+    margin:2px 0; font-size:11px;
+  }
+  .legend .sw{
+    width:14px; height:10px; border:1px solid var(--paper-rule);
+    flex:none;
+  }
+
+  /* Curseur info */
+  .cursor-info{
+    position:absolute; top:18px; left:50%; transform:translateX(-50%);
+    background:rgba(34,30,24,.86);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:6px 14px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--gold);
+    z-index:6;
+  }
+  .cursor-info b{ color:var(--ink); margin-left:8px; font-weight:500 }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <header class="topbar">
+    <h1>Strates <em>vue carte, dézoom max</em></h1>
+    <span class="meta">POC A · <b>papier ancien</b> · grille 64 × 64</span>
+  </header>
+
+  <div class="map-wrap">
+    <div class="map-frame">
+      <canvas id="map" width="1280" height="900"></canvas>
+
+      <span class="corner tl">
+        <span class="big">Terra Mariæ</span>
+        <span class="small">Année I · Été · An 1</span>
+      </span>
+      <span class="corner tr">
+        <span class="big" style="font-size:18px">Cartographie</span>
+        <span class="small">F. M., l'an MMXXVI</span>
+      </span>
+
+      <svg class="compass" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#5a4423" stroke-width="1"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#5a4423" stroke-width=".5" stroke-dasharray="2 3"/>
+        <polygon points="50,8 56,50 50,46 44,50" fill="#5a4423"/>
+        <polygon points="50,92 56,50 50,54 44,50" fill="#8a6f3e"/>
+        <polygon points="8,50 50,44 46,50 50,56" fill="#8a6f3e"/>
+        <polygon points="92,50 50,44 54,50 50,56" fill="#8a6f3e"/>
+        <text x="50" y="14" text-anchor="middle" font-family="Fraunces, serif" font-style="italic"
+              font-size="9" fill="#3a2c14">N</text>
+      </svg>
+
+      <div class="legend">
+        <h4>Legenda</h4>
+        <ul>
+          <li><span class="sw" style="background:#a8b06a"></span>plaines</li>
+          <li><span class="sw" style="background:#6c8050"></span>forêts</li>
+          <li><span class="sw" style="background:#9a8a72"></span>roche</li>
+          <li><span class="sw" style="background:#d8c089"></span>sable</li>
+          <li><span class="sw" style="background:#7a8e9c"></span>eaux</li>
+          <li><span class="sw" style="background:repeating-linear-gradient(45deg,#5a4423 0 2px,transparent 2px 5px)"></span>terra incognita</li>
+        </ul>
+      </div>
+
+      <div class="cursor-info" id="cursor">
+        survol <b id="cur-text">· · ·</b>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="_world.js"></script>
+<script>
+(function(){
+  const W = window.STRATES_WORLD;
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d');
+  const SIZE = W.SIZE;
+
+  // adapt internal size to display ratio for crispness
+  function fit(){
+    const r = canvas.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(r.width * dpr);
+    canvas.height = Math.floor(r.height * dpr);
+    canvas.style.width = r.width+'px';
+    canvas.style.height = r.height+'px';
+    draw();
+  }
+  window.addEventListener('resize', fit);
+
+  /* Couleurs aplats biome version "papier ancien" : sépia/parchemin */
+  const PAL = {
+    0:{fill:'#5a6e7c', stroke:'#3a4a55'},     // eau profonde
+    1:{fill:'#7a8e9c', stroke:'#4a5a66'},     // eau
+    2:{fill:'#d8c089', stroke:'#a08550'},     // sable
+    3:{fill:'#a8b06a', stroke:'#6e7440'},     // herbe
+    4:{fill:'#6c8050', stroke:'#3e4d2c'},     // forêt
+    5:{fill:'#9a8a72', stroke:'#665540'},     // roche
+    6:{fill:'#e6dec8', stroke:'#a89868'},     // neige
+  };
+
+  function draw(){
+    const w = canvas.width, h = canvas.height;
+    ctx.save();
+    // 1) Fond parchemin avec grain
+    drawParchment(ctx, w, h);
+
+    // Calcul du carré utile (centré, avec marges)
+    const margin = Math.min(w,h)*0.06;
+    const side = Math.min(w,h) - margin*2;
+    const ox = (w - side)/2;
+    const oy = (h - side)/2;
+    const cs = side / SIZE; // cell size
+
+    // 2) Bandes de "tuiles" du parchemin (plis)
+    ctx.save();
+    ctx.globalAlpha = .14;
+    ctx.fillStyle = '#8a6f3e';
+    for (let i=0;i<6;i++){
+      const x = ox + (side/6)*i + (Math.sin(i*1.7)*4);
+      ctx.fillRect(x, oy, 1, side);
+    }
+    ctx.restore();
+
+    // 3) Aplats biome cellule par cellule
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        const b = W.biomeAt(x,y);
+        const f = W.fogAt(x,y);
+        let c = PAL[b].fill;
+        ctx.fillStyle = c;
+        ctx.fillRect(ox + x*cs, oy + y*cs, cs+0.6, cs+0.6);
+      }
+    }
+
+    // 4) Hachures sur eau (lignes horizontales fines, façon gravure)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(58,74,85,.55)';
+    ctx.lineWidth = 1;
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        if (W.biomeAt(x,y) <= 1){
+          if ((x+y)%3===0){
+            const X = ox + x*cs, Y = oy + y*cs;
+            ctx.beginPath();
+            ctx.moveTo(X+1, Y + cs*0.5);
+            ctx.lineTo(X + cs - 1, Y + cs*0.5);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    ctx.restore();
+
+    // 5) Texture forêt : petits "moutons" (cercles bas)
+    ctx.save();
+    ctx.fillStyle = 'rgba(40,55,30,.35)';
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        if (W.biomeAt(x,y)===4){
+          const X = ox + x*cs + cs*0.5;
+          const Y = oy + y*cs + cs*0.65;
+          ctx.beginPath();
+          ctx.arc(X, Y, cs*0.22, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+
+    // 6) Texture roche : petits chevrons
+    ctx.save();
+    ctx.strokeStyle = 'rgba(50,40,25,.55)';
+    ctx.lineWidth = 1;
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        if (W.biomeAt(x,y)===5 && (x+y)%2===0){
+          const X = ox + x*cs + cs*0.2;
+          const Y = oy + y*cs + cs*0.55;
+          ctx.beginPath();
+          ctx.moveTo(X, Y);
+          ctx.lineTo(X + cs*0.3, Y - cs*0.25);
+          ctx.lineTo(X + cs*0.6, Y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
+
+    // 7) Contours biomes (côtes, lisières) hachurés
+    ctx.save();
+    ctx.strokeStyle = 'rgba(58,44,20,.85)';
+    ctx.lineWidth = 1.4;
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        const b = W.biomeAt(x,y);
+        const water = b<=1;
+        const X = ox + x*cs, Y = oy + y*cs;
+        // bord avec voisin de catégorie diff (eau vs terre uniquement, pour les côtes)
+        const right = x<SIZE-1 ? (W.biomeAt(x+1,y)<=1) : water;
+        const down  = y<SIZE-1 ? (W.biomeAt(x,y+1)<=1) : water;
+        if (water !== right){ ctx.beginPath(); ctx.moveTo(X+cs,Y); ctx.lineTo(X+cs,Y+cs); ctx.stroke(); }
+        if (water !== down ){ ctx.beginPath(); ctx.moveTo(X,Y+cs); ctx.lineTo(X+cs,Y+cs); ctx.stroke(); }
+      }
+    }
+    ctx.restore();
+
+    // 8) Brouillard de guerre, nuages sépia, hachures denses, opacité forte
+    drawFog(ctx, ox, oy, cs);
+
+    // 9) Frontière territoire (ligne pointillée, encre)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(90,68,35,.85)';
+    ctx.setLineDash([4,3]);
+    ctx.lineWidth = 1.6;
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        const t = W.inTerritory(x,y);
+        const X = ox + x*cs, Y = oy + y*cs;
+        const right = x<SIZE-1 ? W.inTerritory(x+1,y) : false;
+        const down  = y<SIZE-1 ? W.inTerritory(x,y+1) : false;
+        if (t !== right){ ctx.beginPath(); ctx.moveTo(X+cs,Y); ctx.lineTo(X+cs,Y+cs); ctx.stroke(); }
+        if (t !== down ){ ctx.beginPath(); ctx.moveTo(X,Y+cs); ctx.lineTo(X+cs,Y+cs); ctx.stroke(); }
+      }
+    }
+    ctx.restore();
+
+    // 10) Bâtiments : tampons cartographie XVIIIe (cercle + symbole + nom italique)
+    drawBuildings(ctx, ox, oy, cs);
+
+    ctx.restore();
+  }
+
+  /* === Fond parchemin avec grain ============================== */
+  function drawParchment(ctx, w, h){
+    const g = ctx.createRadialGradient(w/2, h/2, w*0.1, w/2, h/2, w*0.7);
+    g.addColorStop(0, '#ecdcb3');
+    g.addColorStop(0.6, '#d6bf8c');
+    g.addColorStop(1, '#a88a52');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+    // tâches
+    ctx.save();
+    for (let i=0;i<70;i++){
+      const x = Math.random()*w, y = Math.random()*h;
+      const r = 12 + Math.random()*60;
+      const a = 0.04 + Math.random()*0.07;
+      const col = Math.random()<0.5 ? `rgba(110,80,30,${a})` : `rgba(70,40,15,${a})`;
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+    // grain fin
+    ctx.save();
+    ctx.globalAlpha = .08;
+    for (let i=0;i<2200;i++){
+      const x = Math.random()*w, y = Math.random()*h;
+      ctx.fillStyle = Math.random()<0.5? '#5a4423':'#fff';
+      ctx.fillRect(x, y, 1, 1);
+    }
+    ctx.restore();
+  }
+
+  /* === Brouillard sépia ====================================== */
+  function drawFog(ctx, ox, oy, cs){
+    ctx.save();
+    // couche d'opacité par cellule
+    for (let y=0;y<W.SIZE;y++){
+      for (let x=0;x<W.SIZE;x++){
+        const f = W.fogAt(x,y);
+        if (f===0) continue;
+        const a = f===2 ? 0.78 : 0.42;
+        ctx.fillStyle = `rgba(110,85,45,${a})`;
+        ctx.fillRect(ox + x*cs, oy + y*cs, cs+0.6, cs+0.6);
+      }
+    }
+    // hachures denses sur "inconnu"
+    ctx.strokeStyle = 'rgba(50,35,15,.55)';
+    ctx.lineWidth = 1;
+    for (let y=0;y<W.SIZE;y++){
+      for (let x=0;x<W.SIZE;x++){
+        if (W.fogAt(x,y) === 2){
+          const X = ox + x*cs, Y = oy + y*cs;
+          if ((x+y)%2===0){
+            ctx.beginPath();
+            ctx.moveTo(X, Y+cs);
+            ctx.lineTo(X+cs, Y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  /* === Bâtiments tampons ===================================== */
+  function drawBuildings(ctx, ox, oy, cs){
+    ctx.save();
+    W.buildings.forEach(b=>{
+      if (W.fogAt(b.x, b.y) === 2) return; // caché
+      const X = ox + (b.x+0.5)*cs;
+      const Y = oy + (b.y+0.5)*cs;
+      const R = cs * 1.3;
+      // halo papier (efface motifs derrière)
+      ctx.fillStyle = 'rgba(232,217,179,.92)';
+      ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI*2); ctx.fill();
+      // anneau encre
+      ctx.strokeStyle = '#3a2c14';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(58,44,20,.55)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(X, Y, R*0.78, 0, Math.PI*2); ctx.stroke();
+      // glyphe
+      ctx.fillStyle = '#3a2c14';
+      ctx.font = `bold ${Math.round(cs*1.05)}px "Fraunces", serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(glyph(b.kind), X, Y + 1);
+      // nom (en italique sépia)
+      ctx.font = `italic ${Math.round(cs*0.95)}px "Fraunces", serif`;
+      ctx.fillStyle = '#3a2c14';
+      ctx.textBaseline = 'top';
+      ctx.fillText(b.name, X, Y + R*1.05);
+    });
+    ctx.restore();
+  }
+
+  function glyph(kind){
+    switch(kind){
+      case 'village':     return '⌂';
+      case 'maison':      return '⌂';
+      case 'foyer':       return '✦';
+      case 'champ':       return '☘';
+      case 'labo':        return '✚';
+      case 'promontoire': return '△';
+      case 'mine':        return '⛏';
+      case 'chasse':      return '➹';
+      default: return '○';
+    }
+  }
+
+  /* === Survol info ========================================== */
+  canvas.addEventListener('mousemove', e=>{
+    const r = canvas.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width  * canvas.width;
+    const py = (e.clientY - r.top)  / r.height * canvas.height;
+    const margin = Math.min(canvas.width,canvas.height)*0.06;
+    const side = Math.min(canvas.width,canvas.height) - margin*2;
+    const ox = (canvas.width - side)/2;
+    const oy = (canvas.height - side)/2;
+    const cs = side/SIZE;
+    const cx = Math.floor((px-ox)/cs), cy = Math.floor((py-oy)/cs);
+    if (cx<0||cy<0||cx>=SIZE||cy>=SIZE){
+      document.getElementById('cur-text').textContent = '· · ·';
+      return;
+    }
+    const f = W.fogAt(cx,cy);
+    if (f===2){
+      document.getElementById('cur-text').textContent = 'terra incognita';
+      return;
+    }
+    const names = ['eau profonde','eau','sable','plaine','forêt','roche','neige'];
+    document.getElementById('cur-text').textContent = `${names[W.biomeAt(cx,cy)]} · ${cx},${cy}`;
+  });
+
+  fit();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>POC B - Taskbar pleine largeur</title>
+<!--
+================================================================================
+POC B - Taskbar pleine largeur, hauteur 80 px etirable verticalement
+================================================================================
+
+Layout :
+  une seule barre de 100vw au bord bas, hauteur 80 px par defaut, etirable
+  via une poignee de drag horizontale en haut de la barre (jusqu'a 240 px).
+  3 zones internes :
+    [Naviguer] | [Tabs + outils contextuels] | [Annuler | Demolir]
+       gauche              centre                       droite
+
+Forces :
+  + Une seule surface persistante : le joueur sait toujours ou ses controles
+    se trouvent. Plus de "trois petites barres" qui flottent.
+  + Annuler et Demolir, ancres dans le coin droit de la barre, gardent un
+    chemin de souris constant ; la barre etant pleine largeur, la cible
+    bord-droit est infinie au sens Fitts.
+  + La poignee verticale permet d'agrandir pour passer en mode "panneau",
+    afficher categories detaillees, ressources sur les tuiles construisables,
+    sans masquer l'ecran le reste du temps.
+  + Coherent avec la metaphore "barre des taches" deja interiorisee par
+    les joueurs PC (Windows, Diablo, WoW).
+
+Faiblesses :
+  - 100vw = beaucoup de pixels morts au centre quand un seul onglet est actif.
+    Faut le compenser avec un fond tres discret (le notre est presque
+    transparent au-dela des trois zones).
+  - La poignee est une affordance qui demande decouverte ; il faut un curseur
+    ns-resize tres lisible et idealement un onboarding au premier lancement.
+  - Empiete sur la zone d'observation du terrain en bas d'ecran. Le mode
+    etire (240 px) ferme la moitie basse de la carte ; il faut prevoir un
+    raccourci pour revenir a 80 px (double-clic poignee).
+================================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#1b1914;--panel:#221e18;--panel-2:#2b261e;--panel-3:#362f25;
+    --rule:#3d352a;--ink:#ede3cc;--ink-2:#b9ad91;--ink-3:#7f7562;
+    --gold:#d4b870;--gold-2:#a88d4a;--grass:#7cc06a;--wood:#c48a52;
+    --danger:#c87456;
+    --serif:"Fraunces","Iowan Old Style",Palatino,Georgia,serif;
+    --sans:"Inter",ui-sans-serif,system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:#0e0d0a;color:var(--ink);font-family:var(--sans);font-size:13.5px;overflow:hidden}
+
+  .stage{
+    position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse at 30% 20%,#2c3322 0%,transparent 55%),
+      radial-gradient(ellipse at 70% 70%,#1a2417 0%,transparent 60%),
+      linear-gradient(180deg,#1d2418 0%,#11140d 100%);
+  }
+  .stage::after{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--rule) 1px,transparent 1px),
+      linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+    background-size:60px 60px;opacity:.05;
+    transform:perspective(800px) rotateX(60deg) translateY(40px) scale(2);
+    transform-origin:center bottom;
+  }
+  .scene-label{
+    position:fixed;top:14px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-3);background:rgba(27,25,20,.6);
+    padding:5px 12px;border:1px solid var(--rule);border-radius:2px;
+    backdrop-filter:blur(6px);z-index:30;
+  }
+  .label-id{color:var(--gold);margin-right:8px}
+
+  /* ============================================================
+     TASKBAR - POC B
+     Une seule barre, 100vw, 80px de base, etirable jusqu'a 240px
+     ============================================================ */
+  #actionbar{
+    position:fixed;left:0;right:0;bottom:0;
+    height:80px;
+    background:linear-gradient(180deg,rgba(34,30,24,.97),rgba(27,25,20,.98));
+    border-top:1px solid var(--rule);
+    box-shadow:0 -2px 0 rgba(212,184,112,.06) inset, 0 -16px 40px rgba(0,0,0,.5);
+    backdrop-filter:blur(10px);
+    display:grid;
+    grid-template-columns: minmax(150px,auto) 1fr minmax(180px,auto);
+    align-items:stretch;
+    z-index:20;
+    transition:height .18s ease;
+  }
+  #actionbar.expanded{height:240px}
+
+  /* Poignee de drag */
+  .ab-grip{
+    position:absolute;top:-6px;left:0;right:0;height:12px;
+    cursor:ns-resize;display:flex;align-items:center;justify-content:center;
+    z-index:21;
+  }
+  .ab-grip::before{
+    content:"";width:60px;height:4px;border-radius:2px;
+    background:var(--rule);transition:background .15s, width .15s;
+  }
+  .ab-grip:hover::before{background:var(--gold-2);width:90px}
+  .ab-grip.dragging::before{background:var(--gold);width:120px}
+
+  /* Separateurs verticaux entre zones */
+  #actionbar > .sep{
+    width:1px;background:linear-gradient(180deg,transparent,var(--rule) 20%,var(--rule) 80%,transparent);
+    margin:10px 0;
+  }
+
+  /* ---- Zone Naviguer (gauche) ---- */
+  .actionbar-nav{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 14px 10px 18px;
+  }
+  .ab-section-label{
+    font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--ink-3);
+    writing-mode:vertical-rl;transform:rotate(180deg);
+    align-self:stretch;display:flex;align-items:center;
+  }
+
+  /* ---- Zone centre : tabs + outils ---- */
+  .actionbar-center{
+    display:grid;grid-template-rows:auto 1fr;
+    padding:6px 16px 10px;
+    min-width:0;
+  }
+  .ab-tabs{
+    display:flex;gap:2px;align-self:start;
+    margin-bottom:6px;
+  }
+  .ab-tab{
+    appearance:none;background:transparent;border:none;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-3);
+    padding:6px 12px 5px;cursor:pointer;
+    border-bottom:2px solid transparent;
+    transition:color .12s,border-color .12s;
+  }
+  .ab-tab:hover{color:var(--ink-2)}
+  .ab-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+  .ab-tab .count{
+    display:inline-block;margin-left:6px;font-size:8.5px;color:var(--ink-3);font-weight:400;
+  }
+
+  .ab-tools{
+    display:flex;gap:6px;align-items:flex-start;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .ab-tools[hidden]{display:none}
+  .ab-tools::-webkit-scrollbar{height:4px}
+  .ab-tools::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+
+  .tool{
+    flex-shrink:0;
+    width:54px;height:54px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--rule);border-radius:3px;
+    color:var(--ink-2);cursor:pointer;
+    transition:border-color .12s,color .12s,transform .12s;
+    position:relative;
+  }
+  .tool:hover{border-color:var(--gold-2);color:var(--ink)}
+  .tool.active{
+    border-color:var(--gold);color:var(--gold);
+    background:linear-gradient(180deg,#2e281e,#241f18);
+    box-shadow:0 0 0 1px var(--gold) inset, 0 0 14px rgba(212,184,112,.18);
+  }
+  .tool .ic{font-size:20px;line-height:1}
+  .tool .lab{font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+  .tool .key{position:absolute;top:2px;right:3px;font-family:var(--mono);font-size:8px;color:var(--ink-3);opacity:.6}
+
+  /* Mode etire : on revele un detail panel par outil */
+  .tool-detail{
+    display:none;
+    flex:1;
+    padding:10px 14px;
+    background:rgba(0,0,0,.18);
+    border:1px solid var(--rule);border-radius:3px;
+    margin-left:10px;
+    min-width:220px;
+  }
+  #actionbar.expanded .tool-detail{display:block}
+  .tool-detail h4{
+    margin:0 0 4px;font-family:var(--serif);font-weight:500;font-size:16px;color:var(--ink);
+  }
+  .tool-detail p{margin:0 0 8px;color:var(--ink-2);font-size:12px;line-height:1.45}
+  .tool-detail .meta{
+    display:flex;gap:14px;
+    font-family:var(--mono);font-size:10px;color:var(--ink-3);
+    letter-spacing:.08em;text-transform:uppercase;
+  }
+  .tool-detail .meta b{color:var(--gold);font-weight:500}
+
+  .center-stack{display:flex;gap:12px;align-items:stretch;min-width:0}
+
+  /* ---- Zone droite : Annuler + Demolir, TOUJOURS la ---- */
+  .actionbar-right{
+    display:flex;align-items:center;gap:8px;
+    padding:10px 18px 10px 14px;
+    justify-content:flex-end;
+    position:relative;
+  }
+  .actionbar-right::before{
+    content:"toujours visible";
+    position:absolute;top:6px;right:18px;
+    font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold-2);opacity:.7;
+  }
+  .ab-act{
+    height:54px;min-width:72px;padding:0 12px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--rule);border-radius:3px;
+    color:var(--ink-2);cursor:pointer;
+    transition:all .12s;
+  }
+  .ab-act .ic{font-size:18px;line-height:1}
+  .ab-act .lab{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+  .ab-act .key{font-family:var(--mono);font-size:8px;color:var(--ink-3);margin-top:1px}
+  .ab-cancel:hover{border-color:var(--ink-2);color:var(--ink)}
+  .ab-destroy{color:#d49a82}
+  .ab-destroy:hover{
+    border-color:var(--danger);color:#fff;
+    background:linear-gradient(180deg,#3a1c14,#26120c);
+  }
+  .ab-destroy.armed{
+    border-color:var(--danger);color:#fff;
+    background:linear-gradient(180deg,#5a261a,#3a1810);
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(200,116,86,.5)}
+    50%{box-shadow:0 0 0 6px rgba(200,116,86,0)}
+  }
+
+  /* Hint d'expansion */
+  .expand-hint{
+    position:absolute;top:6px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-3);pointer-events:none;opacity:.55;
+  }
+  #actionbar.expanded .expand-hint{opacity:.3}
+</style>
+</head>
+<body>
+  <div class="stage"></div>
+  <div class="scene-label"><span class="label-id">POC B</span>Taskbar pleine largeur, drag pour etendre</div>
+
+  <div id="actionbar">
+    <div class="ab-grip" id="ab-grip" title="Glisser pour etendre"></div>
+    <div class="expand-hint">tirer vers le haut pour les details</div>
+
+    <div class="actionbar-nav">
+      <span class="ab-section-label">Camera</span>
+      <button class="tool active" data-tool="navigate" title="Naviguer (Esc)">
+        <span class="ic">✥</span>
+        <span class="lab">Naviguer</span>
+        <span class="key">ESC</span>
+      </button>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="actionbar-center">
+      <div class="ab-tabs" role="tablist">
+        <button class="ab-tab active" data-tab="recoltes">Recoltes <span class="count">04</span></button>
+        <button class="ab-tab" data-tab="construire">Construire <span class="count">05</span></button>
+      </div>
+      <div class="center-stack">
+        <div class="ab-tools" data-pane="recoltes">
+          <button class="tool" data-tool="bois"><span class="ic">🪓</span><span class="lab">Bois</span><span class="key">1</span></button>
+          <button class="tool" data-tool="pierre"><span class="ic">⛏</span><span class="lab">Pierre</span><span class="key">2</span></button>
+          <button class="tool" data-tool="baies"><span class="ic">🌿</span><span class="lab">Baies</span><span class="key">3</span></button>
+          <button class="tool" data-tool="chasse"><span class="ic">🏹</span><span class="lab">Chasse</span><span class="key">4</span></button>
+        </div>
+        <div class="ab-tools" data-pane="construire" hidden>
+          <button class="tool" data-tool="hutte"><span class="ic">🏠</span><span class="lab">Hutte</span><span class="key">1</span></button>
+          <button class="tool" data-tool="atelier"><span class="ic">🔨</span><span class="lab">Atelier</span><span class="key">2</span></button>
+          <button class="tool" data-tool="entrepot"><span class="ic">📦</span><span class="lab">Entrepot</span><span class="key">3</span></button>
+          <button class="tool" data-tool="route"><span class="ic">═</span><span class="lab">Route</span><span class="key">4</span></button>
+          <button class="tool" data-tool="palissade"><span class="ic">▦</span><span class="lab">Palissade</span><span class="key">5</span></button>
+        </div>
+
+        <div class="tool-detail" id="tool-detail">
+          <h4>Selectionnez un outil</h4>
+          <p>Glisser la poignee vers le haut pour afficher les details d'outil : ressources requises, prerequis, raccourcis avances.</p>
+          <div class="meta"><span>Cout : <b>aucun</b></span><span>Temps : <b>aucun</b></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="actionbar-right">
+      <button class="ab-act ab-cancel" id="ab-cancel">
+        <span class="ic">↶</span><span class="lab">Annuler</span><span class="key">CTRL Z</span>
+      </button>
+      <button class="ab-act ab-destroy" id="ab-destroy">
+        <span class="ic">⛏</span><span class="lab">Demolir</span><span class="key">DEL</span>
+      </button>
+    </div>
+  </div>
+
+<script>
+  // ----- Tabs -----
+  const tabs = document.querySelectorAll(".ab-tab");
+  const panes = document.querySelectorAll(".ab-tools");
+  tabs.forEach(t => t.addEventListener("click", () => {
+    tabs.forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    const k = t.dataset.tab;
+    panes.forEach(p => p.hidden = (p.dataset.pane !== k));
+    cancelAllSelections();
+  }));
+
+  // ----- Tool selection -----
+  const detailH = document.querySelector("#tool-detail h4");
+  const detailP = document.querySelector("#tool-detail p");
+  const detailMeta = document.querySelector("#tool-detail .meta");
+  const TOOL_INFO = {
+    bois: ["Coupe de bois","Assigne un colon a la coupe selective. Choisir une foret en cliquant sur la zone.", "1 colon", "instantane"],
+    pierre:["Carriere","Designer un affleurement. Le colon revient avec 4 pierres par cycle.", "1 colon", "30 s/cycle"],
+    baies:["Cueillette","Cueillette saisonniere. Production divisee par 3 hors ete.", "1 colon", "saisonnier"],
+    chasse:["Battue","Pose un cheminement de chasse, rendement variable selon le gibier.", "2 colons", "1 min"],
+    hutte:["Hutte","Loge 4 colons. Necessite 8 bois.", "8 bois", "20 s"],
+    atelier:["Atelier","Debloque les outils en pierre.", "12 bois, 6 pierre", "40 s"],
+    entrepot:["Entrepot","Stockage 200 unites par tas.", "10 bois", "25 s"],
+    route:["Route","Chemin de terre. Acceleration de deplacement x1.4.", "1 pierre / case", "instantane"],
+    palissade:["Palissade","Defense legere. Bloque les loups.", "3 bois / case", "5 s/case"],
+  };
+  document.addEventListener("click", e => {
+    const t = e.target.closest(".tool");
+    if (!t) return;
+    if (t.closest(".actionbar-nav")) return;
+    document.querySelectorAll(".tool").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("ab-destroy").classList.remove("armed");
+    const info = TOOL_INFO[t.dataset.tool];
+    if (info){
+      detailH.textContent = info[0];
+      detailP.textContent = info[1];
+      detailMeta.innerHTML = `<span>Cout : <b>${info[2]}</b></span><span>Temps : <b>${info[3]}</b></span>`;
+    }
+  });
+
+  // ----- Cancel -----
+  document.getElementById("ab-cancel").addEventListener("click", cancelAllSelections);
+  function cancelAllSelections(){
+    document.querySelectorAll(".tool").forEach(x => x.classList.remove("active"));
+    document.querySelector(".actionbar-nav .tool").classList.add("active");
+    document.getElementById("ab-destroy").classList.remove("armed");
+    detailH.textContent = "Selectionnez un outil";
+    detailP.textContent = "Glisser la poignee vers le haut pour afficher les details d'outil : ressources requises, prerequis, raccourcis avances.";
+    detailMeta.innerHTML = `<span>Cout : <b>aucun</b></span><span>Temps : <b>aucun</b></span>`;
+  }
+
+  // ----- Demolir -----
+  document.getElementById("ab-destroy").addEventListener("click", e => {
+    const b = e.currentTarget;
+    document.querySelectorAll(".tool").forEach(x => x.classList.remove("active"));
+    b.classList.toggle("armed");
+  });
+
+  // ----- Drag-resize de la barre -----
+  const grip = document.getElementById("ab-grip");
+  const bar = document.getElementById("actionbar");
+  let dragging = false, startY = 0, startH = 80;
+  grip.addEventListener("mousedown", e => {
+    dragging = true; startY = e.clientY; startH = bar.offsetHeight;
+    grip.classList.add("dragging");
+    document.body.style.cursor = "ns-resize";
+    bar.style.transition = "none";
+  });
+  window.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    const dy = startY - e.clientY;
+    const h = Math.max(80, Math.min(240, startH + dy));
+    bar.style.height = h + "px";
+    bar.classList.toggle("expanded", h > 130);
+  });
+  window.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    grip.classList.remove("dragging");
+    document.body.style.cursor = "";
+    bar.style.transition = "";
+    // snap
+    const h = bar.offsetHeight;
+    bar.style.height = h > 130 ? "240px" : "80px";
+    bar.classList.toggle("expanded", h > 130);
+  });
+  grip.addEventListener("dblclick", () => {
+    bar.style.height = "80px";
+    bar.classList.remove("expanded");
+  });
+
+  // ----- Keyboard shortcuts -----
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape") cancelAllSelections();
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+      e.preventDefault();
+      document.getElementById("ab-cancel").click();
+    }
+    if (e.key === "Delete") document.getElementById("ab-destroy").click();
+  });
+</script>
+</body>
+</html>

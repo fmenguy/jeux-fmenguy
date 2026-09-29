@@ -4,18 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Strates · Arbre des savoirs, deux pistes</title>
+<title>Strates · Journal des POC</title>
+<script>
+  // Anciens liens (/strates-poc/#cadrans...) : la comparaison de l'arbre des savoirs a déménagé
+  (function () {
+    var h = location.hash.slice(1)
+    if (['strates', 'spherier', 'alveoles', 'cadrans'].indexOf(h) >= 0) location.replace('arbre-des-savoirs/#' + h)
+  })()
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
   :root {
     --bg: #1b1914;
     --panel: #221e18;
+    --panel-2: #2b261e;
     --line: rgba(237,227,204,0.12);
     --text: #ede3cc;
-    --muted: rgba(237,227,204,0.62);
+    --muted: rgba(237,227,204,0.64);
+    --faint: rgba(237,227,204,0.42);
     --gold: #d4a017;
     --gold-soft: #f0c96a;
+    --ok: #7fc38a;
+    --wait: #e0b25a;
+    --off: #9a8f76;
+    --ref: #86a0d4;
   }
   * { box-sizing: border-box; }
   body {
@@ -27,211 +40,423 @@
   }
   a { color: var(--gold-soft); }
 
-  .wrap { max-width: 1400px; margin: 0 auto; padding: 1.6rem 1rem 3rem; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 1.8rem 1rem 4rem; }
 
   .top {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: 0.6rem 1.2rem;
-    margin-bottom: 0.4rem;
+  }
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    margin: 0 0 0.3rem;
   }
   h1 {
     margin: 0;
     font-family: Fraunces, Georgia, serif;
     font-weight: 600;
-    font-size: clamp(1.5rem, 3vw, 2.1rem);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1.1;
   }
-  .tmp {
-    padding: 0.15rem 0.6rem;
-    border: 1px dashed rgba(212,160,23,0.6);
-    border-radius: 999px;
-    font-size: 0.72rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--gold-soft);
-  }
-  .nav { margin-left: auto; font-size: 0.85rem; display: flex; gap: 1rem; }
+  .nav { margin-left: auto; font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
   .nav a { text-decoration: none; border-bottom: 1px solid rgba(240,201,106,0.35); }
   .nav a:hover { border-color: var(--gold-soft); }
 
-  .intro { max-width: 70ch; color: var(--muted); font-size: 0.95rem; margin: 0.4rem 0 1.4rem; }
+  .intro { max-width: 68ch; color: var(--muted); margin: 0.8rem 0 1.2rem; }
 
-  .picks {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 0.8rem;
-    margin-bottom: 1.2rem;
-  }
-  .pick {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    padding: 0.9rem 1rem;
-    text-align: left;
-    font: inherit;
-    color: var(--text);
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
-  }
-  .pick:hover { border-color: rgba(212,160,23,0.5); transform: translateY(-1px); }
-  .pick[aria-selected="true"] {
-    border-color: var(--gold);
-    background: linear-gradient(160deg, rgba(212,160,23,0.18) 0%, rgba(212,160,23,0.04) 70%), var(--panel);
-    box-shadow: 0 6px 22px rgba(212,160,23,0.14);
-  }
-  .pick-k {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--gold-soft);
-  }
-  .pick-n { font-family: Fraunces, Georgia, serif; font-size: 1.15rem; font-weight: 600; }
-  .pick-d { font-size: 0.8rem; color: var(--muted); }
-
-  .stage-head {
+  .legend {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem 1rem;
-    margin-bottom: 0.6rem;
-    font-size: 0.85rem;
-    color: var(--muted);
-  }
-  .stage-head strong { color: var(--text); font-weight: 600; }
-  .stage-head a { margin-left: auto; }
-
-  .stage {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
+    gap: 0.5rem 1.2rem;
+    margin: 0 0 2.4rem;
+    padding: 0.7rem 0.9rem;
     border: 1px solid var(--line);
     border-radius: 8px;
-    background: var(--bg);
-  }
-  .stage iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 1366px;
-    height: 768px;
-    border: 0;
-    transform-origin: 0 0;
-  }
-
-  .how {
-    margin-top: 1rem;
     font-size: 0.8rem;
     color: var(--muted);
   }
-  .mobile-note { display: none; }
+  .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
 
-  @media (max-width: 760px) {
+  .dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex: none; }
+  .st-integre .dot, .dot.st-integre { background: var(--ok); }
+  .st-validation .dot, .dot.st-validation { background: var(--wait); }
+  .st-non-integre .dot, .dot.st-non-integre { background: var(--off); }
+  .st-reference .dot, .dot.st-reference { background: var(--ref); }
+
+  .era {
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+    margin: 2.6rem 0 1.2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(212,160,23,0.25);
+  }
+  .era h2 { margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1.35rem; }
+  .era p { margin: 0; font-size: 0.85rem; color: var(--faint); }
+
+  /* Une entrée : la date à gauche, la fiche à droite, reliées par la frise */
+  .entry {
+    display: grid;
+    grid-template-columns: 8.5rem 1fr;
+    gap: 0 1.4rem;
+    position: relative;
+  }
+  .entry + .entry { margin-top: 1.4rem; }
+  .when {
+    position: relative;
+    padding-top: 0.9rem;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .when strong { display: block; font-family: Fraunces, Georgia, serif; font-size: 1.05rem; color: var(--text); font-weight: 600; }
+  .when::after {
+    content: '';
+    position: absolute;
+    top: 1.15rem;
+    right: -1.05rem;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+  .entry::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: -1.4rem;
+    left: calc(8.5rem + 0.7rem - 0.5px);
+    width: 1px;
+    background: rgba(212,160,23,0.22);
+  }
+  .entry:last-child::before { bottom: 0; }
+
+  .card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+    overflow: hidden;
+  }
+  .shot {
+    display: block;
+    position: relative;
+    background: #0f0e0b;
+    border-right: 1px solid var(--line);
+    min-height: 100%;
+  }
+  .shot img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: left top;
+    transition: opacity 0.2s ease;
+  }
+  .shot:hover img { opacity: 0.85; }
+  .shot-cap {
+    position: absolute;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(15,14,11,0.82);
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .body { padding: 1rem 1.2rem 1.1rem; display: flex; flex-direction: column; gap: 0.65rem; }
+  .head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.7rem; }
+  .ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    color: var(--gold-soft);
+    border: 1px solid rgba(212,160,23,0.35);
+    border-radius: 4px;
+    padding: 0.05rem 0.4rem;
+  }
+  h3 { margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1.25rem; line-height: 1.2; }
+  .question { margin: 0; font-size: 0.88rem; color: var(--muted); }
+
+  .pistes { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
+  .pistes li {
+    font-size: 0.76rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--faint);
+  }
+  .pistes li.kept {
+    color: #1a1206;
+    background: linear-gradient(135deg, #f6dfa4 0%, #d4a017 100%);
+    border-color: transparent;
+    font-weight: 600;
+  }
+  .pistes li.kept::before { content: '✓ '; }
+
+  .choice {
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    border-left: 2px solid var(--gold);
+    background: rgba(212,160,23,0.07);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.88rem;
+  }
+  .choice b { color: var(--gold-soft); font-weight: 600; }
+  .note { margin: 0; font-size: 0.8rem; color: var(--faint); font-style: italic; }
+
+  .status { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; color: var(--muted); }
+
+  .links { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; margin-top: auto; padding-top: 0.2rem; font-size: 0.84rem; }
+  .links a { text-decoration: none; border-bottom: 1px solid rgba(240,201,106,0.35); }
+  .links a:hover { border-color: var(--gold-soft); }
+
+  .foot { margin-top: 3rem; font-size: 0.78rem; color: var(--faint); }
+
+  @media (max-width: 860px) {
+    .card { grid-template-columns: 1fr; }
+    .shot { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+  @media (max-width: 640px) {
     .nav { margin-left: 0; width: 100%; }
-    .mobile-note { display: block; }
+    .entry { grid-template-columns: 1fr; }
+    .entry::before, .when::after { display: none; }
+    .when { text-align: left; padding: 0 0 0.4rem; }
+    .when strong { display: inline; margin-right: 0.5rem; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
 
+  <p class="kicker">Strates · atelier de conception</p>
   <div class="top">
-    <h1>Strates · Arbre des savoirs</h1>
-    <span class="tmp">Page temporaire</span>
+    <h1>Journal des POC</h1>
     <nav class="nav">
       <a href="/">Retour à l'Arcade</a>
+      <a href="https://strates.fmenguy.fr/v2/">Jouer à Strates</a>
       <a href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/kanban.html">Suivi du chantier</a>
     </nav>
   </div>
 
   <p class="intro">
-    Deux pistes pour le nouvel écran des technologies de la V2, à comparer avant de choisir.
-    Ce sont des maquettes jouables : on peut cliquer sur un savoir pour lire sa fiche, suivre ses prérequis
-    et le mettre en recherche. Les données sont celles du jeu, la partie est figée à l'âge du Bronze.
+    Avant d'entrer dans le jeu, chaque morceau d'interface passe par des maquettes, souvent jouables, qu'on compare.
+    Cette page garde la trace des pistes explorées et du choix retenu, du plus récent au plus ancien.
+    Cliquer sur une image ouvre la maquette.
   </p>
 
-  <div class="picks" role="tablist" aria-label="Choix de la maquette">
-    <button class="pick" role="tab" data-id="strates" data-src="Strates.dc.html">
-      <span class="pick-k">Piste A</span>
-      <span class="pick-n">Strates</span>
-      <span class="pick-d">Les âges empilés en couches comme des strates géologiques, une colonne par branche.</span>
-    </button>
-    <button class="pick" role="tab" data-id="spherier" data-src="Spherier.dc.html">
-      <span class="pick-k">Piste A, variante</span>
-      <span class="pick-n">Sphérier</span>
-      <span class="pick-d">Le même arbre en étoile autour du village, chaque branche part dans sa direction.</span>
-    </button>
-    <button class="pick" role="tab" data-id="alveoles" data-src="Alveoles.dc.html">
-      <span class="pick-k">Piste A, variante</span>
-      <span class="pick-n">Alvéoles</span>
-      <span class="pick-d">Les couches de la piste A, avec des savoirs regroupés en grappes d'hexagones.</span>
-    </button>
-    <button class="pick" role="tab" data-id="cadrans" data-src="Cadrans.dc.html">
-      <span class="pick-k">Piste B</span>
-      <span class="pick-n">Roue à quatre cadrans</span>
-      <span class="pick-d">Les âges en anneaux autour du village, les savoirs en quatre cadrans : Connaître, Bâtir, Produire, Nourrir.</span>
-    </button>
+  <div class="legend" aria-label="Légende des statuts">
+    <span><span class="dot st-integre"></span>Intégré au jeu</span>
+    <span><span class="dot st-validation"></span>Intégré, en cours de validation</span>
+    <span><span class="dot st-non-integre"></span>Choisi, jamais intégré</span>
+    <span><span class="dot st-reference"></span>Maquette de référence, sans duel</span>
   </div>
 
-  <div class="stage-head">
-    <span>Maquette affichée : <strong id="current-name">Strates</strong></span>
-    <a id="open-full" href="Strates.dc.html" target="_blank" rel="noopener">Ouvrir en grand ↗</a>
-  </div>
+  <div id="journal"></div>
 
-  <div class="stage" id="stage">
-    <iframe id="frame" title="Maquette de l'arbre des savoirs" src="Strates.dc.html"></iframe>
-  </div>
-
-  <p class="how" id="how"></p>
-  <p class="how mobile-note">Les maquettes sont dessinées pour un écran d'ordinateur (1366 × 768). Sur téléphone, « Ouvrir en grand » donne une meilleure lecture.</p>
+  <p class="foot">
+    Les maquettes de la V1 viennent du projet Claude Design d'avril et mai 2026, celles de la V2 du dépôt de Strates.
+    Données d'exemple, aucune sauvegarde n'est touchée.
+  </p>
 
 </div>
 
 <script>
-  const HOW = {
-    strates: 'Glisser pour se déplacer, molette ou boutons + et − pour zoomer, clic sur un savoir pour ouvrir sa fiche.',
-    spherier: 'Glisser pour se déplacer, molette pour zoomer, survol d\'un savoir pour son état, clic pour sa fiche.',
-    alveoles: 'Glisser pour se déplacer, molette pour zoomer, survol d\'un savoir pour son état, clic pour sa fiche.',
-    cadrans: 'Clic ou molette vers l\'avant sur un cadran pour zoomer dessus, molette vers l\'arrière pour revenir à la vue d\'ensemble. Les onglets en bas de la carte changent de cadran.'
+  // Ajouter un POC : une entrée dans POCS, dans la bonne époque, la plus récente en tête.
+  // statut : integre | validation | non-integre | reference
+  const S = 'https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/'
+
+  const ERAS = [
+    { id: 'v2', titre: 'V2', sous: 'Septembre 2026, la refonte' },
+    { id: 'v1', titre: 'V1', sous: 'Avril et mai 2026, l\'éditeur d\'origine' }
+  ]
+
+  const POCS = [
+    {
+      era: 'v2',
+      date: '28 sept. 2026',
+      ref: 'EVO-21',
+      titre: 'Arbre des savoirs',
+      question: 'Comment montrer tout le catalogue des savoirs, âge par âge, sans perdre le joueur ?',
+      pistes: [['Strates', 0], ['Sphérier', 0], ['Alvéoles', 0], ['Roue à quatre cadrans', 1]],
+      choix: 'La roue à quatre cadrans : Connaître, Bâtir, Produire, Nourrir, un anneau par âge autour du village. C\'était l\'idée de départ.',
+      statut: 'validation',
+      statutTexte: 'Intégrée à la V2 le 28 sept., visite guidée revue le 29 sept.',
+      img: 'img/arbre-cadrans.webp',
+      cap: 'Roue à quatre cadrans',
+      href: 'arbre-des-savoirs/#cadrans',
+      liens: [['Comparer les quatre maquettes', 'arbre-des-savoirs/'], ['Maquette retenue', 'arbre-des-savoirs/#cadrans']]
+    },
+    {
+      era: 'v2',
+      date: '28 sept. 2026',
+      ref: 'EVO-37',
+      titre: 'Interface épurée',
+      question: 'Où ranger les ressources quand leur nombre explose d\'un âge à l\'autre ?',
+      pistes: [['A · Catégories au clic', 1], ['B · Stocks visibles par groupe', 0]],
+      choix: 'A : quatre catégories stables qui s\'ouvrent au clic. Pas de barre qui défile ni de pages, les ascenseurs font mauvais effet dans un jeu. L\'âge rejoint la barre du haut.',
+      statut: 'validation',
+      statutTexte: 'Intégrée le 28 sept., complétée le 29 sept.',
+      img: 'img/interface-epuree.webp',
+      cap: 'Variante A',
+      href: S + 'interface-epuree.html',
+      liens: [['Ouvrir les deux variantes', S + 'interface-epuree.html']]
+    },
+    {
+      era: 'v2',
+      date: '28 sept. 2026',
+      ref: 'MIG-16',
+      titre: 'Dessiner la Renaissance',
+      question: 'Un dossier de conception plutôt qu\'un duel : quinze projets de bâtiments, des recherches candidates et trente arbitrages à rendre.',
+      pistes: [],
+      choix: 'Une Renaissance paisible : pas de guerre, plus de bâtiments, plus de savoirs, une agriculture plus riche.',
+      statut: 'validation',
+      statutTexte: 'Jouable jusqu\'à l\'âge industriel depuis le 29 sept., rendu à valider.',
+      img: 'img/renaissance.webp',
+      cap: 'Dossier de conception',
+      href: S + 'renaissance.html',
+      liens: [['Lire le dossier', S + 'renaissance.html']]
+    },
+    {
+      era: 'v2',
+      date: '25 sept. 2026',
+      ref: 'EVO-1 · EVO-2',
+      titre: 'Fiche habitant et atlas des découvertes',
+      question: 'Quel cadre pour la fiche d\'un habitant, et comment naviguer dans les découvertes ?',
+      pistes: [['Fiche A · Tableau de bord central', 1], ['Fiche B · Fiche latérale', 0], ['Atlas en pages à trois niveaux', 0]],
+      choix: 'La fiche A. Pour la recherche, garder le cercle existant et zoomer dessus, puis ouvrir un savoir d\'un clic : l\'atlas en pages est écarté. Ce cercle mènera à la roue à quatre cadrans.',
+      statut: 'integre',
+      statutTexte: 'Fiche A et cercle zoomable intégrés et validés.',
+      img: 'img/fiche-atlas.webp',
+      cap: 'Fiches A et B',
+      href: S + 'maquettes.html',
+      liens: [['Ouvrir les maquettes', S + 'maquettes.html']]
+    },
+    {
+      era: 'v1',
+      date: 'Mai 2026',
+      ref: 'Vue carte',
+      titre: 'Vue carte au dézoom maximal',
+      question: 'Aux derniers crans de dézoom, le monde voxel devient illisible : quelle carte afficher à la place ?',
+      pistes: [['A · Papier ancien', 1], ['B · Tactique moderne', 1], ['C · Voxel pixel art', 0]],
+      choix: 'Un hybride A + B : la base tactique moderne (aplats, pictos, frontières en pointillé doré) avec un vernis papier ancien (parchemin discret, noms de lieux en italique).',
+      note: 'Date exacte non consignée.',
+      statut: 'non-integre',
+      statutTexte: 'Jamais intégrée à la V1.',
+      img: 'img/vue-carte.webp',
+      cap: 'Piste B, tactique moderne',
+      href: 'v1/vue-carte/index.html',
+      liens: [['Comparer les trois pistes', 'v1/vue-carte/index.html'], ['A', 'v1/vue-carte/poc-a-papier-ancien.html'], ['B', 'v1/vue-carte/poc-b-tactique-moderne.html'], ['C', 'v1/vue-carte/poc-c-voxel-pixel-art.html']]
+    },
+    {
+      era: 'v1',
+      date: '4 mai 2026',
+      ref: 'Barre d\'action',
+      titre: 'Barre d\'action',
+      question: 'Annuler et Démolir changeaient de place selon l\'onglet actif : où les fixer pour de bon ?',
+      pistes: [['A · Trois zones ancrées', 1], ['B · Taskbar pleine largeur', 0], ['C · Hybride dock latéral', 0]],
+      choix: 'A : Naviguer en bas à gauche, les outils au centre, Annuler et Démolir toujours au même endroit en bas à droite.',
+      note: 'La maquette recommandait C, le choix final s\'est porté sur A.',
+      statut: 'integre',
+      statutTexte: 'Intégrée le 4 mai 2026.',
+      img: 'img/barre-action-a.webp',
+      cap: 'Piste A',
+      href: 'v1/barre-action/A-trois-zones.html',
+      liens: [['A', 'v1/barre-action/A-trois-zones.html'], ['B', 'v1/barre-action/B-taskbar-pleine-largeur.html'], ['C', 'v1/barre-action/C-hybride-dock-lateral.html']]
+    },
+    {
+      era: 'v1',
+      date: '24 avr. 2026',
+      ref: 'Population v0.3',
+      titre: 'Vue Population',
+      question: 'Une seule maquette pour gérer les colons : liste, compétences, métiers, relations, démographie et villages.',
+      pistes: [],
+      choix: 'Maquette retenue telle quelle, intégrée par priorités : liste, métiers et compétences d\'abord.',
+      statut: 'integre',
+      statutTexte: 'Premier lot intégré le 24 avril 2026.',
+      img: 'img/population.webp',
+      cap: 'Onglet Liste',
+      href: 'v1/population/population.html',
+      liens: [['Ouvrir la maquette', 'v1/population/population.html']]
+    },
+    {
+      era: 'v1',
+      date: '23 avr. 2026',
+      ref: 'HUD',
+      titre: 'Maquette du HUD',
+      question: 'Point de départ de la refonte : barre des ressources, rail de panneaux, fiche colon, et deux premières idées de barre d\'action (onglets ou côte à côte).',
+      pistes: [],
+      choix: 'Pas d\'arbitrage consigné. La barre d\'action a été reprise en mai (voir plus haut).',
+      statut: 'reference',
+      statutTexte: 'Maquette de référence.',
+      img: 'img/hud.webp',
+      cap: 'HUD complet',
+      href: 'v1/hud/hud-mockup.html',
+      liens: [['Ouvrir la maquette', 'v1/hud/hud-mockup.html']]
+    },
+    {
+      era: 'v1',
+      date: '23 avr. 2026',
+      ref: 'Arbre techno',
+      titre: 'Arbre technologique de la V1',
+      question: 'Une vue globale par branches autour de l\'âge en cours, avec une file de recherche, et une variante en constellation.',
+      pistes: [['Vue par branches', 0], ['Constellation', 0]],
+      choix: 'Pas d\'arbitrage consigné. Le sujet a été rouvert en V2 (voir l\'arbre des savoirs).',
+      statut: 'reference',
+      statutTexte: 'Maquettes de référence.',
+      img: 'img/arbre-techno.webp',
+      cap: 'Vue par branches',
+      href: 'v1/arbre-techno/techtree-v2.html',
+      liens: [['Vue par branches', 'v1/arbre-techno/techtree-v2.html'], ['Constellation', 'v1/arbre-techno/techtree-global-b.html']]
+    }
+  ]
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+  const ext = href => /^https?:/.test(href) ? ' target="_blank" rel="noopener"' : ''
+
+  function entry(p) {
+    const [jour, ...reste] = p.date.split(' ')
+    const when = reste.length && /^\d/.test(jour)
+      ? '<strong>' + esc(jour) + '</strong>' + esc(reste.join(' '))
+      : '<strong>' + esc(p.date) + '</strong>'
+    const pistes = p.pistes.length
+      ? '<ul class="pistes">' + p.pistes.map(([n, k]) => '<li' + (k ? ' class="kept"' : '') + '>' + esc(n) + '</li>').join('') + '</ul>'
+      : ''
+    return '<article class="entry">'
+      + '<div class="when">' + when + '</div>'
+      + '<div class="card">'
+      +   '<a class="shot" href="' + esc(p.href) + '"' + ext(p.href) + '>'
+      +     '<img src="' + esc(p.img) + '" width="960" height="540" loading="lazy" decoding="async" alt="' + esc(p.titre + ', ' + p.cap) + '">'
+      +     '<span class="shot-cap">' + esc(p.cap) + '</span>'
+      +   '</a>'
+      +   '<div class="body">'
+      +     '<div class="head"><span class="ref">' + esc(p.ref) + '</span><h3>' + esc(p.titre) + '</h3></div>'
+      +     '<p class="question">' + esc(p.question) + '</p>'
+      +     pistes
+      +     '<p class="choice"><b>Choix</b> · ' + esc(p.choix) + '</p>'
+      +     (p.note ? '<p class="note">' + esc(p.note) + '</p>' : '')
+      +     '<span class="status st-' + p.statut + '"><span class="dot"></span>' + esc(p.statutTexte) + '</span>'
+      +     '<div class="links">' + p.liens.map(([t, h]) => '<a href="' + esc(h) + '"' + ext(h) + '>' + esc(t) + ' →</a>').join('') + '</div>'
+      +   '</div>'
+      + '</div>'
+      + '</article>'
   }
-  const W = 1366, H = 768
-  const stage = document.getElementById('stage')
-  const frame = document.getElementById('frame')
-  const picks = [...document.querySelectorAll('.pick')]
-  const nameEl = document.getElementById('current-name')
-  const fullEl = document.getElementById('open-full')
-  const howEl = document.getElementById('how')
 
-  function fit() {
-    const k = stage.clientWidth / W
-    frame.style.transform = 'scale(' + k + ')'
-    stage.style.height = Math.round(H * k) + 'px'
-  }
-
-  function show(id, push) {
-    const btn = picks.find(p => p.dataset.id === id) || picks[0]
-    picks.forEach(p => p.setAttribute('aria-selected', p === btn ? 'true' : 'false'))
-    if (!frame.src.endsWith(btn.dataset.src)) frame.src = btn.dataset.src
-    nameEl.textContent = btn.querySelector('.pick-n').textContent
-    fullEl.href = btn.dataset.src
-    howEl.textContent = HOW[btn.dataset.id]
-    if (push) history.replaceState(null, '', '#' + btn.dataset.id)
-  }
-
-  // La molette sert au zoom des maquettes : on empêche qu'elle fasse aussi défiler la page
-  frame.addEventListener('load', () => {
-    try { frame.contentWindow.addEventListener('wheel', e => e.preventDefault(), { passive: false }) } catch (e) {}
-  })
-
-  picks.forEach(p => p.addEventListener('click', () => show(p.dataset.id, true)))
-  window.addEventListener('resize', fit)
-  window.addEventListener('hashchange', () => show(location.hash.slice(1), false))
-  fit()
-  show(location.hash.slice(1), false)
+  document.getElementById('journal').innerHTML = ERAS.map(e =>
+    '<section><div class="era"><h2>' + esc(e.titre) + '</h2><p>' + esc(e.sous) + '</p></div>'
+    + POCS.filter(p => p.era === e.id).map(entry).join('')
+    + '</section>'
+  ).join('')
 </script>
 </body>
 </html>
