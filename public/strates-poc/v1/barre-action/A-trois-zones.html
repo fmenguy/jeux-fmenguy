@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>POC A - Trois zones ancrees</title>
+<!--
+================================================================================
+POC A - Trois zones ancrees au bord bas (RTS classique)
+================================================================================
+
+Layout :
+  [Naviguer]                  [outils contextuels]                  [Annuler] [Demolir]
+  bas-gauche                       bas-centre                            bas-droite
+
+Forces :
+  + Stabilite spatiale absolue : Annuler/Demolir ne bougent jamais d'un pixel,
+    quel que soit l'onglet (Recoltes / Construire) actif.
+  + Memoire musculaire RTS-classique (Settlers, AoE, Banished) : zone gauche =
+    deplacement / camera, zone droite = actions destructives, centre = creation.
+  + Hierarchie visuelle claire : la palette d'outils centrale "respire", les
+    actions critiques sont visuellement separees (couleur + isolement).
+  + Annuler/Demolir restent ergonomiques pres du curseur si le joueur cible
+    le terrain (souvent vers le bas-droite a la souris).
+
+Faiblesses :
+  - Trois ancres = trois saccades visuelles au lieu d'une seule barre.
+  - Zone centre peut grossir et finir collee a la zone droite sur petit ecran ;
+    necessite breakpoint a ~1100 px pour passer la zone droite en colonne.
+  - Tablette : trois zones distinctes prennent plus de surface au sol que
+    la barre unique d'origine.
+================================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#1b1914;
+    --panel:#221e18;
+    --panel-2:#2b261e;
+    --panel-3:#362f25;
+    --rule:#3d352a;
+    --ink:#ede3cc;
+    --ink-2:#b9ad91;
+    --ink-3:#7f7562;
+    --gold:#d4b870;
+    --gold-2:#a88d4a;
+    --grass:#7cc06a;
+    --wood:#c48a52;
+    --danger:#c87456;
+    --danger-2:#7a3a28;
+
+    --serif:"Fraunces","Iowan Old Style",Palatino,Georgia,serif;
+    --sans:"Inter",ui-sans-serif,system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:#0e0d0a;color:var(--ink);font-family:var(--sans);font-size:13.5px}
+
+  /* ---- Faux canvas 3D, juste pour planter le contexte visuel ---- */
+  .stage{
+    position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse at 30% 20%, #2c3322 0%, transparent 55%),
+      radial-gradient(ellipse at 70% 70%, #1a2417 0%, transparent 60%),
+      linear-gradient(180deg,#1d2418 0%,#11140d 100%);
+  }
+  .stage::after{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--rule) 1px,transparent 1px),
+      linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+    background-size:60px 60px;
+    background-position:0 0;
+    opacity:.05;
+    transform:perspective(800px) rotateX(60deg) translateY(40px) scale(2);
+    transform-origin:center bottom;
+  }
+  .scene-label{
+    position:fixed;top:14px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-3);background:rgba(27,25,20,.6);
+    padding:5px 12px;border:1px solid var(--rule);border-radius:2px;
+    backdrop-filter:blur(6px);
+    z-index:30;
+  }
+  .label-id{color:var(--gold);margin-right:8px}
+
+  /* ============================================================
+     ACTION BAR - POC A
+     Trois zones ancrees independantes au bord bas
+     ============================================================ */
+  #actionbar{
+    position:fixed;left:0;right:0;bottom:0;
+    padding:0 22px 18px;
+    display:grid;
+    grid-template-columns: minmax(140px,1fr) auto minmax(140px,1fr);
+    align-items:end;
+    gap:18px;
+    pointer-events:none; /* enfants en auto */
+    z-index:20;
+  }
+  #actionbar > *{pointer-events:auto}
+
+  .ab-zone{
+    background:linear-gradient(180deg,rgba(43,38,30,.96),rgba(34,30,24,.96));
+    border:1px solid var(--rule);
+    border-radius:6px;
+    box-shadow:0 12px 32px rgba(0,0,0,.55), 0 1px 0 rgba(212,184,112,.08) inset;
+    backdrop-filter:blur(8px);
+    padding:10px;
+    display:flex;align-items:center;gap:8px;
+  }
+
+  /* Zone gauche : Naviguer (toujours visible) */
+  .actionbar-nav{
+    justify-self:start;
+  }
+  .ab-zone-label{
+    font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-3);
+    position:absolute;top:-16px;left:6px;
+  }
+  .ab-zone{position:relative}
+
+  /* Zone centre : tabs + outils contextuels */
+  .actionbar-center{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    background:transparent;border:none;box-shadow:none;backdrop-filter:none;
+    padding:0;
+  }
+  .ab-tabs{
+    display:flex;gap:4px;
+    padding:4px;
+    background:linear-gradient(180deg,rgba(43,38,30,.96),rgba(34,30,24,.96));
+    border:1px solid var(--rule);
+    border-radius:4px;
+    backdrop-filter:blur(8px);
+  }
+  .ab-tab{
+    appearance:none;background:transparent;border:none;
+    font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-3);
+    padding:6px 14px;border-radius:3px;cursor:pointer;
+    transition:color .12s, background .12s;
+  }
+  .ab-tab:hover{color:var(--ink-2);background:rgba(212,184,112,.06)}
+  .ab-tab.active{color:#1a1510;background:var(--gold);font-weight:700}
+
+  .ab-tools{
+    display:flex;gap:6px;padding:8px;
+    background:linear-gradient(180deg,rgba(43,38,30,.96),rgba(34,30,24,.96));
+    border:1px solid var(--rule);
+    border-radius:6px;
+    box-shadow:0 12px 32px rgba(0,0,0,.55), 0 1px 0 rgba(212,184,112,.08) inset;
+    backdrop-filter:blur(8px);
+    min-height:78px;
+  }
+  .ab-tools[hidden]{display:none}
+
+  .tool{
+    width:62px;height:62px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--rule);border-radius:4px;
+    color:var(--ink-2);cursor:pointer;
+    transition:border-color .12s,color .12s,transform .12s;
+    position:relative;
+  }
+  .tool:hover{border-color:var(--gold-2);color:var(--ink);transform:translateY(-1px)}
+  .tool.active{border-color:var(--gold);color:var(--gold);background:linear-gradient(180deg,#2e281e,#241f18);box-shadow:0 0 0 1px var(--gold) inset, 0 0 18px rgba(212,184,112,.15)}
+  .tool .ic{font-size:22px;line-height:1}
+  .tool .lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+  .tool .key{
+    position:absolute;top:3px;right:4px;
+    font-family:var(--mono);font-size:8px;color:var(--ink-3);opacity:.7;
+  }
+
+  /* Zone droite : Annuler / Demolir, ANCRES, ne bougent jamais */
+  .actionbar-right{
+    justify-self:end;
+    gap:8px;
+  }
+  .ab-act{
+    height:62px;min-width:78px;padding:0 14px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--rule);border-radius:4px;
+    color:var(--ink-2);cursor:pointer;
+    transition:all .12s;
+  }
+  .ab-act .ic{font-size:18px;line-height:1}
+  .ab-act .lab{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+  .ab-act .key{font-family:var(--mono);font-size:8px;color:var(--ink-3);margin-top:2px}
+
+  .ab-cancel:hover{border-color:var(--ink-2);color:var(--ink)}
+  .ab-destroy{color:#d49a82}
+  .ab-destroy:hover{
+    border-color:var(--danger);color:#fff;
+    background:linear-gradient(180deg,#3a1c14,#26120c);
+  }
+  .ab-destroy.armed{
+    border-color:var(--danger);color:#fff;
+    background:linear-gradient(180deg,#5a261a,#3a1810);
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(200,116,86,.5)}
+    50%{box-shadow:0 0 0 6px rgba(200,116,86,0)}
+  }
+
+  /* Filet decoratif entre zones gauche/centre/droite */
+  .ab-spacer{
+    height:1px;flex:1;
+    background:linear-gradient(90deg,transparent, rgba(212,184,112,.18), transparent);
+    margin:0 4px;
+  }
+
+  /* Hint "ces deux la sont stables" */
+  .stable-hint{
+    position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold-2);white-space:nowrap;opacity:.7;
+  }
+</style>
+</head>
+<body>
+  <div class="stage"></div>
+  <div class="scene-label"><span class="label-id">POC A</span>Trois zones ancrees - bas-gauche / centre / bas-droite</div>
+
+  <div id="actionbar">
+
+    <!-- Zone gauche : Naviguer -->
+    <div class="ab-zone actionbar-nav">
+      <span class="ab-zone-label">Camera</span>
+      <button class="tool active" data-tool="navigate" title="Naviguer (Esc)">
+        <span class="ic">✥</span>
+        <span class="lab">Naviguer</span>
+        <span class="key">ESC</span>
+      </button>
+    </div>
+
+    <!-- Zone centre : tabs + outils contextuels -->
+    <div class="actionbar-center">
+      <div class="ab-tabs" role="tablist">
+        <button class="ab-tab active" data-tab="recoltes">Recoltes</button>
+        <button class="ab-tab" data-tab="construire">Construire</button>
+      </div>
+
+      <div class="ab-tools" data-pane="recoltes">
+        <button class="tool" data-tool="bois"><span class="ic">🪓</span><span class="lab">Bois</span><span class="key">1</span></button>
+        <button class="tool" data-tool="pierre"><span class="ic">⛏</span><span class="lab">Pierre</span><span class="key">2</span></button>
+        <button class="tool" data-tool="baies"><span class="ic">🌿</span><span class="lab">Baies</span><span class="key">3</span></button>
+        <button class="tool" data-tool="chasse"><span class="ic">🏹</span><span class="lab">Chasse</span><span class="key">4</span></button>
+      </div>
+      <div class="ab-tools" data-pane="construire" hidden>
+        <button class="tool" data-tool="hutte"><span class="ic">🏠</span><span class="lab">Hutte</span><span class="key">1</span></button>
+        <button class="tool" data-tool="atelier"><span class="ic">🔨</span><span class="lab">Atelier</span><span class="key">2</span></button>
+        <button class="tool" data-tool="entrepot"><span class="ic">📦</span><span class="lab">Entrepot</span><span class="key">3</span></button>
+        <button class="tool" data-tool="route"><span class="ic">═</span><span class="lab">Route</span><span class="key">4</span></button>
+        <button class="tool" data-tool="palissade"><span class="ic">▦</span><span class="lab">Palissade</span><span class="key">5</span></button>
+      </div>
+    </div>
+
+    <!-- Zone droite : Annuler + Demolir, TOUJOURS au meme endroit -->
+    <div class="ab-zone actionbar-right">
+      <span class="ab-zone-label">Stable</span>
+      <span class="stable-hint">toujours ici</span>
+      <button class="ab-act ab-cancel" id="ab-cancel">
+        <span class="ic">↶</span>
+        <span class="lab">Annuler</span>
+        <span class="key">CTRL Z</span>
+      </button>
+      <button class="ab-act ab-destroy" id="ab-destroy">
+        <span class="ic">⛏</span>
+        <span class="lab">Demolir</span>
+        <span class="key">DEL</span>
+      </button>
+    </div>
+  </div>
+
+<script>
+  // ----- Tab swap (Recoltes / Construire) -----
+  const tabs = document.querySelectorAll(".ab-tab");
+  const panes = document.querySelectorAll(".ab-tools");
+  tabs.forEach(t => t.addEventListener("click", () => {
+    tabs.forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    const k = t.dataset.tab;
+    panes.forEach(p => p.hidden = (p.dataset.pane !== k));
+    cancelAllSelections();
+  }));
+
+  // ----- Tool selection (mock) -----
+  const toolBtns = () => document.querySelectorAll(".ab-tools:not([hidden]) .tool, .actionbar-nav .tool");
+  document.addEventListener("click", e => {
+    const t = e.target.closest(".tool");
+    if (!t || t.closest(".actionbar-nav")) return; // navigate stays "active" except on swap
+    document.querySelectorAll(".tool").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("ab-destroy").classList.remove("armed");
+  });
+
+  // ----- Cancel -----
+  document.getElementById("ab-cancel").addEventListener("click", cancelAllSelections);
+  function cancelAllSelections(){
+    document.querySelectorAll(".tool").forEach(x => x.classList.remove("active"));
+    document.querySelector('.actionbar-nav .tool').classList.add("active");
+    document.getElementById("ab-destroy").classList.remove("armed");
+  }
+
+  // ----- Demolir : toggle "armed" mode -----
+  document.getElementById("ab-destroy").addEventListener("click", e => {
+    const b = e.currentTarget;
+    document.querySelectorAll(".tool").forEach(x => x.classList.remove("active"));
+    b.classList.toggle("armed");
+  });
+
+  // ----- Keyboard shortcuts -----
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape") cancelAllSelections();
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+      e.preventDefault();
+      document.getElementById("ab-cancel").click();
+    }
+    if (e.key === "Delete") document.getElementById("ab-destroy").click();
+  });
+</script>
+</body>
+</html>

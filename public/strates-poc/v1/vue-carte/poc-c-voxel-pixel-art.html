@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Strates · POC C, vue carte voxel pixel-art</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --panel:#221e18; --panel-2:#2b261e;
+    --rule:#3d352a;
+    --ink:#ede3cc; --ink-2:#b9ad91; --ink-3:#7f7562;
+    --gold:#d4b870; --gold-2:#a88d4a;
+
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"Inter",ui-sans-serif,system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#100d09;color:var(--ink);font-family:var(--sans);min-height:100vh}
+
+  .frame{
+    min-height:100vh;
+    background:radial-gradient(ellipse at 50% 0%, #2a241c 0%, #1a1610 60%, #0c0a07 100%);
+    padding:18px 22px 22px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid var(--rule); padding-bottom:10px;
+  }
+  .topbar h1{
+    margin:0;font-family:var(--serif);font-weight:500;font-size:18px;
+    color:var(--ink);letter-spacing:.02em;
+  }
+  .topbar h1 em{
+    font-style:italic;color:var(--gold);font-weight:400;font-size:.78em;margin-left:10px;
+  }
+  .topbar .meta{
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .topbar .meta b{ color:var(--gold-2); font-weight:500 }
+
+  .map-wrap{
+    flex:1; position:relative;
+    border:1px solid var(--rule); border-radius:4px;
+    background:var(--panel-2);
+    box-shadow:0 12px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(212,184,112,.05) inset;
+    padding:14px; display:flex; overflow:hidden;
+  }
+  .map-frame{
+    flex:1; position:relative; border-radius:2px; overflow:hidden;
+    background:#1a2226;
+    box-shadow:
+      0 0 0 1px rgba(212,184,112,.35),
+      0 0 0 4px rgba(0,0,0,.4),
+      0 0 0 5px rgba(212,184,112,.15);
+  }
+  canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+
+  /* HUD bandeau gauche, scan-lines verticales */
+  .scan{
+    position:absolute; top:0; bottom:0; left:0; right:0; pointer-events:none;
+    background:repeating-linear-gradient(180deg,
+      transparent 0 3px,
+      rgba(0,0,0,.06) 3px 4px);
+    mix-blend-mode:multiply;
+    z-index:4;
+  }
+
+  .legend{
+    position:absolute; top:18px; left:18px;
+    background:linear-gradient(180deg,rgba(43,38,30,.96),rgba(34,30,24,.96));
+    border:1px solid var(--rule); border-radius:3px;
+    padding:10px 12px; z-index:6;
+    font-family:var(--mono); font-size:10px; color:var(--ink-2);
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+  }
+  .legend h4{
+    margin:0 0 6px;
+    font-size:9px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--gold-2); font-weight:500;
+    border-bottom:1px solid var(--rule); padding-bottom:4px;
+  }
+  .legend .grid{
+    display:grid; grid-template-columns:auto 1fr; gap:4px 8px;
+  }
+  .legend .sw{
+    width:14px; height:8px; image-rendering:pixelated;
+  }
+
+  .stamp{
+    position:absolute; bottom:18px; right:18px;
+    font-family:var(--mono); font-size:9px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--ink-3);
+    z-index:6; text-align:right;
+  }
+  .stamp b{ color:var(--gold); display:block; font-size:11px; letter-spacing:.18em }
+
+  .cursor-info{
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+    background:rgba(34,30,24,.92); border:1px solid var(--rule); border-radius:2px;
+    padding:6px 14px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--gold); z-index:6;
+  }
+  .cursor-info b{ color:var(--ink); margin-left:8px; font-weight:500 }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <header class="topbar">
+    <h1>Strates <em>vue carte, dézoom max</em></h1>
+    <span class="meta">POC C · <b>voxel pixel-art</b> · grille 64 × 64</span>
+  </header>
+
+  <div class="map-wrap">
+    <div class="map-frame">
+      <canvas id="map" width="1280" height="900"></canvas>
+      <div class="scan"></div>
+
+      <div class="legend">
+        <h4>Strates</h4>
+        <div class="grid">
+          <span class="sw" style="background:#6e9c4d"></span><span>plaine</span>
+          <span class="sw" style="background:#3e6a3a"></span><span>forêt</span>
+          <span class="sw" style="background:#8a8170"></span><span>roche</span>
+          <span class="sw" style="background:#cdb478"></span><span>sable</span>
+          <span class="sw" style="background:#3a627a"></span><span>eau</span>
+          <span class="sw" style="background:#dcd5be"></span><span>neige</span>
+        </div>
+      </div>
+
+      <div class="stamp">
+        <b>Année I · Été</b>
+        Moriah, 22 colons
+      </div>
+
+      <div class="cursor-info">survol <b id="cur-text">· · ·</b></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="_world.js"></script>
+<script>
+(function(){
+  const W = window.STRATES_WORLD;
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d');
+  const SIZE = W.SIZE;
+
+  function fit(){
+    const r = canvas.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(r.width * dpr);
+    canvas.height = Math.floor(r.height * dpr);
+    canvas.style.width = r.width+'px';
+    canvas.style.height = r.height+'px';
+    draw();
+  }
+  window.addEventListener('resize', fit);
+
+  /* Palette voxel : 3 niveaux par biome (top, side-light, side-dark) */
+  const PAL = {
+    0:{top:'#3a627a', side:'#2c4f63', dark:'#1d3a4d'},
+    1:{top:'#4a7e96', side:'#3a627a', dark:'#2c4f63'},
+    2:{top:'#cdb478', side:'#a08550', dark:'#7d6638'},
+    3:{top:'#6e9c4d', side:'#4e7c34', dark:'#365e22'},
+    4:{top:'#3e6a3a', side:'#2a5028', dark:'#1d3a1c'},
+    5:{top:'#8a8170', side:'#665e50', dark:'#48402f'},
+    6:{top:'#dcd5be', side:'#a89868', dark:'#85763e'},
+  };
+  const heights = {0:0, 1:1, 2:1, 3:2, 4:3, 5:4, 6:5};
+
+  function draw(){
+    const w = canvas.width, h = canvas.height;
+    ctx.save();
+
+    // 1) Fond : ardoise très sombre + dithering pixel
+    ctx.fillStyle = '#0e1418';
+    ctx.fillRect(0,0,w,h);
+    ctx.save();
+    ctx.fillStyle = 'rgba(40,60,80,.4)';
+    for (let y=0;y<h;y+=4){
+      for (let x=((y/4)|0)%2 ? 0 : 2; x<w; x+=4){
+        ctx.fillRect(x,y,1,1);
+      }
+    }
+    ctx.restore();
+
+    // 2) Projection isométrique très simplifiée
+    // chaque cellule rendue comme losange aplati (top) + petit côté (height)
+    const margin = Math.min(w,h)*0.10;
+    const usable = Math.min(w,h) - margin*2;
+    const TILE_W = usable / SIZE * 1.5;       // largeur losange
+    const TILE_H = TILE_W * 0.5;              // hauteur losange (/2)
+    const STRATE = TILE_H * 0.5;              // hauteur d'une strate empilée
+
+    const cx = w/2;
+    const cy = h*0.42;
+
+    // Fonction de projection iso : (gx, gy) -> (px, py top-of-cell)
+    function iso(gx, gy, hi){
+      const x = (gx - gy) * TILE_W*0.5 + cx - (SIZE/2 - 0)*0;
+      const y = (gx + gy) * TILE_H*0.5 + cy - hi*STRATE - SIZE*TILE_H*0.5;
+      return {x, y};
+    }
+
+    // Ombre globale au sol (ellipse)
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,.45)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 32, SIZE*TILE_W*0.55, SIZE*TILE_H*0.55, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // 3) Dessin tuile par tuile, depth-sort par x+y
+    for (let s=0; s<SIZE+SIZE; s++){
+      for (let gy=0; gy<SIZE; gy++){
+        const gx = s - gy;
+        if (gx<0||gx>=SIZE) continue;
+        const b = W.biomeAt(gx,gy);
+        const f = W.fogAt(gx,gy);
+        if (f===2) continue; // brouillard masque
+        const hi = heights[b];
+        const p = iso(gx, gy, hi);
+        drawTile(p.x, p.y, TILE_W, TILE_H, STRATE, hi, PAL[b], f);
+      }
+    }
+
+    // 4) Brouillard rendu en bandes pointillées (par dessus le sol mais sous les bâtiments)
+    drawFogIso(ctx, iso, TILE_W, TILE_H, STRATE);
+
+    // 5) Frontières territoire, ligne pointillée or qui suit la projection iso
+    drawTerritoryIso(ctx, iso, TILE_W, TILE_H, STRATE);
+
+    // 6) Bâtiments comme mini-sprites
+    W.buildings.forEach(b=>{
+      if (W.fogAt(b.x, b.y) === 2) return;
+      const hi = heights[W.biomeAt(b.x, b.y)] + 0.5;
+      const p = iso(b.x, b.y, hi);
+      drawSprite(ctx, p.x, p.y, TILE_W, b);
+    });
+
+    ctx.restore();
+  }
+
+  /* === Tuile iso ============================================ */
+  function drawTile(x, y, tw, th, sh, hi, pal, f){
+    // top (losange)
+    ctx.fillStyle = f===1 ? mix(pal.top, '#1d3540', .35) : pal.top;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + tw/2, y + th/2);
+    ctx.lineTo(x, y + th);
+    ctx.lineTo(x - tw/2, y + th/2);
+    ctx.closePath();
+    ctx.fill();
+
+    // côté avant-droit (lumière)
+    if (hi > 0){
+      ctx.fillStyle = f===1 ? mix(pal.side, '#1d3540', .35) : pal.side;
+      ctx.beginPath();
+      ctx.moveTo(x + tw/2, y + th/2);
+      ctx.lineTo(x, y + th);
+      ctx.lineTo(x, y + th + hi*sh);
+      ctx.lineTo(x + tw/2, y + th/2 + hi*sh);
+      ctx.closePath();
+      ctx.fill();
+
+      // côté avant-gauche (ombre)
+      ctx.fillStyle = f===1 ? mix(pal.dark, '#10202c', .35) : pal.dark;
+      ctx.beginPath();
+      ctx.moveTo(x - tw/2, y + th/2);
+      ctx.lineTo(x, y + th);
+      ctx.lineTo(x, y + th + hi*sh);
+      ctx.lineTo(x - tw/2, y + th/2 + hi*sh);
+      ctx.closePath();
+      ctx.fill();
+
+      // outline 1px
+      ctx.strokeStyle = 'rgba(0,0,0,.35)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y + th + hi*sh);
+      ctx.lineTo(x + tw/2, y + th/2 + hi*sh);
+      ctx.moveTo(x, y + th + hi*sh);
+      ctx.lineTo(x - tw/2, y + th/2 + hi*sh);
+      ctx.stroke();
+    }
+  }
+
+  function drawFogIso(ctx, iso, tw, th, sh){
+    ctx.save();
+    ctx.fillStyle = 'rgba(20,30,40,.85)';
+    for (let gy=0;gy<SIZE;gy++){
+      for (let gx=0;gx<SIZE;gx++){
+        if (W.fogAt(gx,gy)===2){
+          const p = iso(gx,gy, 1);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + tw/2, p.y + th/2);
+          ctx.lineTo(p.x, p.y + th);
+          ctx.lineTo(p.x - tw/2, p.y + th/2);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
+    // dithering pixel-art sur le fog
+    ctx.fillStyle = 'rgba(80,110,140,.18)';
+    for (let gy=0;gy<SIZE;gy++){
+      for (let gx=0;gx<SIZE;gx++){
+        if (W.fogAt(gx,gy)===2 && (gx+gy)%2===0){
+          const p = iso(gx,gy, 1);
+          ctx.fillRect(p.x-1, p.y + th*0.5 - 1, 2, 2);
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawTerritoryIso(ctx, iso, tw, th, sh){
+    ctx.save();
+    ctx.strokeStyle = '#d4b870';
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([4,3]);
+    ctx.shadowColor = 'rgba(212,184,112,.5)';
+    ctx.shadowBlur = 4;
+    for (let gy=0;gy<SIZE;gy++){
+      for (let gx=0;gx<SIZE;gx++){
+        const t = W.inTerritory(gx,gy);
+        if (!t) continue;
+        const b = W.biomeAt(gx,gy);
+        const hi = heights[b];
+        const p = iso(gx, gy, hi);
+        // bord droit
+        if (gx===SIZE-1 || !W.inTerritory(gx+1, gy)){
+          ctx.beginPath();
+          ctx.moveTo(p.x + tw/2, p.y + th/2);
+          ctx.lineTo(p.x, p.y + th);
+          ctx.stroke();
+        }
+        // bord bas
+        if (gy===SIZE-1 || !W.inTerritory(gx, gy+1)){
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y + th);
+          ctx.lineTo(p.x - tw/2, p.y + th/2);
+          ctx.stroke();
+        }
+        // bord haut
+        if (gy===0 || !W.inTerritory(gx, gy-1)){
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + tw/2, p.y + th/2);
+          ctx.stroke();
+        }
+        // bord gauche
+        if (gx===0 || !W.inTerritory(gx-1, gy)){
+          ctx.beginPath();
+          ctx.moveTo(p.x - tw/2, p.y + th/2);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  /* === Mini-sprites pixel-art =============================== */
+  function drawSprite(ctx, x, y, tw, b){
+    const u = Math.max(2, Math.round(tw*0.18));
+    ctx.save();
+    // ombre
+    ctx.fillStyle = 'rgba(0,0,0,.45)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + tw*0.06, tw*0.28, tw*0.12, 0, 0, Math.PI*2); ctx.fill();
+
+    switch(b.kind){
+      case 'village': drawVillage(ctx, x, y, u); break;
+      case 'maison':  drawMaison(ctx, x, y, u, '#c95a3a'); break;
+      case 'foyer':   drawFoyer(ctx, x, y, u); break;
+      case 'champ':   drawChamp(ctx, x, y, u); break;
+      case 'labo':    drawLabo(ctx, x, y, u); break;
+      case 'promontoire': drawPromontoire(ctx, x, y, u); break;
+      case 'mine':    drawMine(ctx, x, y, u); break;
+      case 'chasse':  drawChasse(ctx, x, y, u); break;
+    }
+
+    // étiquette nom (police pixel = mono)
+    ctx.font = `${Math.max(9, Math.round(tw*0.32))}px "JetBrains Mono", monospace`;
+    const t = b.name;
+    const tw2 = ctx.measureText(t).width;
+    ctx.fillStyle = 'rgba(34,30,24,.95)';
+    ctx.fillRect(x - tw2/2 - 4, y - tw*0.85, tw2 + 8, tw*0.42);
+    ctx.strokeStyle = '#d4b870';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - tw2/2 - 4, y - tw*0.85, tw2 + 8, tw*0.42);
+    ctx.fillStyle = '#d4b870';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(t, x, y - tw*0.65);
+    ctx.restore();
+  }
+
+  // sprites simples : rectangles colorés "blocks"
+  function px(ctx, x, y, w, h, c){ ctx.fillStyle=c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+  function drawMaison(ctx,x,y,u,roof){
+    const w = u*4, h = u*3;
+    px(ctx, x-w/2, y-h, w, u*1.6, '#d9c08a');         // mur
+    px(ctx, x-w/2, y-h+u*1.4, w, u*0.4, '#a88a52');   // soubassement
+    // toit triangle pixelisé
+    for (let i=0;i<5;i++){
+      const yy = y-h - i*u*0.45;
+      const ww = w - i*u*0.85;
+      px(ctx, x-ww/2, yy, ww, u*0.5, roof);
+    }
+    px(ctx, x-u*0.5, y-h+u*0.6, u, u*1.0, '#5a3e28'); // porte
+  }
+  function drawVillage(ctx,x,y,u){
+    drawMaison(ctx, x-u*1.8, y, u*0.85, '#c95a3a');
+    drawMaison(ctx, x+u*1.6, y, u*0.85, '#3a6f9a');
+    drawMaison(ctx, x, y - u*0.4, u, '#c95a3a');
+  }
+  function drawFoyer(ctx,x,y,u){
+    px(ctx, x-u*1.5, y-u*0.5, u*3, u*0.6, '#5a3e28');
+    px(ctx, x-u*0.7, y-u*1.6, u*1.4, u*1.1, '#e89a3a');
+    px(ctx, x-u*0.4, y-u*2.4, u*0.8, u*0.8, '#f6c83c');
+  }
+  function drawChamp(ctx,x,y,u){
+    for (let i=0;i<4;i++){
+      px(ctx, x-u*2 + i*u*1.1, y-u*1.6, u*0.9, u*1.6, i%2? '#a8884a':'#cba762');
+    }
+  }
+  function drawLabo(ctx,x,y,u){
+    drawMaison(ctx, x, y, u, '#3a6f9a');
+    px(ctx, x-u*0.4, y-u*4.8, u*0.8, u*1.4, '#b8b8b8');  // cheminée
+    px(ctx, x-u*0.6, y-u*5.2, u*1.2, u*0.4, '#8a8a8a');
+  }
+  function drawPromontoire(ctx,x,y,u){
+    px(ctx, x-u*0.3, y-u*3.6, u*0.6, u*3.6, '#a89868');   // mât
+    px(ctx, x-u*1.4, y-u*3.6, u*1.4, u*0.9, '#d4b870');   // drapeau
+  }
+  function drawMine(ctx,x,y,u){
+    px(ctx, x-u*1.8, y-u*0.6, u*3.6, u*0.6, '#5a4a36');
+    px(ctx, x-u*1.6, y-u*2.0, u*3.2, u*1.4, '#8a7050');
+    px(ctx, x-u*0.5, y-u*2.0, u, u*1.4, '#2a1e14');       // entrée sombre
+  }
+  function drawChasse(ctx,x,y,u){
+    // tente triangulaire pixel
+    for (let i=0;i<5;i++){
+      const yy = y - i*u*0.5;
+      const ww = u*4 - i*u*0.85;
+      px(ctx, x-ww/2, yy-u*0.5, ww, u*0.5, i%2? '#6a4a2c':'#8a6438');
+    }
+    px(ctx, x-u*0.3, y-u*0.6, u*0.6, u*0.6, '#1d1a14');
+  }
+
+  function mix(a, b, t){
+    function p(s){ return [parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16)]; }
+    const A = p(a), B = p(b);
+    const r = Math.round(A[0]+(B[0]-A[0])*t);
+    const g = Math.round(A[1]+(B[1]-A[1])*t);
+    const b2 = Math.round(A[2]+(B[2]-A[2])*t);
+    return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b2.toString(16).padStart(2,'0')}`;
+  }
+
+  /* === Survol (approximation sans inverse iso précise) === */
+  canvas.addEventListener('mousemove', e=>{
+    const r = canvas.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width  * canvas.width;
+    const py = (e.clientY - r.top)  / r.height * canvas.height;
+    const w = canvas.width, h = canvas.height;
+    const margin = Math.min(w,h)*0.10;
+    const usable = Math.min(w,h) - margin*2;
+    const TILE_W = usable / SIZE * 1.5;
+    const TILE_H = TILE_W * 0.5;
+    const cx = w/2, cy = h*0.42 - SIZE*TILE_H*0.5;
+    // inverse iso (sans hauteur)
+    const X = px - cx, Y = py - cy;
+    const gx = Math.floor((X / (TILE_W*0.5) + Y / (TILE_H*0.5)) / 2);
+    const gy = Math.floor((Y / (TILE_H*0.5) - X / (TILE_W*0.5)) / 2);
+    if (gx<0||gy<0||gx>=SIZE||gy>=SIZE){
+      document.getElementById('cur-text').textContent = '· · ·'; return;
+    }
+    const f = W.fogAt(gx,gy);
+    if (f===2){ document.getElementById('cur-text').textContent = 'inconnu'; return; }
+    const names = ['eau profonde','eau','sable','plaine','forêt','roche','neige'];
+    document.getElementById('cur-text').textContent = `${names[W.biomeAt(gx,gy)]} · ${gx},${gy}`;
+  });
+
+  fit();
+})();
+</script>
+</body>
+</html>

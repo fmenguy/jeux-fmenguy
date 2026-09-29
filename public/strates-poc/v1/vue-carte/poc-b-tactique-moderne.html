@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Strates · POC B, vue carte tactique moderne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --panel:#221e18; --panel-2:#2b261e;
+    --rule:#3d352a;
+    --ink:#ede3cc; --ink-2:#b9ad91; --ink-3:#7f7562;
+    --gold:#d4b870; --gold-2:#a88d4a;
+
+    /* biomes saturés "tactique" */
+    --b-water:#2c4f63;
+    --b-water-deep:#1d3a4d;
+    --b-sand:#c9b074;
+    --b-grass:#6b9b4e;
+    --b-forest:#3a6b3a;
+    --b-rock:#8a8170;
+    --b-snow:#d8d2bd;
+
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"Inter",ui-sans-serif,system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#100d09;color:var(--ink);font-family:var(--sans);min-height:100vh}
+
+  .frame{
+    min-height:100vh;
+    background:radial-gradient(ellipse at 50% 0%, #2a241c 0%, #1a1610 60%, #0c0a07 100%);
+    padding:18px 22px 22px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid var(--rule); padding-bottom:10px;
+  }
+  .topbar h1{
+    margin:0;font-family:var(--serif);font-weight:500;font-size:18px;
+    letter-spacing:.02em;color:var(--ink);
+  }
+  .topbar h1 em{
+    font-style:italic;color:var(--gold);font-weight:400;font-size:.78em;margin-left:10px;
+  }
+  .topbar .meta{
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .topbar .meta b{ color:var(--gold-2); font-weight:500 }
+
+  .map-wrap{
+    flex:1; position:relative;
+    border:1px solid var(--rule); border-radius:4px;
+    background:var(--panel-2);
+    box-shadow:0 12px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(212,184,112,.05) inset;
+    padding:14px; display:flex; overflow:hidden;
+  }
+  .map-frame{
+    flex:1; position:relative; border-radius:2px; overflow:hidden;
+    background:#1a2a36;
+    box-shadow:
+      0 0 0 1px rgba(212,184,112,.35),
+      0 0 0 4px rgba(0,0,0,.4),
+      0 0 0 5px rgba(212,184,112,.15);
+  }
+  canvas{display:block;width:100%;height:100%}
+
+  /* Panneau latéral droit, info ardoise */
+  .side{
+    position:absolute; top:18px; right:18px;
+    width:210px;
+    background:linear-gradient(180deg,rgba(43,38,30,.96),rgba(34,30,24,.96));
+    border:1px solid var(--rule); border-radius:4px;
+    padding:12px 14px; z-index:6;
+    backdrop-filter:blur(6px);
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+  }
+  .side h4{
+    margin:0 0 8px; font-family:var(--mono); font-size:9px;
+    letter-spacing:.22em; text-transform:uppercase; color:var(--gold-2);
+    border-bottom:1px solid var(--rule); padding-bottom:6px; font-weight:500;
+  }
+  .side .row{
+    display:flex; justify-content:space-between; align-items:center;
+    margin:5px 0; font-size:11px; color:var(--ink-2);
+  }
+  .side .row b{ color:var(--ink); font-weight:500; font-family:var(--mono); font-size:10.5px }
+  .side .legend{ margin-top:10px; padding-top:8px; border-top:1px solid var(--rule); }
+  .side .legend ul{ list-style:none; margin:0; padding:0 }
+  .side .legend li{
+    display:flex; align-items:center; gap:8px;
+    font-size:10.5px; margin:3px 0; color:var(--ink-2);
+  }
+  .side .legend .sw{
+    width:14px; height:10px; border:1px solid rgba(212,184,112,.25); flex:none;
+  }
+
+  /* Mini légende du joueur (couleur faction) */
+  .faction{
+    margin-top:10px; padding-top:8px; border-top:1px solid var(--rule);
+    display:flex; align-items:center; gap:10px;
+  }
+  .faction .dot{
+    width:14px;height:14px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 0 2px rgba(212,184,112,.25), 0 0 12px rgba(212,184,112,.4);
+  }
+  .faction .label{
+    font-family:var(--serif); font-size:13px; color:var(--ink);
+  }
+  .faction .sub{
+    font-family:var(--mono); font-size:9px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--ink-3);
+  }
+
+  /* Curseur info en bas */
+  .cursor-info{
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+    background:rgba(34,30,24,.92); border:1px solid var(--rule); border-radius:2px;
+    padding:6px 14px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--gold); z-index:6;
+  }
+  .cursor-info b{ color:var(--ink); margin-left:8px; font-weight:500 }
+
+  /* Boussole en haut-gauche */
+  .compass{
+    position:absolute; top:18px; left:18px;
+    width:54px; height:54px; z-index:6; opacity:.85;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <header class="topbar">
+    <h1>Strates <em>vue carte, dézoom max</em></h1>
+    <span class="meta">POC B · <b>tactique moderne</b> · grille 64 × 64</span>
+  </header>
+
+  <div class="map-wrap">
+    <div class="map-frame">
+      <canvas id="map" width="1280" height="900"></canvas>
+
+      <svg class="compass" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="rgba(34,30,24,.7)" stroke="#d4b870" stroke-width="1"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#a88d4a" stroke-width=".5" stroke-dasharray="2 3"/>
+        <polygon points="50,10 56,50 50,46 44,50" fill="#d4b870"/>
+        <polygon points="50,90 56,50 50,54 44,50" fill="#7f7562"/>
+        <text x="50" y="16" text-anchor="middle"
+              font-family="JetBrains Mono, monospace" font-size="9"
+              letter-spacing="1.5" fill="#d4b870">N</text>
+      </svg>
+
+      <aside class="side">
+        <h4>Aperçu</h4>
+        <div class="row"><span>Cellules</span><b>4 096</b></div>
+        <div class="row"><span>Explorées</span><b>432</b></div>
+        <div class="row"><span>Bâtiments</span><b>8</b></div>
+        <div class="row"><span>Population</span><b>22</b></div>
+
+        <div class="legend">
+          <ul>
+            <li><span class="sw" style="background:#6b9b4e"></span>plaines</li>
+            <li><span class="sw" style="background:#3a6b3a"></span>forêts</li>
+            <li><span class="sw" style="background:#8a8170"></span>roche</li>
+            <li><span class="sw" style="background:#c9b074"></span>sable</li>
+            <li><span class="sw" style="background:#2c4f63"></span>eaux</li>
+            <li><span class="sw" style="background:#d8d2bd"></span>neige</li>
+          </ul>
+        </div>
+
+        <div class="faction">
+          <span class="dot"></span>
+          <div>
+            <div class="label">Moriah</div>
+            <div class="sub">faction joueur</div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="cursor-info">survol <b id="cur-text">· · ·</b></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="_world.js"></script>
+<script>
+(function(){
+  const W = window.STRATES_WORLD;
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d');
+  const SIZE = W.SIZE;
+
+  function fit(){
+    const r = canvas.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(r.width * dpr);
+    canvas.height = Math.floor(r.height * dpr);
+    canvas.style.width = r.width+'px';
+    canvas.style.height = r.height+'px';
+    draw();
+  }
+  window.addEventListener('resize', fit);
+
+  /* Aplats saturés version "tactique" */
+  const PAL = {
+    0:'#1d3a4d',
+    1:'#2c4f63',
+    2:'#c9b074',
+    3:'#6b9b4e',
+    4:'#3a6b3a',
+    5:'#8a8170',
+    6:'#d8d2bd',
+  };
+
+  function draw(){
+    const w = canvas.width, h = canvas.height;
+    ctx.save();
+    // 1) Fond ardoise (océan stylisé)
+    const g = ctx.createRadialGradient(w/2, h/2, w*0.05, w/2, h/2, w*0.7);
+    g.addColorStop(0, '#1a2c38');
+    g.addColorStop(0.7, '#0e1a22');
+    g.addColorStop(1, '#080e13');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+
+    // texture océan : lignes bathymétriques
+    ctx.save();
+    ctx.strokeStyle = 'rgba(80,130,160,.10)';
+    ctx.lineWidth = 1;
+    for (let i=0;i<22;i++){
+      const r = (Math.min(w,h)/2) * (0.18 + i*0.045);
+      ctx.beginPath();
+      ctx.arc(w/2, h/2, r, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    const margin = Math.min(w,h)*0.06;
+    const side = Math.min(w,h) - margin*2;
+    const ox = (w - side)/2;
+    const oy = (h - side)/2;
+    const cs = side / SIZE;
+
+    // 2) Aplats biome
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        ctx.fillStyle = PAL[W.biomeAt(x,y)];
+        ctx.fillRect(ox + x*cs, oy + y*cs, cs+0.6, cs+0.6);
+      }
+    }
+
+    // 3) Variation interne forêt (pointillés sombres)
+    ctx.save();
+    ctx.fillStyle = 'rgba(20,40,20,.4)';
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        if (W.biomeAt(x,y)===4 && (x*7+y*3)%5===0){
+          const X = ox + x*cs + cs*0.5, Y = oy + y*cs + cs*0.5;
+          ctx.beginPath(); ctx.arc(X, Y, cs*0.18, 0, Math.PI*2); ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+
+    // 4) Roche : nuances rocheuses
+    ctx.save();
+    ctx.fillStyle = 'rgba(50,40,30,.30)';
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        if (W.biomeAt(x,y)===5 && (x+y*2)%3===0){
+          ctx.fillRect(ox + x*cs + cs*0.2, oy + y*cs + cs*0.6, cs*0.6, cs*0.15);
+        }
+      }
+    }
+    ctx.restore();
+
+    // 5) Côtes : trait sombre net
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,25,35,.95)';
+    ctx.lineWidth = 1.4;
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        const water = W.biomeAt(x,y)<=1;
+        const X = ox + x*cs, Y = oy + y*cs;
+        const right = x<SIZE-1 ? (W.biomeAt(x+1,y)<=1) : water;
+        const down  = y<SIZE-1 ? (W.biomeAt(x,y+1)<=1) : water;
+        if (water !== right){ ctx.beginPath(); ctx.moveTo(X+cs,Y); ctx.lineTo(X+cs,Y+cs); ctx.stroke(); }
+        if (water !== down ){ ctx.beginPath(); ctx.moveTo(X,Y+cs); ctx.lineTo(X+cs,Y+cs); ctx.stroke(); }
+      }
+    }
+    ctx.restore();
+
+    // 6) Brouillard "bleu nuit" décoratif
+    drawFog(ctx, ox, oy, cs);
+
+    // 7) Frontière territoire en pointillé doré + halo
+    ctx.save();
+    ctx.shadowColor = 'rgba(212,184,112,.6)';
+    ctx.shadowBlur = 6;
+    ctx.strokeStyle = '#d4b870';
+    ctx.setLineDash([5,4]);
+    ctx.lineWidth = 1.6;
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        const t = W.inTerritory(x,y);
+        const X = ox + x*cs, Y = oy + y*cs;
+        const right = x<SIZE-1 ? W.inTerritory(x+1,y) : false;
+        const down  = y<SIZE-1 ? W.inTerritory(x,y+1) : false;
+        if (t !== right){ ctx.beginPath(); ctx.moveTo(X+cs,Y); ctx.lineTo(X+cs,Y+cs); ctx.stroke(); }
+        if (t !== down ){ ctx.beginPath(); ctx.moveTo(X,Y+cs); ctx.lineTo(X+cs,Y+cs); ctx.stroke(); }
+      }
+    }
+    ctx.restore();
+
+    // 7b) Remplissage léger doré du territoire
+    ctx.save();
+    ctx.fillStyle = 'rgba(212,184,112,.06)';
+    for (let y=0;y<SIZE;y++){
+      for (let x=0;x<SIZE;x++){
+        if (W.inTerritory(x,y)){
+          ctx.fillRect(ox + x*cs, oy + y*cs, cs+0.6, cs+0.6);
+        }
+      }
+    }
+    ctx.restore();
+
+    // 8) Bâtiments : pictogrammes flat circulaires sur fond ardoise
+    drawBuildings(ctx, ox, oy, cs);
+
+    ctx.restore();
+  }
+
+  function drawFog(ctx, ox, oy, cs){
+    ctx.save();
+    for (let y=0;y<W.SIZE;y++){
+      for (let x=0;x<W.SIZE;x++){
+        const f = W.fogAt(x,y);
+        if (f===0) continue;
+        const a = f===2 ? 0.78 : 0.35;
+        ctx.fillStyle = `rgba(20,40,60,${a})`;
+        ctx.fillRect(ox + x*cs, oy + y*cs, cs+0.6, cs+0.6);
+      }
+    }
+    // hexagone-pattern décoratif sur "inconnu"
+    ctx.fillStyle = 'rgba(80,120,160,.12)';
+    for (let y=0;y<W.SIZE;y++){
+      for (let x=0;x<W.SIZE;x++){
+        if (W.fogAt(x,y)===2 && (x+y)%3===0){
+          ctx.fillRect(ox + x*cs + cs*0.25, oy + y*cs + cs*0.4, cs*0.5, cs*0.2);
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawBuildings(ctx, ox, oy, cs){
+    ctx.save();
+    W.buildings.forEach(b=>{
+      if (W.fogAt(b.x, b.y) === 2) return;
+      const X = ox + (b.x+0.5)*cs;
+      const Y = oy + (b.y+0.5)*cs;
+      const R = cs * 1.25;
+
+      // ombre portée
+      ctx.shadowColor = 'rgba(0,0,0,.6)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 2;
+
+      // pastille fond ardoise
+      const grad = ctx.createLinearGradient(0, Y-R, 0, Y+R);
+      grad.addColorStop(0, '#322b21');
+      grad.addColorStop(1, '#1d1812');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI*2); ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // ring or
+      ctx.strokeStyle = '#d4b870';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI*2); ctx.stroke();
+
+      // pictogramme
+      ctx.fillStyle = '#ede3cc';
+      ctx.font = `${Math.round(cs*1.05)}px "Inter", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(glyph(b.kind), X, Y + 1);
+
+      // étiquette nom
+      const labelW = ctx.measureText(b.name).width;
+      ctx.font = `600 ${Math.round(cs*0.85)}px "Inter", sans-serif`;
+      const lw = ctx.measureText(b.name).width + 10;
+      ctx.fillStyle = 'rgba(34,30,24,.95)';
+      ctx.fillRect(X - lw/2, Y + R + 4, lw, cs*1.2);
+      ctx.strokeStyle = 'rgba(212,184,112,.45)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(X - lw/2, Y + R + 4, lw, cs*1.2);
+      ctx.fillStyle = '#d4b870';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(b.name, X, Y + R + 4 + cs*0.6);
+    });
+    ctx.restore();
+  }
+
+  function glyph(kind){
+    switch(kind){
+      case 'village':     return '⌂';
+      case 'maison':      return '⌂';
+      case 'foyer':       return '✦';
+      case 'champ':       return '☘';
+      case 'labo':        return '⚗';
+      case 'promontoire': return '△';
+      case 'mine':        return '⛏';
+      case 'chasse':      return '➹';
+      default: return '○';
+    }
+  }
+
+  canvas.addEventListener('mousemove', e=>{
+    const r = canvas.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width  * canvas.width;
+    const py = (e.clientY - r.top)  / r.height * canvas.height;
+    const margin = Math.min(canvas.width,canvas.height)*0.06;
+    const side = Math.min(canvas.width,canvas.height) - margin*2;
+    const ox = (canvas.width - side)/2;
+    const oy = (canvas.height - side)/2;
+    const cs = side/SIZE;
+    const cx = Math.floor((px-ox)/cs), cy = Math.floor((py-oy)/cs);
+    if (cx<0||cy<0||cx>=SIZE||cy>=SIZE){
+      document.getElementById('cur-text').textContent = '· · ·'; return;
+    }
+    const f = W.fogAt(cx,cy);
+    if (f===2){ document.getElementById('cur-text').textContent = 'inconnu'; return; }
+    const names = ['eau profonde','eau','sable','plaine','forêt','roche','neige'];
+    document.getElementById('cur-text').textContent = `${names[W.biomeAt(cx,cy)]} · ${cx},${cy}`;
+  });
+
+  fit();
+})();
+</script>
+</body>
+</html>
