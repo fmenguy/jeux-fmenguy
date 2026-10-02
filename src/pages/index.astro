@@ -1147,6 +1147,14 @@
       border-color: #f0c96a;
       box-shadow: 0 0 16px rgba(212,160,23,0.22);
     }
+    .strates-btn--download {
+      color: #1b1914;
+      background: #f0c96a;
+      border: 1px solid #f0c96a;
+      letter-spacing: 0.04em;
+    }
+    .strates-btn--download:hover { background: #f7d98a; }
+    .strates-install { margin-top: 0.7rem; font-size: 0.85rem; line-height: 1.6; }
     .strates-btn-icon { font-size: 0.95rem; }
     .strates-btn-label { font-family: 'Cinzel', serif; font-weight: 700; }
     .strates-btn-arrow { font-size: 0.9rem; transition: transform 0.2s ease; }
@@ -1283,6 +1291,10 @@
       </div>
 
       <div class="strates-actions">
+        <a class="strates-btn strates-btn--download" href="https://telechargement.fmenguy.fr/Strates-Setup.exe">
+          <span class="strates-btn-label">Télécharger pour Windows</span>
+          <span class="strates-btn-arrow" aria-hidden="true">↓</span>
+        </a>
         <a class="strates-btn strates-btn--changelog" href="https://strates.fmenguy.fr/docs/changelog.html">
           <span class="strates-btn-icon" style="color:#4ade80">✓</span>
           <span class="strates-btn-label">Changelog</span>
@@ -1299,6 +1311,7 @@
           <span class="strates-btn-arrow">→</span>
         </a>
       </div>
+      <p class="strates-install">Windows 10 ou 11, 64 bits. Connexion Internet nécessaire. <a class="inline" href="/strates/windows/">Installer et retrouver sa colonie</a></p>
     </div>
 
     <div class="dev-card dev-card--elf">
