@@ -1,0 +1,82 @@
+---
+---
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Installer Strates sur Windows et transférer votre colonie depuis le navigateur." />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <title>Strates sur Windows · Arcade FM</title>
+  <script is:inline>
+    try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'light'; } catch {}
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+    * { box-sizing: border-box; }
+    :root { --bg: #181b2e; --surface: #232745; --text: #e8e0d0; --muted: #b8b1aa; --gold: #f0c96a; --border: #49404d; }
+    [data-theme="light"] { --bg: #f5f0eb; --surface: #faf7f4; --text: #2c1e10; --muted: #6b5744; --gold: #8a5f08; --border: #ddd0c2; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.75 Inter, sans-serif; }
+    main { max-width: 850px; margin: auto; padding: 28px 22px 64px; }
+    nav a, a { color: var(--gold); text-underline-offset: 4px; }
+    nav { margin-bottom: 36px; }
+    h1, h2 { font-family: Cinzel, Georgia, serif; line-height: 1.35; }
+    h1 { font-size: clamp(28px, 5vw, 44px); margin: 10px 0 20px; }
+    h2 { font-size: 21px; margin-top: 0; }
+    header { margin-bottom: 32px; }
+    .eyebrow { letter-spacing: 0.15em; text-transform: uppercase; font-size: 12px; color: var(--muted); }
+    .download { display: inline-block; padding: 12px 20px; border-radius: 6px; background: #f0c96a; color: #1b1914; text-decoration: none; font-weight: 600; }
+    .download:hover { background: #f7d98a; }
+    a:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+    .requirements { font-size: 14px; color: var(--muted); }
+    section { margin: 18px 0; padding: 24px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+    section p:last-child { margin-bottom: 0; }
+    li + li { margin-top: 12px; }
+    ol { padding-left: 22px; }
+    strong { font-weight: 600; }
+    code { overflow-wrap: anywhere; font-size: 0.9em; }
+    @media (max-width: 480px) { section { padding: 18px; } .download { display: block; text-align: center; } }
+  </style>
+</head>
+<body>
+  <main>
+    <nav aria-label="Retour"><a href="/">← Tous les jeux</a></nav>
+    <header>
+      <p class="eyebrow">Strates · Application de bureau</p>
+      <h1>Votre colonie a sa fenêtre.</h1>
+      <p>Retrouvez Strates depuis le bureau ou le menu Démarrer. L’application ouvre le jeu en ligne, toujours à jour, dans sa propre fenêtre.</p>
+      <a class="download" href="https://telechargement.fmenguy.fr/Strates-Setup.exe">Télécharger pour Windows</a>
+      <p class="requirements">Windows 10 ou 11, 64 bits (x64). Une connexion Internet est nécessaire à chaque session. Le jeu se joue sur ordinateur, avec clavier et souris.</p>
+    </header>
+    <section>
+      <h2>1. Télécharger et installer</h2>
+      <ol>
+        <li>Depuis votre ordinateur Windows, téléchargez puis ouvrez <strong>Strates-Setup.exe</strong>.</li>
+        <li>L’application n’est pas signée numériquement. Si Windows SmartScreen affiche « Windows a protégé votre ordinateur », cliquez sur <strong>Informations complémentaires</strong>, puis <strong>Exécuter quand même</strong>. Vérifiez que le fichier vient bien de <code>telechargement.fmenguy.fr</code>. Si votre ordinateur est administré et refuse cette option, utilisez la version navigateur.</li>
+        <li>Suivez l’assistant en français. L’installation concerne votre compte Windows. Choisissez le dossier proposé ou un autre emplacement.</li>
+        <li>Lancez <strong>Strates</strong> depuis le raccourci du bureau ou le menu Démarrer.</li>
+      </ol>
+    </section>
+    <section>
+      <h2>2. Jouer</h2>
+      <p>Le jeu reste identique à la <a href="https://strates.fmenguy.fr/v2/">version navigateur</a>. Appuyez sur <strong>F11</strong> pour passer en plein écran ou en sortir. Fermez la fenêtre pour quitter.</p>
+      <p>Si le jeu est inaccessible, vérifiez votre connexion et cliquez sur <strong>Réessayer</strong>. Les améliorations du jeu sont disponibles aux lancements suivants, sans réinstaller l’application. Une nouvelle version de l’application elle-même pourra demander de télécharger un nouvel installateur.</p>
+    </section>
+    <section>
+      <h2>3. Retrouver sa colonie</h2>
+      <p>Les sauvegardes de l’application et celles du navigateur sont séparées. Elles ne se synchronisent pas automatiquement.</p>
+      <ol>
+        <li>Dans votre partie du navigateur, ouvrez <strong>Réglages</strong>, puis <strong>Emporter votre colonie</strong> (bouton <strong>Exporter la sauvegarde</strong>). Conservez le fichier JSON téléchargé.</li>
+        <li>Ouvrez le jeu dans l’application. Si une colonie y existe déjà, exportez-la également avant de la remplacer.</li>
+        <li>Ouvrez <strong>Réglages</strong>, puis <strong>Retrouver une colonie</strong> (bouton <strong>Importer une sauvegarde</strong>) et sélectionnez le fichier JSON. Confirmez avec <strong>Retrouver l’île</strong>, puis vérifiez votre colonie après le chargement.</li>
+      </ol>
+      <p>Pour revenir au navigateur, faites le même transfert dans l’autre sens. Gardez régulièrement une copie exportée de votre partie.</p>
+    </section>
+    <section>
+      <h2>4. Désinstaller</h2>
+      <p>Fermez Strates, puis ouvrez les <strong>Paramètres Windows → Applications</strong>, recherchez <strong>Strates</strong> et choisissez <strong>Désinstaller</strong>. Le programme et ses raccourcis sont retirés.</p>
+      <p>Vos sauvegardes sont conservées pour une réinstallation. Pour tout effacer, exportez d’abord votre colonie, puis supprimez le dossier <code>%APPDATA%\Strates</code> après la désinstallation. Cela efface aussi les parties du mode local de développement si vous l’avez utilisé.</p>
+    </section>
+  </main>
+</body>
+</html>
