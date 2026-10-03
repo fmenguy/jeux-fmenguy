@@ -1137,6 +1137,16 @@
       border-color: #7cc4ff;
       box-shadow: 0 0 16px rgba(124,196,255,0.22);
     }
+    .strates-btn--agents {
+      color: #fb923c;
+      border: 1px solid rgba(251,146,60,0.4);
+      background: rgba(251,146,60,0.07);
+    }
+    .strates-btn--agents:hover {
+      transform: translateY(-1px);
+      border-color: #fb923c;
+      box-shadow: 0 0 16px rgba(251,146,60,0.24);
+    }
     .strates-btn--poc {
       color: #f0c96a;
       border: 1px dashed rgba(212,160,23,0.5);
@@ -1308,6 +1318,11 @@
         <a class="strates-btn strates-btn--kanban" href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/tableau-de-bord.html" title="Temps, jetons et coût des agents d'IA qui développent Strates, carte par carte">
           <span class="strates-btn-icon">▥</span>
           <span class="strates-btn-label">Coulisses IA</span>
+          <span class="strates-btn-arrow">→</span>
+        </a>
+        <a class="strates-btn strates-btn--agents" href="/strates/agents/" title="L'arbre interactif des agents d'IA qui développent Strates : orchestrateurs, sous-agents, outils, rejeu animé et coûts">
+          <span class="strates-btn-icon">⟁</span>
+          <span class="strates-btn-label">L'atelier des agents</span>
           <span class="strates-btn-arrow">→</span>
         </a>
         <a class="strates-btn strates-btn--poc" href="/strates-poc/" title="Les maquettes de Strates et les choix retenus au fil du temps">
