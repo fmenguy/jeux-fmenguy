@@ -1,0 +1,393 @@
+---
+---
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="L'arbre interactif des agents d'IA qui développent Strates : orchestrateurs, sous-agents, outils et commandes, rejeu animé, compétences, échanges avec l'auteur et coûts réels." />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <title>L'atelier des agents de Strates · Arcade FM</title>
+  <script is:inline>
+    try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'light'; } catch {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <style is:inline>
+/* Mise en page : grandes scènes interactives pleine largeur, une phrase par section, la nuit dorée de Strates sur l'Arcade (sombre et clair suivent le choix du hub) */
+:root {
+  color-scheme: dark;
+  --bg: #181b2e;
+  --card: #232745;
+  --surface: #2c3052;
+  --text: #e8e0d0;
+  --muted: #b8b1aa;
+  --border: rgba(255, 255, 255, 0.09);
+  --line: rgba(255, 255, 255, 0.17);
+  --accent: #f0c96a;
+  --accent2: #f7d98a;
+  --on-accent: #1b1914;
+  --glow: rgba(240, 201, 106, 0.18);
+  --m-opus55: #e8650f;
+  --m-astra: #0f9f73;
+  --m-sonnet: #9b59e6;
+  --m-opus5: #a77c00;
+  --m-sol: #3a7be0;
+  --m-fable: #db3f8f;
+  --f-title: "Cinzel", Georgia, "Times New Roman", serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+[data-theme="light"] { color-scheme: light; --bg: #f5f0eb; --card: #faf7f4; --surface: #ede7e0; --text: #2c1e10; --muted: #6b5744; --border: #ddd0c2; --line: rgba(80, 50, 20, 0.22); --accent: #8a5f08; --accent2: #a8740c; --on-accent: #ffffff; --glow: rgba(138, 95, 8, 0.14); }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--text); font-family: var(--f-body); font-size: 17px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 1380px; margin: 0 auto; padding-inline: 24px; padding-block: 28px 72px; }
+.back { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.95rem; font-weight: 600; margin-bottom: 18px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent2); }
+button, select, input { font: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1, h2 { font-family: var(--f-title); letter-spacing: 0.01em; }
+h1 { font-size: clamp(2.2rem, 5.4vw, 3.8rem); font-weight: 700; line-height: 1.1; }
+h1 span, h2 span { color: var(--accent); }
+h2 { font-size: clamp(1.6rem, 3.2vw, 2.3rem); font-weight: 700; line-height: 1.2; }
+h3 { font-size: 1.2rem; font-weight: 700; }
+p { margin: 0; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--f-mono); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.lede { color: var(--muted); font-size: 1.15rem; max-width: 60ch; }
+.muted { color: var(--muted); }
+
+.hero { display: grid; gap: 18px; padding-block: 10px 30px; }
+.counters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-top: 12px; }
+.counter { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; display: grid; gap: 2px; min-width: 0; }
+.counter b { font-family: var(--f-mono); font-weight: 600; font-size: clamp(1.8rem, 3.6vw, 2.8rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.counter span { color: var(--muted); font-size: 0.92rem; }
+.counter.hot b { color: var(--accent); }
+
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 24px; margin-inline: -24px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+nav.toc a { color: var(--muted); font-size: 0.92rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+nav.toc a:hover { color: var(--text); background: var(--surface); }
+
+section { padding-block: 56px 8px; display: grid; gap: 20px; scroll-margin-top: 64px; }
+.sec-head { display: grid; gap: 8px; }
+.sec-head p { color: var(--muted); font-size: 1.05rem; max-width: 70ch; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; min-width: 0; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; min-width: 0; }
+.toolbar > * { min-width: 0; max-width: 100%; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; font-size: 0.92rem; font-weight: 600; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; cursor: pointer; transition: opacity .2s, border-color .2s; }
+.chip[aria-pressed="false"] { opacity: 0.42; }
+.chip:hover { border-color: var(--line); }
+.dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; cursor: pointer; }
+.btn:hover { border-color: var(--line); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { background: var(--accent2); }
+.seg { display: inline-flex; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; gap: 3px; }
+.seg button { border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 0.9rem; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.95rem; max-width: 100%; min-width: 0; }
+.range { display: inline-flex; align-items: center; gap: 10px; font-size: 0.92rem; color: var(--muted); }
+.range input { accent-color: var(--accent); width: 170px; }
+.range b { font-family: var(--f-mono); color: var(--text); min-width: 64px; }
+
+/* arbre */
+.tree-grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 16px; align-items: stretch; }
+.tree-box { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; min-height: 700px; }
+.tree-box svg { width: 100%; height: 700px; display: block; cursor: grab; }
+.tree-box svg:active { cursor: grabbing; }
+.tree-hint { position: absolute; left: 14px; bottom: 12px; font-size: 0.82rem; color: var(--muted); background: color-mix(in srgb, var(--card) 85%, transparent); padding: 4px 10px; border-radius: 999px; pointer-events: none; }
+.tree-zoom { position: absolute; right: 12px; top: 12px; display: grid; gap: 6px; }
+.tree-zoom button { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 1.2rem; font-weight: 700; cursor: pointer; }
+.link { fill: none; stroke: var(--line); stroke-width: 1.4; }
+.link.flow { stroke-dasharray: 4 6; animation: flow 1.6s linear infinite; }
+.link.hl { stroke: var(--accent); stroke-width: 2.2; }
+@keyframes flow { to { stroke-dashoffset: -20; } }
+.node { cursor: pointer; }
+.node circle.c { stroke: var(--card); stroke-width: 2; }
+.node .ring { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; }
+.node.sel .ring { opacity: 1; }
+.node text { font-size: 14px; fill: var(--text); paint-order: stroke; stroke: var(--card); stroke-width: 4px; stroke-linejoin: round; }
+.node text .sub { fill: var(--muted); font-family: var(--f-mono); font-size: 11px; }
+.node.k-tool text, .node.k-cmd text { font-family: var(--f-mono); font-size: 11.5px; fill: var(--muted); }
+.node.k-group text, .node.k-human text, .node.k-orch text { font-weight: 800; font-size: 15px; }
+.node.k-family text { font-weight: 700; }
+.node .badge { font-family: var(--f-mono); font-size: 10px; fill: #fff; stroke: none; font-weight: 700; }
+
+.drawer { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: grid; gap: 14px; align-content: start; max-height: 700px; overflow: auto; min-width: 0; }
+.drawer h3 { font-size: 1.35rem; line-height: 1.2; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; font-family: var(--f-mono); color: var(--muted); background: var(--surface); border-radius: 999px; padding: 3px 10px; }
+.tag a { color: var(--accent); }
+.mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mini div { background: var(--surface); border-radius: var(--radius-sm); padding: 8px 10px; display: grid; min-width: 0; }
+.mini b { font-family: var(--f-mono); font-size: 1.05rem; font-weight: 600; }
+.mini span { font-size: 0.74rem; color: var(--muted); }
+details.fold { border-top: 1px solid var(--border); padding-top: 10px; }
+details.fold summary { cursor: pointer; font-weight: 700; font-size: 0.95rem; }
+details.fold pre { white-space: pre-wrap; word-break: break-word; font-family: var(--f-mono); font-size: 0.78rem; line-height: 1.5; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin: 10px 0 0; max-height: 340px; overflow: auto; }
+.empty { color: var(--muted); font-size: 0.95rem; }
+
+/* rejeu */
+.replay-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; }
+.stage { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; min-width: 0; position: relative; }
+.stage svg { width: 100%; height: auto; display: block; }
+.st circle.bg { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; transition: fill .25s, stroke .25s; }
+.st.hot circle.bg { fill: var(--glow); stroke: var(--accent); }
+.st text.l { font-size: 13px; font-weight: 700; fill: var(--text); text-anchor: middle; }
+.st text.n { font-family: var(--f-mono); font-size: 15px; font-weight: 600; fill: var(--muted); text-anchor: middle; }
+.st.hot text.n { fill: var(--accent); }
+.spoke { stroke: var(--border); stroke-width: 1.2; }
+.feed { min-width: 0; background: #0f1120; color: #cfd3e6; border-radius: var(--radius); padding: 14px 16px; font-family: var(--f-mono); font-size: 0.8rem; line-height: 1.6; height: 100%; min-height: 320px; max-height: 540px; overflow: hidden; display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--border); }
+.feed .row { min-width: 0; display: grid; grid-template-columns: 54px 92px minmax(0, 1fr); gap: 8px; white-space: nowrap; }
+.feed .row span:last-child { overflow: hidden; text-overflow: ellipsis; color: #9aa0bd; }
+.feed .row b { font-weight: 600; }
+.feed .row.new { animation: fadein .35s ease; }
+@keyframes fadein { from { opacity: 0; transform: translateY(-4px); } }
+.progress { height: 6px; background: var(--surface); border-radius: 999px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; }
+.kanban-link { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; }
+
+/* radars */
+.radar-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.radar-box svg { width: 100%; height: auto; display: block; max-width: 620px; margin: 0 auto; }
+.rgrid { fill: none; stroke: var(--line); stroke-width: 1; }
+.raxis { stroke: var(--line); stroke-width: 1; }
+.rlabel { font-size: 14px; font-weight: 700; fill: var(--text); }
+.rpoly { stroke-width: 2.5; fill-opacity: 0.16; transition: d .4s; }
+.rpt { stroke: var(--card); stroke-width: 2; }
+.slots { display: grid; gap: 8px; }
+.slot { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; align-items: center; }
+.minis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.minir { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; cursor: pointer; text-align: center; display: grid; gap: 2px; color: var(--text); }
+.minir:hover { border-color: var(--accent); }
+.minir svg { width: 100%; height: auto; display: block; }
+.minir b { font-size: 0.85rem; }
+.minir span { font-size: 0.72rem; color: var(--muted); font-family: var(--f-mono); }
+
+/* frise */
+.swim { overflow-x: auto; }
+.swim svg { display: block; width: 100%; min-width: 760px; height: auto; }
+.lane-label { font-size: 13px; font-weight: 800; fill: var(--text); }
+.lane-bg { fill: var(--surface); opacity: 0.55; }
+.axis text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.axis line, .axis path { stroke: var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.stats-line { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.95rem; color: var(--muted); }
+.stats-line b { color: var(--text); font-family: var(--f-mono); }
+
+/* mur de cartes */
+.wall-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+.wall svg { width: 100%; height: auto; display: block; }
+.bub { cursor: pointer; transition: opacity .2s; }
+.bub circle { stroke: var(--card); stroke-width: 1.5; }
+.bub:hover circle, .bub.on circle { stroke: var(--text); stroke-width: 2.5; }
+.bub text { font-family: var(--f-mono); font-size: 10px; font-weight: 600; fill: #fff; text-anchor: middle; pointer-events: none; }
+.cardpanel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.cardpanel h3 { font-size: 1.25rem; line-height: 1.25; }
+.agent-links { display: grid; gap: 6px; }
+.agent-links button { display: flex; align-items: center; gap: 8px; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 7px 10px; cursor: pointer; font-size: 0.9rem; }
+.agent-links button:hover { border-color: var(--accent); }
+.stack { display: flex; height: 10px; border-radius: 999px; overflow: hidden; gap: 2px; }
+.stack i { display: block; height: 100%; }
+
+/* courbes */
+.curves { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart .grid line { stroke: var(--line); stroke-opacity: 0.5; }
+.chart .grid path { stroke: none; }
+.chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.cross { stroke: var(--text); stroke-width: 1; stroke-dasharray: 3 3; }
+
+.tip { position: fixed; z-index: 50; pointer-events: none; background: #0f1120; color: #e4e6f0; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; line-height: 1.45; max-width: 320px; box-shadow: 0 8px 28px rgba(0,0,0,.4); }
+.tip b { font-weight: 700; }
+.tip .r { display: flex; justify-content: space-between; gap: 16px; }
+.tip .r span:last-child { font-family: var(--f-mono); }
+.tip .q { color: #b6bbd4; font-style: italic; margin-top: 4px; }
+
+footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); display: grid; gap: 14px; color: var(--muted); font-size: 0.92rem; }
+footer .links { display: flex; flex-wrap: wrap; gap: 10px 26px; font-weight: 600; }
+footer details summary { cursor: pointer; font-weight: 700; color: var(--text); }
+footer ul { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 6px; max-width: 90ch; }
+
+@media (max-width: 1100px) {
+  .tree-grid, .replay-grid, .radar-grid, .curves, .wall-grid { grid-template-columns: minmax(0, 1fr); }
+  .counters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .drawer { max-height: none; }
+}
+@media (max-width: 640px) {
+  .counters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tree-box, .tree-box svg { min-height: 520px; height: 520px; }
+  .minis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .range input { width: 120px; }
+  .feed .row { grid-template-columns: 46px 76px minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .link.flow { animation: none; }
+  * { transition: none !important; animation: none !important; }
+}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back" aria-label="Retour"><a href="/">← Tous les jeux</a><a href="https://strates.fmenguy.fr/v2/">Jouer à Strates</a></nav>
+  <header class="hero">
+    <div class="eyebrow">Strates · développement agentique</div>
+    <h1>Les agents de <span>Strates</span></h1>
+    <p class="lede">Un humain, des orchestrateurs, des dizaines d'agents. Tout ce qui suit sort des journaux réels de travail, appel par appel.</p>
+    <div class="counters" id="counters"></div>
+    <div class="chips" id="modelLegend" aria-label="Modèles"></div>
+  </header>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#arbre">L'arbre</a>
+    <a href="#rejeu">Rejouer un agent</a>
+    <a href="#cartes">Les cartes</a>
+    <a href="#competences">Compétences</a>
+    <a href="#humain">Avec l'humain</a>
+    <a href="#courbes">Courbes</a>
+  </nav>
+
+  <section id="arbre">
+    <div class="sec-head">
+      <div class="eyebrow">01</div>
+      <h2>L'arbre des <span>agents</span></h2>
+      <p>De l'humain aux orchestrateurs, des sous-agents à leurs outils, jusqu'aux commandes lancées dans le terminal. Déplie, zoome, clique.</p>
+    </div>
+    <div class="toolbar">
+      <div class="chips" id="treeModels"></div>
+      <label class="range" for="treeMin">Tokens min <input type="range" id="treeMin" min="0" max="100" value="0"><b id="treeMinV">0</b></label>
+      <button class="btn" type="button" id="treeOpen">Tout déplier</button>
+      <button class="btn" type="button" id="treeClose">Replier</button>
+    </div>
+    <div class="tree-grid">
+      <div class="tree-box" id="treeBox">
+        <div class="tree-zoom"><button type="button" id="zin" aria-label="Zoomer">+</button><button type="button" id="zout" aria-label="Dézoomer">−</button><button type="button" id="zfit" aria-label="Recentrer">⌂</button></div>
+        <div class="tree-hint">Glisser pour se déplacer · molette pour zoomer</div>
+      </div>
+      <aside class="drawer" id="drawer" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section id="rejeu">
+    <div class="sec-head">
+      <div class="eyebrow">02</div>
+      <h2>Rejouer un <span>agent</span></h2>
+      <p>Chaque impulsion est un vrai appel d'outil, dans l'ordre où l'agent l'a fait : il lit les règles, ouvre le kanban, fouille le code, écrit, lance les tests, commite.</p>
+    </div>
+    <div class="toolbar">
+      <select id="rpSel" aria-label="Agent à rejouer"></select>
+      <button class="btn primary" type="button" id="rpPlay">▶ Lecture</button>
+      <div class="seg" id="rpSpeed"><button type="button" data-v="3" aria-pressed="false">×1</button><button type="button" data-v="10" aria-pressed="true">×4</button><button type="button" data-v="40" aria-pressed="false">×16</button></div>
+      <span id="rpCard"></span>
+    </div>
+    <div class="progress"><i id="rpProg"></i></div>
+    <div class="replay-grid">
+      <div class="stage" id="stage"></div>
+      <div class="feed" id="feed" aria-live="off"></div>
+    </div>
+    <div class="legend" id="rpLegend"></div>
+  </section>
+
+  <section id="cartes">
+    <div class="sec-head">
+      <div class="eyebrow">03</div>
+      <h2>Le kanban, <span>carte par carte</span></h2>
+      <p>Une bulle par carte, à la taille de ce qu'elle a coûté. Chaque carte est la consigne lue par les agents : clique pour voir qui l'a traitée et l'ouvrir sur le kanban.</p>
+    </div>
+    <div class="toolbar">
+      <div class="chips" id="wallTypes"></div>
+      <div class="seg" id="wallSize"><button type="button" data-v="usd" aria-pressed="true">Coût</button><button type="button" data-v="min" aria-pressed="false">Temps</button><button type="button" data-v="lines" aria-pressed="false">Lignes de code</button></div>
+      <a class="btn" href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/tableau-de-bord" target="_blank" rel="noopener">Tableau de bord détaillé ↗</a>
+    </div>
+    <div class="wall-grid">
+      <div class="card wall" id="wall"></div>
+      <aside class="cardpanel" id="cardPanel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section id="competences">
+    <div class="sec-head">
+      <div class="eyebrow">04</div>
+      <h2>Qui sait faire <span>quoi</span></h2>
+      <p>Profil calculé à partir de ce que chaque agent a réellement touché (fichiers, commandes, tests) et de ce que son prompt lui demandait.</p>
+    </div>
+    <div class="radar-grid">
+      <div class="card radar-box">
+        <div class="toolbar" style="justify-content:space-between">
+          <div class="seg" id="rdMode"><button type="button" data-v="shape" aria-pressed="true">Profil</button><button type="button" data-v="vol" aria-pressed="false">Volume</button></div>
+        </div>
+        <div id="radar"></div>
+        <div class="slots" id="slots"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:12px">Les familles</h3>
+        <div class="minis" id="minis"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="humain">
+    <div class="sec-head">
+      <div class="eyebrow">05</div>
+      <h2>Avec <span>l'humain</span></h2>
+      <p>Chaque point est un message de François. En dessous, ce que l'orchestrateur en fait, puis les agents qu'il lance.</p>
+    </div>
+    <div class="toolbar">
+      <select id="swSel" aria-label="Session"></select>
+      <div class="seg" id="swDays"></div>
+    </div>
+    <div class="stats-line" id="swStats"></div>
+    <div class="card swim" id="swim"></div>
+    <div class="legend" id="swLegend"></div>
+  </section>
+
+  <section id="courbes">
+    <div class="sec-head">
+      <div class="eyebrow">06</div>
+      <h2>Les <span>courbes</span></h2>
+      <p>Ce que consomment tous ces agents, jour après jour, au tarif public des modèles.</p>
+    </div>
+    <div class="toolbar">
+      <div class="seg" id="cvMetric"><button type="button" data-v="tok" aria-pressed="true">Tokens</button><button type="button" data-v="eur" aria-pressed="false">Euros</button></div>
+    </div>
+    <div class="curves">
+      <div class="card chart"><h3 style="margin-bottom:8px">Par jour et par modèle</h3><div class="legend" id="cvLegend" style="margin-bottom:8px"></div><div id="cvArea"></div></div>
+      <div class="card chart"><h3 style="margin-bottom:8px">Cumul</h3><div class="legend" id="cumLegend" style="margin-bottom:8px"></div><div id="cvCum"></div></div>
+    </div>
+    <div class="card chart">
+      <div class="toolbar" style="justify-content:space-between;margin-bottom:8px"><h3>Le contexte qui gonfle</h3><select id="ctxSel" aria-label="Agent"></select></div>
+      <p class="muted" style="font-size:.95rem;margin-bottom:6px" id="ctxNote"></p>
+      <div id="ctxChart"></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="links">
+      <a href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/kanban">Le kanban en ligne</a>
+      <a href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/tableau-de-bord">Le tableau de bord des cartes</a>
+      <a href="/">L'Arcade</a>
+      <a href="https://fmenguy.fr/agents-en-action">Les agents en action</a>
+      <a href="https://fmenguy.fr/formation-ia">Formation IA</a>
+    </div>
+    <details>
+      <summary>D'où viennent les chiffres</summary>
+      <ul id="method"></ul>
+    </details>
+  </footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <script is:inline src="/strates-agents/agents-data.js"></script>
+  <script is:inline src="/strates-agents/cards-data.js"></script>
+  <script is:inline src="/strates-agents/agents.js"></script>
+</body>
+</html>
