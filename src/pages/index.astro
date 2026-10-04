@@ -27,27 +27,20 @@
       --gold:      #d4a017;
       --gold-dim:  #a07810;
       --violet:    #7c5cbf;
-      --violet-glow: rgba(124,92,191,0.25);
       --text:      #e8e0d0;
       --text-strong: #f0e8d8;
       --text-strong-violet: #d8d0e8;
-      --text-strong-wip: #f0e0c0;
       --muted:     #7a8090;
       --tag-full:  #1a2d1a;
       --tag-full-c:#4ade80;
-      --tag-mini:  #1a1a2d;
-      --tag-mini-c:#818cf8;
-      --tag-soon-bg: #2d1f0a;
-      --tag-soon-c:  #f59e0b;
       --grid-line: rgba(212,160,23,0.03);
-      --card-shadow: 0 16px 40px rgba(0,0,0,0.5);
-      --banner-fda:     radial-gradient(ellipse at 60% 40%, #4a3818 0%, #2a1d0a 100%);
-      --banner-eryndor: radial-gradient(ellipse at 40% 60%, #2a2050 0%, #1a1430 100%);
+      --card-shadow: 0 14px 34px rgba(0,0,0,0.5);
+      --banner-fda:     radial-gradient(ellipse at 50% 45%, #2e2416 0%, #1b1610 100%);
       --banner-orbique: radial-gradient(ellipse at 50% 50%, #1a3552 0%, #0e1d30 100%);
-      --banner-aelindra-base: #1a1828;
-      --banner-aelindra-vignette: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(0,0,0,0.45) 100%);
-      --aelindra-name-grad: linear-gradient(180deg, #ecd190 0%, #d4b370 55%, #8a7340 100%);
-      --aelindra-sub-c: #6a6276;
+      --banner-achro:
+        radial-gradient(ellipse at 25% 20%, rgba(124,79,208,0.45) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 90%, rgba(45,122,79,0.35) 0%, transparent 55%),
+        linear-gradient(160deg, #241a3c 0%, #17122a 100%);
       --header-title-grad: linear-gradient(135deg, var(--gold) 0%, #f5d060 50%, var(--gold-dim) 100%);
     }
 
@@ -59,27 +52,19 @@
       --gold:      #b8800f;
       --gold-dim:  #8a5f08;
       --violet:    #6a4ab0;
-      --violet-glow: rgba(106,74,176,0.18);
       --text:      #2c1e10;
       --text-strong: #1a1208;
       --text-strong-violet: #2a1f4a;
-      --text-strong-wip: #4a3208;
       --muted:     #6b5744;
       --tag-full:  #e2f4e2;
       --tag-full-c:#1e7a3a;
-      --tag-mini:  #e7e7f5;
-      --tag-mini-c:#4c52cc;
-      --tag-soon-bg: #fbf0d8;
-      --tag-soon-c:  #9a6608;
       --grid-line: rgba(184,128,15,0.05);
-      --card-shadow: 0 16px 40px rgba(120,80,40,0.18);
-      --banner-fda:     radial-gradient(ellipse at 60% 40%, #f5e4c2 0%, #e8d4a8 100%);
-      --banner-eryndor: radial-gradient(ellipse at 40% 60%, #e8dcf2 0%, #d8cce8 100%);
+      --card-shadow: 0 14px 34px rgba(120,80,40,0.18);
       --banner-orbique: radial-gradient(ellipse at 50% 50%, #d8e8f4 0%, #c2d6e8 100%);
-      --banner-aelindra-base: #ece2d4;
-      --banner-aelindra-vignette: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(120,80,40,0.10) 100%);
-      --aelindra-name-grad: linear-gradient(180deg, #8a5f08 0%, #a07810 55%, #6a4a08 100%);
-      --aelindra-sub-c: #8a7a60;
+      --banner-achro:
+        radial-gradient(ellipse at 25% 20%, rgba(124,79,208,0.22) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 90%, rgba(45,122,79,0.18) 0%, transparent 55%),
+        linear-gradient(160deg, #ece4f4 0%, #e0d6ec 100%);
       --header-title-grad: linear-gradient(135deg, #b8800f 0%, #8a5f08 50%, #6a4808 100%);
     }
 
@@ -90,7 +75,10 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
       transition: background 0.3s ease, color 0.3s ease;
     }
 
@@ -104,19 +92,23 @@
       pointer-events: none;
     }
 
+    /* === Barre du haut : logo, thème, titre, crédit sur une seule ligne === */
+    .topbar {
+      position: relative; z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem clamp(1rem, 2vw, 2rem);
+      border-bottom: 1px solid var(--border);
+    }
     .header-left {
-      position: absolute;
-      top: 1.4rem;
-      left: 1.8rem;
       display: flex;
       align-items: center;
       gap: 10px;
-      z-index: 11;
     }
-
     .site-logo {
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -133,9 +125,9 @@
     .site-logo:hover { transform: translateY(-2px); }
 
     .theme-toggle {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--muted);
@@ -155,16 +147,16 @@
     [data-theme="light"] .theme-toggle__icon--dark { display: none; }
     [data-theme="light"] .theme-toggle__icon--light { display: block; }
 
-    header {
-      position: relative; z-index: 10;
-      padding: 3rem 2rem 2rem;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
+    .topbar-brand {
+      display: flex;
+      align-items: baseline;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+      min-width: 0;
     }
-
-.header-title {
+    .header-title {
       font-family: 'Cinzel', serif;
-      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-size: clamp(1.35rem, 2vw, 1.8rem);
       font-weight: 900;
       letter-spacing: 0.12em;
       background: var(--header-title-grad);
@@ -172,36 +164,60 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
       line-height: 1.1;
-      margin-bottom: 0.6rem;
     }
-
     .header-sub {
-      font-size: 0.9rem;
+      font-size: 0.7rem;
       color: var(--muted);
       letter-spacing: 0.15em;
       text-transform: uppercase;
     }
+    .topbar-credit {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .topbar-credit a { color: var(--gold); text-decoration: none; }
+    .topbar-credit a:hover { text-decoration: underline; }
 
-    main {
+    /* === Grille du tableau de bord ===
+       Mobile et tablette : les zones s'empilent.
+       Desktop (>= 1100px) : grille 12 colonnes qui remplit la hauteur de l'écran,
+       les jeux à la une en haut, jeux complets et mini-jeux en bas. */
+    .dash {
       position: relative; z-index: 1;
-      max-width: 1100px;
+      flex: 1;
+      width: 100%;
+      max-width: 1920px;
       margin: 0 auto;
-      padding: 3rem 1.5rem 5rem;
+      padding: 1.5rem 1rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    .zone {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .une-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
     }
 
     .section-label {
       font-family: 'Cinzel', serif;
-      font-size: 0.72rem;
+      font-size: 0.66rem;
+      font-weight: 400;
       letter-spacing: 0.3em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-top: 3rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.7rem;
       display: flex;
       align-items: center;
       gap: 1rem;
     }
-    .section-label:first-child { margin-top: 0; }
     .section-label::after {
       content: '';
       flex: 1;
@@ -209,361 +225,582 @@
       background: var(--border);
     }
 
-    .featured-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3.5rem;
-    }
-
-    .top-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3.5rem;
-    }
-
-    .card-featured {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-    }
-
-    .card-featured:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--card-shadow), 0 0 0 1px var(--gold-dim);
-      border-color: var(--gold-dim);
-    }
-
-    .card-featured--violet:hover {
-      box-shadow: var(--card-shadow), 0 0 0 1px var(--violet);
-      border-color: var(--violet);
-    }
-
-    .card-featured::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .card-featured--violet::before {
-      background: linear-gradient(90deg, transparent, var(--violet), transparent);
-    }
-    .card-featured:hover::before { opacity: 1; }
-
-    .card-banner {
-      height: 160px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Cinzel', serif;
-      font-size: 3rem;
-      position: relative;
-      overflow: hidden;
-      background: var(--surface2);
-    }
-
-    .card-banner--fda {
-      background: var(--banner-fda);
-    }
-    .card-banner--eryndor {
-      background: var(--banner-eryndor);
-    }
-
-    .card-banner img {
-      width: 100px; height: auto;
-      opacity: 0.9;
-      filter: drop-shadow(0 0 20px rgba(212,160,23,0.4));
-    }
-
-    .card-banner-icon {
-      font-size: 4rem;
-      filter: drop-shadow(0 0 12px currentColor);
-    }
-    .card-banner--fda .card-banner-icon { color: var(--gold); }
-    .card-banner--eryndor .card-banner-icon { color: #a78bfa; }
-    .card-banner--orbique .card-banner-icon { color: #38bdf8; }
-    .card-banner--orbique { background: var(--banner-orbique); }
-    .card-featured--cyan:hover { box-shadow: var(--card-shadow), 0 0 0 1px #38bdf8; border-color: #38bdf8; }
-    .card-featured--cyan::before { background: linear-gradient(90deg, transparent, #38bdf8, transparent); }
-    .card-featured--cyan .card-cta { color: #38bdf8; }
-
-    .card-banner--aelindra {
-      background:
-        radial-gradient(120% 60% at 50% 0%, rgba(142,197,212,0.08) 0%, transparent 55%),
-        radial-gradient(80% 50% at 50% 100%, rgba(212,179,112,0.10) 0%, transparent 60%),
-        var(--banner-aelindra-base);
-      position: relative;
-    }
-    .card-banner--aelindra::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: var(--banner-aelindra-vignette);
-      pointer-events: none;
-    }
-    .aelindra-wordmark {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.4rem;
-      position: relative;
-      z-index: 1;
-    }
-    .aelindra-star {
-      font-size: 0.85rem;
-      color: var(--gold);
-      opacity: 0.9;
-      filter: drop-shadow(0 0 6px rgba(212,179,112,0.5));
-      letter-spacing: 0;
-    }
-    .aelindra-name {
-      font-family: 'Cinzel', serif;
-      font-weight: 900;
-      font-size: clamp(1.8rem, 4.5vw, 2.6rem);
-      letter-spacing: 0.32em;
-      padding-left: 0.32em;
-      background: var(--aelindra-name-grad);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 22px rgba(212,179,112,0.25);
-      line-height: 1;
-    }
-    .aelindra-sub {
-      font-family: 'Cinzel', serif;
-      font-size: 0.62rem;
-      letter-spacing: 0.45em;
-      color: var(--aelindra-sub-c);
-      padding-left: 0.45em;
-    }
-    .card-featured--aelindra:hover {
-      box-shadow: var(--card-shadow), 0 0 0 1px var(--gold);
-      border-color: var(--gold);
-    }
-    .card-featured--aelindra::before {
-      background: linear-gradient(90deg, transparent, #d4b370, transparent);
-    }
-    .card-featured--aelindra .card-cta { color: #d4b370; }
-
-    .card-body {
-      padding: 1.4rem 1.5rem 1.6rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
-
     .card-tag {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      font-size: 0.68rem;
+      font-size: 0.62rem;
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      padding: 0.2rem 0.6rem;
+      padding: 0.18rem 0.55rem;
       border-radius: 4px;
       width: fit-content;
+      white-space: nowrap;
     }
     .card-tag--full {
       background: var(--tag-full);
       color: var(--tag-full-c);
       border: 1px solid rgba(74,222,128,0.2);
     }
-    .card-tag--mini {
-      background: var(--tag-mini);
-      color: var(--tag-mini-c);
-      border: 1px solid rgba(129,140,248,0.2);
-    }
-    .card-tag--soon {
-      background: var(--tag-soon-bg);
-      color: var(--tag-soon-c);
-      border: 1px solid rgba(245,158,11,0.25);
-    }
-    .card-tag::before { content: '●'; font-size: 0.5rem; }
+    .card-tag::before { content: '●'; font-size: 0.45rem; }
 
-    .card-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--text-strong);
-      line-height: 1.2;
-    }
-
-    .card-desc {
-      font-size: 0.85rem;
-      color: var(--muted);
-      line-height: 1.6;
-      flex: 1;
-    }
-
-    .card-cta {
-      margin-top: 0.8rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--gold);
-      letter-spacing: 0.08em;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      transition: gap 0.2s;
-    }
-    .card-featured--violet .card-cta { color: #a78bfa; }
-    .card-featured:hover .card-cta { gap: 0.7rem; }
-    .card-cta::after { content: '→'; }
-
-    .mini-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1rem;
-    }
-
-    .card-mini {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.2rem 1.3rem;
+    a.inline {
       text-decoration: none;
-      color: inherit;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      transition: transform 0.2s, border-color 0.2s, background 0.2s;
-    }
-    .card-mini:hover {
-      transform: translateY(-2px);
-      background: var(--surface2);
-      border-color: rgba(129,140,248,0.35);
+      border-bottom: 1px solid currentColor;
     }
 
-    .card-wip {
-      background: var(--surface);
-      border: 1px dashed rgba(245,158,11,0.3);
+    .panel {
+      position: relative;
       border-radius: 12px;
-      padding: 1.4rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      text-decoration: none;
-      color: inherit;
-      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+      overflow: hidden;
+      min-width: 0;
     }
-    .card-wip:hover {
-      transform: translateY(-3px);
-      border-color: rgba(245,158,11,0.6);
-      background: var(--surface2);
-    }
-    .card-wip-header {
+    .panel-head {
       display: flex;
       align-items: center;
       gap: 0.7rem;
-    }
-    .card-wip-icon {
-      font-size: 1.6rem;
-      width: 42px; height: 42px;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--surface2);
-      border-radius: 8px;
-      border: 1px solid rgba(245,158,11,0.2);
-    }
-    .card-wip-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text-strong-wip);
-    }
-    .card-wip-subtitle {
-      font-size: 0.7rem;
-      color: #f59e0b;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-    .card-wip-desc {
-      font-size: 0.82rem;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-    .card-wip-refs {
-      font-size: 0.72rem;
-      color: var(--muted);
-      font-style: italic;
-      padding-top: 0.4rem;
-      border-top: 1px solid var(--border);
-      margin-top: 0.3rem;
-    }
-
-    .dev-card {
-      background: var(--surface);
-      border: 1px dashed rgba(245,158,11,0.35);
-      border-radius: 14px;
-      padding: 1.8rem 1.8rem 1.6rem;
-      margin-top: 0.5rem;
-    }
-    .dev-card-head {
-      display: flex;
-      align-items: baseline;
-      gap: 0.8rem;
       flex-wrap: wrap;
-      margin-bottom: 0.9rem;
     }
-    .dev-card-title {
+    .panel-title {
       font-family: 'Cinzel', serif;
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: 700;
-      color: var(--text-strong-wip);
       letter-spacing: 0.04em;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .dev-card-status {
-      font-size: 0.7rem;
-      color: #f59e0b;
+    .panel-status {
+      font-size: 0.64rem;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       font-weight: 600;
     }
-    .dev-card p {
-      font-size: 0.9rem;
-      line-height: 1.65;
-      color: var(--text);
-      margin-bottom: 0.8rem;
+    .panel-desc {
+      font-size: 0.86rem;
+      line-height: 1.6;
     }
-    .dev-card a.inline {
-      color: var(--gold);
-      text-decoration: none;
-      border-bottom: 1px solid rgba(212,160,23,0.3);
-    }
-    .dev-card a.inline:hover { border-color: var(--gold); }
 
-    .card-cta-link {
-      display: inline-block;
-      margin-top: 1.2rem;
+    /* Capture cliquable qui sert de bouton Jouer, l'image remplit toute la hauteur dispo */
+    .shot {
+      position: relative;
+      display: block;
+      min-height: 200px;
+      overflow: hidden;
       text-decoration: none;
     }
-    .card-cta-link:hover .card-cta { gap: 0.7rem; }
+    .shot img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .shot:hover img { transform: scale(1.03); }
+    .shot-play {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 2.4rem 1.1rem 0.95rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+    .shot-play-arrow {
+      margin-left: auto;
+      transition: transform 0.2s ease;
+    }
+    .shot:hover .shot-play-arrow { transform: translateX(4px); }
+    .shot-badge {
+      position: absolute;
+      top: 0.8rem;
+      right: 0.8rem;
+      padding: 0.18rem 0.6rem;
+      border-radius: 999px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.35);
+    }
+
+    /* === Strates : nuit voxel, strates de roche, lueur de feu de camp === */
+    .panel--strates {
+      display: grid;
+      grid-template-columns: 1fr;
+      border: 1px solid rgba(200,170,120,0.35);
+      background:
+        radial-gradient(ellipse at 75% 108%, rgba(245,158,11,0.20) 0%, rgba(245,158,11,0.08) 22%, transparent 50%),
+        repeating-linear-gradient(180deg,
+          rgba(255,255,255,0.035) 0px,
+          rgba(255,255,255,0.035) 2px,
+          transparent 2px,
+          transparent 12px),
+        linear-gradient(180deg, #0b0f22 0%, #131a34 45%, #1c2440 75%, #232a42 100%);
+    }
+    .panel--strates::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 62% 12%, rgba(255,255,255,0.85) 0, transparent 60%),
+        radial-gradient(1px 1px at 70% 22%, rgba(255,255,255,0.6) 0, transparent 60%),
+        radial-gradient(1px 1px at 82% 10%, rgba(255,255,255,0.75) 0, transparent 60%),
+        radial-gradient(1px 1px at 88% 26%, rgba(255,255,255,0.55) 0, transparent 60%),
+        radial-gradient(1px 1px at 94% 14%, rgba(255,255,255,0.8) 0, transparent 60%),
+        radial-gradient(1px 1px at 76% 6%, rgba(255,255,255,0.65) 0, transparent 60%);
+    }
+    .panel--strates::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background:
+        linear-gradient(90deg, transparent, rgba(212,160,23,0.5), transparent) top left / 100% 2px no-repeat,
+        linear-gradient(135deg, rgba(212,160,23,0.45) 0 10px, transparent 10px) top left / 20px 20px no-repeat,
+        linear-gradient(-45deg, rgba(212,160,23,0.45) 0 10px, transparent 10px) bottom right / 20px 20px no-repeat;
+    }
+    .panel--strates .shot {
+      border-bottom: 1px solid rgba(212,160,23,0.28);
+    }
+    .panel--strates .shot img { object-position: center 42%; }
+    .panel--strates .shot-play {
+      color: #f7d98a;
+      background: linear-gradient(180deg, transparent, rgba(8,11,26,0.92));
+    }
+    .panel--strates .shot-badge {
+      color: #1a1206;
+      background: linear-gradient(135deg, #f6dfa4 0%, #d4a017 100%);
+      box-shadow: 0 2px 10px rgba(212,160,23,0.45);
+    }
+    .strates-info {
+      position: relative;
+      z-index: 1;
+      padding: 1.2rem 1.3rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      min-width: 0;
+    }
+    .panel--strates .panel-title {
+      background-image: linear-gradient(135deg, #f0dca0 0%, #d4a017 55%, #8a6420 100%);
+    }
+    .panel--strates .panel-status { color: #f59e0b; }
+    .panel--strates .panel-desc { color: #d6ddef; }
+    .panel--strates a.inline { color: #f0c96a; }
+    .card-tag--strates {
+      background: rgba(212,160,23,0.14);
+      color: #eab84d;
+      border: 1px solid rgba(212,160,23,0.35);
+    }
+
+    .dev-progress-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(214,221,239,0.55);
+      margin-bottom: 0.45rem;
+    }
+    .ages {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.3rem;
+      margin-bottom: 0.45rem;
+    }
+    .age {
+      height: 30px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: 0.74rem;
+      font-weight: 700;
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(214,221,239,0.45);
+    }
+    .age.done {
+      background: rgba(74,222,128,0.08);
+      border-color: rgba(74,222,128,0.4);
+      color: #4ade80;
+    }
+    .age.wip {
+      background: rgba(245,158,11,0.1);
+      border-color: rgba(245,158,11,0.5);
+      color: #f59e0b;
+    }
+    .age.wip::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 6px;
+      border: 1px solid rgba(245,158,11,0.3);
+      animation: agepulse 2s ease-in-out infinite;
+    }
+    @keyframes agepulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.05); }
+    }
+    .dev-progress-meta {
+      font-size: 0.76rem;
+      line-height: 1.5;
+      color: rgba(214,221,239,0.72);
+    }
+
+    .strates-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid rgba(212,160,23,0.18);
+    }
+    .strates-download {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem 0.9rem;
+      flex-wrap: wrap;
+    }
+    .strates-install {
+      font-size: 0.74rem;
+      color: rgba(214,221,239,0.7);
+    }
+    .strates-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .strates-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.36rem 0.7rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+    .strates-btn:hover { transform: translateY(-1px); }
+    .strates-btn--download {
+      padding: 0.5rem 0.95rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      color: #1b1914;
+      background: #f0c96a;
+      border: 1px solid #f0c96a;
+    }
+    .strates-btn--download:hover { background: #f7d98a; }
+    .strates-btn--changelog {
+      color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.35);
+      background: rgba(74,222,128,0.06);
+    }
+    .strates-btn--changelog:hover { border-color: #4ade80; box-shadow: 0 0 14px rgba(74,222,128,0.22); }
+    .strates-btn--kanban {
+      color: #7cc4ff;
+      border: 1px solid rgba(124,196,255,0.35);
+      background: rgba(124,196,255,0.06);
+    }
+    .strates-btn--kanban:hover { border-color: #7cc4ff; box-shadow: 0 0 14px rgba(124,196,255,0.22); }
+    .strates-btn--agents {
+      color: #fb923c;
+      border: 1px solid rgba(251,146,60,0.4);
+      background: rgba(251,146,60,0.07);
+    }
+    .strates-btn--agents:hover { border-color: #fb923c; box-shadow: 0 0 14px rgba(251,146,60,0.24); }
+    .strates-btn--poc {
+      color: #f0c96a;
+      border: 1px dashed rgba(212,160,23,0.5);
+      background: rgba(212,160,23,0.06);
+    }
+    .strates-btn--poc:hover { border-color: #f0c96a; box-shadow: 0 0 14px rgba(212,160,23,0.22); }
+
+    /* === Bathyrêve : abysses bleu canard, cuivre des structures, bulles === */
+    .panel--bathy {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(127,214,232,0.30);
+      background:
+        radial-gradient(circle at 88% 78%, rgba(160,230,245,0.16) 0 5px, transparent 6px),
+        radial-gradient(circle at 93% 70%, rgba(160,230,245,0.12) 0 3px, transparent 4px),
+        radial-gradient(circle at 84% 64%, rgba(160,230,245,0.10) 0 2px, transparent 3px),
+        radial-gradient(ellipse at 50% 0%, rgba(127,214,232,0.14) 0%, transparent 60%),
+        linear-gradient(180deg, #0f3a4e 0%, #0a2b3b 55%, #061b27 100%);
+    }
+    .panel--bathy::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: linear-gradient(90deg, transparent, rgba(232,149,90,0.55), transparent) top left / 100% 2px no-repeat;
+    }
+    .panel--bathy .shot {
+      flex: 1;
+      border-bottom: 1px solid rgba(127,214,232,0.25);
+    }
+    .panel--bathy .shot img { object-position: center 48%; }
+    .panel--bathy .shot-play {
+      color: #ffd9b8;
+      background: linear-gradient(180deg, transparent, rgba(4,20,30,0.92));
+    }
+    .panel--bathy .shot-badge {
+      color: #062030;
+      background: linear-gradient(135deg, #c8f2fb 0%, #7fd6e8 100%);
+      box-shadow: 0 2px 10px rgba(127,214,232,0.40);
+    }
+    .bathy-info {
+      padding: 1rem 1.3rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .panel--bathy .panel-title {
+      background-image: linear-gradient(135deg, #e6fbff 0%, #8fdcec 55%, #3aa6bf 100%);
+    }
+    .panel--bathy .panel-status { color: #7fd6e8; }
+    .panel--bathy .panel-desc { color: #cfe6ee; }
+    .card-tag--bathy {
+      background: rgba(232,149,90,0.14);
+      color: #f6b77a;
+      border: 1px solid rgba(232,149,90,0.40);
+    }
+    .bathy-res {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .bathy-res span {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      color: #bfe9f3;
+      background: rgba(127,214,232,0.08);
+      border: 1px solid rgba(127,214,232,0.25);
+    }
+    .bathy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      align-self: flex-start;
+      padding: 0.5rem 1rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      border-radius: 7px;
+      color: #1d1006;
+      background: #e8955a;
+      border: 1px solid #e8955a;
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.25s ease;
+    }
+    .bathy-btn:hover {
+      background: #f2ad7b;
+      transform: translateY(-1px);
+      box-shadow: 0 0 18px rgba(232,149,90,0.35);
+    }
+
+    /* === Jeux complets : cartes compactes, lien étiré sur toute la carte === */
+    .complets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .game-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      min-width: 0;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .game-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-shadow), 0 0 0 1px var(--accent, var(--gold-dim));
+      border-color: var(--accent, var(--gold-dim));
+    }
+    .game-card--achro { --accent: #c9a227; }
+    .game-card--fda { --accent: var(--gold-dim); }
+    .game-card--orbique { --accent: #38bdf8; }
+    .game-card__banner {
+      position: relative;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .game-card__banner--fda { background: var(--banner-fda); }
+    .game-card__banner--fda img {
+      position: absolute;
+      top: 4%;
+      left: 50%;
+      height: 92%;
+      width: auto;
+      transform: translateX(-50%);
+      border-radius: 6px;
+    }
+    .game-card__banner--orbique { background: var(--banner-orbique); }
+    .game-card__banner--achro { background: var(--banner-achro); }
+    .game-card__glyph {
+      font-size: 2.6rem;
+      filter: drop-shadow(0 0 12px currentColor);
+    }
+    .game-card__banner--orbique .game-card__glyph { color: #38bdf8; }
+    .achro-gems {
+      display: flex;
+      gap: 0.7rem;
+      align-items: center;
+    }
+    .achro-gems span {
+      width: 18px;
+      height: 18px;
+      transform: rotate(45deg);
+      border-radius: 3px;
+      box-shadow: 0 0 14px currentColor;
+      background: currentColor;
+    }
+    .achro-gems span:nth-child(1) { color: #4caf7a; }
+    .achro-gems span:nth-child(2) { color: #e8c547; width: 26px; height: 26px; }
+    .achro-gems span:nth-child(3) { color: #9b6ee8; }
+    .game-card__body {
+      padding: 0.85rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      flex: 1;
+    }
+    .game-card__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .game-card__title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-strong);
+      line-height: 1.2;
+    }
+    .game-card__link {
+      color: inherit;
+      text-decoration: none;
+    }
+    .game-card__link::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    .game-card__desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+      flex: 1;
+    }
+    .game-card__foot {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem 0.8rem;
+      flex-wrap: wrap;
+    }
+    .game-card__sub {
+      position: relative;
+      z-index: 2;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .game-card__sub:hover { color: var(--gold); border-color: var(--gold); }
+
+    /* === Mini-jeux : liste en lignes === */
+    .mini-list {
+      display: grid;
+      grid-auto-rows: 1fr;
+      gap: 0.45rem;
+    }
+    .mini-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.55rem 0.8rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      color: inherit;
+      min-width: 0;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .mini-row:hover {
+      transform: translateX(3px);
+      background: var(--surface2);
+      border-color: rgba(129,140,248,0.35);
+    }
+    .mini-icon {
+      font-size: 1.15rem;
+      width: 32px; height: 32px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .mini-text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .mini-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--text-strong-violet);
+    }
+    .mini-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
 
     /* === Boutons Jouer thématiques par jeu === */
     .btn-game {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      align-self: flex-start;
-      margin-top: 0.9rem;
-      padding: 0.55rem 1.05rem;
+      gap: 0.45rem;
+      flex-shrink: 0;
+      padding: 0.4rem 0.85rem;
       font-family: 'Cinzel', serif;
-      font-size: 0.78rem;
+      font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      border-radius: 8px;
+      border-radius: 7px;
       border: 1px solid transparent;
       background-clip: padding-box;
       transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
@@ -571,9 +808,26 @@
       overflow: hidden;
     }
     .btn-game::after { content: '→'; transition: transform 0.2s ease; }
-    a:hover .btn-game::after,
-    .card-cta-link:hover .btn-game::after { transform: translateX(3px); }
-    a:hover .btn-game { transform: translateY(-1px); }
+    :is(a, .game-card):hover .btn-game::after { transform: translateX(3px); }
+    :is(a, .game-card):hover .btn-game { transform: translateY(-1px); }
+
+    /* Achrogemme · grimoire or et améthyste */
+    .btn-game--achro {
+      color: #f0d97a;
+      background: linear-gradient(135deg, rgba(124,79,208,0.22) 0%, rgba(201,162,39,0.16) 100%);
+      border-color: rgba(201,162,39,0.50);
+      text-shadow: 0 0 8px rgba(201,162,39,0.30);
+    }
+    .game-card:hover .btn-game--achro {
+      border-color: #e8c547;
+      box-shadow: 0 0 18px rgba(124,79,208,0.28), 0 0 10px rgba(201,162,39,0.20);
+    }
+    [data-theme="light"] .btn-game--achro {
+      color: #5a3a8a;
+      background: linear-gradient(135deg, rgba(124,79,208,0.12) 0%, rgba(201,162,39,0.14) 100%);
+      border-color: rgba(124,79,208,0.45);
+      text-shadow: none;
+    }
 
     /* FDA · forge / or / braise */
     .btn-game--fda {
@@ -582,7 +836,7 @@
       border-color: rgba(212,160,23,0.50);
       text-shadow: 0 0 8px rgba(212,160,23,0.35);
     }
-    a:hover .btn-game--fda {
+    .game-card:hover .btn-game--fda {
       border-color: #d4a017;
       box-shadow: 0 0 20px rgba(212,160,23,0.30), inset 0 0 14px rgba(212,160,23,0.10);
     }
@@ -592,9 +846,6 @@
       border-color: rgba(184,128,15,0.55);
       text-shadow: none;
     }
-    [data-theme="light"] a:hover .btn-game--fda {
-      box-shadow: 0 0 18px rgba(184,128,15,0.22);
-    }
 
     /* Orbique · cyan luminescent */
     .btn-game--orbique {
@@ -603,7 +854,7 @@
       border-color: rgba(56,189,248,0.50);
       text-shadow: 0 0 8px rgba(56,189,248,0.35);
     }
-    a:hover .btn-game--orbique {
+    .game-card:hover .btn-game--orbique {
       border-color: #38bdf8;
       box-shadow: 0 0 20px rgba(56,189,248,0.30), inset 0 0 14px rgba(56,189,248,0.10);
     }
@@ -612,9 +863,6 @@
       background: linear-gradient(135deg, rgba(56,189,248,0.16), rgba(56,140,200,0.08));
       border-color: rgba(56,140,200,0.55);
       text-shadow: none;
-    }
-    [data-theme="light"] a:hover .btn-game--orbique {
-      box-shadow: 0 0 18px rgba(56,140,200,0.22);
     }
 
     /* Aelindra · sable, cuivre, lampe à huile */
@@ -714,741 +962,346 @@
       text-shadow: none;
     }
 
-    .dev-progress {
-      margin-top: 1.4rem;
-      padding-top: 1.2rem;
-      border-top: 1px solid var(--border);
-    }
-    .dev-progress-label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.68rem;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.8rem;
-    }
-    .ages {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 0.4rem;
-      margin-bottom: 0.9rem;
-      max-width: 480px;
-    }
-    .age {
-      aspect-ratio: 1;
-      border-radius: 6px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--muted);
-      position: relative;
-    }
-    .age.done {
-      background: rgba(74,222,128,0.08);
-      border-color: rgba(74,222,128,0.4);
-      color: #4ade80;
-    }
-    .age.wip {
-      background: rgba(245,158,11,0.1);
-      border-color: rgba(245,158,11,0.5);
-      color: #f59e0b;
-    }
-    .age.wip::after {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      border-radius: 7px;
-      border: 1px solid rgba(245,158,11,0.3);
-      animation: agepulse 2s ease-in-out infinite;
-    }
-    @keyframes agepulse {
-      0%, 100% { opacity: 0.3; transform: scale(1); }
-      50% { opacity: 0.7; transform: scale(1.05); }
-    }
-    .dev-progress-meta {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-    .dev-progress-meta strong {
-      color: var(--text);
-      font-weight: 600;
+    /* === Mise en page tableau de bord 16:9 (desktop) === */
+    @media (min-width: 1100px) {
+      body { height: 100vh; height: 100dvh; }
+
+      .dash {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-template-rows: 1.65fr 1fr;
+        min-height: 0;
+        gap: 1.1rem 1.2rem;
+        padding: 1.1rem clamp(1rem, 2vw, 2rem) 1.3rem;
+      }
+      .zone--une {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-template-rows: auto 1fr;
+      }
+      .zone--une > .section-label { grid-column: 1 / -1; }
+      .une-grid { display: contents; }
+      .panel--strates { grid-column: 1 / 8; }
+      .panel--bathy { grid-column: 8 / -1; }
+      .zone--complets { grid-column: 1 / 8; }
+      .zone--mini { grid-column: 8 / -1; }
+
+      .panel--strates {
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      }
+      .panel--strates .shot {
+        border-bottom: none;
+        border-right: 1px solid rgba(212,160,23,0.28);
+      }
+      .strates-actions { margin-top: auto; }
+
+      .complets-grid {
+        flex: 1;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .game-card__banner { height: auto; flex: 1; min-height: 64px; }
+      .game-card__desc {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .mini-list { flex: 1; }
+      .mini-desc {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
 
-    /* === Carte dev "Grimoire Stellaire" pour Achrogemme === */
-    .dev-card--elf {
-      background:
-        radial-gradient(ellipse at 30% 0%, rgba(201,162,39,0.08) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 100%, rgba(45,122,79,0.08) 0%, transparent 55%),
-        var(--surface);
-      border: 1px solid rgba(201,162,39,0.30);
-      border-radius: 14px;
-      position: relative;
-      overflow: hidden;
-    }
-    .dev-card--elf::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(201,162,39,0.5), transparent);
-    }
-    .dev-card--elf .dev-card-title {
-      background: linear-gradient(135deg, #f0d97a 0%, #c9a227 50%, #7a600f 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .dev-card--elf .dev-card-status {
-      color: #9b6ee8;
-    }
-    .dev-card--elf a.inline {
-      color: #e8c547;
-      border-bottom-color: rgba(201,162,39,0.4);
-    }
-    .dev-card--elf a.inline:hover { border-color: #e8c547; }
-
-    .elf-actions {
-      display: flex;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-      margin-top: 1.2rem;
-      padding-top: 1.1rem;
-      border-top: 1px solid rgba(201,162,39,0.18);
-    }
-    .elf-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.6rem 1.1rem;
-      font-family: 'Cinzel', serif;
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-decoration: none;
-      border-radius: 6px;
-      transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-      position: relative;
-    }
-    .elf-btn--play {
-      color: var(--gold);
-      border: 1px solid rgba(212,160,23,0.35);
-      background: rgba(212,160,23,0.05);
-      padding: 0.6rem 1.1rem;
-      margin: 0;
-    }
-    .elf-btn--play .card-cta { margin: 0; color: var(--gold); }
-    .elf-btn--play:hover {
-      border-color: var(--gold);
-      box-shadow: 0 0 16px rgba(212,160,23,0.18);
-    }
-    .elf-btn--lore {
-      color: #f0d97a;
-      background:
-        linear-gradient(135deg, rgba(124,79,208,0.18) 0%, rgba(201,162,39,0.12) 60%, rgba(45,122,79,0.16) 100%);
-      border: 1px solid rgba(201,162,39,0.45);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.06),
-        0 4px 16px rgba(0,0,0,0.4);
-    }
-    .elf-btn--lore::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 6px;
-      background: linear-gradient(90deg, transparent, rgba(232,197,71,0.08), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    .elf-btn--lore:hover {
-      transform: translateY(-1px);
-      border-color: #e8c547;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.08),
-        0 6px 24px rgba(124,79,208,0.25),
-        0 0 20px rgba(201,162,39,0.20);
-    }
-    .elf-btn--lore:hover::before { opacity: 1; }
-    .elf-btn-icon {
-      font-size: 0.95rem;
-      color: #c45fa0;
-      filter: drop-shadow(0 0 4px rgba(196,95,160,0.6));
-    }
-    .elf-btn-label {
-      font-family: 'Cinzel Decorative', 'Cinzel', serif;
-      font-weight: 700;
-    }
-    .elf-btn-arrow {
-      font-size: 0.9rem;
-      color: #9b6ee8;
-      transition: transform 0.2s ease;
-    }
-    .elf-btn--lore:hover .elf-btn-arrow { transform: translateX(3px); }
-
-    .elf-btn--changelog {
-      color: var(--tag-full-c);
-      border: 1px solid rgba(74,222,128,0.35);
-      background: rgba(74,222,128,0.05);
-    }
-    .elf-btn--changelog .elf-btn-arrow { color: var(--tag-full-c); }
-    .elf-btn--changelog:hover {
-      transform: translateY(-1px);
-      border-color: var(--tag-full-c);
-      box-shadow: 0 0 16px rgba(74,222,128,0.18);
-    }
-    .elf-btn--changelog:hover .elf-btn-arrow { transform: translateX(3px); }
-
-    [data-theme="light"] .elf-btn--play {
-      color: var(--gold-dim);
-      border-color: rgba(184,128,15,0.45);
-      background: rgba(212,160,23,0.12);
-    }
-    [data-theme="light"] .elf-btn--play .card-cta { color: var(--gold-dim); }
-    [data-theme="light"] .elf-btn--play:hover {
-      border-color: var(--gold);
-      background: rgba(212,160,23,0.18);
-      box-shadow: 0 0 14px rgba(184,128,15,0.18);
-    }
-    [data-theme="light"] .elf-btn--lore {
-      color: #5a3a8a;
-      background:
-        linear-gradient(135deg, rgba(124,79,208,0.10) 0%, rgba(201,162,39,0.10) 60%, rgba(45,122,79,0.10) 100%);
-      border-color: rgba(124,79,208,0.40);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.5),
-        0 2px 8px rgba(120,80,40,0.10);
-    }
-    [data-theme="light"] .elf-btn--lore:hover {
-      border-color: #7c4fd0;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.6),
-        0 6px 18px rgba(124,79,208,0.20);
-    }
-    [data-theme="light"] .elf-btn-icon { color: #a8408a; filter: none; }
-    [data-theme="light"] .elf-btn-arrow { color: #7c4fd0; }
-
-    /* === Carte dev "Strates" : ambiance nuit voxel, strates de roche, lueur de feu de camp === */
-    .dev-card--strates {
-      position: relative;
-      overflow: hidden;
-      border-radius: 8px;
-      border: 1px solid rgba(200,170,120,0.35);
-      background:
-        radial-gradient(ellipse at 50% 108%, rgba(245,158,11,0.22) 0%, rgba(245,158,11,0.09) 20%, transparent 48%),
-        repeating-linear-gradient(180deg,
-          rgba(255,255,255,0.035) 0px,
-          rgba(255,255,255,0.035) 2px,
-          transparent 2px,
-          transparent 12px),
-        linear-gradient(180deg, #0b0f22 0%, #131a34 45%, #1c2440 75%, #232a42 100%);
-    }
-    .dev-card--strates::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        radial-gradient(1px 1px at 12% 12%, rgba(255,255,255,0.85) 0, transparent 60%),
-        radial-gradient(1px 1px at 30% 22%, rgba(255,255,255,0.6) 0, transparent 60%),
-        radial-gradient(1px 1px at 52% 10%, rgba(255,255,255,0.75) 0, transparent 60%),
-        radial-gradient(1px 1px at 68% 26%, rgba(255,255,255,0.55) 0, transparent 60%),
-        radial-gradient(1px 1px at 82% 14%, rgba(255,255,255,0.8) 0, transparent 60%),
-        radial-gradient(1px 1px at 92% 30%, rgba(255,255,255,0.5) 0, transparent 60%),
-        radial-gradient(1px 1px at 20% 34%, rgba(255,255,255,0.4) 0, transparent 60%),
-        radial-gradient(1px 1px at 40% 6%, rgba(255,255,255,0.65) 0, transparent 60%);
-    }
-    .dev-card--strates::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(90deg, transparent, rgba(212,160,23,0.5), transparent) top left / 100% 2px no-repeat,
-        linear-gradient(135deg, rgba(212,160,23,0.45) 0 10px, transparent 10px) top left / 20px 20px no-repeat,
-        linear-gradient(-45deg, rgba(212,160,23,0.45) 0 10px, transparent 10px) bottom right / 20px 20px no-repeat;
-    }
-    .dev-card--strates > * {
-      position: relative;
-      z-index: 1;
-    }
-    .dev-card--strates .dev-card-title {
-      background: linear-gradient(135deg, #f0dca0 0%, #d4a017 55%, #8a6420 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .dev-card--strates p {
-      color: #d6ddef;
-    }
-    .dev-card--strates a.inline {
-      color: #f0c96a;
-      border-bottom: 1px solid rgba(212,160,23,0.35);
-    }
-    .dev-card--strates a.inline:hover { border-color: #f0c96a; }
-    .dev-card--strates .dev-progress {
-      border-top: 1px solid rgba(255,255,255,0.12);
-    }
-    .dev-card--strates .dev-progress-label {
-      color: rgba(214,221,239,0.55);
-    }
-    .dev-card--strates .dev-progress-meta {
-      color: rgba(214,221,239,0.72);
-    }
-    .dev-card--strates .age:not(.done):not(.wip) {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.14);
-      color: rgba(214,221,239,0.45);
+    /* Desktop moins large : plus de place pour le texte de Strates */
+    @media (min-width: 1100px) and (max-width: 1599px) {
+      .panel--strates { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); }
     }
 
-    .card-tag--strates {
-      background: rgba(212,160,23,0.14);
-      color: #eab84d;
-      border: 1px solid rgba(212,160,23,0.35);
+    /* Desktop peu haut (portables, 1440x810, 1280x720) : tout resserrer pour tenir sans défilement */
+    @media (min-width: 1100px) and (max-height: 900px) {
+      .topbar { padding-block: 0.5rem; }
+      .site-logo { width: 32px; height: 32px; }
+      .theme-toggle { width: 30px; height: 30px; }
+      .header-title { font-size: 1.3rem; }
+      .dash { padding-top: 0.75rem; padding-bottom: 0.9rem; gap: 0.8rem 1.1rem; grid-template-rows: 1.75fr 1fr; }
+      .section-label { margin-bottom: 0.45rem; }
+      .panel-title { font-size: 1.15rem; }
+      .panel-head { gap: 0.3rem 0.6rem; }
+      .panel-desc { font-size: 0.8rem; line-height: 1.5; }
+      .strates-info { padding: 0.85rem 1.1rem 0.95rem; gap: 0.55rem; }
+      .dev-progress-label { margin-bottom: 0.3rem; }
+      .age { height: 25px; font-size: 0.7rem; }
+      .ages { margin-bottom: 0.3rem; }
+      .dev-progress-meta { font-size: 0.72rem; }
+      .strates-actions { padding-top: 0.6rem; gap: 0.45rem; }
+      .strates-btn { padding: 0.3rem 0.6rem; font-size: 0.68rem; }
+      .strates-btn--download { padding: 0.42rem 0.85rem; font-size: 0.74rem; }
+      .shot { min-height: 120px; }
+      .shot-play { padding: 1.6rem 1rem 0.7rem; font-size: 0.82rem; }
+      .bathy-info { padding: 0.8rem 1.1rem 0.95rem; gap: 0.5rem; }
+      .bathy-res { display: none; }
+      .bathy-btn { padding: 0.42rem 0.9rem; font-size: 0.74rem; }
+      .game-card__body { padding: 0.6rem 0.9rem 0.75rem; gap: 0.3rem; }
+      .game-card__title { font-size: 0.95rem; }
+      .game-card__desc { font-size: 0.74rem; -webkit-line-clamp: 2; }
+      .game-card__banner { min-height: 44px; }
+      .mini-list { gap: 0.35rem; }
+      .mini-row { padding: 0.3rem 0.7rem; gap: 0.65rem; }
+      .mini-icon { width: 28px; height: 28px; font-size: 1rem; }
+      .mini-title { font-size: 0.8rem; }
+      .mini-desc { font-size: 0.68rem; }
+      .mini-row .btn-game { padding: 0.3rem 0.7rem; font-size: 0.64rem; }
+      .btn-game { padding: 0.32rem 0.75rem; font-size: 0.65rem; }
     }
 
-    /* Lien de jeu unique, la V2 servie par le domaine, sur toute la largeur de la carte */
-    .strates-versions {
-      display: grid;
-      grid-template-columns: 1fr;
-      margin-top: 1.4rem;
-      padding-top: 1.3rem;
-      border-top: 1px solid rgba(212,160,23,0.18);
-    }
-    .strates-version {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      padding: 1rem;
-      border-radius: 8px;
-      text-decoration: none;
-      transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-    }
-    .strates-version:hover { transform: translateY(-2px); }
-    .strates-version-head {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-family: 'Cinzel', serif;
-      font-size: 0.88rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-    }
-    .strates-version-arrow {
-      margin-left: auto;
-      font-size: 0.9rem;
-      transition: transform 0.2s ease;
-    }
-    .strates-version:hover .strates-version-arrow { transform: translateX(3px); }
-    .strates-version-desc {
-      font-size: 0.78rem;
-      line-height: 1.55;
-      letter-spacing: 0;
+    /* Écrans larges : un peu plus d'air et de texte */
+    @media (min-width: 1600px) {
+      .panel-title { font-size: 1.5rem; }
+      .panel-desc { font-size: 0.92rem; }
+      .age { height: 34px; font-size: 0.8rem; }
+      .game-card__title { font-size: 1.15rem; }
+      .game-card__desc { font-size: 0.82rem; }
+      .mini-title { font-size: 0.92rem; }
+      .mini-desc { font-size: 0.76rem; }
     }
 
-    .strates-version--v2 {
-      color: #f7d98a;
-      border: 1px solid rgba(212,160,23,0.55);
-      background:
-        linear-gradient(160deg, rgba(212,160,23,0.22) 0%, rgba(212,160,23,0.06) 65%, transparent 100%),
-        rgba(11,15,34,0.45);
-      box-shadow: 0 6px 22px rgba(212,160,23,0.16);
-    }
-    .strates-version--v2:hover {
-      border-color: #f0c96a;
-      box-shadow: 0 8px 26px rgba(212,160,23,0.32);
-    }
-    .strates-version--v2 .strates-version-desc { color: rgba(247,217,138,0.85); }
-
-    .strates-badge {
-      position: absolute;
-      top: -0.6rem;
-      right: 0.9rem;
-      padding: 0.18rem 0.6rem;
-      border-radius: 999px;
-      font-family: 'Cinzel', serif;
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #1a1206;
-      background: linear-gradient(135deg, #f6dfa4 0%, #d4a017 100%);
-      border: 1px solid rgba(255,255,255,0.35);
-      box-shadow: 0 2px 10px rgba(212,160,23,0.45);
-    }
-
-    .strates-shot {
-      display: block;
-      border-radius: 6px;
-      overflow: hidden;
-      border: 1px solid rgba(212,160,23,0.3);
-      background: #0b0f22;
-    }
-    .strates-shot img {
-      display: block;
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      object-position: center 42%;
-    }
-
-    .strates-actions {
-      display: flex;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
-    .strates-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.6rem 1.1rem;
-      font-family: 'Cinzel', serif;
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-decoration: none;
-      border-radius: 6px;
-      transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-      position: relative;
-    }
-    .strates-btn--changelog {
-      color: #4ade80;
-      border: 1px solid rgba(74,222,128,0.35);
-      background: rgba(74,222,128,0.06);
-    }
-    .strates-btn--changelog:hover {
-      transform: translateY(-1px);
-      border-color: #4ade80;
-      box-shadow: 0 0 16px rgba(74,222,128,0.22);
-    }
-    .strates-btn--kanban {
-      color: #7cc4ff;
-      border: 1px solid rgba(124,196,255,0.35);
-      background: rgba(124,196,255,0.06);
-    }
-    .strates-btn--kanban:hover {
-      transform: translateY(-1px);
-      border-color: #7cc4ff;
-      box-shadow: 0 0 16px rgba(124,196,255,0.22);
-    }
-    .strates-btn--agents {
-      color: #fb923c;
-      border: 1px solid rgba(251,146,60,0.4);
-      background: rgba(251,146,60,0.07);
-    }
-    .strates-btn--agents:hover {
-      transform: translateY(-1px);
-      border-color: #fb923c;
-      box-shadow: 0 0 16px rgba(251,146,60,0.24);
-    }
-    .strates-btn--poc {
-      color: #f0c96a;
-      border: 1px dashed rgba(212,160,23,0.5);
-      background: rgba(212,160,23,0.06);
-    }
-    .strates-btn--poc:hover {
-      transform: translateY(-1px);
-      border-color: #f0c96a;
-      box-shadow: 0 0 16px rgba(212,160,23,0.22);
-    }
-    .strates-btn--download {
-      color: #1b1914;
-      background: #f0c96a;
-      border: 1px solid #f0c96a;
-      letter-spacing: 0.04em;
-    }
-    .strates-btn--download:hover { background: #f7d98a; }
-    .strates-install { margin-top: 0.7rem; font-size: 0.85rem; line-height: 1.6; }
-    .strates-btn-icon { font-size: 0.95rem; }
-    .strates-btn-label { font-family: 'Cinzel', serif; font-weight: 700; }
-    .strates-btn-arrow { font-size: 0.9rem; transition: transform 0.2s ease; }
-    .strates-btn:hover .strates-btn-arrow { transform: translateX(3px); }
-
-    .card-mini-header {
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-    }
-
-    .card-mini-icon {
-      font-size: 1.4rem;
-      width: 36px; height: 36px;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--surface2);
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .card-mini-title {
-      font-family: 'Cinzel', serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text-strong-violet);
-    }
-
-    .card-mini-desc {
-      font-size: 0.78rem;
-      color: var(--muted);
-      line-height: 1.5;
-      flex: 1;
-    }
-
-    footer {
-      position: relative; z-index: 1;
-      text-align: center;
-      padding: 2rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-    footer a { color: var(--gold); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
-
-    @media (max-width: 560px) {
-      .strates-shot img { height: 132px; }
-    }
-
-    @media (max-width: 480px) {
-      header { padding: 3.5rem 1rem 1.5rem; }
-      .site-back { top: 1rem; left: 1rem; }
-      main { padding: 2rem 1rem 4rem; }
-      .card-banner { height: 120px; }
-      .dev-card { padding: 1.4rem 1.2rem 1.3rem; }
-      .strates-version { padding: 0.9rem; }
-      .strates-version-head { font-size: 0.82rem; letter-spacing: 0.08em; }
-      .strates-actions { width: 100%; }
-      .strates-btn { width: 100%; justify-content: center; }
+    @media (max-width: 640px) {
+      .topbar { flex-wrap: wrap; row-gap: 0.4rem; }
+      .topbar-credit { margin-left: 0; width: 100%; }
+      .header-sub { display: none; }
+      .strates-info, .bathy-info { padding: 1rem 1rem 1.1rem; }
+      .mini-row .btn-game { display: none; }
     }
   </style>
 </head>
 <body>
 
-<header>
+<header class="topbar">
   <div class="header-left">
     <a class="site-logo" href="https://fmenguy.fr" aria-label="Retour sur fmenguy.fr" title="Retour sur fmenguy.fr">
-      <img src="/logo.png" alt="FM" width="42" height="42" />
+      <img src="/logo.png" alt="FM" width="36" height="36" />
     </a>
     <button class="theme-toggle" id="theme-toggle" aria-label="Changer de thème" title="Changer de thème">
-      <svg class="theme-toggle__icon theme-toggle__icon--dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="theme-toggle__icon theme-toggle__icon--dark" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3v1m0 16v1m-8-9H3m18 0h-1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707"/>
         <circle cx="12" cy="12" r="4"/>
       </svg>
-      <svg class="theme-toggle__icon theme-toggle__icon--light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="theme-toggle__icon theme-toggle__icon--light" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
       </svg>
     </button>
   </div>
-  <div class="header-title">Arcade FM</div>
-  <div class="header-sub">Jeux &amp; expériences web</div>
+  <div class="topbar-brand">
+    <h1 class="header-title">Arcade FM</h1>
+    <span class="header-sub">Jeux &amp; expériences web</span>
+  </div>
+  <p class="topbar-credit">Des projets de <a href="https://fmenguy.fr">François Menguy</a></p>
 </header>
 
-<main>
+<main class="dash">
 
-  <div class="section-label">À la une</div>
-  <div class="top-grid">
+  <section class="zone zone--une" aria-labelledby="label-une">
+    <h2 class="section-label" id="label-une">À la une</h2>
+    <div class="une-grid">
 
-    <div class="dev-card dev-card--strates">
-      <div class="dev-card-head">
-        <span class="dev-card-title">Strates</span>
-        <span class="card-tag card-tag--strates">Version 2</span>
-        <span class="dev-card-status">En développement actif</span>
-      </div>
-      <p>
-        Strates est un jeu de dieu voxel (Three.js) où une colonie de colons nommés traverse huit âges de civilisation, de la pierre jusqu'à l'espace, dans la lignée de <a class="inline" href="/fda/">Forge des Âges</a>.
-      </p>
-      <p>
-        Le joueur désigne le travail, les colons vivent leur vie (métiers, couples, familles, humeur), et la civilisation grandit sous ses yeux.
-      </p>
+      <article class="panel panel--strates">
+        <a class="shot" href="https://strates.fmenguy.fr/v2/">
+          <img src="/images/strates-v2.webp" width="840" height="616" decoding="async" alt="Capture de la V2 de Strates : l'île en relief vue de dessus avec la nouvelle interface">
+          <span class="shot-badge">V2</span>
+          <span class="shot-play">
+            <span aria-hidden="true">▶</span>
+            <span>Jouer à Strates</span>
+            <span class="shot-play-arrow" aria-hidden="true">→</span>
+          </span>
+        </a>
 
-      <div class="dev-progress dev-progress--v1">
-        <div class="dev-progress-label">Avancement de la version précédente</div>
-        <div class="ages">
-          <div class="age done" title="Version précédente, âge I, Pierre">I</div>
-          <div class="age done" title="Version précédente, âge II, Bronze">II</div>
-          <div class="age done" title="Version précédente, âge III, Fer et Médiéval">III</div>
-          <div class="age done" title="Version précédente, âge IV, Renaissance">IV</div>
-          <div class="age wip" title="Version précédente, âge V, Industriel, en chantier">V</div>
-          <div class="age" title="Version précédente, âge VI">VI</div>
-          <div class="age" title="Version précédente, âge VII">VII</div>
-          <div class="age" title="Version précédente, âge VIII">VIII</div>
+        <div class="strates-info">
+          <div class="panel-head">
+            <h3 class="panel-title">Strates</h3>
+            <span class="card-tag card-tag--strates">Version 2</span>
+            <span class="panel-status">En développement actif</span>
+          </div>
+          <p class="panel-desc">
+            Strates est un jeu de dieu voxel (Three.js) où une colonie de colons nommés traverse huit âges de civilisation, de la pierre jusqu'à l'espace, dans la lignée de <a class="inline" href="/fda/">Forge des Âges</a>.
+          </p>
+
+          <div class="dev-progress">
+            <div class="dev-progress-label">Avancement de la V1</div>
+            <div class="ages">
+              <div class="age done" title="Version précédente, âge I, Pierre">I</div>
+              <div class="age done" title="Version précédente, âge II, Bronze">II</div>
+              <div class="age done" title="Version précédente, âge III, Fer et Médiéval">III</div>
+              <div class="age done" title="Version précédente, âge IV, Renaissance">IV</div>
+              <div class="age wip" title="Version précédente, âge V, Industriel, en chantier">V</div>
+              <div class="age" title="Version précédente, âge VI">VI</div>
+              <div class="age" title="Version précédente, âge VII">VII</div>
+              <div class="age" title="Version précédente, âge VIII">VIII</div>
+            </div>
+            <p class="dev-progress-meta">
+              La V1 reste jouable <a class="inline" href="https://strates.fmenguy.fr/accueil-v1.html">en archive</a>. La V2 repart de l'âge de pierre.
+            </p>
+          </div>
+
+          <div class="strates-actions">
+            <div class="strates-download">
+              <a class="strates-btn strates-btn--download" href="https://telechargement.fmenguy.fr/Strates-Setup.exe">
+                Télécharger pour Windows <span aria-hidden="true">↓</span>
+              </a>
+              <span class="strates-install">Windows 10 ou 11, 64 bits · <a class="inline" href="/strates/windows/">Guide d'installation</a></span>
+            </div>
+            <div class="strates-links">
+              <a class="strates-btn strates-btn--changelog" href="https://strates.fmenguy.fr/docs/changelog.html">✓ Changelog</a>
+              <a class="strates-btn strates-btn--kanban" href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/kanban.html" title="Tableau de suivi des retours et chantiers de la V2">▤ Suivi du chantier</a>
+              <a class="strates-btn strates-btn--kanban" href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/tableau-de-bord.html" title="Temps, jetons et coût des agents d'IA qui développent Strates, carte par carte">▥ Coulisses IA</a>
+              <a class="strates-btn strates-btn--agents" href="/strates/agents/" title="L'arbre interactif des agents d'IA qui développent Strates : orchestrateurs, sous-agents, outils, rejeu animé et coûts">⟁ L'atelier des agents</a>
+              <a class="strates-btn strates-btn--poc" href="/strates-poc/" title="Les maquettes de Strates et les choix retenus au fil du temps">◈ Journal des POC</a>
+            </div>
+          </div>
         </div>
-        <p class="dev-progress-meta">
-          Cette frise retrace la version précédente (V1, v1.2), toujours jouable <a class="inline" href="https://strates.fmenguy.fr/accueil-v1.html">en archive</a> : âges I à IV jouables, vie sociale des colons livrée, âge V Industriel en chantier. La V2 jouable ci-dessous repart de l'âge de pierre et suit sa propre progression.
-        </p>
-      </div>
+      </article>
 
-      <div class="strates-versions">
-        <a class="strates-version strates-version--v2" href="https://strates.fmenguy.fr/v2/">
-          <span class="strates-badge">Nouveau</span>
-          <span class="strates-shot">
-            <img src="/images/strates-v2.webp" width="840" height="616" loading="lazy" decoding="async" alt="Capture de la V2 de Strates : l'île en relief vue de dessus avec la nouvelle interface">
-          </span>
-          <span class="strates-version-head">
-            <span class="strates-btn-icon">▶</span>
-            <span class="strates-version-title">Jouer à Strates</span>
-            <span class="strates-version-arrow">→</span>
-          </span>
-          <span class="strates-version-desc">
-            Interface et prise en main entièrement refondues, île en relief, progression guidée par chapitres. La partie redémarre à l'âge de pierre.
+      <article class="panel panel--bathy">
+        <a class="shot" href="https://bathyreve.fmenguy.fr/">
+          <img src="/images/bathyreve.webp" width="1200" height="578" decoding="async" alt="Capture de Bathyrêve : une colonie sous-marine sur pilotis, habitats, ferme d'algues et générateur thermique reliés par des tuyaux">
+          <span class="shot-badge">Démo</span>
+          <span class="shot-play">
+            <span aria-hidden="true">▶</span>
+            <span>Plonger dans la démo</span>
+            <span class="shot-play-arrow" aria-hidden="true">→</span>
           </span>
         </a>
-      </div>
+        <div class="bathy-info">
+          <div class="panel-head">
+            <h3 class="panel-title">Bathyrêve</h3>
+            <span class="card-tag card-tag--bathy">En préparation</span>
+            <span class="panel-status">Démo jouable en ligne</span>
+          </div>
+          <p class="panel-desc">
+            Bâtissez une cité au fond de la mer. Habitats, pompes, électrolyseurs et fermes d'algues sur pilotis, reliés par des tuyaux : gardez l'oxygène et la nourriture à flot, puis explorez les abysses vers les cheminées les plus profondes.
+          </p>
+          <div class="bathy-res" aria-label="Ressources à gérer">
+            <span>Oxygène</span><span>Nourriture</span><span>Eau</span><span>Énergie</span><span>Exploration</span>
+          </div>
+          <a class="bathy-btn" href="https://bathyreve.fmenguy.fr/">Jouer la démo <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
 
-      <div class="strates-actions">
-        <a class="strates-btn strates-btn--download" href="https://telechargement.fmenguy.fr/Strates-Setup.exe">
-          <span class="strates-btn-label">Télécharger pour Windows</span>
-          <span class="strates-btn-arrow" aria-hidden="true">↓</span>
-        </a>
-        <a class="strates-btn strates-btn--changelog" href="https://strates.fmenguy.fr/docs/changelog.html">
-          <span class="strates-btn-icon" style="color:#4ade80">✓</span>
-          <span class="strates-btn-label">Changelog</span>
-          <span class="strates-btn-arrow">→</span>
-        </a>
-        <a class="strates-btn strates-btn--kanban" href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/kanban.html" title="Tableau de suivi des retours et chantiers de la V2">
-          <span class="strates-btn-icon">▤</span>
-          <span class="strates-btn-label">Suivi du chantier</span>
-          <span class="strates-btn-arrow">→</span>
-        </a>
-        <a class="strates-btn strates-btn--kanban" href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/tableau-de-bord.html" title="Temps, jetons et coût des agents d'IA qui développent Strates, carte par carte">
-          <span class="strates-btn-icon">▥</span>
-          <span class="strates-btn-label">Coulisses IA</span>
-          <span class="strates-btn-arrow">→</span>
-        </a>
-        <a class="strates-btn strates-btn--agents" href="/strates/agents/" title="L'arbre interactif des agents d'IA qui développent Strates : orchestrateurs, sous-agents, outils, rejeu animé et coûts">
-          <span class="strates-btn-icon">⟁</span>
-          <span class="strates-btn-label">L'atelier des agents</span>
-          <span class="strates-btn-arrow">→</span>
-        </a>
-        <a class="strates-btn strates-btn--poc" href="/strates-poc/" title="Les maquettes de Strates et les choix retenus au fil du temps">
-          <span class="strates-btn-icon">◈</span>
-          <span class="strates-btn-label">Journal des POC</span>
-          <span class="strates-btn-arrow">→</span>
-        </a>
-      </div>
-      <p class="strates-install">Windows 10 ou 11, 64 bits. Connexion Internet nécessaire. <a class="inline" href="/strates/windows/">Installer et retrouver sa colonie</a></p>
     </div>
+  </section>
 
-    <div class="dev-card dev-card--elf">
-      <div class="dev-card-head">
-        <span class="dev-card-title">Achrogemme</span>
-        <span class="card-tag card-tag--full">v1.0 · Jeu complet</span>
-      </div>
-      <p>
-        Duel d'Achronia tiré du <a class="inline" href="https://elfes.fmenguy.fr">roman illustré de l'Aventure des Sœurs Elfes</a>. Trois Marches gardent les frontières du royaume : la Sylvestre des bois, l'Arcanique des plaines, le Rempart des forteresses. Sur chacune, jusqu'à trois unités par côté (avant · milieu · arrière) où les volontés se cristallisent en Gemmes.
-      </p>
-      <p>
-        Affronte Sylvie, Lilia puis Skarn sur un monde tiré au sort (Achronia, Terrania ou Sandara, chacun avec ses règles), active les synergies de faction, compose ton deck carte par carte, et abats le Champion adverse avant qu'il ne fasse tomber le tien.
-      </p>
+  <section class="zone zone--complets" aria-labelledby="label-complets">
+    <h2 class="section-label" id="label-complets">Jeux complets</h2>
+    <div class="complets-grid">
 
-      <div class="elf-actions">
-        <a class="card-cta-link elf-btn elf-btn--play" href="/achrogemme/">
-          <span class="card-cta">Jouer</span>
-        </a>
-        <a class="elf-btn elf-btn--lore" href="https://elfes.fmenguy.fr" target="_blank" rel="noopener">
-          <span class="elf-btn-icon">✦</span>
-          <span class="elf-btn-label">Découvrir le roman</span>
-          <span class="elf-btn-arrow">→</span>
-        </a>
-        <a class="elf-btn elf-btn--changelog" href="/achrogemme/changelog/">
-          <span class="elf-btn-icon" style="color:#4ade80">✓</span>
-          <span class="elf-btn-label">Changelog</span>
-          <span class="elf-btn-arrow">→</span>
-        </a>
-      </div>
+      <article class="game-card game-card--achro">
+        <div class="game-card__banner game-card__banner--achro" aria-hidden="true">
+          <div class="achro-gems"><span></span><span></span><span></span></div>
+        </div>
+        <div class="game-card__body">
+          <div class="game-card__top">
+            <h3 class="game-card__title"><a class="game-card__link" href="/achrogemme/">Achrogemme</a></h3>
+            <span class="card-tag card-tag--full">v1.0</span>
+          </div>
+          <p class="game-card__desc">Duel de cartes tiré du roman des Sœurs Elfes. Trois Marches, des Gemmes, et Sylvie, Lilia puis Skarn à faire tomber.</p>
+          <div class="game-card__foot">
+            <span class="btn-game btn-game--achro">Jouer</span>
+            <a class="game-card__sub" href="https://elfes.fmenguy.fr" target="_blank" rel="noopener">Le roman</a>
+            <a class="game-card__sub" href="/achrogemme/changelog/">Changelog</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-card game-card--fda">
+        <div class="game-card__banner game-card__banner--fda" aria-hidden="true">
+          <img src="/fda/assets/fda.webp" alt="" width="1024" height="1024" loading="lazy" decoding="async">
+        </div>
+        <div class="game-card__body">
+          <div class="game-card__top">
+            <h3 class="game-card__title"><a class="game-card__link" href="/fda/">Forge des Âges</a></h3>
+            <span class="card-tag card-tag--full">Complet</span>
+          </div>
+          <p class="game-card__desc">Gestion médiévale au tour par tour. Gérez vos ressources, explorez la carte, forgez votre empire.</p>
+          <div class="game-card__foot">
+            <span class="btn-game btn-game--fda">Jouer</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-card game-card--orbique">
+        <div class="game-card__banner game-card__banner--orbique" aria-hidden="true">
+          <span class="game-card__glyph">🔵</span>
+        </div>
+        <div class="game-card__body">
+          <div class="game-card__top">
+            <h3 class="game-card__title"><a class="game-card__link" href="/orbique/">Orbique</a></h3>
+            <span class="card-tag card-tag--full">Complet</span>
+          </div>
+          <p class="game-card__desc">Exploration en salles thématiques. Particules, textures, puzzles et tutoriel intégré.</p>
+          <div class="game-card__foot">
+            <span class="btn-game btn-game--orbique">Jouer</span>
+          </div>
+        </div>
+      </article>
+
     </div>
+  </section>
 
-  </div>
+  <section class="zone zone--mini" aria-labelledby="label-mini">
+    <h2 class="section-label" id="label-mini">Mini-jeux</h2>
+    <div class="mini-list">
 
-  <div class="section-label">Jeux complets</div>
-  <div class="featured-grid">
+      <a class="mini-row" href="/aelindra/">
+        <span class="mini-icon" aria-hidden="true">⚔</span>
+        <span class="mini-text">
+          <span class="mini-title">Aelindra</span>
+          <span class="mini-desc">RPG tactique au tour par tour pensé mobile, installable en PWA.</span>
+        </span>
+        <span class="btn-game btn-game--aelindra">Jouer</span>
+      </a>
 
-    <a class="card-featured" href="/fda/">
-      <div class="card-banner card-banner--fda">
-        <img src="/fda/assets/fda.webp" alt="Forge des Âges" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <span class="card-banner-icon" style="display:none">⚒</span>
-      </div>
-      <div class="card-body">
-        <span class="card-tag card-tag--full">Jeu complet</span>
-        <div class="card-title">Forge des Âges</div>
-        <div class="card-desc">Jeu de gestion médiéval au tour par tour. Gérez vos ressources, explorez la carte, forgez votre empire. Avec ambiance sonore et mode mobile.</div>
-        <span class="btn-game btn-game--fda">Jouer</span>
-      </div>
-    </a>
+      <a class="mini-row" href="/eryndor/">
+        <span class="mini-icon" aria-hidden="true">⚔</span>
+        <span class="mini-text">
+          <span class="mini-title">Eryndor : Duel d'IA</span>
+          <span class="mini-desc">Deux agents IA s'affrontent à la tête des humains et des elfes.</span>
+        </span>
+        <span class="btn-game btn-game--eryndor">Jouer</span>
+      </a>
 
-    <a class="card-featured card-featured--cyan" href="/orbique/">
-      <div class="card-banner card-banner--orbique">
-        <span class="card-banner-icon">🔵</span>
-      </div>
-      <div class="card-body">
-        <span class="card-tag card-tag--full">Jeu complet</span>
-        <div class="card-title">Orbique</div>
-        <div class="card-desc">Jeu d'exploration en salles thématiques. Particules, textures, puzzles et tutoriel intégré pour une expérience visuelle immersive.</div>
-        <span class="btn-game btn-game--orbique">Jouer</span>
-      </div>
-    </a>
-  </div>
+      <a class="mini-row" href="/ecosim/ecosystem.html">
+        <span class="mini-icon" aria-hidden="true">🌿</span>
+        <span class="mini-text">
+          <span class="mini-title">EcoSim</span>
+          <span class="mini-desc">Créatures, nourriture, prédateurs : observez l'équilibre se construire.</span>
+        </span>
+        <span class="btn-game btn-game--ecosim">Jouer</span>
+      </a>
 
-  <div class="section-label">Mini-jeux</div>
-  <div class="mini-grid">
+      <a class="mini-row" href="/conway/">
+        <span class="mini-icon" aria-hidden="true">🧬</span>
+        <span class="mini-text">
+          <span class="mini-title">Jeu de la Vie</span>
+          <span class="mini-desc">Automate cellulaire de Conway, tracez des patterns et regardez la vie émerger.</span>
+        </span>
+        <span class="btn-game btn-game--conway">Jouer</span>
+      </a>
 
-    <a class="card-mini" href="/aelindra/">
-      <div class="card-mini-header">
-        <span class="card-mini-icon">⚔</span>
-        <span class="card-mini-title">Aelindra</span>
-      </div>
-      <div class="card-mini-desc">POC d'un RPG tactique tour par tour pensé mobile. Constituez votre équipe, explorez des donjons, gacha et équipement. Installable comme app Android (PWA).</div>
-      <span class="btn-game btn-game--aelindra">Jouer</span>
-    </a>
+      <a class="mini-row" href="/zentel/">
+        <span class="mini-icon" aria-hidden="true">🔮</span>
+        <span class="mini-text">
+          <span class="mini-title">Zentel</span>
+          <span class="mini-desc">Expérimentation visuelle interactive générée avec p5.js.</span>
+        </span>
+        <span class="btn-game btn-game--zentel">Jouer</span>
+      </a>
 
-    <a class="card-mini" href="/zentel/">
-      <div class="card-mini-header">
-        <span class="card-mini-icon">🔮</span>
-        <span class="card-mini-title">Zentel</span>
-      </div>
-      <div class="card-mini-desc">Expérimentation visuelle interactive générée avec p5.js.</div>
-      <span class="btn-game btn-game--zentel">Jouer</span>
-    </a>
-
-    <a class="card-mini" href="/ecosim/ecosystem.html">
-      <div class="card-mini-header">
-        <span class="card-mini-icon">🌿</span>
-        <span class="card-mini-title">EcoSim</span>
-      </div>
-      <div class="card-mini-desc">Simulation d'écosystème. Créatures, nourriture, prédateurs, observez l'équilibre se construire.</div>
-      <span class="btn-game btn-game--ecosim">Jouer</span>
-    </a>
-
-    <a class="card-mini" href="/conway/">
-      <div class="card-mini-header">
-        <span class="card-mini-icon">🧬</span>
-        <span class="card-mini-title">Jeu de la Vie</span>
-      </div>
-      <div class="card-mini-desc">Automate cellulaire de Conway. Tracez des patterns et regardez la vie émerger.</div>
-      <span class="btn-game btn-game--conway">Jouer</span>
-    </a>
-
-    <a class="card-mini" href="/eryndor/">
-      <div class="card-mini-header">
-        <span class="card-mini-icon">⚔</span>
-        <span class="card-mini-title">Eryndor : Duel d'IA</span>
-      </div>
-      <div class="card-mini-desc">Simulation fantasy en mode spectateur. Deux agents IA s'affrontent à la tête des humains et des elfes.</div>
-      <span class="btn-game btn-game--eryndor">Jouer</span>
-    </a>
-
-  </div>
+    </div>
+  </section>
 
 </main>
-
-<footer>
-  <p>Des projets de <a href="https://fmenguy.fr">François Menguy</a></p>
-</footer>
 
 <script is:inline>
   (function() {
