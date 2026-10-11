@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
-    "strates:agents": "node scripts/strates-agents.mjs"
+    "preview": "astro preview"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.1",
