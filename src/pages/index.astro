@@ -504,18 +504,8 @@
       border: 1px solid #f0c96a;
     }
     .strates-btn--download:hover { background: #f7d98a; }
-    .strates-btn--changelog {
-      color: #4ade80;
-      border: 1px solid rgba(74,222,128,0.35);
-      background: rgba(74,222,128,0.06);
-    }
-    .strates-btn--changelog:hover { border-color: #4ade80; box-shadow: 0 0 14px rgba(74,222,128,0.22); }
-    .strates-btn--kanban {
-      color: #7cc4ff;
-      border: 1px solid rgba(124,196,255,0.35);
-      background: rgba(124,196,255,0.06);
-    }
-    .strates-btn--kanban:hover { border-color: #7cc4ff; box-shadow: 0 0 14px rgba(124,196,255,0.22); }
+    .strates-btn--soon { cursor: default; }
+    .strates-btn--soon:hover { transform: none; background: #f0c96a; }
     .strates-btn--agents {
       color: #fb923c;
       border: 1px solid rgba(251,146,60,0.4);
@@ -1125,20 +1115,19 @@
             <span class="panel-status">En développement actif</span>
           </div>
           <p class="panel-desc">
-            Strates est un jeu de dieu voxel (Three.js) où une colonie de colons nommés traverse huit âges de civilisation, de la pierre jusqu'à l'espace, dans la lignée de <a class="inline" href="/fda/">Forge des Âges</a>.
+            Strates est un jeu de dieu voxel (Three.js) où une colonie de colons nommés traverse sept âges de civilisation, de la pierre jusqu'à l'espace, dans la lignée de <a class="inline" href="/fda/">Forge des Âges</a>.
           </p>
 
           <div class="dev-progress">
-            <div class="dev-progress-label">Avancement de la V1</div>
+            <div class="dev-progress-label">Avancement de la V2</div>
             <div class="ages">
-              <div class="age done" title="Version précédente, âge I, Pierre">I</div>
-              <div class="age done" title="Version précédente, âge II, Bronze">II</div>
-              <div class="age done" title="Version précédente, âge III, Fer et Médiéval">III</div>
-              <div class="age done" title="Version précédente, âge IV, Renaissance">IV</div>
-              <div class="age wip" title="Version précédente, âge V, Industriel, en chantier">V</div>
-              <div class="age" title="Version précédente, âge VI">VI</div>
-              <div class="age" title="Version précédente, âge VII">VII</div>
-              <div class="age" title="Version précédente, âge VIII">VIII</div>
+              <div class="age done" title="Âge I, Pierre">I</div>
+              <div class="age done" title="Âge II, Bronze">II</div>
+              <div class="age done" title="Âge III, Fer et Médiéval">III</div>
+              <div class="age done" title="Âge IV, Renaissance">IV</div>
+              <div class="age wip" title="Âge V, Industriel, en chantier">V</div>
+              <div class="age" title="Âge VI, Moderne">VI</div>
+              <div class="age" title="Âge VII, Spatial">VII</div>
             </div>
             <p class="dev-progress-meta">
               La V1 reste jouable <a class="inline" href="https://strates.fmenguy.fr/accueil-v1.html">en archive</a>. La V2 repart de l'âge de pierre.
@@ -1147,17 +1136,12 @@
 
           <div class="strates-actions">
             <div class="strates-download">
-              <a class="strates-btn strates-btn--download" href="https://telechargement.fmenguy.fr/Strates-Setup.exe">
-                Télécharger pour Windows <span aria-hidden="true">↓</span>
-              </a>
-              <span class="strates-install">Windows 10 ou 11, 64 bits · <a class="inline" href="/strates/windows/">Guide d'installation</a></span>
+              <span class="strates-btn strates-btn--download strates-btn--soon">Bientôt sur Steam</span>
+              <span class="strates-install">Accès anticipé en préparation · une démo restera jouable ici</span>
             </div>
             <div class="strates-links">
-              <a class="strates-btn strates-btn--changelog" href="https://strates.fmenguy.fr/docs/changelog.html">✓ Changelog</a>
-              <a class="strates-btn strates-btn--kanban" href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/kanban.html" title="Tableau de suivi des retours et chantiers de la V2">▤ Suivi du chantier</a>
-              <a class="strates-btn strates-btn--kanban" href="https://strates.fmenguy.fr/docs/v2/retours/v2-20260925/tableau-de-bord.html" title="Temps, jetons et coût des agents d'IA qui développent Strates, carte par carte">▥ Coulisses IA</a>
-              <a class="strates-btn strates-btn--agents" href="/strates/agents/" title="L'arbre interactif des agents d'IA qui développent Strates : orchestrateurs, sous-agents, outils, rejeu animé et coûts">⟁ L'atelier des agents</a>
               <a class="strates-btn strates-btn--poc" href="/strates-poc/" title="Les maquettes de Strates et les choix retenus au fil du temps">◈ Journal des POC</a>
+              <a class="strates-btn strates-btn--agents" href="https://fmenguy.fr/coin-perso/ia-agentique/" title="Comment Strates est construit avec l'IA : l'évolution de ma méthode, le système d'agents actuel et le plan du code">⟁ Coulisses IA</a>
             </div>
           </div>
         </div>
