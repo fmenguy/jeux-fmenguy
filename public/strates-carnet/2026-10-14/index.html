@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.png">
+<title>Strates, quinze jours sur l'île</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Carnet de chantier : une colonne de lecture, une coupe des sept strates à côté du titre, des fiches par thème. Palette reprise du jeu. */
+  :root {
+    color-scheme: dark;
+    --bg: #1b1914;
+    --panel: #221e18;
+    --panel-2: #2b261e;
+    --line: #3d352a;
+    --cream: #ede3cc;
+    --muted: #b9ad91;
+    --faint: #7f7562;
+    --gold: #d4b870;
+    --gold-deep: #a88d4a;
+    --s1: #8a8172;
+    --s2: #b07a4f;
+    --s3: #7d8a8e;
+    --s4: #a7905e;
+    --s5: #6f6a60;
+    --s6: #6f8fa8;
+    --s7: #5a5f86;
+    --display: "Fraunces", Georgia, "Times New Roman", serif;
+    --body: "Inter", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  }
+  html { background: var(--bg); }
+  body { background: var(--bg); color: var(--cream); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+  .page { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 48px 72px; display: grid; gap: 56px; }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 3px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; line-height: 1.15; }
+  p { margin: 0; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-deep); }
+
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 48px; align-items: end; }
+  .hero-text { display: grid; gap: 18px; min-width: 0; }
+  .hero h1 { font-size: clamp(2.3rem, 5vw, 3.6rem); font-weight: 700; letter-spacing: -.01em; }
+  .hero h1 em { font-style: italic; font-weight: 400; color: var(--gold); }
+  .lead { font-size: 1.12rem; color: var(--muted); max-width: 60ch; }
+
+  .strata { display: grid; gap: 3px; }
+  .stratum { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 8px; padding: 7px 12px; border-radius: 3px; background: color-mix(in srgb, var(--c) 34%, var(--panel)); border-left: 4px solid var(--c); }
+  .stratum b { font-family: var(--display); font-weight: 600; font-size: .95rem; }
+  .stratum span { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .stratum.soon { background: transparent; border: 1px dashed var(--line); border-left: 4px dashed var(--c); }
+  .stratum.soon b { color: var(--faint); }
+  .stratum.work { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 30%, var(--panel)) 0 8px, var(--panel) 8px 14px); }
+  .strata-legend { font-family: var(--mono); font-size: 11px; color: var(--faint); margin-top: 8px; }
+
+  .figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-block: 1px solid var(--line); }
+  .figure { padding: 18px 16px; display: grid; gap: 2px; }
+  .figure + .figure { border-left: 1px solid var(--line); }
+  .figure strong { font-family: var(--mono); font-weight: 600; font-size: 1.7rem; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .figure span { font-size: .88rem; color: var(--muted); }
+
+  .try { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 28px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+  .try h2 { font-size: 1.6rem; }
+  .try-intro { display: grid; gap: 12px; align-content: start; }
+  .try-intro p { color: var(--muted); }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; counter-reset: step; }
+  .steps li { counter-increment: step; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; }
+  .steps li::before { content: counter(step); font-family: var(--mono); font-weight: 600; color: var(--bg); background: var(--gold); width: 26px; height: 26px; border-radius: 4px; display: grid; place-items: center; font-size: 13px; }
+  .steps strong { color: var(--cream); }
+  .steps p { color: var(--muted); font-size: .95rem; }
+  code { font-family: var(--mono); font-size: .88em; color: var(--gold); background: var(--panel-2); padding: 1px 6px; border-radius: 3px; }
+
+  .section-head { display: grid; gap: 8px; margin-bottom: 22px; }
+  .section-head h2 { font-size: 2rem; }
+  .section-head p { color: var(--muted); max-width: 62ch; }
+
+  .themes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .theme { border-top: 3px solid var(--c, var(--gold)); background: var(--panel); border-radius: 0 0 6px 6px; padding: 22px 24px 24px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .theme header { display: grid; gap: 4px; }
+  .theme .verb { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--c, var(--gold)); filter: brightness(1.35); }
+  .theme h3 { font-size: 1.35rem; }
+  .theme ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .theme li { padding-left: 18px; position: relative; color: var(--muted); font-size: .96rem; }
+  .theme li::before { content: ""; position: absolute; left: 0; top: .62em; width: 7px; height: 7px; background: var(--c, var(--gold)); border-radius: 1px; }
+  .theme li strong { color: var(--cream); font-weight: 600; }
+
+  .spotlight { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 28px; align-items: center; background: linear-gradient(90deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); border-radius: 6px; padding: 28px; }
+  .spotlight svg { width: 120px; height: 120px; }
+  .spotlight-text { display: grid; gap: 10px; min-width: 0; }
+  .spotlight h2 { font-size: 1.7rem; }
+  .spotlight p { color: var(--muted); }
+  .spotlight q { font-family: var(--display); font-style: italic; color: var(--cream); quotes: "« " " »"; }
+
+  .chosen { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 28px; align-items: center; }
+  .chosen-text { display: grid; gap: 10px; min-width: 0; }
+  .chosen-text h2 { font-size: 1.7rem; }
+  .chosen-text p { color: var(--muted); }
+  .grid-demo { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+  .grid-demo table { border-collapse: separate; border-spacing: 3px; font-family: var(--mono); font-size: 12px; width: 100%; min-width: 380px; }
+  .grid-demo th { font-family: var(--body); font-weight: 500; font-size: 12px; color: var(--muted); text-align: center; padding: 4px; }
+  .grid-demo th:first-child { text-align: left; }
+  .grid-demo td { text-align: center; padding: 5px 4px; color: var(--faint); border-radius: 3px; font-variant-numeric: tabular-nums; }
+  .grid-demo td:first-child { text-align: left; color: var(--cream); font-family: var(--body); font-size: 13px; }
+  .grid-demo td.on { color: var(--bg); font-weight: 600; background: var(--c); }
+
+  .steam { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .steam > div { border-left: 2px solid var(--line); padding: 4px 0 4px 18px; display: grid; gap: 6px; align-content: start; }
+  .steam h3 { font-size: 1.15rem; }
+  .steam p { color: var(--muted); font-size: .95rem; }
+
+  .next { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .next article { background: transparent; border: 1px dashed var(--line); border-radius: 6px; padding: 20px 22px; display: grid; gap: 8px; align-content: start; }
+  .next h3 { font-size: 1.2rem; }
+  .next p { color: var(--muted); font-size: .95rem; }
+  .next .verb { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-deep); }
+
+  .feedback { border-top: 1px solid var(--line); padding-top: 32px; display: grid; gap: 14px; max-width: 70ch; }
+  .feedback h2 { font-size: 1.6rem; }
+  .feedback p, .feedback li { color: var(--muted); }
+  .feedback ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  .sign { font-family: var(--display); font-style: italic; color: var(--cream); }
+
+  @media (max-width: 820px) {
+    .hero, .try, .chosen, .spotlight { grid-template-columns: minmax(0, 1fr); }
+    .hero { gap: 28px; }
+    .strata { max-width: 360px; }
+    .themes, .steam, .next { grid-template-columns: minmax(0, 1fr); }
+    .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .figure:nth-child(3) { border-left: 0; }
+    .figure:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .spotlight svg { width: 96px; height: 96px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .stratum { transition: transform .2s ease; }
+    .stratum:hover { transform: translateX(-4px); }
+  }
+</style><style>.back{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:20px 0;display:flex;gap:20px;font-family:"JetBrains Mono",Consolas,monospace;font-size:12px}.back a{color:#b9ad91;text-decoration:none}.back a:hover{color:#d4b870}</style>
+</head>
+<body>
+<nav class="back"><a href="/">← jeux.fmenguy.fr</a><a href="/strates-carnet/">Carnet de chantier</a></nav>
+
+<main class="page">
+
+  <header class="hero">
+    <div class="hero-text">
+      <span class="eyebrow">Carnet de chantier · du 30 septembre au 14 octobre 2026</span>
+      <h1>Quinze jours <em>sur l'île</em></h1>
+      <p class="lead">Depuis votre dernier passage, Strates a gagné deux âges, un sous-sol, un ciel, une météo et une dizaine de nouveaux visages. Voici l'essentiel, et ce que j'aimerais que vous essayiez.</p>
+    </div>
+    <div>
+      <div class="strata" aria-label="Les sept âges, du plus récent en haut au plus ancien en bas">
+        <div class="stratum soon" style="--c: var(--s7)"><b>Spatial</b><span>partir</span></div>
+        <div class="stratum work" style="--c: var(--s6)"><b>Moderne</b><span>relier</span></div>
+        <div class="stratum" style="--c: var(--s5)"><b>Industriel</b><span>mécaniser</span></div>
+        <div class="stratum" style="--c: var(--s4)"><b>Renaissance</b><span>savoir, commercer</span></div>
+        <div class="stratum" style="--c: var(--s3)"><b>Fer</b><span>nourrir en chaîne</span></div>
+        <div class="stratum" style="--c: var(--s2)"><b>Bronze</b><span>transformer</span></div>
+        <div class="stratum" style="--c: var(--s1)"><b>Pierre</b><span>désigner</span></div>
+      </div>
+      <p class="strata-legend">plein : jouable · hachuré : en chantier · pointillé : à venir</p>
+    </div>
+  </header>
+
+  <section class="figures" aria-label="Le jeu en chiffres">
+    <div class="figure"><strong>7</strong><span>âges, de la Pierre au Spatial</span></div>
+    <div class="figure"><strong>55</strong><span>habitants nommés</span></div>
+    <div class="figure"><strong>27</strong><span>métiers</span></div>
+    <div class="figure"><strong>1 290</strong><span>tests automatiques au vert</span></div>
+  </section>
+
+  <section class="try" aria-labelledby="try-title">
+    <div class="try-intro">
+      <span class="eyebrow">Pour la séance de test</span>
+      <h2 id="try-title">Par où commencer</h2>
+      <p>Le jeu se lance dans le navigateur, sans rien installer. Une partie neuve commence à l'âge de pierre. Pour sauter directement à un âge avancé, le mode recette ouvre des parties déjà jouées.</p>
+    </div>
+    <ol class="steps">
+      <li><div><strong>Ouvrir le jeu</strong><p><a href="https://strates.fmenguy.fr/" target="_blank" rel="noopener">strates.fmenguy.fr</a>, puis Nouvelle partie. Le choix du type de carte se fait au lancement.</p></div></li>
+      <li><div><strong>Sauter à un âge avancé</strong><p>Ajoutez <code>/game.html?recette=1</code> à l'adresse, puis Réglages, Sauvegardes, Parties de recette. Le tableau classe les parties par thème et par âge.</p></div></li>
+      <li><div><strong>Noter ce qui accroche</strong><p>Un blocage, un texte flou, un bâtiment dont on ne comprend pas l'utilité : une capture et une phrase suffisent.</p></div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="themes-title">
+    <div class="section-head">
+      <span class="eyebrow">Les grandes nouveautés</span>
+      <h2 id="themes-title">Ce qui a changé</h2>
+      <p>Chaque âge apporte un verbe plutôt qu'une liste d'objets. Les deux dernières semaines ont surtout rempli l'Industriel et ouvert le monde sous l'île.</p>
+    </div>
+    <div class="themes">
+
+      <article class="theme" style="--c: var(--s5)">
+        <header><span class="verb">Industriel · mécaniser et électrifier</span><h3>L'âge industriel au complet</h3></header>
+        <ul>
+          <li><strong>L'acier quitte la forge</strong> : charbon minéral, Puits de mine et Fonderie.</li>
+          <li><strong>Le chemin de fer</strong> relie deux villages, avec sa Gare et son Cheminot.</li>
+          <li><strong>L'électricité</strong> : une centrale au charbon, puis des postes et des lignes qui portent le courant jusqu'aux ateliers éloignés.</li>
+          <li><strong>La voiture à vapeur</strong> et des routes en macadam que le jeu propose de tracer.</li>
+          <li><strong>Les ouvriers</strong> : chaque atelier peut embaucher, et les cités ouvrières les logent.</li>
+          <li>Le <strong>Palais des Machines</strong> ouvre l'âge Moderne.</li>
+        </ul>
+      </article>
+
+      <article class="theme" style="--c: var(--s2)">
+        <header><span class="verb">Nouveau · sous la surface</span><h3>Le monde souterrain</h3></header>
+        <ul>
+          <li>Une <strong>vue en coupe</strong> de l'île : les Galeries, puis les Profondeurs.</li>
+          <li>Mines de cuivre et d'étain, <strong>veines mères</strong>, pompe et éclairage.</li>
+          <li><strong>Wagonnets sur rails</strong>, puis traction électrique.</li>
+          <li><strong>Fouilles</strong> à choix, une seconde roue des savoirs et sa propre musique.</li>
+          <li>Le cuivre et l'étain de surface s'épuisent : il faut descendre.</li>
+        </ul>
+      </article>
+
+      <article class="theme" style="--c: var(--s6)">
+        <header><span class="verb">Explorer · par la mer et par les airs</span><h3>Plus loin que l'horizon</h3></header>
+        <ul>
+          <li>La <strong>montgolfière</strong> part explorer plus vite et plus loin que les chevaux.</li>
+          <li>Le <strong>dirigeable</strong> et les comptoirs ouvrent des routes commerciales régulières vers les îles connues.</li>
+          <li>Le port dit enfin ce qui manque avant un départ.</li>
+          <li><strong>Trois types de carte</strong> au lancement : archipel, continent ou équilibrée.</li>
+        </ul>
+      </article>
+
+      <article class="theme" style="--c: var(--s3)">
+        <header><span class="verb">Ambiance · une île qui respire</span><h3>Saisons, météo et paysages</h3></header>
+        <ul>
+          <li><strong>Des nuages passent</strong> avec leur ombre au sol, et la pluie n'arrose que les champs qui sont dessous.</li>
+          <li><strong>Événements saisonniers</strong> annoncés par les habitants : hiver prolongé, saisons pluvieuses, récolte exceptionnelle.</li>
+          <li>Une <strong>montagne au nord-ouest</strong>, avec pistes de ski, remontées et téléphérique en hiver.</li>
+          <li>Une mer vraiment bleue, des plages, des crabes et des coquillages.</li>
+          <li>La place du village change de style : <strong>feu, fontaine ou obélisque</strong>. Le lieu du savoir devient le <strong>Cercle de pierres</strong>.</li>
+          <li>Les arbres et les buissons ne repoussent plus sur place : les ressources se gèrent.</li>
+        </ul>
+      </article>
+
+      <article class="theme" style="--c: var(--s4)">
+        <header><span class="verb">Social · les habitants</span><h3>Des visages et des talents</h3></header>
+        <ul>
+          <li><strong>Nouveaux habitants</strong> : Henri, Christophe le chercheur, Christophe le baroudeur, Latifa, et à l'Industriel les familles d'Antonin et Marine, d'Emeric et Lauriane.</li>
+          <li><strong>Les talents se découvrent en jouant</strong>, et certains duos travaillent mieux ensemble.</li>
+          <li>Une soirée à la taverne avec sa cervoise, l'escalade, le salon du coiffeur.</li>
+          <li>On peut <strong>incarner un habitant</strong> et le déplacer soi-même.</li>
+        </ul>
+      </article>
+
+      <article class="theme" style="--c: var(--gold-deep)">
+        <header><span class="verb">Confort · jouer plus facilement</span><h3>Plus clair, plus fluide</h3></header>
+        <ul>
+          <li><strong>Tout le jeu en anglais</strong>, en plus du français.</li>
+          <li>Une <strong>voix</strong> présente le jeu au lancement, et le tutoriel dit où cliquer.</li>
+          <li>Le <strong>plan</strong> s'ouvre tout seul quand on dézoome, et le jeu est nettement plus fluide.</li>
+          <li>La file de recherche monte jusqu'à six places.</li>
+          <li>Une vue des métiers avec les personnes affectées, cliquables.</li>
+          <li>Une <strong>copie de secours</strong> de la partie, restaurable si la sauvegarde s'abîme.</li>
+        </ul>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="spotlight" aria-labelledby="spot-title">
+    <svg viewBox="0 0 120 120" role="img" aria-label="Un bloc d'escalade et un pied plâtré, en voxels">
+      <rect x="0" y="0" width="120" height="120" rx="6" fill="#2b261e"/>
+      <rect x="14" y="56" width="56" height="50" fill="#6f6a60"/>
+      <rect x="24" y="38" width="40" height="22" fill="#8a8172"/>
+      <rect x="34" y="24" width="22" height="16" fill="#9a9182"/>
+      <rect x="30" y="46" width="6" height="6" fill="#d4b870"/>
+      <rect x="48" y="64" width="6" height="6" fill="#b07a4f"/>
+      <rect x="22" y="78" width="6" height="6" fill="#6f8fa8"/>
+      <rect x="80" y="44" width="14" height="44" fill="#85a292"/>
+      <rect x="80" y="30" width="14" height="14" fill="#e1b68d"/>
+      <rect x="80" y="26" width="14" height="6" fill="#d2b16b"/>
+      <rect x="78" y="86" width="9" height="20" fill="#3d352a"/>
+      <rect x="88" y="80" width="12" height="26" fill="#ede3cc"/>
+      <rect x="88" y="100" width="18" height="6" fill="#ede3cc"/>
+    </svg>
+    <div class="spotlight-text">
+      <span class="eyebrow">Clin d'œil</span>
+      <h2 id="spot-title">Guillaume a le pied dans le plâtre</h2>
+      <p>La première fois qu'il grimpe aux Rochers d'escalade, Guillaume se tord la cheville. Pendant une année de jeu, il marche plus lentement et ne peut plus grimper ni explorer, mais il continue ses recherches en binôme avec Paul. <q>Le plâtre ralentit les pieds, pas la tête.</q></p>
+      <p>Pour le voir tout de suite : mode recette, axe « Village et habitants », colonne Fer, partie « Guillaume et les Rochers d'escalade », variante Témoin. Une fois Guillaume sur le rocher, lancez un défi d'escalade.</p>
+    </div>
+  </section>
+
+  <section class="chosen" aria-labelledby="chosen-title">
+    <div class="chosen-text">
+      <span class="eyebrow">Vous avez voté</span>
+      <h2 id="chosen-title">Le tableau des métiers arrive</h2>
+      <p>Parmi les trois maquettes de la vue complète des métiers, vous avez choisi le tableau habitants par métiers. Un clic sur une case affecte, un clic sur la case active libère. Il est en cours de réalisation. Quand le village devient trop grand pour tenir sur un écran, le jeu passera seul à une vue plus compacte, et vous pourrez toujours revenir au tableau.</p>
+    </div>
+    <div class="grid-demo" aria-label="Aperçu du tableau des métiers">
+      <table>
+        <thead><tr><th>adulte</th><th>Cueilleur</th><th>Bûcheron</th><th>Bâtisseur</th><th>Chercheur</th></tr></thead>
+        <tbody>
+          <tr><td>Frédéric</td><td></td><td></td><td class="on" style="--c:#d4b870">4</td><td>1</td></tr>
+          <tr><td>Chloé</td><td class="on" style="--c:#a7c48f">4</td><td></td><td>1</td><td></td></tr>
+          <tr><td>Julien</td><td></td><td class="on" style="--c:#d0a06a">4</td><td>2</td><td>1</td></tr>
+          <tr><td>Victoire</td><td>1</td><td>3</td><td></td><td class="on" style="--c:#9fb3e0">3</td></tr>
+          <tr><td>Thomas</td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="steam-title">
+    <div class="section-head">
+      <span class="eyebrow">Cap sur Steam</span>
+      <h2 id="steam-title">Le jeu complet sur Steam, une démo dans le navigateur</h2>
+    </div>
+    <div class="steam">
+      <div><h3>Une vraie application</h3><p>Strates tourne en application Windows autonome, sans connexion, prête à être déposée sur Steam.</p></div>
+      <div><h3>Des sauvegardes solides</h3><p>Dans l'application, la partie est un fichier sur le PC, synchronisé par Steam Cloud, avec sa copie de secours.</p></div>
+      <div><h3>Une page en préparation</h3><p>Captures, textes en français et en anglais : la page « À venir » est prête à partir dès que le compte Steam est validé.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="next-title">
+    <div class="section-head">
+      <span class="eyebrow">La suite</span>
+      <h2 id="next-title">Ce qui se prépare</h2>
+    </div>
+    <div class="next">
+      <article><span class="verb">Moderne · relier</span><h3>Un réseau qui travaille</h3><p>Le courant prolongé, des ordres de production entre ateliers, et le Centre des liaisons qui ouvre le dernier âge.</p></article>
+      <article><span class="verb">Spatial · partir</span><h3>Humains ou robots</h3><p>Un choix de société définitif : garder les métiers, ou confier le travail aux robots. Puis des vaisseaux qui explorent le ciel, et un départ final.</p></article>
+      <article><span class="verb">Dès le Bronze</span><h3>Grève et fête</h3><p>Un village épuisé ou affamé peut se mettre en grève, un village heureux peut faire la fête. Toujours pour une raison visible, jamais au hasard.</p></article>
+    </div>
+  </section>
+
+  <footer class="feedback">
+    <h2>Vos retours</h2>
+    <p>Rien n'est figé. Ce qui m'aide le plus :</p>
+    <ul>
+      <li>l'endroit où vous ne saviez plus quoi faire ;</li>
+      <li>un panneau ou un texte que vous avez dû relire deux fois ;</li>
+      <li>un moment où le jeu a ralenti, avec l'âge et le nombre d'habitants ;</li>
+      <li>et ce qui vous a fait sourire, pour en faire plus.</li>
+    </ul>
+    <p class="sign">Merci d'habiter l'île. François</p>
+  </footer>
+
+</main>
+
+</body>
+</html>
