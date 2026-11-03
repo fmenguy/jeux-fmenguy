@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
 ---
 
+## [2026-11-03]
+
+### Retiré
+- **Aelindra** : le RPG tactique n'était plus maintenu. Le jeu, sa page `/aelindra/`, son lien dans les mini-jeux, ses sons et ses icônes sont supprimés, ainsi que la connexion Google et la sauvegarde en ligne (Firebase). Son mode hors ligne n'avait jamais pu s'installer en production : le service worker était attendu sous `/aelindra/sw.js`, qui renvoyait la page.
+- Dépendances `firebase` et `@vite-pwa/astro`.
+
+### Modifié
+- **README** réécrit d'après le site actuel (Astro, emplacement réel de chaque jeu, Strates et Bathyrêve développés dans leurs propres dépôts).
+
 ## [2026-05-16] — 16h43
 
 ### Ajouté — Aelindra (combat T1 + T2)
