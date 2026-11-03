@@ -1,71 +1,51 @@
-# Arcade FM : Jeux et Expériences Web
+# Arcade FM : jeux et expériences web
 
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![Changelog](https://img.shields.io/badge/Changelog-consulter-blue)](CHANGELOG.md)
 
-Collection de jeux et expériences interactives développés en JavaScript vanilla, hébergée sur Cloudflare Pages.
+Collection de jeux et d'expériences interactives jouables dans le navigateur, réunis sur un site Astro hébergé par Cloudflare Pages.
 
-**[jeux.fmenguy.fr](https://jeux.fmenguy.fr)** · Fait partie de [fmenguy.fr](https://fmenguy.fr)
+**[jeux.fmenguy.fr](https://jeux.fmenguy.fr)**, qui fait partie de [fmenguy.fr](https://fmenguy.fr)
 
 ---
 
 ## Jeux complets
 
+### Achrogemme
+Duel de cartes tiré du roman des Sœurs Elfes : trois Marches, des Gemmes, et Sylvie, Lilia puis Skarn à faire tomber. Son journal des versions est public sur le site.
+
+- **Adresse :** [/achrogemme/](https://jeux.fmenguy.fr/achrogemme/), [changelog](https://jeux.fmenguy.fr/achrogemme/changelog/)
+- **Code :** [`src/games/achrogemme/`](src/games/achrogemme/) (React), règles et équilibrage dans [`docs/achrogemme/`](docs/achrogemme/)
+
 ### Forge des Âges
-Jeu de gestion médiéval au tour par tour. Gérez vos ressources, explorez une carte procédurale, forgez votre empire à travers les âges. Ambiance sonore intégrée, compatible mobile.
+Gestion médiévale au tour par tour : ressources, exploration d'une carte, expansion à travers les âges. Ambiance sonore intégrée, compatible mobile.
 
-- **Genre :** Gestion / 4X (exploration, expansion, exploitation, sans extermination)
-- **URL :** [fda.fmenguy.fr](https://fda.fmenguy.fr)
-- **Dossier :** [`fda/`](fda/)
-
-### Eryndor : Duel d'IA
-Simulation stratégique fantasy **en mode spectateur**. Deux agents IA (Sonnet 4.6 pour les Humains, Haiku 4.5 pour les Elfes, configurables) s'affrontent en respectant les règles du jeu. Apporte ta propre clé API au lancement ; elle ne quitte jamais ton navigateur. Mode mock disponible pour tester sans coût.
-
-- **Genre :** Simulation stratégique / Duel d'IA
-- **Dossier :** [`eryndor/`](eryndor/)
+- **Adresse :** [/fda/](https://jeux.fmenguy.fr/fda/)
+- **Code :** [`public/fda/`](public/fda/)
 
 ### Orbique
-Exploration en salles thématiques avec particules, textures procédurales et puzzles. Tutoriel intégré pour une prise en main immédiate.
+Exploration en salles thématiques avec particules, textures et puzzles, tutoriel intégré.
 
-- **Genre :** Exploration / Puzzle
-- **Dossier :** [`orbique/`](orbique/)
-
----
-
-## Mini-jeux & Expériences
-
-| Projet | Description | Stack |
-|--------|-------------|-------|
-| **[Zentel](zentel/zentel.html)** | Expérimentation visuelle générative et interactive | p5.js |
-| **[EcoSim](ecosim/ecosystem.html)** | Simulation d'écosystème, proies, prédateurs, équilibre | JS vanilla |
-| **[Jeu de la Vie](conway/)** | Automate cellulaire de Conway, tracez des patterns, regardez la vie émerger | JS vanilla / Canvas |
+- **Adresse :** [/orbique/](https://jeux.fmenguy.fr/orbique/)
+- **Code :** [`public/orbique/`](public/orbique/) (Three.js)
 
 ---
 
-## Stack technique
+## Mini-jeux et expériences
 
-Tout le code est front-end, sans dépendance serveur.
-
-| Technologie | Usage |
-|-------------|-------|
-| HTML5 / CSS3 | Structure et styles, responsive mobile |
-| JavaScript (ES6+) | Logique de jeu, rendu Canvas, gestion d'état |
-| [Three.js](https://threejs.org) | Rendu 3D pour Achronia |
-| [p5.js](https://p5js.org) | Génératif / expérimental pour Zentel |
-| Canvas API | Rendu 2D natif (FDA, EcoSim, Orbique, Conway) |
-| Web Audio API | Ambiance sonore dans Forge des Âges |
-
-Aucun framework, aucun bundler, du web natif.
+| Projet | Description | Code |
+|--------|-------------|------|
+| **[Eryndor : Duel d'IA](https://jeux.fmenguy.fr/eryndor/)** | Deux agents IA (Claude) s'affrontent à la tête des humains et des elfes. Chacun apporte sa propre clé d'API, utilisée depuis son navigateur ; un mode sans IA permet de tester sans coût. | [`public/eryndor/`](public/eryndor/) |
+| **[EcoSim](https://jeux.fmenguy.fr/ecosim/ecosystem.html)** | Créatures, nourriture, prédateurs : l'équilibre d'un écosystème qui se construit. | [`public/ecosim/`](public/ecosim/) |
+| **[Jeu de la Vie](https://jeux.fmenguy.fr/conway/)** | Automate cellulaire de Conway : tracer des motifs et regarder la vie émerger. | [`src/pages/conway/`](src/pages/conway/) |
+| **[Zentel](https://jeux.fmenguy.fr/zentel/)** | Expérimentation visuelle interactive avec p5.js. | [`src/pages/zentel/`](src/pages/zentel/), [`public/zentel/`](public/zentel/) |
 
 ---
 
-## Hébergement
+## Projets mis en avant, développés ailleurs
 
-Déployé via **[Cloudflare Pages](https://pages.cloudflare.com)** en déploiement continu depuis ce dépôt.
-
-- Domaine personnalisé : `jeux.fmenguy.fr`
-- Sous-domaine dédié pour FDA : `fda.fmenguy.fr`
-- CDN mondial, HTTPS automatique, zéro coût d'hébergement
+- **Strates** : jeu de dieu voxel (Three.js) où une colonie traverse sept âges de civilisation. Le jeu a son propre dépôt ; ce site héberge son [carnet de chantier](https://jeux.fmenguy.fr/strates-carnet/) et son [journal des POC](https://jeux.fmenguy.fr/strates-poc/).
+- **Bathyrêve** : bâtir une cité au fond de la mer, sur [bathyreve.fmenguy.fr](https://bathyreve.fmenguy.fr/).
 
 ---
 
@@ -73,21 +53,32 @@ Déployé via **[Cloudflare Pages](https://pages.cloudflare.com)** en déploieme
 
 ```
 jeux-fmenguy/
-├── index.html        # Hub Arcade FM
-├── fda/              # Forge des Âges
-├── eryndor/          # Eryndor : L'Aube des Royaumes
-├── orbique/          # Orbique
-├── conway/           # Jeu de la Vie
-├── ecosim/           # EcoSim
-├── fps/              # Achronia (FPS Three.js)
-└── zentel/           # Zentel (p5.js)
+├── src/
+│   ├── pages/        pages Astro : accueil, achrogemme, conway, zentel, strates
+│   └── games/        jeux écrits en React (achrogemme)
+├── public/           jeux autonomes servis tels quels (fda, orbique, eryndor, ecosim, zentel)
+│                     et pages de Strates (strates-carnet, strates-poc)
+├── docs/             documentation de conception d'Achrogemme
+└── astro.config.mjs
 ```
+
+## Lancer en local
+
+```bash
+npm install
+npm run dev       # http://localhost:4321
+npm run build     # site statique dans dist/
+```
+
+## Hébergement
+
+Déployé par **[Cloudflare Pages](https://pages.cloudflare.com)** à chaque push sur `main`, sur le domaine `jeux.fmenguy.fr`. Tout est statique : aucun serveur, aucune base de données.
 
 ---
 
 ## Licence
 
-[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) François Menguy, utilisation non commerciale, attribution requise.
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) François Menguy : utilisation non commerciale, attribution requise.
 
 ## Auteur
 
