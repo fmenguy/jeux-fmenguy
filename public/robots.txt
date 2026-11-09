@@ -1,0 +1,5 @@
+# Sans ce fichier, Cloudflare Pages servait la page d'accueil HTML à la place,
+# et Google comptait chaque ligne comme une erreur (Search Console, 09/11/2026).
+# Cloudflare ajoute devant son propre bloc (robots d'entraînement d'IA bloqués).
+User-agent: *
+Allow: /
