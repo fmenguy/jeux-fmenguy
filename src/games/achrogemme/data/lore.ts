@@ -5,8 +5,8 @@
  * l'auteur (page personnages du Tome 1, chapitres du Tome 2). Aucune extrapolation,
  * aucune déduction implicite, aucune relation familiale non écrite explicitement.
  *
- * Source canon Tome 1 : ~/Documents/BLOG/Histoires/histoire-elfes/src/pages/personnages.astro
- * Source canon Tome 2 : ~/Documents/BLOG/Histoires/histoire-elfes/src/content/tome2/*.md
+ * Source canon Tome 1 : dépôt histoire-elfes, src/pages/personnages.astro
+ * Source canon Tome 2 : dépôt histoire-elfes, src/content/tome2/*.md
  */
 
 export interface LoreEntry {
