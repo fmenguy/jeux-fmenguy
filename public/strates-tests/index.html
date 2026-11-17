@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.png">
+<title>Strates, comment on teste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root { color-scheme: dark; --bg: #1b1914; --panel: #221e18; --panel2: #2b261e; --line: #3d352a; --cream: #ede3cc; --muted: #b9ad91; --gold: #d4b870; --gold-deep: #a88d4a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--cream); font-family: "Inter", "Segoe UI", system-ui, sans-serif; line-height: 1.6; }
+  main { max-width: 1100px; margin: 0 auto; padding-inline: 24px; padding-block: 32px 64px; display: grid; gap: 40px; }
+  .back { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12px; }
+  .back a { color: var(--muted); text-decoration: none; }
+  .back a:hover { color: var(--gold); }
+  h1 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 2.6rem; margin: 0; line-height: 1.15; }
+  h2 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.6rem; margin: 0 0 8px; }
+  p { margin: 0; }
+  .lead { color: var(--muted); font-size: 1.1rem; margin-top: 8px; }
+  .muted { color: var(--muted); }
+  section { display: grid; gap: 14px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 10px 12px; display: grid; gap: 2px; }
+  .tile b { font-family: "JetBrains Mono", Consolas, monospace; font-weight: 500; font-size: 1.1rem; white-space: nowrap; color: var(--gold); line-height: 1.4; }
+  .tile span { color: var(--muted); font-size: .9rem; }
+  .fig { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
+  .fig svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: "Inter", "Segoe UI", system-ui, sans-serif; fill: var(--cream); }
+  svg .t { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 19px; }
+  svg .s { font-size: 15px; }
+  svg .m { fill: var(--muted); font-size: 15px; }
+  svg .n { font-family: "JetBrains Mono", Consolas, monospace; font-size: 15px; fill: var(--gold); }
+  svg .g { fill: var(--gold); font-weight: 600; }
+  .legend { color: var(--muted); font-size: .98rem; display: grid; gap: 8px; }
+  .legend code, code { font-family: "JetBrains Mono", Consolas, monospace; font-size: .9em; color: var(--gold); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+  .card strong { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.1rem; }
+  .seeds { display: flex; flex-wrap: wrap; gap: 8px; }
+  .seeds span { font-family: "JetBrains Mono", Consolas, monospace; background: var(--panel2); border: 1px solid var(--line); border-radius: 3px; padding: 2px 10px; color: var(--gold); }
+  .quote { background: var(--panel); border: 1px solid var(--gold-deep); border-radius: 6px; padding: 20px 24px; display: grid; gap: 10px; }
+  .quote blockquote { margin: 0; font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.5rem; color: var(--gold); line-height: 1.3; }
+  ol.cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  ol.cards li { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 20px; display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: start; }
+  ol.cards .id { font-family: "JetBrains Mono", Consolas, monospace; color: var(--gold); font-size: 1rem; padding-top: 2px; }
+  ol.cards strong { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.15rem; display: block; margin-bottom: 2px; }
+  ol.cards span { color: var(--muted); }
+  footer { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12px; color: var(--gold-deep); }
+  @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } ol.cards li { grid-template-columns: 1fr; gap: 4px; } }
+</style>
+</head>
+<body>
+<main>
+  <nav class="back"><a href="/">← jeux.fmenguy.fr</a></nav>
+
+  <header>
+    <h1>Comment on teste Strates</h1>
+    <p class="lead">Réponse aux questions d'un ami, ancien testeur : ce qui existe, ce qui marche, ce qui est fragile, et ce qu'on change.</p>
+  </header>
+
+  <section aria-label="En chiffres">
+    <h2>En chiffres</h2>
+    <div class="tiles">
+      <div class="tile"><b>~2 500</b><span>tests</span></div>
+      <div class="tile"><b>399</b><span>fichiers de tests</span></div>
+      <div class="tile"><b>107</b><span>témoins</span></div>
+      <div class="tile"><b>55</b><span>parcours</span></div>
+      <div class="tile"><b>10 à 30 min</b><span>suite ciblée</span></div>
+      <div class="tile"><b>~80 min</b><span>suite complète</span></div>
+      <div class="tile"><b>0</b><span>navigateur</span></div>
+    </div>
+  </section>
+
+  <section aria-label="Trois étages de tests">
+    <h2>Trois étages de tests</h2>
+    <p class="muted">Du plus petit au plus large. Les trois jouent le vrai moteur du jeu sous Node, par les mêmes commandes qu'un joueur. Jamais d'état fabriqué ni injecté : si une situation n'arrive pas en jouant, elle n'est pas testée.</p>
+    <div class="fig">
+      <svg viewBox="0 0 1000 400" role="img" aria-label="Pyramide à trois étages : tests de règle, témoins, parcours de bout en bout">
+        <rect x="140" y="14" width="220" height="104" rx="6" fill="#2b261e" stroke="#d4b870" stroke-width="1.5"/>
+        <text class="t" x="250" y="48" text-anchor="middle">Parcours</text>
+        <text class="n" x="250" y="72" text-anchor="middle">55</text>
+        <text class="m" x="250" y="96" text-anchor="middle">bout en bout</text>
+        <text class="s g" x="400" y="40">Une partie neuve, de la Pierre au Spatial, sans aide.</text>
+        <text class="s" x="400" y="64">Règle n° 1 du projet : chaque passage d'âge doit être</text>
+        <text class="s" x="400" y="86">atteignable en partie normale. La première version du</text>
+        <text class="s" x="400" y="108">jeu est morte de ne pas l'avoir vérifié.</text>
+
+        <rect x="80" y="140" width="340" height="104" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="t" x="250" y="174" text-anchor="middle">Témoins</text>
+        <text class="n" x="250" y="198" text-anchor="middle">107</text>
+        <text class="m" x="250" y="222" text-anchor="middle">partie jouée jusqu'à un jalon</text>
+        <text class="s g" x="460" y="166">Une partie jouée automatiquement depuis une partie</text>
+        <text class="s g" x="460" y="188">neuve, puis des assertions sur le résultat.</text>
+        <text class="m" x="460" y="214">Exemple : les tisserands produisent des étoffes.</text>
+
+        <rect x="20" y="266" width="460" height="104" rx="6" fill="#221e18" stroke="#3d352a" stroke-width="1.5"/>
+        <text class="t" x="250" y="300" text-anchor="middle">Tests de règle</text>
+        <text class="n" x="250" y="324" text-anchor="middle">~2 500 au total</text>
+        <text class="m" x="250" y="348" text-anchor="middle">une mécanique isolée</text>
+        <text class="s g" x="520" y="292">Une règle, une situation, un verdict.</text>
+        <text class="m" x="520" y="318">Exemple : un colon revenu près de chez lui</text>
+        <text class="m" x="520" y="340">finit son retour.</text>
+
+        <text class="m" x="500" y="392" text-anchor="middle">Plus on monte, moins il y en a, plus ils sont lents et plus ils disent de choses.</text>
+      </svg>
+    </div>
+  </section>
+
+  <section aria-label="Qui fait quoi">
+    <h2>Qui fait quoi</h2>
+    <div class="fig">
+      <svg viewBox="0 0 1000 250" role="img" aria-label="Flux : carte, agent d'implémentation, relecteur de tests, pilote, suite de nuit">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#d4b870"/></marker>
+        </defs>
+        <rect x="0" y="20" width="160" height="180" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="t" x="80" y="52" text-anchor="middle">Carte</text>
+        <text class="m" x="80" y="74" text-anchor="middle">du kanban</text>
+        <text class="s" x="80" y="112" text-anchor="middle">objectif</text>
+        <text class="s" x="80" y="136" text-anchor="middle">critère de fin</text>
+        <text class="s" x="80" y="160" text-anchor="middle">budget</text>
+        <text class="s" x="80" y="184" text-anchor="middle">interdits</text>
+
+        <line x1="164" y1="110" x2="206" y2="110" stroke="#d4b870" stroke-width="2" marker-end="url(#ar)"/>
+
+        <rect x="210" y="20" width="160" height="180" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="t" x="290" y="52" text-anchor="middle">Agent</text>
+        <text class="t" x="290" y="74" text-anchor="middle" style="font-size:16px">d'implémentation</text>
+        <text class="s" x="290" y="116" text-anchor="middle">code ET tests</text>
+        <text class="s" x="290" y="140" text-anchor="middle">de la fonction,</text>
+        <text class="s" x="290" y="164" text-anchor="middle">dans le même lot</text>
+
+        <line x1="374" y1="110" x2="416" y2="110" stroke="#d4b870" stroke-width="2" marker-end="url(#ar)"/>
+
+        <rect x="420" y="20" width="160" height="180" rx="6" fill="#2b261e" stroke="#d4b870" stroke-width="2" stroke-dasharray="7 5"/>
+        <text class="n" x="500" y="42" text-anchor="middle">NOUVEAU</text>
+        <text class="t" x="500" y="70" text-anchor="middle">Relecteur</text>
+        <text class="t" x="500" y="92" text-anchor="middle">de tests</text>
+        <text class="s" x="500" y="128" text-anchor="middle">indépendant,</text>
+        <text class="s" x="500" y="152" text-anchor="middle">lecture seule</text>
+        <text class="n" x="500" y="182" text-anchor="middle">EVO-192</text>
+
+        <line x1="584" y1="110" x2="626" y2="110" stroke="#d4b870" stroke-width="2" marker-end="url(#ar)"/>
+
+        <rect x="630" y="20" width="160" height="180" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="t" x="710" y="52" text-anchor="middle">Pilote</text>
+        <text class="m" x="710" y="74" text-anchor="middle">humain + IA</text>
+        <text class="s" x="710" y="124" text-anchor="middle">relecture</text>
+        <text class="s" x="710" y="148" text-anchor="middle">fusion dans main</text>
+
+        <line x1="794" y1="110" x2="836" y2="110" stroke="#d4b870" stroke-width="2" marker-end="url(#ar)"/>
+
+        <rect x="840" y="20" width="160" height="180" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="t" x="920" y="52" text-anchor="middle">Suite de nuit</text>
+        <text class="m" x="920" y="74" text-anchor="middle">sur main</text>
+        <text class="s" x="920" y="124" text-anchor="middle">tout rejoué,</text>
+        <text class="s" x="920" y="148" text-anchor="middle">rapport au matin</text>
+
+        <text class="m" x="500" y="236" text-anchor="middle">Chaque agent reçoit une carte et rend un bilan à la fin.</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <p>Les tests sont joués par la machine (<code>node --test</code>), pas par une IA. Un test qui tourne ne coûte aucun jeton. Les jetons partent quand un agent attend les résultats, les lit et recommence.</p>
+      <p>Il n'y a pas d'orchestrateur en dialogue continu, et c'est voulu : un échange permanent coûterait cher pour peu de gain.</p>
+    </div>
+  </section>
+
+  <section aria-label="La continuité">
+    <h2>La continuité</h2>
+    <div class="fig">
+      <svg viewBox="0 0 1000 350" role="img" aria-label="Deux boucles : sélection ciblée à chaque lot, suite complète chaque nuit avec bissection automatique">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#d4b870"/></marker>
+        </defs>
+        <rect x="0" y="0" width="450" height="350" rx="6" fill="#1b1914" stroke="#3d352a"/>
+        <text class="t" x="20" y="34">Par lot</text>
+        <text class="m" x="20" y="56">10 à 30 minutes</text>
+        <rect x="16" y="86" width="128" height="104" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="s" x="80" y="124" text-anchor="middle">Fichiers</text>
+        <text class="s" x="80" y="146" text-anchor="middle">touchés par</text>
+        <text class="s" x="80" y="168" text-anchor="middle">le lot</text>
+        <line x1="148" y1="138" x2="162" y2="138" stroke="#d4b870" stroke-width="2" marker-end="url(#ar2)"/>
+        <rect x="166" y="86" width="128" height="104" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="s" x="230" y="124" text-anchor="middle">Sélection</text>
+        <text class="s" x="230" y="146" text-anchor="middle">ciblée des</text>
+        <text class="s" x="230" y="168" text-anchor="middle">tests liés</text>
+        <line x1="298" y1="138" x2="312" y2="138" stroke="#d4b870" stroke-width="2" marker-end="url(#ar2)"/>
+        <rect x="316" y="86" width="118" height="104" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="s" x="375" y="124" text-anchor="middle">Verdict</text>
+        <text class="s" x="375" y="146" text-anchor="middle">corriger ou</text>
+        <text class="s" x="375" y="168" text-anchor="middle">fusionner</text>
+        <path d="M375 194 V240 H80 V194" fill="none" stroke="#d4b870" stroke-width="2" marker-end="url(#ar2)"/>
+        <text class="m" x="225" y="266" text-anchor="middle">si ça casse, on corrige et on rejoue</text>
+        <text class="m" x="225" y="320" text-anchor="middle">Rapide, mais ne voit que ce qu'on a désigné.</text>
+
+        <rect x="480" y="0" width="520" height="350" rx="6" fill="#1b1914" stroke="#3d352a"/>
+        <text class="t" x="500" y="34">Chaque nuit à 3 h</text>
+        <text class="m" x="500" y="56">suite complète sur main, environ 80 minutes</text>
+        <rect x="496" y="80" width="140" height="84" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="s" x="566" y="116" text-anchor="middle">Tout main</text>
+        <text class="s" x="566" y="138" text-anchor="middle">rejoué</text>
+        <line x1="640" y1="122" x2="664" y2="122" stroke="#d4b870" stroke-width="2" marker-end="url(#ar2)"/>
+        <rect x="668" y="80" width="140" height="84" rx="6" fill="#221e18" stroke="#a88d4a" stroke-width="1.5"/>
+        <text class="s" x="738" y="116" text-anchor="middle">Rapport</text>
+        <text class="s" x="738" y="138" text-anchor="middle">du jour</text>
+        <rect x="836" y="80" width="148" height="84" rx="6" fill="#2b261e" stroke="#3d352a" stroke-width="1.5"/>
+        <text class="m" x="910" y="108" text-anchor="middle">les rapports</text>
+        <text class="m" x="910" y="130" text-anchor="middle">s'accumulent,</text>
+        <text class="m" x="910" y="152" text-anchor="middle">jour après jour</text>
+        <line x1="812" y1="122" x2="832" y2="122" stroke="#d4b870" stroke-width="2" marker-end="url(#ar2)"/>
+        <path d="M566 168 V206" fill="none" stroke="#d4b870" stroke-width="2" marker-end="url(#ar2)"/>
+        <text class="n" x="580" y="192">si un test casse</text>
+        <rect x="496" y="210" width="488" height="110" rx="6" fill="#2b261e" stroke="#d4b870" stroke-width="2"/>
+        <text class="t" x="516" y="242">Bissection automatique</text>
+        <text class="s" x="516" y="270">La machine remonte seule les commits, un par un,</text>
+        <text class="s" x="516" y="292">rejoue le test et désigne le commit coupable.</text>
+      </svg>
+    </div>
+  </section>
+
+  <section aria-label="Aléatoire">
+    <h2>Et l'aléatoire ?</h2>
+    <div class="cols">
+      <div class="card">
+        <strong>Aujourd'hui, des graines fixes</strong>
+        <div class="seeds"><span>42</span><span>7</span><span>123</span><span>73</span><span>137</span></div>
+        <p class="muted">Le 42 sert la plupart du temps.</p>
+      </div>
+      <div class="card">
+        <strong>Le pour et le contre</strong>
+        <p><span class="g" style="color:var(--gold)">Avantage :</span> tout est rejouable à l'identique, un échec se reproduit toujours.</p>
+        <p><span style="color:var(--gold)">Limite :</span> on rejoue toujours les mêmes mondes. Un défaut qui n'apparaît que sur une autre carte nous échappe.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Ce qu'il a vu juste">
+    <h2>Ce qu'il a vu juste</h2>
+    <div class="quote">
+      <blockquote>« 4 bons tests valent mieux que 50 mauvais. »</blockquote>
+      <p>Exemple réel du jour : un agent a écrit un test qui vérifiait son propre mécanisme (« le colon s'arrête en 1 seconde ») au lieu du défaut réel (« aucun colon ne reste coincé »). Ce test a bloqué un correctif pendant une heure et demie.</p>
+      <p class="muted">Et la suite a grossi à chaque lot sans jamais être élaguée : par exemple, un même parcours découpé en 29 tranches.</p>
+    </div>
+  </section>
+
+  <section aria-label="Ce qu'on change">
+    <h2>Ce qu'on change</h2>
+    <ol class="cards">
+      <li><span class="id">EVO-192</span><div><strong>Un relecteur de tests indépendant</strong><span>Un petit agent en lecture seule relit les tests d'une carte avant fusion, avec une seule question : ce test vérifie-t-il ce que le joueur voit, ou la façon dont le code s'y prend ?</span></div></li>
+      <li><span class="id">EVO-193</span><div><strong>Une règle d'écriture</strong><span>Un test décrit ce que le joueur voit ou subit, pas un détail d'implémentation. Et l'agent lance exactement la commande de vérification donnée par la carte.</span></div></li>
+      <li><span class="id">EVO-194</span><div><strong>De l'aléatoire la nuit</strong><span>Chaque nuit, deux ou trois témoins jouent une graine nouvelle, tirée au hasard et notée. Seuls des invariants sont vérifiés (personne coincé, âge suivant atteignable, sauvegarde rechargée). En cas d'échec, on rejoue cette graine exacte.</span></div></li>
+      <li><span class="id">EVO-195</span><div><strong>Un élagage chiffré</strong><span>Coût et utilité de chaque fichier, fusion ou suppression des doublons, objectif : suite complète sous 30 minutes. Moins d'attente pour les agents, donc moins de jetons.</span></div></li>
+    </ol>
+  </section>
+
+  <footer>17 novembre 2026</footer>
+</main>
+</body>
+</html>
