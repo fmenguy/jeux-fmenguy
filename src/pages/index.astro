@@ -451,11 +451,6 @@
       0%, 100% { opacity: 0.3; transform: scale(1); }
       50% { opacity: 0.7; transform: scale(1.05); }
     }
-    .dev-progress-meta {
-      font-size: 0.76rem;
-      line-height: 1.5;
-      color: rgba(214,221,239,0.72);
-    }
 
     .strates-actions {
       display: flex;
@@ -505,12 +500,12 @@
     .strates-btn--download:hover { background: #f7d98a; }
     .strates-btn--soon { cursor: default; }
     .strates-btn--soon:hover { transform: none; background: #f0c96a; }
-    .strates-btn--poc {
+    .strates-btn--lien {
       color: #f0c96a;
       border: 1px dashed rgba(212,160,23,0.5);
       background: rgba(212,160,23,0.06);
     }
-    .strates-btn--poc:hover { border-color: #f0c96a; box-shadow: 0 0 14px rgba(212,160,23,0.22); }
+    .strates-btn--lien:hover { border-color: #f0c96a; box-shadow: 0 0 14px rgba(212,160,23,0.22); }
 
     /* === Bathyrêve : abysses bleu canard, cuivre des structures, bulles === */
     .panel--bathy {
@@ -1001,7 +996,6 @@
       .dev-progress-label { margin-bottom: 0.3rem; }
       .age { height: 25px; font-size: 0.7rem; }
       .ages { margin-bottom: 0.3rem; }
-      .dev-progress-meta { font-size: 0.72rem; }
       .strates-actions { padding-top: 0.6rem; gap: 0.45rem; }
       .strates-btn { padding: 0.3rem 0.6rem; font-size: 0.68rem; }
       .strates-btn--download { padding: 0.42rem 0.85rem; font-size: 0.74rem; }
@@ -1105,9 +1099,6 @@
               <div class="age wip" title="Âge VI, Moderne, en chantier">VI</div>
               <div class="age" title="Âge VII, Spatial">VII</div>
             </div>
-            <p class="dev-progress-meta">
-              Les nouveautés sont racontées dans le <a class="inline" href="/strates-carnet/">carnet de chantier</a>.
-            </p>
           </div>
 
           <div class="strates-actions">
@@ -1116,11 +1107,8 @@
               <span class="strates-install">Accès anticipé en préparation · la démo est jouable ici</span>
             </div>
             <div class="strates-links">
-              <a class="strates-btn strates-btn--poc" href="https://strates.fmenguy.fr/" title="Les âges de la Pierre et du Bronze, ouverts à tous">▶ Jouer à la démo</a>
-              <a class="strates-btn strates-btn--poc" href="https://testeurs.strates-fmenguy.pages.dev/" title="Les sept âges, réservés aux testeurs inscrits : connexion par un code reçu par courriel">◈ Version complète (testeurs)</a>
-              <a class="strates-btn strates-btn--poc" href="/strates-carnet/" title="Les nouveautés de Strates, racontées pour celles et ceux qui testent le jeu">◈ Carnet de chantier</a>
-              <a class="strates-btn strates-btn--poc" href="/strates-poc/" title="Les maquettes de Strates et les choix retenus au fil du temps">◈ Journal des POC</a>
-              <a class="strates-btn strates-btn--poc" href="/strates-tests/" title="Comment les tests de Strates sont faits, et ce qu'on change">◈ Comment on teste</a>
+              <a class="strates-btn strates-btn--lien" href="https://strates.fmenguy.fr/" title="Les âges de la Pierre et du Bronze, ouverts à tous">▶ Jouer à la démo</a>
+              <a class="strates-btn strates-btn--lien" href="https://testeurs.strates-fmenguy.pages.dev/" title="Les sept âges, réservés aux testeurs inscrits : connexion par un code reçu par courriel">◈ Version complète (testeurs)</a>
             </div>
           </div>
         </div>
