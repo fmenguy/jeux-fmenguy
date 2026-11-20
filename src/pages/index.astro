@@ -955,7 +955,7 @@
         border-bottom: none;
         border-right: 1px solid rgba(212,160,23,0.28);
       }
-      .strates-actions { margin-top: auto; }
+      .strates-info { justify-content: center; }
 
       .complets-grid {
         flex: 1;
@@ -1019,6 +1019,7 @@
 
     /* Écrans larges : un peu plus d'air et de texte */
     @media (min-width: 1600px) {
+      .panel--strates { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); }
       .panel-title { font-size: 1.5rem; }
       .panel-desc { font-size: 0.92rem; }
       .age { height: 34px; font-size: 0.8rem; }
