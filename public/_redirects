@@ -1,0 +1,15 @@
+# Les pages qui expliquent le fonctionnement de Strates ont rejoint fmenguy.fr/ia/strates/.
+# Ici ne restent que les liens pour jouer.
+/strates-carnet https://fmenguy.fr/ia/strates/carnet/ 301
+/strates-carnet/ https://fmenguy.fr/ia/strates/carnet/ 301
+/strates-carnet/* https://fmenguy.fr/ia/strates/carnet/:splat 301
+/strates-poc https://fmenguy.fr/ia/strates/maquettes/ 301
+/strates-poc/ https://fmenguy.fr/ia/strates/maquettes/ 301
+/strates-poc/index.html https://fmenguy.fr/ia/strates/maquettes/ 301
+/strates-poc/* https://fmenguy.fr/ia/strates/maquettes/:splat 301
+/strates-tests https://fmenguy.fr/ia/strates/tests/ 301
+/strates-tests/* https://fmenguy.fr/ia/strates/tests/ 301
+/strates/agents https://fmenguy.fr/ia/strates/ 301
+/strates/agents/ https://fmenguy.fr/ia/strates/ 301
+/strates/windows https://fmenguy.fr/ia/strates/ 301
+/strates/windows/ https://fmenguy.fr/ia/strates/ 301

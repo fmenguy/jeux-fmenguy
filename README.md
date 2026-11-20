@@ -44,7 +44,7 @@ Exploration en salles thématiques avec particules, textures et puzzles, tutorie
 
 L'accueil met en avant deux jeux dont le code vit dans d'autres dépôts.
 
-- **Strates** : jeu de dieu voxel (Three.js) où une colonie traverse sept âges de civilisation, de la pierre jusqu'à l'espace. La V2 se joue sur [strates.fmenguy.fr](https://strates.fmenguy.fr/v2/), un accès anticipé sur Steam est en préparation. Ce dépôt héberge son [carnet de chantier](https://jeux.fmenguy.fr/strates-carnet/) et son [journal des POC](https://jeux.fmenguy.fr/strates-poc/).
+- **Strates** : jeu de dieu voxel (Three.js) où une colonie traverse sept âges de civilisation, de la pierre jusqu'à l'espace. La V2 se joue sur [strates.fmenguy.fr](https://strates.fmenguy.fr/v2/), un accès anticipé sur Steam est en préparation. La version complète est réservée aux testeurs. Son fonctionnement (atelier agentique, tests, carnet de chantier, maquettes) est expliqué sur [fmenguy.fr/ia/strates](https://fmenguy.fr/ia/strates/).
 - **Bathyrêve** : bâtir une cité au fond de la mer, démo jouable sur [bathyreve.fmenguy.fr](https://bathyreve.fmenguy.fr/).
 
 ## Structure du dépôt
@@ -52,11 +52,10 @@ L'accueil met en avant deux jeux dont le code vit dans d'autres dépôts.
 ```
 jeux-fmenguy/
 ├── src/
-│   ├── pages/        pages Astro : accueil, 404, achrogemme, conway, zentel,
-│   │                 et deux anciennes adresses de Strates redirigées vers l'accueil
+│   ├── pages/        pages Astro : accueil, 404, achrogemme, conway, zentel
 │   └── games/        jeux écrits en React (achrogemme)
 ├── public/           jeux autonomes servis tels quels (fda, orbique, eryndor, ecosim, zentel),
-│                     pages de Strates (strates-carnet, strates-poc), robots.txt
+│                     robots.txt, _redirects (anciennes pages de Strates vers fmenguy.fr)
 ├── docs/             documentation de conception d'Achrogemme
 ├── claude design/    maquettes de l'interface d'Achrogemme (v1, v2)
 └── astro.config.mjs
@@ -132,7 +131,7 @@ Exploration through themed rooms with particles, textures and puzzles, plus a bu
 
 The home page features two games whose code lives in other repositories.
 
-- **Strates**: a voxel god game (Three.js) where a colony moves through seven ages of civilization, from the Stone Age to space. Version 2 is playable at [strates.fmenguy.fr](https://strates.fmenguy.fr/v2/), and a Steam early access release is in preparation. This repository hosts its [development log](https://jeux.fmenguy.fr/strates-carnet/) and its [prototype journal](https://jeux.fmenguy.fr/strates-poc/).
+- **Strates**: a voxel god game (Three.js) where a colony moves through seven ages of civilization, from the Stone Age to space. Version 2 is playable at [strates.fmenguy.fr](https://strates.fmenguy.fr/v2/), and a Steam early access release is in preparation. The full version is reserved for testers. How it is made (agentic workshop, tests, development log, mockups) is explained, in French, at [fmenguy.fr/ia/strates](https://fmenguy.fr/ia/strates/).
 - **Bathyrêve**: build a city at the bottom of the sea, with a playable demo at [bathyreve.fmenguy.fr](https://bathyreve.fmenguy.fr/).
 
 ## Repository layout
@@ -140,11 +139,10 @@ The home page features two games whose code lives in other repositories.
 ```
 jeux-fmenguy/
 ├── src/
-│   ├── pages/        Astro pages: home, 404, achrogemme, conway, zentel,
-│   │                 and two old Strates URLs redirected to the home page
+│   ├── pages/        Astro pages: home, 404, achrogemme, conway, zentel
 │   └── games/        games written in React (achrogemme)
 ├── public/           standalone games served as is (fda, orbique, eryndor, ecosim, zentel),
-│                     Strates pages (strates-carnet, strates-poc), robots.txt
+│                     robots.txt, _redirects (old Strates pages sent to fmenguy.fr)
 ├── docs/             Achrogemme design documentation
 ├── claude design/    Achrogemme interface mockups (v1, v2)
 └── astro.config.mjs
